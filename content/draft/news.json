@@ -1,0 +1,62 @@
+{
+  "_note": "Real posts from the current site (VI and EN RSS), titles in sentence case without emoji (05-DESIGN). Real publication dates are shown: Maxwell confirmed post dates are fine (they are facts about public posts, not unverified claims). Links point at the live posts until the news archive exists. The featured story is a placeholder: no stories exist yet.",
+  "featuredStory": {
+    "category": "story",
+    "draft": true,
+    "title": {
+      "vi": "[Tên câu chuyện]",
+      "en": "[Story title]"
+    },
+    "excerpt": {
+      "vi": "[Hai dòng tóm tắt câu chuyện, kể từ góc nhìn của trẻ hoặc gia đình, đã được HCWA duyệt.]",
+      "en": "[Two-line summary of an HCWA-approved story, told from a child's or family's point of view.]"
+    },
+    "date": null,
+    "image": {
+      "code": "C2",
+      "label": {
+        "vi": "Ảnh câu chuyện",
+        "en": "Story photo"
+      },
+      "ratio": "3:2"
+    }
+  },
+  "posts": [
+    {
+      "category": "event",
+      "title": {
+        "vi": "Đại diện Hội Bảo trợ Trẻ em TP. Hồ Chí Minh tham dự Hội nghị Philanthropy Asia Summit tại Singapore",
+        "en": "HCWA delegation takes part in the Philanthropy Asia Summit in Singapore"
+      },
+      "url": {
+        "vi": "https://hcwa.org.vn/dai-dien-hoi-bao-tro-tre-em-tp-ho-chi-minh-tham-du-hoi-nghi-philanthropy-asia-summit-tai-singapore/",
+        "en": "https://hcwa.org.vn/hcwa-delegation-participates-in-philanthropy-asia-summit-in-singapore/"
+      },
+      "published": "2026-05-25"
+    },
+    {
+      "category": "news",
+      "title": {
+        "vi": "Hội nghị tổng kết dự án thí điểm thúc đẩy quyền trẻ em khuyết tật tại TP. Hồ Chí Minh",
+        "en": "Conference reviewing the pilot project promoting the rights of children with disabilities in Ho Chi Minh City"
+      },
+      "url": {
+        "vi": "https://hcwa.org.vn/hoi-nghi-tong-ket-du-an-thi-diem-thuc-day-quyen-tre-em-khuyet-tat-tai-tp-ho-chi-minh/",
+        "en": "https://hcwa.org.vn/conference-on-the-review-of-the-pilot-project-promoting-the-rights-of-children-with-disabilities-in-ho-chi-minh-city/"
+      },
+      "published": "2026-05-25"
+    },
+    {
+      "category": "news",
+      "published": "2026-03-07",
+      "title": {
+        "vi": "Tăng cường cơ hội tiếp cận chính sách cho trẻ em khuyết tật",
+        "en": "Enhancing access to policies for children with disabilities"
+      },
+      "url": {
+        "vi": "https://hcwa.org.vn/tang-cuong-co-hoi-tiep-can-chinh-sach-cho-tre-em-khuyet-tat/",
+        "en": "https://hcwa.org.vn/enhancing-access-to-policies-for-children-with-disabilities/"
+      }
+    }
+  ]
+}

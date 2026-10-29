@@ -1,0 +1,3 @@
+NOTE  console error [mobile]: Cannot read properties of null (reading 'forEach')
+NOTE  console error [desktop]: Cannot read properties of null (reading 'forEach')
+tastegate PASS: 0 fail, 0 warn. Screenshots: C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\en\mobile.png, C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\en\desktop.png

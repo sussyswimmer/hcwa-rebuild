@@ -1,0 +1,8 @@
+# Phase 1 prototype for HCWA review. Netlify sets URL during builds, which makes hreflang links absolute.
+[build]
+  base = "prototype"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"

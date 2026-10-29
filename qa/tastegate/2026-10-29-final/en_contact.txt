@@ -1,0 +1,5 @@
+WARN  no_cta_in_first_screen  [desktop]  x1
+      body "Skip to main content Prototype for HCWA review. ": no button-like call to action inside the first desktop screen
+NOTE  console error [mobile]: Cannot read properties of null (reading 'forEach')
+NOTE  console error [desktop]: Cannot read properties of null (reading 'forEach')
+tastegate PASS: 0 fail, 1 warn. Screenshots: C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\en_contact\mobile.png, C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\en_contact\desktop.png

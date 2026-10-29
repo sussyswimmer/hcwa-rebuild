@@ -1,0 +1,37 @@
+{
+  "target": "http://localhost:4173/components/",
+  "url": "http://localhost:4173/components/",
+  "findings": [
+    {
+      "rule": "no_cta_in_first_screen",
+      "severity": "warn",
+      "el": "body \"B\u1ecf qua, \u0111\u1ebfn n\u1ed9i dung ch\u00ednh B\u1ea3n m\u1eabu \u0111\u1ec3 HCWA g\u00f3p \u00fd\"",
+      "detail": "no button-like call to action inside the first desktop screen",
+      "viewport": "desktop"
+    },
+    {
+      "rule": "placeholder_copy",
+      "severity": "warn",
+      "el": "body \"B\u1ecf qua, \u0111\u1ebfn n\u1ed9i dung ch\u00ednh B\u1ea3n m\u1eabu \u0111\u1ec3 HCWA g\u00f3p \u00fd\"",
+      "detail": "\"example.com\" on the page",
+      "viewport": "desktop"
+    }
+  ],
+  "screenshots": {
+    "mobile": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\components\\mobile.png",
+    "desktop": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\components\\desktop.png"
+  },
+  "console_errors": [
+    {
+      "viewport": "mobile",
+      "error": "e(...).forEach is not a function"
+    },
+    {
+      "viewport": "desktop",
+      "error": "e(...).forEach is not a function"
+    }
+  ],
+  "fail": 0,
+  "warn": 2,
+  "rules_failed": []
+}

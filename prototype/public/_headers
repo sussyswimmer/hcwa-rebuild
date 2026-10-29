@@ -1,0 +1,3 @@
+# Prototype for HCWA review: keep it out of search engines.
+/*
+  X-Robots-Tag: noindex, nofollow

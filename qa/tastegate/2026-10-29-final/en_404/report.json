@@ -1,0 +1,22 @@
+{
+  "target": "http://localhost:4173/en/404.html",
+  "url": "http://localhost:4173/en/404.html",
+  "findings": [],
+  "screenshots": {
+    "mobile": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_404\\mobile.png",
+    "desktop": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_404\\desktop.png"
+  },
+  "console_errors": [
+    {
+      "viewport": "mobile",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    },
+    {
+      "viewport": "desktop",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    }
+  ],
+  "fail": 0,
+  "warn": 0,
+  "rules_failed": []
+}

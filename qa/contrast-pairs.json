@@ -1,0 +1,212 @@
+[
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-sunken",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-blue-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-sun-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-sun-400",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink",
+  "fondo": "--color-ok-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-2",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-2",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-2",
+  "fondo": "--color-sunken",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-2",
+  "fondo": "--color-sun-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-3",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-3",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-3",
+  "fondo": "--color-sunken",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-blue-700",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-blue-700",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-blue-700",
+  "fondo": "--color-sunken",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-blue-700",
+  "fondo": "--color-blue-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-blue-700",
+  "fondo": "--color-sun-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-on-blue",
+  "fondo": "--color-blue-700",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-on-blue",
+  "fondo": "--color-blue-900",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-sun-400",
+  "fondo": "--color-blue-700",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-warn",
+  "fondo": "--color-sun-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-warn",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-warn",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ok",
+  "fondo": "--color-ok-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ok",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-error",
+  "fondo": "--color-surface",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-error",
+  "fondo": "--color-paper",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-input-border",
+  "fondo": "--color-surface",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-input-border",
+  "fondo": "--color-paper",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-focus",
+  "fondo": "--color-paper",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-focus",
+  "fondo": "--color-surface",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-focus",
+  "fondo": "--color-sunken",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-focus-on-blue",
+  "fondo": "--color-blue-700",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-focus-on-blue",
+  "fondo": "--color-blue-900",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-green-bamboo",
+  "fondo": "--color-paper",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-green-bamboo",
+  "fondo": "--color-surface",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-little-rose",
+  "fondo": "--color-paper",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-little-rose",
+  "fondo": "--color-surface",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-cau-han",
+  "fondo": "--color-paper",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-unit-cau-han",
+  "fondo": "--color-surface",
+  "tipo": "ui"
+ }
+]

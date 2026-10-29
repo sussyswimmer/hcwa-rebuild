@@ -14,8 +14,10 @@ crowded, clarity over effects, fast.
 
 ## Color tokens
 
-Provisional values. Task 1.1 samples the real brand blue from the official logo SVG and
-the unit accents from each unit's logo, then runs `design-token-contrast`.
+Task 1.1 done (29 Oct 2026). Brand blue and unit accents were sampled from the logos on
+the current site (no SVGs yet: still provisional until the agency delivers A1/B6). Every
+pair was measured with `design-token-contrast` (`qa/contrast-pairs.json`, 42 pairs, all
+pass). Source of truth: `prototype/src/styles/tokens.css` (names carry a `--color-` prefix).
 
 ```css
 :root {
@@ -23,34 +25,41 @@ the unit accents from each unit's logo, then runs `design-token-contrast`.
   --paper:      #FBF8F3;  /* page background */
   --surface:    #FFFFFF;  /* cards, header, forms */
   --sunken:     #F3EEE6;  /* alternate section background */
-  --line:       #E4DDD2;  /* borders, dividers */
-  --ink:        #1C2333;  /* body and headings */
-  --ink-2:      #4A5265;  /* secondary text (check ≥ 4.5:1 on --paper and --sunken) */
-  --ink-3:      #6B7285;  /* meta text, only at ≥ 15px; check contrast */
+  --line:       #E4DDD2;  /* dividers only (1.35:1 on white: too faint for field borders) */
+  --input-border: #857C70; /* NEW: field and control borders, 4.11:1 on white, 3.88:1 on paper */
+  --ink:        #1C2333;  /* 14.82 paper · 15.70 white · 13.59 sunken · 9.86 on sun-400 */
+  --ink-2:      #4A5265;  /* 7.38 paper · 6.77 sunken */
+  --ink-3:      #5F6679;  /* CHANGED from #6B7285 (4.16:1 on sunken, failed) → 5.41 paper · 4.96 sunken */
 
-  /* brand (sample from logo) */
-  --blue-900:   #16275C;
-  --blue-700:   #1E3A8A;  /* links, secondary buttons, footer bg */
-  --blue-100:   #E6ECF8;
-  --on-blue:    #FFFFFF;
+  /* brand, sampled from the HCWA logo */
+  --blue-900:   #23236A;  /* CHANGED: darker step of the logo blue */
+  --blue-700:   #313188;  /* CHANGED from #1E3A8A: the logo's own blue. 10.30 paper · 10.91 white */
+  --blue-100:   #ECECF7;  /* CHANGED: tint of the logo blue */
+  --on-blue:    #FFFFFF;  /* 10.91 on blue-700 · 13.82 on blue-900 */
 
   /* action: carried over from the current site's yellow buttons */
-  --sun-400:    #FFC42E;  /* primary button bg, text = --ink */
+  --sun-400:    #FFC42E;  /* primary button bg, text = --ink (9.86:1) */
   --sun-500:    #F2B312;  /* hover */
   --sun-100:    #FFF4D6;  /* announcement bar, soft accent bg */
 
-  /* unit accents (sample from each unit logo; bands and labels only) */
-  --unit-green-bamboo: #2E8B4A;
-  --unit-little-rose:  #C94E73;
-  --unit-cau-han:      #2F6FB8;
+  /* unit accents, sampled from each unit logo; bands and dots only */
+  --unit-green-bamboo: #008E3A;  /* CHANGED from #2E8B4A. 4.02:1 on paper */
+  --unit-little-rose:  #DC4C98;  /* CHANGED from #C94E73 (logo pink). 3.58:1 on paper */
+  --unit-cau-han:      #417CBD;  /* CHANGED from #2F6FB8. 4.09:1 on paper */
 
   /* status */
-  --ok:    #2F7D4F;
-  --warn:  #8A5A00;
-  --error: #B42318;
-  --focus: #1E3A8A;  /* 3px outline + 2px offset */
+  --ok:     #2C7A4C;  /* CHANGED from #2F7D4F (4.38:1 on ok-100, failed) → 4.57 */
+  --ok-100: #E6F2EA;  /* NEW: Active pill background */
+  --warn:   #8A5A00;  /* 5.41 on sun-100 (pending chip) */
+  --error:  #B42318;  /* 6.57 white · 6.21 paper */
+  --focus:  #313188;  /* 3px outline + 2px offset. 10.30 on paper */
+  --focus-on-blue: #FFC42E; /* NEW: focus ring on blue bands/footer, 6.85:1 */
 }
 ```
+
+Accepted exception: the sun-400 button fill is 1.50:1 against paper. The button is
+identified by its label (ink on sun, 9.86:1), so the fill is not the only cue (WCAG 1.4.11).
+The blue is more violet than the old placeholder because it's the real logo color.
 
 Rules:
 - One action color (sun) for Donate and the primary button only. Everything else is
@@ -67,6 +76,11 @@ Rules:
 | Display / headings | Fraunces (variable, opsz + SOFT axes) | Warm serif with Vietnamese support. Use SOFT 50, weight 560 to 640. |
 | Body / UI | Be Vietnam Pro | Designed for Vietnamese. 400 / 500 / 600 only. |
 | Numbers in impact strip | Fraunces, tabular figures | |
+
+Task 1.1 check (29 Oct 2026): both families cover every Vietnamese precomposed letter
+(U+1EA0–1EF9, Ơ/Ư, Đ, ₫). To meet "fonts ≤ 4 files" (09), `scripts/build-fonts.py` builds
+one WOFF2 per face with Latin + Vietnamese merged: `fraunces-vf.woff2` (opsz 9–144, wght
+500–700, SOFT pinned 50) and Be Vietnam Pro 400/500/600. 155 KB total.
 
 Before building, task 1.1 confirms both families ship the `vietnamese` subset and renders
 this test line at every size: "Hội Bảo trợ Trẻ em Thành phố Hồ Chí Minh: những đứa trẻ

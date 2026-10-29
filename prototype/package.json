@@ -1,0 +1,15 @@
+{
+  "name": "hcwa-prototype",
+  "private": true,
+  "type": "module",
+  "description": "HCWA Phase 1 clickable prototype (static, VI at /, EN at /en/)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}

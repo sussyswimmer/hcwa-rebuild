@@ -1,0 +1,271 @@
+{
+  "_note": "Centers vs programs follow the proposal in 04-SITEMAP (HCWA question Q3). Years are tokens: the current site gives conflicting founding years (Green Bamboo 1992 vs 1993; the Charity Class page says HCWA was founded June 1997).",
+  "focusAreas": [
+    {
+      "id": "education",
+      "icon": "A6",
+      "name": {
+        "vi": "Giáo dục",
+        "en": "Education"
+      },
+      "text": {
+        "vi": "Lớp học miễn phí, học bổng và kỹ năng sống cho trẻ chưa thể đến trường.",
+        "en": "Free classes, scholarships and life skills for children who can't attend school.",
+        "draft": true
+      }
+    },
+    {
+      "id": "protection",
+      "icon": "A6",
+      "name": {
+        "vi": "Bảo vệ trẻ em",
+        "en": "Child protection"
+      },
+      "text": {
+        "vi": "Nơi ở an toàn, tư vấn và hỗ trợ cho trẻ có nguy cơ bị xâm hại hoặc bóc lột.",
+        "en": "Safe shelter, counseling and support for children at risk of abuse or exploitation.",
+        "draft": true
+      }
+    },
+    {
+      "id": "family",
+      "icon": "A6",
+      "name": {
+        "vi": "Hỗ trợ gia đình và cộng đồng",
+        "en": "Family & community support"
+      },
+      "text": {
+        "vi": "Tư vấn gia đình, chăm sóc sức khỏe và kết nối dịch vụ xã hội ngay tại cộng đồng.",
+        "en": "Family counseling, healthcare and access to social services in the community.",
+        "draft": true
+      }
+    },
+    {
+      "id": "policy",
+      "icon": "A6",
+      "name": {
+        "vi": "Vận động chính sách",
+        "en": "Policy & advocacy"
+      },
+      "text": {
+        "vi": "Làm việc cùng chính quyền và đối tác để chính sách cho trẻ em tốt hơn.",
+        "en": "Working with local government and partners on better policies for children.",
+        "draft": true
+      }
+    }
+  ],
+  "centers": [
+    {
+      "id": "green-bamboo",
+      "built": true,
+      "path": {
+        "vi": "/hoat-dong/co-so/tre-xanh/",
+        "en": "/en/our-work/centers/green-bamboo/"
+      },
+      "accent": "green-bamboo",
+      "logo": "/img/unit-green-bamboo.png",
+      "name": {
+        "vi": "Cơ sở Bảo trợ Xã hội Tre Xanh",
+        "en": "Green Bamboo Social Protection Center"
+      },
+      "sinceToken": {
+        "vi": "[năm]",
+        "en": "[year]"
+      },
+      "location": {
+        "vi": "[phường], TP. Hồ Chí Minh",
+        "en": "[ward], Ho Chi Minh City",
+        "draft": true
+      },
+      "serves": {
+        "vi": "Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng",
+        "en": "Disadvantaged children and families, supported in their community",
+        "draft": true
+      },
+      "areas": [
+        "education",
+        "family",
+        "protection"
+      ],
+      "image": {
+        "code": "B1",
+        "label": {
+          "vi": "Ảnh bìa Tre Xanh",
+          "en": "Green Bamboo cover"
+        },
+        "ratio": "4:3"
+      }
+    },
+    {
+      "id": "little-rose",
+      "built": false,
+      "path": {
+        "vi": "/hoat-dong/co-so/hoa-hong-nho/",
+        "en": "/en/our-work/centers/little-rose/"
+      },
+      "accent": "little-rose",
+      "name": {
+        "vi": "Mái ấm Hoa Hồng Nhỏ",
+        "en": "Little Rose Warm Shelter"
+      },
+      "sinceToken": {
+        "vi": "[năm]",
+        "en": "[year]"
+      },
+      "serves": {
+        "vi": "Trẻ em gái [độ tuổi] đã trải qua hoặc có nguy cơ bị xâm hại tình dục",
+        "en": "Girls [age range] who survived or are at risk of sexual abuse",
+        "draft": true,
+        "source": "current site gives an age range; not shown until HCWA confirms (owner rule: no current-site numbers)"
+      },
+      "areas": [
+        "protection",
+        "education"
+      ],
+      "image": {
+        "code": "B2",
+        "label": {
+          "vi": "Tranh minh họa Hoa Hồng Nhỏ",
+          "en": "Little Rose illustration"
+        },
+        "ratio": "4:3",
+        "illustration": true
+      }
+    },
+    {
+      "id": "cau-han",
+      "built": false,
+      "path": {
+        "vi": "/hoat-dong/co-so/cau-han/",
+        "en": "/en/our-work/centers/cau-han/"
+      },
+      "accent": "cau-han",
+      "name": {
+        "vi": "Dự án Cầu Hàn",
+        "en": "Cau Han Project"
+      },
+      "sinceToken": {
+        "vi": "[năm]",
+        "en": "[year]"
+      },
+      "serves": {
+        "vi": "Trẻ em và gia đình bị ảnh hưởng bởi HIV/AIDS, gia đình di cư và trẻ đã nghỉ học",
+        "en": "Children and families affected by HIV/AIDS, migrant families, and children who left school",
+        "draft": true
+      },
+      "areas": [
+        "education",
+        "family"
+      ],
+      "image": {
+        "code": "B1",
+        "label": {
+          "vi": "Ảnh bìa Cầu Hàn",
+          "en": "Cau Han cover"
+        },
+        "ratio": "4:3"
+      }
+    }
+  ],
+  "programs": [
+    {
+      "id": "thrive-together",
+      "built": true,
+      "path": {
+        "vi": "/hoat-dong/du-an/cung-vuon-len/",
+        "en": "/en/our-work/programs/thrive-together/"
+      },
+      "status": "active",
+      "years": {
+        "vi": "[năm bắt đầu]–[năm kết thúc]",
+        "en": "[start]–[end]"
+      },
+      "name": {
+        "vi": "Chương trình Cùng Vươn Lên",
+        "en": "Thrive Together"
+      },
+      "fullName": {
+        "vi": "Chương trình Cùng Vươn Lên: Nâng cao khả năng phục hồi cho trẻ em có hoàn cảnh khó khăn tại TP.HCM",
+        "en": "Thrive Together: Advancing Child Resilience in Ho Chi Minh City"
+      },
+      "summary": {
+        "vi": "Dự án do CapitaLand Việt Nam tài trợ, giúp trẻ em có hoàn cảnh khó khăn được tiếp cận liên tục với giáo dục, chăm sóc sức khỏe và phát triển kỹ năng.",
+        "en": "A project funded by CapitaLand Vietnam that gives disadvantaged children steady access to education, healthcare and skills development.",
+        "draft": true,
+        "source": "condensed from the current Thrive Together page (VI and EN)"
+      },
+      "partners": [
+        "CapitaLand Vietnam"
+      ],
+      "areas": [
+        "education",
+        "family"
+      ],
+      "centers": [
+        "green-bamboo",
+        "little-rose",
+        "cau-han"
+      ]
+    },
+    {
+      "id": "charity-class",
+      "built": false,
+      "path": {
+        "vi": "/hoat-dong/du-an/lop-hoc-tinh-thuong/",
+        "en": "/en/our-work/programs/charity-class/"
+      },
+      "status": "active",
+      "years": {
+        "vi": "từ [năm]",
+        "en": "since [year]"
+      },
+      "name": {
+        "vi": "Lớp học tình thương",
+        "en": "The Charity Class"
+      },
+      "summary": {
+        "vi": "Lớp học miễn phí các môn cơ bản cho trẻ không thể vào hoặc theo học trường công, tổ chức tại Cầu Hàn và Tre Xanh.",
+        "en": "Free classes in core subjects for children who can't enrol in or stay in public school, run at Cau Han and Green Bamboo.",
+        "draft": true,
+        "source": "condensed from the current Charity Classes page"
+      },
+      "partners": [],
+      "areas": [
+        "education"
+      ],
+      "centers": [
+        "cau-han",
+        "green-bamboo"
+      ]
+    },
+    {
+      "id": "disability-pilot",
+      "built": false,
+      "path": {
+        "vi": "/hoat-dong/du-an/quyen-tre-em-khuyet-tat/",
+        "en": "/en/our-work/programs/disability-rights-pilot/"
+      },
+      "status": "completed",
+      "years": {
+        "vi": "[năm bắt đầu]–[năm kết thúc]",
+        "en": "[start]–[end]"
+      },
+      "name": {
+        "vi": "Dự án thí điểm thúc đẩy quyền trẻ em khuyết tật",
+        "en": "Pilot project promoting the rights of children with disabilities"
+      },
+      "summary": {
+        "vi": "Dự án thí điểm giúp trẻ em khuyết tật và người chăm sóc tiếp cận chính sách và được lắng nghe. Dự án đã kết thúc với hội nghị tổng kết.",
+        "en": "A pilot that helped children with disabilities and their caregivers access policies and be heard. It ended with a closing review conference.",
+        "draft": true,
+        "source": "from 2026 news posts on the current site"
+      },
+      "partners": [],
+      "areas": [
+        "policy",
+        "protection"
+      ],
+      "centers": []
+    }
+  ]
+}

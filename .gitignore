@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.venv/
+.playwright-browsers/
+.tastegate/
+prototype/.site/
+.omc/

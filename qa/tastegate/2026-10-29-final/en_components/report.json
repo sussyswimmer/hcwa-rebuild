@@ -1,0 +1,37 @@
+{
+  "target": "http://localhost:4173/en/components/",
+  "url": "http://localhost:4173/en/components/",
+  "findings": [
+    {
+      "rule": "no_cta_in_first_screen",
+      "severity": "warn",
+      "el": "body \"Skip to main content Prototype for HCWA review. \"",
+      "detail": "no button-like call to action inside the first desktop screen",
+      "viewport": "desktop"
+    },
+    {
+      "rule": "placeholder_copy",
+      "severity": "warn",
+      "el": "body \"Skip to main content Prototype for HCWA review. \"",
+      "detail": "\"example.com\" on the page",
+      "viewport": "desktop"
+    }
+  ],
+  "screenshots": {
+    "mobile": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_components\\mobile.png",
+    "desktop": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_components\\desktop.png"
+  },
+  "console_errors": [
+    {
+      "viewport": "mobile",
+      "error": "e(...).forEach is not a function"
+    },
+    {
+      "viewport": "desktop",
+      "error": "e(...).forEach is not a function"
+    }
+  ],
+  "fail": 0,
+  "warn": 2,
+  "rules_failed": []
+}

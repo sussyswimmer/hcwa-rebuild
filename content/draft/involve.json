@@ -1,0 +1,58 @@
+{
+  "_note": "Ways to help come from the current Support Us page. Gift amounts and every payment detail are placeholders: real ones only ever come from content/verified/donation.json after HCWA finance re-confirms them in writing.",
+  "ways": [
+    {
+      "id": "donate",
+      "art": "A7",
+      "page": "donate",
+      "title": { "vi": "Ủng hộ", "en": "Donate" },
+      "text": { "vi": "Đóng góp một lần hoặc hằng tháng cho học bổng, bữa ăn và chăm sóc sức khỏe của trẻ.", "en": "Give once or monthly towards scholarships, meals and healthcare for children.", "draft": true }
+    },
+    {
+      "id": "volunteer",
+      "art": "A7",
+      "page": "volunteer",
+      "title": { "vi": "Tình nguyện", "en": "Volunteer" },
+      "text": { "vi": "Cùng tổ chức hoạt động với trẻ, hoặc hỗ trợ truyền thông, gây quỹ và quan hệ nhà tài trợ.", "en": "Help run activities with children, or support communications, fundraising and sponsor relations.", "draft": true, "source": "current Support Us page" }
+    },
+    {
+      "id": "partner",
+      "art": "A7",
+      "page": "partner",
+      "title": { "vi": "Hợp tác", "en": "Partner with us" },
+      "text": { "vi": "Doanh nghiệp, trường học và tổ chức có thể tài trợ chương trình, cử nhân viên tình nguyện hoặc cùng tổ chức sự kiện.", "en": "Companies, schools and NGOs can fund a program, send employee volunteers or run an event with us.", "draft": true }
+    },
+    {
+      "id": "in-kind",
+      "art": "A7",
+      "page": "in-kind",
+      "title": { "vi": "Hiện vật và Tiệm bánh Hoa Hồng Nhỏ", "en": "In-kind gifts and the Little Rose Bakery" },
+      "text": { "vi": "Tặng đồ dùng học tập, nhu yếu phẩm, hoặc đặt bánh từ Tiệm bánh Hoa Hồng Nhỏ.", "en": "Give school supplies and everyday items, or order from the Little Rose Bakery.", "draft": true }
+    }
+  ],
+  "giftExamples": [
+    { "amount": { "vi": "[số tiền]", "en": "[amount]" }, "text": { "vi": "giúp một em có học bổng để đến trường", "en": "provides a scholarship so a child can attend school" } },
+    { "amount": { "vi": "[số tiền]", "en": "[amount]" }, "text": { "vi": "chi trả tư vấn, dinh dưỡng và chăm sóc sức khỏe cho một gia đình bị ảnh hưởng bởi HIV/AIDS", "en": "covers counseling, nutrition and healthcare for a family affected by HIV/AIDS" } },
+    { "amount": { "vi": "[số tiền]", "en": "[amount]" }, "text": { "vi": "giúp một em theo học Lớp học tình thương trong một năm", "en": "supports a child's place in the Charity Class for a year" } }
+  ],
+  "bankFields": [
+    { "id": "bank", "label": { "vi": "Ngân hàng", "en": "Bank" }, "copy": false },
+    { "id": "account", "label": { "vi": "Số tài khoản", "en": "Account number" }, "copy": true },
+    { "id": "holder", "label": { "vi": "Chủ tài khoản", "en": "Account holder" }, "copy": false },
+    { "id": "note", "label": { "vi": "Nội dung chuyển khoản", "en": "Transfer note" }, "copy": true, "hint": { "vi": "UNGHO + số điện thoại của bạn, để Hội đối chiếu và gửi biên nhận", "en": "UNGHO + your phone number, so HCWA can match your gift and send a receipt" } }
+  ],
+  "abroadFields": [
+    { "id": "bank", "label": { "vi": "Ngân hàng", "en": "Bank" }, "copy": false },
+    { "id": "swift", "label": { "vi": "Mã SWIFT", "en": "SWIFT code" }, "copy": true },
+    { "id": "account", "label": { "vi": "Số tài khoản (USD/EUR)", "en": "Account number (USD/EUR)" }, "copy": true },
+    { "id": "holder", "label": { "vi": "Chủ tài khoản", "en": "Account holder" }, "copy": false }
+  ],
+  "faq": [
+    { "q": { "vi": "Tôi có thể đến thăm một cơ sở không?", "en": "Can I visit a center?" } },
+    { "q": { "vi": "Hội có gửi biên nhận cho khoản ủng hộ không?", "en": "Do you issue receipts for donations?" } },
+    { "q": { "vi": "Công ty tôi có thể tình nguyện theo nhóm không?", "en": "Can my company volunteer as a team?" } },
+    { "q": { "vi": "Tôi có thể tặng hiện vật gì?", "en": "What in-kind gifts are useful?" } },
+    { "q": { "vi": "Tình nguyện viên cần đáp ứng yêu cầu gì về an toàn trẻ em?", "en": "What child-safety checks do volunteers go through?" } }
+  ],
+  "faqAnswer": { "vi": "[Câu trả lời do HCWA cung cấp]", "en": "[Answer supplied by HCWA]" }
+}

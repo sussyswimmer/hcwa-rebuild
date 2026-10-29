@@ -1,0 +1,415 @@
+{
+  "_note": "Interface strings. Menu labels follow the 07-BILINGUAL glossary (HCWA confirms). Everything else is draft microcopy for native review.",
+  "skip": {
+    "vi": "Bỏ qua, đến nội dung chính",
+    "en": "Skip to main content"
+  },
+  "home": {
+    "vi": "Trang chủ",
+    "en": "Home"
+  },
+  "breadcrumb": {
+    "vi": "Đường dẫn",
+    "en": "Breadcrumb"
+  },
+  "mainNav": {
+    "vi": "Menu chính",
+    "en": "Main menu"
+  },
+  "menu": {
+    "vi": "Menu",
+    "en": "Menu"
+  },
+  "close": {
+    "vi": "Đóng",
+    "en": "Close"
+  },
+  "submenu": {
+    "vi": "Mở mục con: {x}",
+    "en": "Show {x} pages"
+  },
+  "language": {
+    "vi": "Ngôn ngữ",
+    "en": "Language"
+  },
+  "about": {
+    "vi": "Về chúng tôi",
+    "en": "About Us"
+  },
+  "ourWork": {
+    "vi": "Hoạt động",
+    "en": "Our Work"
+  },
+  "impact": {
+    "vi": "Tác động & Báo cáo",
+    "en": "Impact & Reports"
+  },
+  "news": {
+    "vi": "Tin tức",
+    "en": "News"
+  },
+  "getInvolved": {
+    "vi": "Chung tay",
+    "en": "Get Involved"
+  },
+  "contact": {
+    "vi": "Liên hệ",
+    "en": "Contact"
+  },
+  "donate": {
+    "vi": "Ủng hộ",
+    "en": "Donate"
+  },
+  "whoWeAre": {
+    "vi": "Chúng tôi là ai",
+    "en": "Who we are"
+  },
+  "ourStory": {
+    "vi": "Câu chuyện của Hội",
+    "en": "Our story"
+  },
+  "team": {
+    "vi": "Đội ngũ",
+    "en": "Team"
+  },
+  "partners": {
+    "vi": "Đối tác & nhà tài trợ",
+    "en": "Partners & sponsors"
+  },
+  "policies": {
+    "vi": "Chính sách",
+    "en": "Policies"
+  },
+  "centers": {
+    "vi": "Cơ sở trực thuộc",
+    "en": "Centers"
+  },
+  "programs": {
+    "vi": "Dự án & chương trình",
+    "en": "Projects & programs"
+  },
+  "allWork": {
+    "vi": "Tất cả hoạt động",
+    "en": "All work"
+  },
+  "volunteer": {
+    "vi": "Tình nguyện",
+    "en": "Volunteer"
+  },
+  "partnerWithUs": {
+    "vi": "Đối tác / Hợp tác",
+    "en": "Partner with us"
+  },
+  "inKind": {
+    "vi": "Hiện vật",
+    "en": "In-kind gifts"
+  },
+  "bakery": {
+    "vi": "Tiệm bánh Hoa Hồng Nhỏ",
+    "en": "Little Rose Bakery"
+  },
+  "exploreWork": {
+    "vi": "Khám phá hoạt động",
+    "en": "Explore our work"
+  },
+  "seeAll": {
+    "vi": "Xem tất cả",
+    "en": "See all"
+  },
+  "readMore": {
+    "vi": "Đọc thêm",
+    "en": "Read more"
+  },
+  "allNews": {
+    "vi": "Tất cả tin tức",
+    "en": "All news"
+  },
+  "allPrograms": {
+    "vi": "Tất cả dự án",
+    "en": "All projects"
+  },
+  "seeImpact": {
+    "vi": "Xem tác động và báo cáo",
+    "en": "See our impact and reports"
+  },
+  "visitCenter": {
+    "vi": "Xem cơ sở",
+    "en": "Visit center"
+  },
+  "viewProgram": {
+    "vi": "Xem dự án",
+    "en": "View project"
+  },
+  "since": {
+    "vi": "Từ năm",
+    "en": "Since"
+  },
+  "pending": {
+    "vi": "Đang xác minh",
+    "en": "Pending verification"
+  },
+  "status_active": {
+    "vi": "Đang hoạt động",
+    "en": "Active"
+  },
+  "status_completed": {
+    "vi": "Đã hoàn thành",
+    "en": "Completed"
+  },
+  "status_planned": {
+    "vi": "Sắp triển khai",
+    "en": "Planned"
+  },
+  "cat_news": {
+    "vi": "Tin tức",
+    "en": "News"
+  },
+  "cat_story": {
+    "vi": "Câu chuyện",
+    "en": "Story"
+  },
+  "cat_event": {
+    "vi": "Sự kiện",
+    "en": "Event"
+  },
+  "latest": {
+    "vi": "Tin mới từ Hội",
+    "en": "Latest from HCWA"
+  },
+  "namesChanged": {
+    "vi": "Tên nhân vật đã được thay đổi để bảo vệ trẻ.",
+    "en": "Names have been changed to protect the children's privacy."
+  },
+  "becomePartner": {
+    "vi": "Trở thành đối tác",
+    "en": "Become a partner"
+  },
+  "partnerLogo": {
+    "vi": "Logo đối tác",
+    "en": "Partner logo"
+  },
+  "contactUs": {
+    "vi": "Liên hệ với chúng tôi",
+    "en": "Contact us"
+  },
+  "phone": {
+    "vi": "Điện thoại",
+    "en": "Phone"
+  },
+  "email": {
+    "vi": "Email",
+    "en": "Email"
+  },
+  "address": {
+    "vi": "Địa chỉ",
+    "en": "Address"
+  },
+  "openMap": {
+    "vi": "Mở bản đồ",
+    "en": "Open map"
+  },
+  "explore": {
+    "vi": "Khám phá",
+    "en": "Explore"
+  },
+  "trust": {
+    "vi": "Báo cáo & chính sách",
+    "en": "Reports & policies"
+  },
+  "annualReports": {
+    "vi": "Báo cáo thường niên",
+    "en": "Annual reports"
+  },
+  "safeguarding": {
+    "vi": "Chính sách bảo vệ trẻ em",
+    "en": "Child safeguarding policy"
+  },
+  "privacy": {
+    "vi": "Thông báo quyền riêng tư",
+    "en": "Privacy notice"
+  },
+  "followUs": {
+    "vi": "Theo dõi Hội",
+    "en": "Follow HCWA"
+  },
+  "enBar": {
+    "vi": "View this page in English",
+    "en": "View this page in English"
+  },
+  "enBarDismiss": {
+    "vi": "Dismiss",
+    "en": "Dismiss"
+  },
+  "hideAnnouncement": {
+    "vi": "Ẩn thông báo",
+    "en": "Hide announcement"
+  },
+  "prototypeNote": {
+    "vi": "Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.",
+    "en": "Prototype for HCWA review. A dashed outline marks draft text or figures waiting for HCWA approval."
+  },
+  "notInPrototype": {
+    "vi": "Trang này chưa có trong bản mẫu.",
+    "en": "This page isn't part of the prototype yet."
+  },
+  "langNotice": {
+    "vi": "Bài viết này hiện chỉ có bằng tiếng Anh.",
+    "en": "This article is only available in Vietnamese."
+  },
+  "langNoticeRead": {
+    "vi": "Đọc bản tiếng Anh",
+    "en": "Read it in Vietnamese"
+  },
+  "langNoticeHub": {
+    "vi": "Xem tin tức tiếng Việt",
+    "en": "See English news"
+  },
+  "filterArea": {
+    "vi": "Lọc theo lĩnh vực",
+    "en": "Filter by focus area"
+  },
+  "filterStatus": {
+    "vi": "Lọc theo trạng thái",
+    "en": "Filter by status"
+  },
+  "all": {
+    "vi": "Tất cả",
+    "en": "All"
+  },
+  "noResults": {
+    "vi": "Chưa có hoạt động nào trong mục này.",
+    "en": "Nothing in this area yet."
+  },
+  "showAll": {
+    "vi": "Xem tất cả hoạt động",
+    "en": "Show all work"
+  },
+  "copy": {
+    "vi": "Sao chép",
+    "en": "Copy"
+  },
+  "copied": {
+    "vi": "Đã sao chép",
+    "en": "Copied"
+  },
+  "copyFailed": {
+    "vi": "Không sao chép được. Hãy chọn và sao chép thủ công.",
+    "en": "Couldn't copy. Select the text and copy it yourself."
+  },
+  "pendingFinance": {
+    "vi": "Chờ HCWA xác nhận",
+    "en": "Waiting for HCWA finance"
+  },
+  "f_name": {
+    "vi": "Họ và tên",
+    "en": "Name"
+  },
+  "f_email": {
+    "vi": "Email",
+    "en": "Email"
+  },
+  "f_phone": {
+    "vi": "Số điện thoại (không bắt buộc)",
+    "en": "Phone (optional)"
+  },
+  "f_topic": {
+    "vi": "Chủ đề",
+    "en": "Topic"
+  },
+  "f_topicChoose": {
+    "vi": "Chọn chủ đề",
+    "en": "Choose a topic"
+  },
+  "topic_donate": {
+    "vi": "Ủng hộ",
+    "en": "Donating"
+  },
+  "topic_partner": {
+    "vi": "Hợp tác",
+    "en": "Partnering"
+  },
+  "topic_volunteer": {
+    "vi": "Tình nguyện",
+    "en": "Volunteering"
+  },
+  "topic_media": {
+    "vi": "Báo chí",
+    "en": "Media"
+  },
+  "topic_other": {
+    "vi": "Khác",
+    "en": "Other"
+  },
+  "f_message": {
+    "vi": "Lời nhắn",
+    "en": "Message"
+  },
+  "f_emailHelp": {
+    "vi": "Hội trả lời qua địa chỉ này.",
+    "en": "HCWA replies to this address."
+  },
+  "f_consent": {
+    "vi": "Tôi đồng ý để HCWA dùng các thông tin này để trả lời tôi.",
+    "en": "I agree that HCWA may use these details to reply to me."
+  },
+  "f_send": {
+    "vi": "Gửi",
+    "en": "Send"
+  },
+  "f_sending": {
+    "vi": "Đang gửi…",
+    "en": "Sending…"
+  },
+  "e_summary": {
+    "vi": "Vui lòng sửa các mục sau trước khi gửi:",
+    "en": "Fix these before sending:"
+  },
+  "e_name": {
+    "vi": "Nhập họ và tên của bạn.",
+    "en": "Enter your name."
+  },
+  "e_email": {
+    "vi": "Nhập email đúng dạng, ví dụ ten@example.com.",
+    "en": "Enter an email in the format name@example.com."
+  },
+  "e_topic": {
+    "vi": "Chọn một chủ đề.",
+    "en": "Choose a topic."
+  },
+  "e_message": {
+    "vi": "Nhập lời nhắn của bạn.",
+    "en": "Enter your message."
+  },
+  "e_consent": {
+    "vi": "Đánh dấu ô đồng ý để Hội có thể trả lời bạn.",
+    "en": "Tick the box so HCWA can reply to you."
+  },
+  "f_sent": {
+    "vi": "Đã gửi lời nhắn. Hội sẽ trả lời qua email.",
+    "en": "Message sent. HCWA will reply by email."
+  },
+  "f_prototypeSent": {
+    "vi": "Bản mẫu: chưa có gì được gửi đi.",
+    "en": "Prototype: nothing was actually sent."
+  },
+  "nf_title": {
+    "vi": "Không tìm thấy trang",
+    "en": "Page not found"
+  },
+  "nf_text": {
+    "vi": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi.",
+    "en": "The page you're looking for doesn't exist or has moved."
+  },
+  "nf_search": {
+    "vi": "Tìm trên trang web",
+    "en": "Search this site"
+  },
+  "nf_searchBtn": {
+    "vi": "Tìm",
+    "en": "Search"
+  },
+  "prototypeNoteShort": {
+    "vi": "Bản mẫu. Khung nét đứt: nội dung chờ HCWA duyệt.",
+    "en": "Prototype. Dashed outline: waiting for HCWA approval."
+  }
+}

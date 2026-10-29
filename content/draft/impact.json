@@ -1,0 +1,79 @@
+{
+  "_note": "Every figure is unverified (verified: false). Values stay null and show as tokens until HCWA confirms them and moves them to content/verified/. PROD=1 never renders an unverified figure.",
+  "figures": [
+    {
+      "id": "children-supported",
+      "scope": "organization",
+      "value": null,
+      "token": "[N]",
+      "suffix": "+",
+      "label": { "vi": "trẻ em và thanh thiếu niên được hỗ trợ từ năm [năm]", "en": "children and young people supported since [year]", "draft": true },
+      "year": null,
+      "verified": false,
+      "source": "current site says 300,000+ (EN) and 300.000 (VI); not verified, so not shown"
+    },
+    {
+      "id": "centers",
+      "scope": "organization",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "cơ sở tại TP. Hồ Chí Minh", "en": "centers in Ho Chi Minh City", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "children-this-year",
+      "scope": "organization",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "trẻ em được hỗ trợ trong năm [năm]", "en": "children supported in [year]", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "partners",
+      "scope": "organization",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "đối tác đồng hành trong năm [năm]", "en": "partners in [year]", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "gb-children",
+      "scope": "green-bamboo",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "trẻ em tham gia lớp học và câu lạc bộ trong năm [năm]", "en": "children in classes and clubs in [year]", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "gb-families",
+      "scope": "green-bamboo",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "gia đình được tư vấn trong năm [năm]", "en": "families counseled in [year]", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "tt-children",
+      "scope": "thrive-together",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "trẻ em được hỗ trợ qua chương trình", "en": "children supported through the program", "draft": true },
+      "year": null,
+      "verified": false
+    },
+    {
+      "id": "tt-trained",
+      "scope": "thrive-together",
+      "value": null,
+      "token": "[N]",
+      "label": { "vi": "phụ huynh, nhân viên và cộng tác viên được tập huấn", "en": "parents, staff and collaborators trained", "draft": true },
+      "year": null,
+      "verified": false
+    }
+  ]
+}

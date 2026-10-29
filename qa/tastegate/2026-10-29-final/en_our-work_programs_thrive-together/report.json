@@ -1,0 +1,30 @@
+{
+  "target": "http://localhost:4173/en/our-work/programs/thrive-together/",
+  "url": "http://localhost:4173/en/our-work/programs/thrive-together/",
+  "findings": [
+    {
+      "rule": "no_cta_in_first_screen",
+      "severity": "warn",
+      "el": "body \"Skip to main content Prototype for HCWA review. \"",
+      "detail": "no button-like call to action inside the first desktop screen",
+      "viewport": "desktop"
+    }
+  ],
+  "screenshots": {
+    "mobile": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_our-work_programs_thrive-together\\mobile.png",
+    "desktop": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\en_our-work_programs_thrive-together\\desktop.png"
+  },
+  "console_errors": [
+    {
+      "viewport": "mobile",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    },
+    {
+      "viewport": "desktop",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    }
+  ],
+  "fail": 0,
+  "warn": 1,
+  "rules_failed": []
+}

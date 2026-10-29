@@ -1,0 +1,7 @@
+WARN  no_cta_in_first_screen  [desktop]  x1
+      body "Bỏ qua, đến nội dung chính Bản mẫu để HCWA góp ý": no button-like call to action inside the first desktop screen
+WARN  placeholder_copy  [desktop]  x1
+      body "Bỏ qua, đến nội dung chính Bản mẫu để HCWA góp ý": "example.com" on the page
+NOTE  console error [mobile]: e(...).forEach is not a function
+NOTE  console error [desktop]: e(...).forEach is not a function
+tastegate PASS: 0 fail, 2 warn. Screenshots: C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\components\mobile.png, C:\Users\maxwe\hcwa-rebuild\qa\tastegate\2026-10-29-final\components\desktop.png

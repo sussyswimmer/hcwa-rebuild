@@ -1,0 +1,69 @@
+{
+  "_note": "Draft content for the Phase 1 prototype. Any field with \"draft\": true renders with data-draft and a dashed outline, and fails a PROD=1 build. \"source\" notes where text came from; it never renders.",
+  "orgName": { "vi": "Hội Bảo trợ Trẻ em TP. Hồ Chí Minh", "en": "Ho Chi Minh City Child Welfare Association" },
+  "shortName": { "vi": "Hội Bảo trợ Trẻ em TP.HCM", "en": "HCWA" },
+  "logoLines": {
+    "vi": ["Hội Bảo trợ Trẻ em", "TP. Hồ Chí Minh"],
+    "en": ["HCMC Child Welfare", "Association"]
+  },
+  "description": {
+    "vi": "Tổ chức xã hội tự nguyện, phi lợi nhuận, chăm sóc, bảo vệ và giáo dục trẻ em có hoàn cảnh khó khăn tại TP. Hồ Chí Minh.",
+    "en": "A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.",
+    "draft": true,
+    "source": "condensed from the current About page (VI and EN)"
+  },
+  "registration": {
+    "vi": "[DRAFT: tư cách pháp lý / số quyết định thành lập]",
+    "en": "[DRAFT: legal status / decision number]",
+    "draft": true
+  },
+  "address": {
+    "vi": "85/65 Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP. Hồ Chí Minh",
+    "en": "85/65 Pham Viet Chanh Street, Thanh My Tay Ward, Ho Chi Minh City",
+    "draft": true,
+    "source": "post-2025 form used on the current Thrive Together page; HCWA to verify (01-AUDIT: three forms in use)"
+  },
+  "phone": { "display": "+84 28 3840 1406", "tel": "+842838401406", "draft": true, "source": "current site, one format per 06-PAGES" },
+  "email": { "general": "hcwa.vn@gmail.com", "sponsorship": "sponsorshiprelations@hcwa.org.vn", "draft": true, "source": "current Support Us page" },
+  "facebook": "https://www.facebook.com/hcwa.org.vn",
+  "mapUrl": "https://www.google.com/maps/search/?api=1&query=85%2F65+Ph%E1%BA%A1m+Vi%E1%BA%BFt+Ch%C3%A1nh%2C+TP.+H%E1%BB%93+Ch%C3%AD+Minh",
+  "hero": {
+    "eyebrow": {
+      "vi": "Hội Bảo trợ Trẻ em TP. Hồ Chí Minh · từ năm [năm]",
+      "en": "Ho Chi Minh City Child Welfare Association · since [year]",
+      "draft": true
+    },
+    "title": {
+      "vi": "Cùng trẻ em xây dựng tương lai an toàn và tươi sáng hơn.",
+      "en": "Helping children build safer, brighter futures.",
+      "draft": true,
+      "source": "EN is HCWA's own example from the brief; VI is a draft translation"
+    },
+    "intro": {
+      "vi": "Hội hỗ trợ trẻ em, thanh thiếu niên và gia đình qua giáo dục, bảo vệ trẻ em và các chương trình dựa vào cộng đồng.",
+      "en": "HCWA supports children, young people and families through education, child protection and community-based programs.",
+      "draft": true,
+      "source": "EN from 06-PAGES (HCWA brief example); VI is a draft translation"
+    },
+    "image": { "code": "A2", "label": { "vi": "Ảnh chính trang chủ", "en": "Homepage hero" }, "ratio": "4:5", "mobileRatio": "3:2" }
+  },
+  "whatWeDo": {
+    "title": { "vi": "Chúng tôi làm gì", "en": "What we do" },
+    "summary": {
+      "vi": "Hội chăm sóc, bảo vệ và giáo dục trẻ em có nguy cơ phải lao động sớm, bị xâm hại, bỏ học hoặc bị ảnh hưởng bởi HIV/AIDS. Chúng tôi làm việc cùng gia đình, cộng đồng, chính quyền và các tổ chức đối tác.",
+      "en": "We care for, protect and educate children at risk of early work, abuse, dropping out of school or the effects of HIV/AIDS. We work with families, communities, local government and partner organizations.",
+      "draft": true,
+      "source": "condensed from 'Main activities' on the current About page"
+    }
+  },
+  "centersIntro": {
+    "vi": "Nơi trẻ em được học, được chữa lành và lớn lên, mỗi ngày.",
+    "en": "Places where children learn, heal and grow, every day.",
+    "draft": true
+  },
+  "helpTitle": { "vi": "Bạn có thể giúp như thế nào", "en": "How you can help" },
+  "partnersTitle": { "vi": "Cảm ơn các đối tác đã đồng hành", "en": "With thanks to our partners" },
+  "contactBand": {
+    "title": { "vi": "Bạn có câu hỏi hoặc muốn đến thăm?", "en": "Have a question or want to visit?" }
+  }
+}

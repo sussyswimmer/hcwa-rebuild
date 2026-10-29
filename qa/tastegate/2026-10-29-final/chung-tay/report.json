@@ -1,0 +1,30 @@
+{
+  "target": "http://localhost:4173/chung-tay/",
+  "url": "http://localhost:4173/chung-tay/",
+  "findings": [
+    {
+      "rule": "no_cta_in_first_screen",
+      "severity": "warn",
+      "el": "body \"B\u1ecf qua, \u0111\u1ebfn n\u1ed9i dung ch\u00ednh B\u1ea3n m\u1eabu \u0111\u1ec3 HCWA g\u00f3p \u00fd\"",
+      "detail": "no button-like call to action inside the first desktop screen",
+      "viewport": "desktop"
+    }
+  ],
+  "screenshots": {
+    "mobile": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\chung-tay\\mobile.png",
+    "desktop": "C:\\Users\\maxwe\\hcwa-rebuild\\qa\\tastegate\\2026-10-29-final\\chung-tay\\desktop.png"
+  },
+  "console_errors": [
+    {
+      "viewport": "mobile",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    },
+    {
+      "viewport": "desktop",
+      "error": "Cannot read properties of null (reading 'forEach')"
+    }
+  ],
+  "fail": 0,
+  "warn": 1,
+  "rules_failed": []
+}
