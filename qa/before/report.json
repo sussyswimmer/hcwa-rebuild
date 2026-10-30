@@ -1,0 +1,934 @@
+{
+  "base": "https://hcwa.org.vn",
+  "viewports": {
+    "mobile": [
+      390,
+      844
+    ],
+    "desktop": [
+      1440,
+      900
+    ]
+  },
+  "pages": {
+    "home-en": {
+      "url": "https://hcwa.org.vn/",
+      "mobile": {
+        "pageHeight": 4404,
+        "sidewaysScroll": 75,
+        "overflowElements": [
+          {
+            "sel": "div.elementor-widget-container",
+            "right": 465
+          },
+          {
+            "sel": "div.elementor-shortcode",
+            "right": 465
+          },
+          {
+            "sel": "div.wpedon-container.wpedon-align-left",
+            "right": 465
+          },
+          {
+            "sel": "form.wpedon-form",
+            "right": 465
+          },
+          {
+            "sel": "path.elementor-shape-fill",
+            "right": 999
+          }
+        ],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Skip to content"
+        ],
+        "paragraphStyles": {
+          "16px / lh 27.2px": 3
+        },
+        "tapTargets": 22,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 12,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "HELPING others by giving"
+        ],
+        "firstScreenButtons": [
+          "Navigation Menu",
+          "[image]"
+        ],
+        "images": 32,
+        "imagesNoAlt": 17,
+        "scripts": 27,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/",
+        "redactedLines": 2,
+        "menuToggleFound": true,
+        "visibleMenuLinks": [
+          "About Us",
+          "Who We Are",
+          "Our Team",
+          "Our Sponsors",
+          "Projects",
+          "Green Bamboo Centre",
+          "Little Rose Warm Shelter",
+          "Cau Han Project",
+          "Thrive Together Project",
+          "News",
+          "Support Us",
+          "Contact Us",
+          "English",
+          "Tiếng Việt"
+        ],
+        "languageSwitchVisible": true
+      },
+      "desktop": {
+        "pageHeight": 2803,
+        "sidewaysScroll": 416,
+        "overflowElements": [
+          {
+            "sel": "div.elementor-widget-container",
+            "right": 1856
+          },
+          {
+            "sel": "div.elementor-shortcode",
+            "right": 1856
+          },
+          {
+            "sel": "div.wpedon-container.wpedon-align-left",
+            "right": 1856
+          },
+          {
+            "sel": "form.wpedon-form",
+            "right": 1856
+          }
+        ],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "16px / lh 27.2px": 2,
+          "16px / lh 32.256px": 1
+        },
+        "tapTargets": 36,
+        "tapTargetsUnder24px": 4,
+        "tapTargetsUnder44px": 20,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "HELPING others by giving"
+        ],
+        "firstScreenButtons": [
+          "[image]",
+          "[image]"
+        ],
+        "images": 32,
+        "imagesNoAlt": 17,
+        "scripts": 27,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/",
+        "redactedLines": 2
+      }
+    },
+    "about-en": {
+      "url": "https://hcwa.org.vn/about-us/",
+      "mobile": {
+        "pageHeight": 3835,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Skip to content"
+        ],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 6,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 6,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "Who we are"
+        ],
+        "firstScreenButtons": [
+          "Navigation Menu"
+        ],
+        "images": 27,
+        "imagesNoAlt": 12,
+        "scripts": 27,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/about-us/",
+        "redactedLines": 6
+      },
+      "desktop": {
+        "pageHeight": 3629,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "20.8px / lh 37.44px": 2,
+          "22.176px / lh 37.6992px": 4,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 15,
+        "tapTargetsUnder24px": 4,
+        "tapTargetsUnder44px": 14,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "Who we are"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 27,
+        "imagesNoAlt": 12,
+        "scripts": 27,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/about-us/",
+        "redactedLines": 6
+      }
+    },
+    "green-bamboo-en": {
+      "url": "https://hcwa.org.vn/gbws/",
+      "mobile": {
+        "pageHeight": 3724,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Skip to content"
+        ],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 6,
+          "12.8px / lh 17.92px": 1,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 6,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "green bamboo social protection center",
+          "Past:",
+          "Present:",
+          "Future:"
+        ],
+        "firstScreenButtons": [
+          "Navigation Menu"
+        ],
+        "images": 16,
+        "imagesNoAlt": 13,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/gbws/",
+        "redactedLines": 11
+      },
+      "desktop": {
+        "pageHeight": 2899,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "22.4px / lh 38.08px": 1,
+          "17.6px / lh 29.92px": 5,
+          "17.6px / lh 24.64px": 1,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 15,
+        "tapTargetsUnder24px": 4,
+        "tapTargetsUnder44px": 14,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "green bamboo social protection center",
+          "Past:",
+          "Present:",
+          "Future:"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 16,
+        "imagesNoAlt": 13,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/gbws/",
+        "redactedLines": 11
+      }
+    },
+    "thrive-together-en": {
+      "url": "https://hcwa.org.vn/dva-child-abuse-prevention-project/",
+      "mobile": {
+        "pageHeight": 3035,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Skip to content"
+        ],
+        "paragraphStyles": {
+          "20.8px / lh 31.2px": 1,
+          "17.6px / lh 29.92px": 4,
+          "17.6px / lh 75.68px": 1,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 6,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "Thrive Together: Advancing Child Resilience in Ho Chi Minh City"
+        ],
+        "firstScreenButtons": [
+          "Navigation Menu"
+        ],
+        "images": 16,
+        "imagesNoAlt": 13,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/dva-child-abuse-prevention-project/",
+        "redactedLines": 8
+      },
+      "desktop": {
+        "pageHeight": 1964,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "24px / lh 40.8px": 1,
+          "17.6px / lh 29.92px": 4,
+          "17.6px / lh 32.256px": 1,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 15,
+        "tapTargetsUnder24px": 4,
+        "tapTargetsUnder44px": 14,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [
+          "Thrive Together: Advancing Child Resilience in Ho Chi Minh City"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 16,
+        "imagesNoAlt": 13,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/dva-child-abuse-prevention-project/",
+        "redactedLines": 8
+      }
+    },
+    "support-en": {
+      "url": "https://hcwa.org.vn/support-us/",
+      "mobile": {
+        "pageHeight": 3854,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Skip to content"
+        ],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 5,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 7,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [],
+        "firstScreenButtons": [
+          "Navigation Menu"
+        ],
+        "images": 14,
+        "imagesNoAlt": 11,
+        "scripts": 26,
+        "stylesheets": 26,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/support-us/",
+        "redactedLines": 20
+      },
+      "desktop": {
+        "pageHeight": 3315,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "16px / lh 32.256px": 1,
+          "17.6px / lh 29.92px": 4,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 16,
+        "tapTargetsUnder24px": 4,
+        "tapTargetsUnder44px": 14,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [],
+        "uppercaseVietnameseCount": 0,
+        "h1": [],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 14,
+        "imagesNoAlt": 11,
+        "scripts": 26,
+        "stylesheets": 26,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/support-us/",
+        "redactedLines": 20
+      }
+    },
+    "home-vi": {
+      "url": "https://hcwa.org.vn/hoi-bao-tro-tre-em/",
+      "mobile": {
+        "pageHeight": 8573,
+        "sidewaysScroll": 66,
+        "overflowElements": [
+          {
+            "sel": "path.elementor-shape-fill",
+            "right": 999
+          },
+          {
+            "sel": "div.elementor-element.elementor-absolute",
+            "right": 456
+          },
+          {
+            "sel": "div.elementor-widget-container",
+            "right": 456
+          },
+          {
+            "sel": "div.elementor-shortcode",
+            "right": 456
+          },
+          {
+            "sel": "div.wpedon-container.wpedon-align-left",
+            "right": 456
+          },
+          {
+            "sel": "form.wpedon-form",
+            "right": 456
+          },
+          {
+            "sel": "img.img-responsive.wp-post-image",
+            "right": 439
+          }
+        ],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Chuyển tới nội dung"
+        ],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 8,
+          "17.6px / lh 28.16px": 2,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 24,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 15,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Hội Bảo trợ trẻ em thành phố Hồ Chí Minh",
+          "Giúp đỡ người khác bằng cách cho ĐI",
+          "Tìm hiểu thêm về CHÚNG TÔI",
+          "các dự án của hội bảo trợ trẻ em Tp. hcm",
+          "Cơ sở bảo trợ xã hội tre xanh",
+          "tìm hiểu thêm . .",
+          "DỰ ÁN CẦU HÀN",
+          "MÁI ẤM HOA HỒNG NHỎ"
+        ],
+        "uppercaseVietnameseCount": 15,
+        "h1": [
+          "Hội Bảo trợ trẻ em thành phố Hồ Chí Minh"
+        ],
+        "firstScreenButtons": [
+          "Menu",
+          "Tìm hiểu thêm về CHÚNG TÔI"
+        ],
+        "images": 26,
+        "imagesNoAlt": 10,
+        "scripts": 28,
+        "stylesheets": 30,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/hoi-bao-tro-tre-em/",
+        "redactedLines": 9,
+        "menuToggleFound": true,
+        "visibleMenuLinks": [
+          "VỀ CHÚNG TÔI",
+          "CHÚNG TÔI LÀ AI",
+          "ĐỘI NGŨ",
+          "NHÀ TÀI TRỢ",
+          "DỰ ÁN",
+          "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH",
+          "MÁI ẤM HOA HỒNG NHỎ",
+          "DỰ ÁN CẦU HÀN",
+          "CHƯƠNG TRÌNH CÙNG VƯƠN LÊN",
+          "TIN MỚI",
+          "LIÊN HỆ"
+        ],
+        "languageSwitchVisible": true
+      },
+      "desktop": {
+        "pageHeight": 4670,
+        "sidewaysScroll": 431,
+        "overflowElements": [
+          {
+            "sel": "div.elementor-element.elementor-absolute",
+            "right": 1871
+          },
+          {
+            "sel": "div.elementor-widget-container",
+            "right": 1871
+          },
+          {
+            "sel": "div.elementor-shortcode",
+            "right": 1871
+          },
+          {
+            "sel": "div.wpedon-container.wpedon-align-left",
+            "right": 1871
+          },
+          {
+            "sel": "form.wpedon-form",
+            "right": 1871
+          }
+        ],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 6,
+          "20.8px / lh 35.36px": 1,
+          "17.6px / lh 28.16px": 3,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 31,
+        "tapTargetsUnder24px": 5,
+        "tapTargetsUnder44px": 16,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret",
+          "a"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Hội Bảo trợ trẻ em thành phố Hồ Chí Minh",
+          "Giúp đỡ người khác bằng cách cho ĐI",
+          "Tìm hiểu thêm về CHÚNG TÔI",
+          "các dự án của hội bảo trợ trẻ em Tp. hcm",
+          "Cơ sở bảo trợ xã hội tre xanh",
+          "tìm hiểu thêm . .",
+          "DỰ ÁN CẦU HÀN",
+          "MÁI ẤM HOA HỒNG NHỎ"
+        ],
+        "uppercaseVietnameseCount": 15,
+        "h1": [
+          "Hội Bảo trợ trẻ em thành phố Hồ Chí Minh"
+        ],
+        "firstScreenButtons": [
+          "[image]",
+          "Tìm hiểu thêm về CHÚNG TÔI"
+        ],
+        "images": 26,
+        "imagesNoAlt": 10,
+        "scripts": 28,
+        "stylesheets": 30,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/hoi-bao-tro-tre-em/",
+        "redactedLines": 9
+      }
+    },
+    "about-vi": {
+      "url": "https://hcwa.org.vn/ve-chung-toi/",
+      "mobile": {
+        "pageHeight": 4730,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Chuyển tới nội dung"
+        ],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 8,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 12,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 10,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "về chúng tôi",
+          "Giới thiệu chung",
+          "Giá trị",
+          "Tôn chí mục đích",
+          "Tầm nhìn",
+          "Sứ mạng",
+          "Các hoạt động chính"
+        ],
+        "uppercaseVietnameseCount": 7,
+        "h1": [
+          "Giới thiệu chung"
+        ],
+        "firstScreenButtons": [
+          "Menu"
+        ],
+        "images": 27,
+        "imagesNoAlt": 6,
+        "scripts": 28,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/ve-chung-toi/",
+        "redactedLines": 8
+      },
+      "desktop": {
+        "pageHeight": 3931,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "17.6px / lh 29.92px": 8,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 19,
+        "tapTargetsUnder24px": 5,
+        "tapTargetsUnder44px": 12,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret",
+          "a"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "về chúng tôi",
+          "Giới thiệu chung",
+          "Giá trị",
+          "Tôn chí mục đích",
+          "Tầm nhìn",
+          "Sứ mạng",
+          "Các hoạt động chính"
+        ],
+        "uppercaseVietnameseCount": 7,
+        "h1": [
+          "Giới thiệu chung"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 27,
+        "imagesNoAlt": 6,
+        "scripts": 28,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/ve-chung-toi/",
+        "redactedLines": 8
+      }
+    },
+    "green-bamboo-vi": {
+      "url": "https://hcwa.org.vn/mai-am-tre-xanh/",
+      "mobile": {
+        "pageHeight": 4571,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Chuyển tới nội dung"
+        ],
+        "paragraphStyles": {
+          "20.8px / lh 35.36px": 1,
+          "17.6px / lh 29.92px": 8,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 6,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH",
+          "Câu chuyện của chúng tôi",
+          "mục tiêu"
+        ],
+        "uppercaseVietnameseCount": 3,
+        "h1": [
+          "GBWS",
+          "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH"
+        ],
+        "firstScreenButtons": [
+          "Menu"
+        ],
+        "images": 18,
+        "imagesNoAlt": 9,
+        "scripts": 27,
+        "stylesheets": 30,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/mai-am-tre-xanh/",
+        "redactedLines": 10
+      },
+      "desktop": {
+        "pageHeight": 3302,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "20.8px / lh 35.36px": 1,
+          "17.6px / lh 28.16px": 6,
+          "17.6px / lh 29.92px": 2,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 13,
+        "tapTargetsUnder24px": 5,
+        "tapTargetsUnder44px": 12,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret",
+          "a"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH",
+          "Câu chuyện của chúng tôi",
+          "mục tiêu"
+        ],
+        "uppercaseVietnameseCount": 3,
+        "h1": [
+          "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 18,
+        "imagesNoAlt": 9,
+        "scripts": 27,
+        "stylesheets": 30,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/mai-am-tre-xanh/",
+        "redactedLines": 10
+      }
+    },
+    "thrive-together-vi": {
+      "url": "https://hcwa.org.vn/dva2/",
+      "mobile": {
+        "pageHeight": 4085,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Chuyển tới nội dung"
+        ],
+        "paragraphStyles": {
+          "20.8px / lh 35.36px": 1,
+          "17.6px / lh 29.92px": 5,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 6,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 6,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Chương trình cùng vươn lên: Nâng cao khả năng phục hồi cho t",
+          "Câu chuyện của chúng tôi"
+        ],
+        "uppercaseVietnameseCount": 2,
+        "h1": [
+          "Chương trình cùng vươn lên: Nâng cao khả năng phục hồi cho trẻ em có hoàn cảnh k"
+        ],
+        "firstScreenButtons": [
+          "Menu"
+        ],
+        "images": 16,
+        "imagesNoAlt": 7,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/dva2/",
+        "redactedLines": 8
+      },
+      "desktop": {
+        "pageHeight": 2268,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "20.8px / lh 35.36px": 1,
+          "17.6px / lh 29.92px": 5,
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 13,
+        "tapTargetsUnder24px": 5,
+        "tapTargetsUnder44px": 12,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret",
+          "a"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Chương trình cùng vươn lên: Nâng cao khả năng phục hồi cho t",
+          "Câu chuyện của chúng tôi"
+        ],
+        "uppercaseVietnameseCount": 2,
+        "h1": [
+          "Chương trình cùng vươn lên: Nâng cao khả năng phục hồi cho trẻ em có hoàn cảnh k"
+        ],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 16,
+        "imagesNoAlt": 7,
+        "scripts": 26,
+        "stylesheets": 28,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/dva2/",
+        "redactedLines": 8
+      }
+    },
+    "contact-vi": {
+      "url": "https://hcwa.org.vn/lien-he/",
+      "mobile": {
+        "pageHeight": 2309,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 1,
+        "smallTextSamples": [
+          "5.46px: Chuyển tới nội dung"
+        ],
+        "paragraphStyles": {
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 11,
+        "tapTargetsUnder24px": 1,
+        "tapTargetsUnder44px": 10,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Hội Bảo trợ trẻ em TP.HCM",
+          "Thông tin liên hệ tài trợ:",
+          "Thông tin chuyển khoản ngân hàng:"
+        ],
+        "uppercaseVietnameseCount": 3,
+        "h1": [],
+        "firstScreenButtons": [
+          "Menu"
+        ],
+        "images": 15,
+        "imagesNoAlt": 6,
+        "scripts": 27,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/lien-he/",
+        "redactedLines": 18
+      },
+      "desktop": {
+        "pageHeight": 1751,
+        "sidewaysScroll": 0,
+        "overflowElements": [],
+        "textUnder12px": 0,
+        "smallTextSamples": [],
+        "paragraphStyles": {
+          "14.4px / lh 19.2px": 2
+        },
+        "tapTargets": 18,
+        "tapTargetsUnder24px": 5,
+        "tapTargetsUnder44px": 12,
+        "tinyTapSamples": [
+          "a.neve-skip-link.show-on-focus",
+          "div.caret-wrap.caret",
+          "a"
+        ],
+        "fixedOrSticky": [],
+        "uppercaseVietnamese": [
+          "Hội Bảo trợ trẻ em TP.HCM",
+          "Thông tin liên hệ tài trợ:",
+          "Thông tin chuyển khoản ngân hàng:"
+        ],
+        "uppercaseVietnameseCount": 3,
+        "h1": [],
+        "firstScreenButtons": [
+          "[image]"
+        ],
+        "images": 15,
+        "imagesNoAlt": 6,
+        "scripts": 27,
+        "stylesheets": 27,
+        "status": 200,
+        "finalUrl": "https://hcwa.org.vn/lien-he/",
+        "redactedLines": 18
+      }
+    }
+  }
+}

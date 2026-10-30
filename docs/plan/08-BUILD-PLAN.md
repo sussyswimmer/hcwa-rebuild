@@ -38,6 +38,10 @@ Everything here needs HCWA admin access and HCWA's OK per item. Take a full back
 | 0.8 | Alt text on homepage images (VI and EN). | 0 images without alt on home |
 | 0.9 | Little Rose EN page: replace the 2021-2022 / Covid appeal with HCWA-approved current text. | No outdated years |
 | 0.10 | Update WordPress plugins and Elementor on a backup-first basis. | Up to date, site still renders |
+| 0.11 | Remove the Easy PayPal Donation shortcode from both homepages and the PayPal image from the header; link to Support Us instead. It is what makes both homepages scroll sideways (found in 0.1). | `scripts/live-audit.py` shows no sideways scroll at 390 and 1440 |
+| 0.12 | Fix the broken internal links found in 0.2: `/gwbs-gallery/`, the `_wp_link_placeholder` link on `/cho-mot-ngay-moi/`, and `/chp/` (redirects to a JPG). | Re-run of `scripts/url-inventory.py` shows 0 internal 404s |
+| 0.13 | Turn off author archives in Yoast so login names are not public; old author URLs redirect to the homepage. | `/author/…` URLs return 301 |
+| 0.14 | Hide the floating social icon bar on phones; it covers the contact form. | Form fields clear at 390px |
 
 ---
 

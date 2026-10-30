@@ -5,3 +5,4 @@ dist/
 .tastegate/
 prototype/.site/
 .omc/
+__pycache__/

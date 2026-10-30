@@ -1,7 +1,8 @@
 # Audit of the current site (hcwa.org.vn)
 
-Reviewed 29 Oct 2026 in a desktop browser plus page-by-page HTML reads. Mobile layout was
-not checked in a real phone viewport yet; that is task 0.1 in `08-BUILD-PLAN.md`.
+Reviewed 29 Oct 2026 in a desktop browser plus page-by-page HTML reads. On 30 Oct 2026,
+10 main pages were measured at phone and desktop size (task 0.1, "Mobile audit" below) and
+every public URL was inventoried (task 0.2, "URL inventory" below).
 
 ## What they have today
 
@@ -104,6 +105,97 @@ The VI homepage adds a Vision block, the 3 latest news posts and a contact form.
 - A floating social icon bar sits over the content on every page.
 - PayPal tracking pixels load on every page from the donation plugin.
 - Elementor 3.21.4 dates from 2024; plugin updates are behind.
+
+## Mobile audit (task 0.1, 30 Oct 2026)
+
+`scripts/live-audit.py` rendered 10 pages at 390×844 (iPhone user agent, touch) and
+1440×900: home, About, Green Bamboo, Thrive Together, and Support Us (EN) / Liên hệ (VI),
+in both languages. Full-page screenshots are in `qa/before/`, measurements in
+`qa/before/report.json`. Photos are blurred and bank details greyed out in the screenshots
+because this repository is public (see `qa/before/README.md`). Little Rose was left out on
+purpose. This is a phone-sized browser, not a real handset; check the worst items on a real
+phone before reporting them to HCWA.
+
+Worst first:
+
+1. **Both homepages scroll sideways, on phones and on desktop.** The Easy PayPal Donation
+   form (`form.wpedon-form` inside an Elementor shortcode) is wider than the screen: 75px
+   too wide on the EN home and 66px on the VI home at 390px, and 416px / 431px too wide at
+   1440px. On a phone the whole page can be dragged sideways. The EN hero title also
+   breaks out of the screen ("ASSOCIATION" is wider than 390px at that size). The inner
+   pages measured have no sideways scroll.
+2. **Nearly every tap target on a phone is under 44px** (the bar in `09-QA-CHECKLIST.md`):
+   83 of 106 links and buttons across the 10 pages, and all 6 on most inner pages.
+3. **The EN homepage has no button in the first phone screen.** The first 844px is the name
+   in five lines of capitals, the tagline and a seven-line paragraph; the only button (the
+   PayPal image) starts below it. The VI home does show "Tìm hiểu thêm về CHÚNG TÔI".
+4. **The floating social bar covers content.** On a phone it sits on top of the Liên hệ
+   form fields; on desktop it overlaps the right edge of the page content.
+5. **Phone menu.** It opens as a full-height side panel and works, with every sub-item
+   already expanded (11 links in VI, 14 in EN). The EN menu ends with "English" and
+   "Tiếng Việt" plus flags; the VI menu shows flags only, no words. Every VI item is typed
+   in capitals with wide letter-spacing, and "CƠ SỞ BẢO TRỢ XÃ HỘI TRE XANH" runs into its
+   arrow. The VI menu ends with an English "Donate with PayPal" button and has no Ủng hộ
+   item. The same PayPal image sits in the header of every page in both languages.
+6. **ALL CAPS Vietnamese on every VI page measured**, set by CSS: 15 elements on the home
+   page, 7 on About, 3 on Green Bamboo, 2 on Thrive Together, 3 on Liên hệ, on top of the
+   menu items typed in capitals.
+7. **Headings.** The EN home's only H1 is the tagline "Helping others by giving". Support Us
+   and Liên hệ have no H1. Green Bamboo (EN) has four H1s ("Past:", "Present:", "Future:").
+8. **Alt text is missing on 104 of 207 images** across the 10 pages. Worst: Green Bamboo
+   and Thrive Together (EN) 13 of 16 each, Support Us 11 of 14, EN home 17 of 32.
+9. **Forms on phones.** Contact form placeholders render at about 6px, and the VI form's
+   "Message" label is in English.
+10. **Footer.** Footer text is 14.4px with a 1.33 line height (the rule for Vietnamese is
+    1.6 or more). Support Us prints "© HCWA, 2019. All rights reserved." twice. The VI
+    footer reads "Neve | Mã nguồn WordPress", the EN one "Neve | Powered by WordPress".
+11. **Body text is fine**: 17.6px at a 1.7 line height on most pages, and nothing readable
+    under 12px apart from the hidden skip link.
+12. **Weight and length.** Every page loads 26 to 28 external script files and 26 to 30
+    stylesheets (inline scripts not counted). On a phone the VI home is 8,573px long, about
+    ten screens; the EN home is 4,404px.
+13. **Language detection.** `/` sends browsers set to Vietnamese a 302 to
+    `/hoi-bao-tro-tre-em/`; everyone else, Google included, gets the English home. So
+    "English is the root homepage" holds for search, not for every visitor.
+
+## URL inventory (task 0.2, 30 Oct 2026)
+
+`scripts/url-inventory.py` read the five Yoast sitemaps, followed every internal link and
+recorded redirects without following them. Result: 260 URLs in `scripts/urls-live.csv`
+(url, language, title, status, translation, type, WordPress ID, Elementor flag, redirect
+target, canonical, last modified, source, page it was found on). This seeds the 301 map in
+task 3.4.
+
+- **Content:** 23 pages, 162 posts (83 VI, 79 EN), 5 categories, 29 tags, author archives,
+  and their paginated lists.
+- **Elementor everywhere:** all 23 pages and 123 of 162 posts are built with Elementor.
+  Task 3.3 has to check or convert about 120 posts, not a handful. Plan time for it.
+- **Missing translations:** 40 posts have no other-language version (22 VI-only, 18
+  EN-only). Pages without one: Cau Han (both `/chp-2/` and `/du-an-cau-han/`) and Support
+  Us.
+- **Broken internal links:** `/gwbs-gallery/` returns 404 (linked from the Green Bamboo
+  restaurant opening post); a `_wp_link_placeholder` link on `/cho-mot-ngay-moi/` returns
+  404; `/chp/` (linked from `/up-coming-event/`) redirects to a JPG file.
+- **Existing redirects to keep:** `/dva` and `/dva/` → `/dva-child-abuse-prevention-project/`.
+  In the new map they should go straight to the new URL in one hop.
+- **Fragile slugs:** two posts use decorative Unicode letters in the URL ("𝕊𝔸ℕ𝕋𝔸"). The
+  redirect test has to handle the encoded and the raw form.
+- **Little Rose posts need a safeguarding review now, before migration.** Several news posts
+  are about Little Rose residents, for example
+  `/good-new-our-talented-girls-were-awarded-hcm-clubs-scholarships/`,
+  `/20-10-so-much-love-for-our-young-little-girls/`,
+  `/viet-vu-dao-martial-arts-is-coming-to-the-litte-rose-warm-shelter-lrws/`,
+  `/lop-viet-vu-dao-tai-mai-am-hoa-hong-nho/` and `/for-a-future-to-be-brighter-lrws-bakery/`,
+  plus the `/tag/lrws/` and `/tag/hoa-hong-nho/` archives. These were not opened for this
+  audit. HCWA should check them for identifiable faces or names and unpublish or edit any
+  that show a resident; none migrate unless HCWA marks them approved.
+- **Author archives are public** under `/author/` and `/vi/author/` and expose login names.
+  Turn them off (new task 0.13).
+- **News went quiet:** by last-modified date, 92 posts are from 2020, 42 from 2021, 12 from
+  2022, 3 from 2023 to 2024, and 13 from 2026.
+- **Titles:** the VI home is still "Đội Ngũ - HCWA"; the VI news hub is "tin moi - HCWA"
+  (no diacritics); VI Thrive Together is just "DỰ ÁN - HCWA". Most other titles are in
+  capitals. The EN pages declare `lang="en-GB"`.
 
 ## Top 5 improvements (what to send HCWA as step 1 of their brief)
 
