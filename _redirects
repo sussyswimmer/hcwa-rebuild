@@ -1,0 +1,2 @@
+# English pages that are not built yet get the English 404 page.
+/en/*  /en/404.html  404
