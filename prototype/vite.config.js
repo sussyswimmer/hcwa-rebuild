@@ -30,13 +30,32 @@ const rerender = {
   },
 };
 
+// Hosting under a sub-path (GitHub Pages: npm run build:pages). Vite prefixes assets with
+// --base; this prefixes page links, hreflang links and form actions, which Vite leaves alone.
+let base = "/";
+const rebase = {
+  name: "hcwa-rebase",
+  apply: "build",
+  configResolved(config) {
+    base = config.base;
+  },
+  transformIndexHtml: {
+    order: "post",
+    handler: (html) => (base === "/" ? html : html.replace(new RegExp(`(\\s(?:href|src|action)=")/(?!/|${base.slice(1)})`, "g"), `$1${base}`)),
+  },
+  generateBundle() {
+    // Stops GitHub Pages running Jekyll, which would drop files starting with "_".
+    if (base !== "/") this.emitFile({ type: "asset", fileName: ".nojekyll", source: "" });
+  },
+};
+
 export default defineConfig(() => {
   render(); // throws (and fails the build) when PROD=1 finds drafts
   return {
     root: site,
     publicDir: resolve(here, "public"),
     appType: "mpa",
-    plugins: [rerender],
+    plugins: [rerender, rebase],
     build: {
       outDir: resolve(here, "dist"),
       emptyOutDir: true,
