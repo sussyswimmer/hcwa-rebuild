@@ -1,0 +1,18 @@
+/* HCWA details box and settings page. */
+.hcwa-fields { display: grid; gap: 18px; padding: 8px 0; }
+.hcwa-fields__note { margin: 0; padding: 8px 12px; background: #ececf7; border-radius: 4px; }
+.hcwa-field { display: grid; gap: 6px; max-width: 720px; }
+.hcwa-field > label { font-weight: 600; }
+.hcwa-field--checkbox > label { font-weight: 400; }
+.hcwa-field input[type="text"], .hcwa-field input[type="url"], .hcwa-field input[type="number"], .hcwa-field input[type="date"], .hcwa-field select, .hcwa-field textarea { width: 100%; max-width: 720px; }
+.hcwa-field .description { margin: 0; }
+.hcwa-field fieldset { display: grid; gap: 6px; }
+.hcwa-fields__sync { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px; background: #f3eee6; color: #4a5265; font-size: 12px; font-weight: 400; }
+.hcwa-media__preview { display: flex; flex-wrap: wrap; gap: 8px; }
+.hcwa-media__preview img { width: 72px; height: 72px; object-fit: cover; border-radius: 4px; }
+.hcwa-settings .hcwa-pair { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 8px; }
+.hcwa-settings .hcwa-pair__tag { min-width: 28px; padding-top: 6px; font-weight: 600; color: #4a5265; }
+.hcwa-settings .notice.inline { margin: 4px 0 24px; padding: 8px 12px; }
+.hcwa-check-table td, .hcwa-check-table th { vertical-align: top; }
+.hcwa-check--fail { color: #b42318; font-weight: 600; }
+.hcwa-check--ok { color: #2c7a4c; font-weight: 600; }

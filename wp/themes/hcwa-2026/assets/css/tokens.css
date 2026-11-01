@@ -1,0 +1,68 @@
+/* Copied from prototype/src/styles/tokens.css by wp/scripts/sync-assets.mjs. Edit the original, then run npm run sync in wp/. */
+/* HCWA design tokens (05-DESIGN). Brand blue and unit accents are sampled from the
+   current logos (task 1.1); provisional until the agency delivers A1/B6.
+   Contrast ratios are measured by design-token-contrast; see qa/contrast-pairs.json. */
+:root {
+  /* neutrals: warm paper, never pure white page / pure black text */
+  --color-paper: #FBF8F3;
+  --color-surface: #FFFFFF;
+  --color-sunken: #F3EEE6;
+  --color-line: #E4DDD2;          /* dividers only: decorative, no contrast duty */
+  --color-input-border: #857C70;  /* form fields and controls need 3:1 */
+  --color-ink: #1C2333;
+  --color-ink-2: #4A5265;
+  --color-ink-3: #5F6679;         /* was #6B7285: failed 4.5:1 on sunken */
+
+  /* brand: sampled from the HCWA logo (#313188) */
+  --color-blue-900: #23236A;
+  --color-blue-700: #313188;
+  --color-blue-100: #ECECF7;
+  --color-on-blue: #FFFFFF;
+
+  /* action: carried over from the current site's yellow buttons */
+  --color-sun-400: #FFC42E;
+  --color-sun-500: #F2B312;
+  --color-sun-100: #FFF4D6;
+
+  /* unit accents: sampled from each unit logo. Bands and dots only, never text */
+  --color-unit-green-bamboo: #008E3A;
+  --color-unit-little-rose: #DC4C98;
+  --color-unit-cau-han: #417CBD;
+
+  /* status */
+  --color-ok: #2C7A4C;             /* was #2F7D4F: 4.38:1 on ok-100 */
+  --color-ok-100: #E6F2EA;
+  --color-warn: #8A5A00;
+  --color-error: #B42318;
+  --color-focus: #313188;          /* 3px outline + 2px offset */
+  --color-focus-on-blue: #FFC42E;  /* focus ring on blue bands and the footer */
+
+  /* type */
+  --font-display: "Fraunces", "Iowan Old Style", "Georgia", serif;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --fs-meta: 0.875rem;
+  --fs-sm: 0.9375rem;
+  --fs-base: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-h4: 1.375rem;
+  --fs-h3: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+  --fs-h2: clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem);
+  --fs-h1: clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem);
+  --fs-stat: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  --lh-body: 1.65;
+  --lh-heading: 1.2;
+
+  /* space, radius, elevation */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px;
+  --section-y: clamp(64px, 8vw, 112px);
+  --container: 1200px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --r-sm: 6px; --r-md: 12px; --r-lg: 20px; --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(28, 35, 51, .06), 0 4px 12px rgba(28, 35, 51, .06);
+
+  /* motion */
+  --ease: cubic-bezier(.215, .61, .355, 1);
+  --t-press: 150ms;
+  --t-open: 240ms;
+}

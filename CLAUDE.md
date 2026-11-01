@@ -61,5 +61,24 @@ outline in the prototype. Never invent stats, partner names, testimonials or awa
   deployed to Netlify for HCWA review
 - Phase 2+: WordPress hybrid theme `hcwa-2026` (PHP header/footer, `theme.json` tokens,
   Gutenberg block patterns for page bodies) + small plugin `hcwa-core` for content types
-- Local WordPress: `@wordpress/env` (Docker) or WordPress Studio
+- Local WordPress: WordPress Playground via `cd wp && npm run dev` (no Docker or PHP needed;
+  seeds the draft content in both languages; `npm run dev:production` for production rules).
+  `wp/.wp-env.json` is there for anyone with Docker.
 - Polylang stays as the language plugin
+- PHP 7.4 compatible code: the live host runs PHP 7.4.33. `npm run lint:php` checks it.
+
+## Working on the WordPress code (`wp/`)
+
+- `plugins/hcwa-core`: content types, fields, photo approval, figures, blocks, checks.
+  `themes/hcwa-2026`: layout only. Templates call `hcwa_*` helpers from the plugin.
+- Design system: edit `prototype/src/styles/*.css` and `prototype/src/main.js`, then run
+  `npm run sync` in `wp/`; never edit the copies in the theme. WordPress-only CSS goes in
+  `themes/hcwa-2026/assets/css/wp.css`.
+- UI strings: add them to `content/draft/ui.json` (both languages), then `npm run sync`.
+  Templates use `hcwa_t('key')`; never hard-code a visible string.
+- Review vs production: `wp_get_environment_type()`. Anything not `production` shows drafts
+  outlined and unverified figures with a "Pending verification" chip; production hides them.
+  Blocks have a "Draft" switch; centers, programs and reports a "wording is a draft" field.
+- Before committing: `npm test`, `npm run lint:php`, and with `npm run dev` running,
+  `npm run check:pages`, `npm run check:editor` (and `check:production` against
+  `dev:production`). Set `CHROME_PATH` if playwright-core's own Chromium isn't installed.

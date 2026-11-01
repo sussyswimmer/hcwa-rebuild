@@ -1,0 +1,154 @@
+/* WordPress-only rules for the HCWA 2026 theme. tokens.css and site.css come from the prototype
+   (wp/scripts/sync-assets.mjs); this file adds what only exists in WordPress: real images,
+   block content, archives, the admin bar. Same tokens, same breakpoints (640, 768, 900, 1100). */
+
+/* ---------- real images in slots (placeholders are .ph in site.css) ---------- */
+.media { display: block; width: 100%; height: auto; aspect-ratio: var(--ratio, auto); object-fit: cover; border-radius: var(--r-md); background: var(--color-sunken); }
+.hero__media.media { border-radius: var(--r-lg); }
+@media (max-width: 899px) { .hero__media.media { aspect-ratio: 3 / 2; max-height: 42vh; } }
+.center-card .media { border-radius: 0; aspect-ratio: 4 / 3; }
+.cover__media.media { border-radius: var(--r-lg); }
+@media (max-width: 767px) { .cover__media.media { aspect-ratio: 4 / 3; } }
+.ph--empty { color: transparent; }
+.focus-item__icon.media { width: 48px; height: 48px; aspect-ratio: 1; border-radius: var(--r-sm); }
+.report-row__cover.media { width: 56px; border-radius: var(--r-sm); }
+.gallery__item .media { border-radius: var(--r-md); }
+.lightbox__stage .media { max-height: 75vh; width: auto; margin-inline: auto; object-fit: contain; border-radius: var(--r-md); }
+.pay__qr.media, img.pay__qr { width: 180px; height: auto; border-radius: var(--r-sm); }
+
+/* ---------- admin bar: keep the sticky header below it ---------- */
+.admin-bar .header-slot { top: 32px; }
+@media (max-width: 782px) { .admin-bar .header-slot { top: 46px; } }
+@media (max-width: 600px) { .admin-bar .header-slot { top: 0; } }
+
+/* ---------- announcement bar (Settings → HCWA) ---------- */
+.announce-bar { background: var(--color-sun-100); }
+.announce-bar p { padding-block: 8px; }
+.announce-bar a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--color-ink); }
+.announce-bar a .icon { width: 18px; height: 18px; }
+.icon-btn--sm { width: 44px; height: 44px; }
+
+/* ---------- page body: sections run full width, loose blocks sit at reading width ---------- */
+.page-body > :where(:not(.section):not(.cta-band):not(.hero):not(.our-work):not(.donate):not(.alignfull)) {
+	width: min(100% - 2 * var(--gutter), var(--container));
+	margin-inline: auto;
+}
+.page-body > :where(p, ul, ol, h2, h3, h4, blockquote, .wp-block-details, .wp-block-table, .wp-block-image) {
+	max-width: min(72ch, 100% - 2 * var(--gutter));
+	margin-left: max(var(--gutter), (100% - var(--container)) / 2);
+}
+.page-body > :where(:not(.section):not(.cta-band):not(.hero):not(.our-work):not(.donate)) + * { margin-top: 1em; }
+.page-body > :where(:not(.section):not(.cta-band):not(.hero):not(.our-work):not(.donate)):first-child { margin-top: var(--s-7); }
+.page-body > :where(:not(.section):not(.cta-band):not(.hero):not(.our-work):not(.donate)):last-child { margin-bottom: var(--s-8); }
+.page-body > :where(h2, h3) { margin-top: 1.4em; }
+
+/* Group wrappers from patterns carry WordPress classes; the layout comes from our classes. */
+.wp-block-group { box-sizing: border-box; }
+.hero__actions > .btn { width: 100%; }
+@media (min-width: 640px) { .hero__actions > .btn { width: auto; } }
+.cta-band__actions > .btn { flex: none; }
+.section-head > p:empty, .split__lead > p:empty { display: none; }
+
+/* ---------- block content inside prose (center story, posts, text sections) ---------- */
+.prose > * + * { margin-top: 0; }
+.prose ul, .prose ol { padding-left: 1.4em; display: grid; gap: 6px; }
+.prose h2 { font-size: var(--fs-h3); margin-top: 16px; }
+.prose h3 { font-size: var(--fs-h4); margin-top: 8px; }
+.prose figure { margin: 8px 0; }
+.prose figcaption, .wp-element-caption { margin-top: 8px; font-size: var(--fs-sm); color: var(--color-ink-2); }
+.prose blockquote { margin: 8px 0; padding-left: 20px; border-left: 4px solid var(--color-blue-100); font-family: var(--font-display); font-size: var(--fs-lg); }
+.prose a { overflow-wrap: anywhere; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.prose th, .prose td { padding: 10px 12px; border-bottom: 1px solid var(--color-line); text-align: left; vertical-align: top; }
+.prose .wp-block-image img { border-radius: var(--r-md); }
+.container.prose { max-width: min(72ch, 100% - 2 * var(--gutter)); margin-left: max(var(--gutter), (100% - var(--container)) / 2); }
+
+/* Details blocks: the FAQ accordion, "Read the full history", donation methods. */
+.wp-block-details summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; cursor: pointer; list-style: none; font-weight: 600; }
+.wp-block-details summary::-webkit-details-marker { display: none; }
+.wp-block-details summary::after { content: ""; flex: none; width: 10px; height: 10px; margin-right: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; rotate: 45deg; translate: 0 -3px; transition: rotate var(--t-open) var(--ease); }
+.wp-block-details[open] > summary::after { rotate: 225deg; translate: 0 3px; }
+.accordion .wp-block-details { border-bottom: 1px solid var(--color-line); }
+.accordion .wp-block-details summary { min-height: 60px; padding-block: 14px; font-size: 1.0625rem; }
+.accordion .wp-block-details > :not(summary) { padding-bottom: 20px; color: var(--color-ink-2); }
+.prose .wp-block-details summary { justify-content: flex-start; min-height: 44px; color: var(--color-blue-700); }
+.prose .wp-block-details summary::after { order: 2; }
+.wp-block-details.method { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--r-md); }
+.wp-block-details.method > summary { min-height: 60px; padding: 14px 24px; font-size: var(--fs-lg); }
+.wp-block-details.method > :not(summary) { padding: 0 24px 24px; }
+.methods { display: grid; gap: 12px; margin-top: 24px; }
+.pay--plain { display: block; }
+.pay-details__value { font-weight: 600; overflow-wrap: anywhere; }
+.pay-ask { padding: 16px 20px; background: var(--color-blue-100); border-radius: var(--r-md); }
+.gift-list > p { display: grid; gap: 8px; align-content: start; padding: 20px 24px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--r-md); }
+@media (min-width: 768px) { .gift-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+.gift-list { display: grid; gap: 16px; margin-top: 20px; }
+
+/* ---------- headers, notices ---------- */
+.page-header--post h1 { max-width: 30ch; }
+.post__meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: var(--fs-meta); color: var(--color-ink-3); }
+.lang-notice-wrap { padding-top: 24px; }
+.lang-notice { display: flex; gap: 12px; align-items: flex-start; padding: 16px 20px; background: var(--color-blue-100); border-radius: var(--r-md); }
+.lang-notice > .icon { color: var(--color-blue-700); margin-top: 2px; }
+.lang-notice > div { display: grid; gap: 4px; }
+.lang-notice p:first-child { font-weight: 600; }
+.lang-notice__title { color: var(--color-ink-2); }
+.lang-notice__links { display: flex; flex-wrap: wrap; gap: 0 24px; }
+.partner-inline { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.partner-inline .partner-logo__img { max-height: 44px; width: auto; }
+.plain-list { list-style: none; padding: 0; display: grid; gap: 4px; }
+.plain-list a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* ---------- partners ---------- */
+.partner-logo { display: grid; place-items: center; min-height: 72px; padding: 8px; }
+.partner-logo a { display: grid; place-items: center; width: 100%; min-height: 56px; }
+.partner-logo__img { max-height: 56px; width: auto; filter: grayscale(1); opacity: .7; transition: opacity var(--t-press) var(--ease); }
+.partner-logo a:hover .partner-logo__img { opacity: 1; }
+.partner-logo__name { font-weight: 600; color: var(--color-ink-2); text-align: center; }
+.logo-wall .partner-logo .ph--logo { width: 100%; }
+
+/* ---------- news archive, cards, pagination ---------- */
+.news-grid { list-style: none; padding: 0; display: grid; gap: 40px 32px; }
+@media (min-width: 640px) { .news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .news-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.news-grid .story-card__title { font-size: 1.25rem; line-height: 1.35; }
+.story-card__meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: var(--fs-meta); color: var(--color-ink-3); }
+.story-card .media { margin-bottom: 6px; aspect-ratio: 3 / 2; }
+.pagination ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 48px; }
+.pagination a, .pagination span { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: var(--r-pill); font-weight: 500; text-decoration: none; }
+.pagination a { color: var(--color-blue-700); border: 1.5px solid var(--color-input-border); }
+.pagination a:hover { border-color: var(--color-blue-700); }
+.pagination .current { background: var(--color-blue-700); color: var(--color-on-blue); }
+.pagination .icon { width: 18px; height: 18px; }
+.empty-state { color: var(--color-ink-2); }
+.search-results { margin-top: 32px; }
+.filters-stack .filters + .filters ul { padding-top: 12px; }
+.report-block__more { margin-top: 16px; }
+.report-row__title a { color: var(--color-ink); }
+.report-single { display: grid; gap: 32px; align-items: start; }
+@media (min-width: 768px) { .report-single { grid-template-columns: 280px 1fr; } }
+.report-single__cover { max-width: 280px; }
+
+/* ---------- post body and sharing ---------- */
+.post__lead { margin-top: 32px; max-width: 860px; }
+.post__body { padding-block: 40px 8px; }
+.story-note { font-size: var(--fs-sm); color: var(--color-ink-3); }
+.share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-block: 24px 48px; border-top: 1px solid var(--color-line); margin-top: 32px; max-width: 72ch; }
+.share__title { font-weight: 600; }
+.share__link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.our-work .filters { padding-top: 0; }
+.our-work .note p { margin: 0; }
+.donate .gift-list > p { margin: 0; }
+
+/* ---------- reduced motion (05-DESIGN) ---------- */
+@media (prefers-reduced-motion: reduce) {
+	.wp-block-details summary::after, .partner-logo__img { transition: none; }
+}
+
+/* ---------- contact page ---------- */
+.offices__chat a { display: inline-flex; align-items: center; min-height: 44px; }
+.contact-form-slot { align-self: start; }
+
+/* Icon-sized slots only have room for the asset code. */
+.ph--icon .ph__label { display: none; }
+.filters__empty a { display: inline-flex; align-items: center; min-height: 44px; }

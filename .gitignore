@@ -6,3 +6,5 @@ dist/
 prototype/.site/
 .omc/
 __pycache__/
+qa/wp-review/
+qa/wp-production/

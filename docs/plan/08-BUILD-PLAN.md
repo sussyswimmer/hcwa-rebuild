@@ -77,6 +77,40 @@ inner pages to judge the system. Static, fast to change.
 | 2.7 | Forms: one form plugin, VI and EN forms with consent checkbox, routing by topic, spam protection without Google reCAPTCHA if possible (honeypot or Cloudflare Turnstile). | Test submissions reach the right inbox in both languages |
 | 2.8 | Performance baseline: no jQuery on the front end unless a kept plugin needs it, no Elementor assets, images through `srcset`. | Home < 1 MB, < 15 requests excl. images |
 
+### Phase 2 status (1 Nov 2026)
+
+Code is in `wp/` (`plugins/hcwa-core`, `themes/hcwa-2026`). Local WordPress runs in
+WordPress Playground (`cd wp && npm run dev`, no Docker or PHP install needed) on PHP 7.4,
+the version the live host runs, with Polylang free and the draft content seeded in both
+languages. `npm run dev:production` starts the same site with production rules.
+
+| # | Status | Notes |
+|---|---|---|
+| 2.1 | Done | Hybrid theme. Evidence in `03-STRATEGY-AND-DECISIONS.md`: Polylang free can't translate template parts. |
+| 2.2 | **Blocked** | Needs HCWA admin/host access (question Q4). Until then the seed (`wp/dev/seed.php`) fills a fresh site from `content/draft/`. |
+| 2.3 | Done | 5 content types, focus-area taxonomy, field schema with "same in both languages" sync, photo approval fields enforced everywhere images render, UI strings registered with Polylang. `wp hcwa coverage` and `wp hcwa audit`, also under Tools → HCWA checks for staff without a terminal. |
+| 2.4 | Done with draft content | All listed templates plus single report and a reports library at `/tac-dong/bao-cao/` and `/en/impact/reports/`. "Real content" waits for 2.2. CSS and JS are copied from the prototype by `npm run sync`, so prototype fixes reach the theme. |
+| 2.5 | Done | 13 blocks: the 6 listed plus link/button (links to a page role in the right language), approved image, focus areas, latest news, focus-area filter, contact details, donation details. The announcement bar is a setting (Settings → HCWA), not a block: it sits above the PHP header on every page, so a block in page content can't place it. Every block also gets a "Draft: waiting for HCWA approval" switch. |
+| 2.6 | Done | 13 patterns, locked to content-only editing. The page header is the PHP template (H1 + excerpt), so there is no page-header pattern. |
+| 2.7 | Not started | Next. The contact page shows a placeholder where the form goes. |
+| 2.8 | Baseline met locally | Home: 9 requests without images, about 290 KB uncompressed, no jQuery, fonts 4 files. Re-measure on staging with real photos and server compression. |
+
+Checks (all pass on the seeded site, review and production mode):
+`npm test` (static rules, 11 tests), `npm run lint:php` (PHP 7.4 syntax),
+`npm run check:pages` and `check:production` (every template at 390 and 1440: status, PHP
+notices, console errors, sideways scroll at 320, one H1, alt text, tap targets, hero in the
+first screen, request budget; on production no draft, pending or placeholder text),
+`npm run check:editor` (every seeded page opens in the block editor with no invalid block).
+Screenshots: `qa/phase2-wordpress/`.
+
+New items found while building, for HCWA or later phases:
+- The live host runs **PHP 7.4.33**, end of life since November 2022. The theme and plugin
+  are written for 7.4, but HCWA should ask the host to move to PHP 8.2 or newer before launch.
+- The English Cau Han URL is `/en/our-work/centers/cau-han-project/`: Polylang free needs a
+  unique slug per content type, and the Vietnamese page already uses `cau-han`.
+- Admin labels of the new content types are English. If HCWA staff use WordPress in
+  Vietnamese, add a Vietnamese translation file for `hcwa-core` (Phase 5).
+
 ---
 
 ## Phase 3: migration on staging

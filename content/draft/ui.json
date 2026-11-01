@@ -411,5 +411,269 @@
   "prototypeNoteShort": {
     "vi": "Bản mẫu. Khung nét đứt: nội dung chờ HCWA duyệt.",
     "en": "Prototype. Dashed outline: waiting for HCWA approval."
+  },
+  "orgName": {
+    "vi": "Hội Bảo trợ Trẻ em TP. Hồ Chí Minh",
+    "en": "Ho Chi Minh City Child Welfare Association"
+  },
+  "shortName": {
+    "vi": "Hội Bảo trợ Trẻ em TP.HCM",
+    "en": "HCWA"
+  },
+  "logoLine1": {
+    "vi": "Hội Bảo trợ Trẻ em",
+    "en": "HCMC Child Welfare"
+  },
+  "logoLine2": {
+    "vi": "TP. Hồ Chí Minh",
+    "en": "Association"
+  },
+  "reviewNote": {
+    "vi": "Bản xem trước để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.",
+    "en": "Review copy for HCWA. A dashed outline marks draft text or figures waiting for HCWA approval."
+  },
+  "reviewNoteShort": {
+    "vi": "Bản xem trước. Khung nét đứt: nội dung chờ HCWA duyệt.",
+    "en": "Review copy. Dashed outline: waiting for HCWA approval."
+  },
+  "sinceYear": {
+    "vi": "từ năm {year}",
+    "en": "since {year}"
+  },
+  "langNoticePage": {
+    "vi": "Trang này hiện chỉ có bằng tiếng Anh.",
+    "en": "This page is only available in Vietnamese."
+  },
+  "report_annual": {
+    "vi": "Báo cáo thường niên",
+    "en": "Annual report"
+  },
+  "report_financial": {
+    "vi": "Báo cáo tài chính",
+    "en": "Financial statement"
+  },
+  "report_program": {
+    "vi": "Báo cáo dự án",
+    "en": "Program report"
+  },
+  "report_policy": {
+    "vi": "Chính sách",
+    "en": "Policy"
+  },
+  "reportsTitle": {
+    "vi": "Báo cáo",
+    "en": "Reports"
+  },
+  "allReports": {
+    "vi": "Tất cả báo cáo",
+    "en": "All reports"
+  },
+  "allYears": {
+    "vi": "Mọi năm",
+    "en": "All years"
+  },
+  "noReports": {
+    "vi": "Chưa có báo cáo nào trong mục này.",
+    "en": "No reports here yet."
+  },
+  "filterType": {
+    "vi": "Lọc theo loại báo cáo",
+    "en": "Filter by report type"
+  },
+  "filterYear": {
+    "vi": "Lọc theo năm",
+    "en": "Filter by year"
+  },
+  "filterCategory": {
+    "vi": "Lọc theo chuyên mục",
+    "en": "Filter by category"
+  },
+  "hcwaOffice": {
+    "vi": "Văn phòng Hội",
+    "en": "HCWA office"
+  },
+  "messageUsOn": {
+    "vi": "Nhắn tin qua",
+    "en": "Message us on"
+  },
+  "d_askUs": {
+    "vi": "Liên hệ Hội để nhận thông tin chuyển khoản.",
+    "en": "Contact HCWA for bank transfer details."
+  },
+  "d_bank": {
+    "vi": "Ngân hàng",
+    "en": "Bank"
+  },
+  "d_account": {
+    "vi": "Số tài khoản",
+    "en": "Account number"
+  },
+  "d_holder": {
+    "vi": "Chủ tài khoản",
+    "en": "Account holder"
+  },
+  "d_note": {
+    "vi": "Nội dung chuyển khoản",
+    "en": "Transfer note"
+  },
+  "d_noteHint": {
+    "vi": "Để Hội đối chiếu và gửi biên nhận cho bạn.",
+    "en": "So HCWA can match your gift and send a receipt."
+  },
+  "d_swift": {
+    "vi": "Mã SWIFT",
+    "en": "SWIFT code"
+  },
+  "d_accountAbroad": {
+    "vi": "Số tài khoản (USD/EUR)",
+    "en": "Account number (USD/EUR)"
+  },
+  "d_paypal": {
+    "vi": "Hoặc ủng hộ qua PayPal:",
+    "en": "Or give through PayPal:"
+  },
+  "d_qr": {
+    "vi": "Mã VietQR để chuyển khoản",
+    "en": "VietQR code for bank transfer"
+  },
+  "atGlance": {
+    "vi": "Thông tin nhanh",
+    "en": "At a glance"
+  },
+  "whoWeServe": {
+    "vi": "Đối tượng",
+    "en": "Who we serve"
+  },
+  "whatWeDo": {
+    "vi": "Hoạt động",
+    "en": "What we do"
+  },
+  "ourStoryHeading": {
+    "vi": "Câu chuyện của chúng tôi",
+    "en": "Our story"
+  },
+  "figuresAt": {
+    "vi": "Kết quả tại {x}",
+    "en": "{x} in numbers"
+  },
+  "photos": {
+    "vi": "Hình ảnh hoạt động",
+    "en": "Photos"
+  },
+  "photoN": {
+    "vi": "Ảnh {n}",
+    "en": "Photo {n}"
+  },
+  "openLarger": {
+    "vi": "phóng to",
+    "en": "open larger"
+  },
+  "prevPhoto": {
+    "vi": "Ảnh trước",
+    "en": "Previous photo"
+  },
+  "nextPhoto": {
+    "vi": "Ảnh sau",
+    "en": "Next photo"
+  },
+  "programsHere": {
+    "vi": "Dự án tại cơ sở",
+    "en": "Programs run here"
+  },
+  "helpCenter": {
+    "vi": "Cách giúp {x}",
+    "en": "How to help {x}"
+  },
+  "donateTo": {
+    "vi": "Ủng hộ {x}",
+    "en": "Donate to {x}"
+  },
+  "relatedNews": {
+    "vi": "Tin liên quan",
+    "en": "Related news"
+  },
+  "visitCenterCta": {
+    "vi": "Muốn đến thăm {x}?",
+    "en": "Want to visit {x}?"
+  },
+  "unitLogo": {
+    "vi": "Logo {x}",
+    "en": "{x} logo"
+  },
+  "summary": {
+    "vi": "Tóm tắt",
+    "en": "Summary"
+  },
+  "goals": {
+    "vi": "Mục tiêu",
+    "en": "Goals"
+  },
+  "activities": {
+    "vi": "Hoạt động",
+    "en": "Activities"
+  },
+  "whereFunds": {
+    "vi": "Nơi thực hiện và nhà tài trợ",
+    "en": "Where it runs and who funds it"
+  },
+  "fundedBy": {
+    "vi": "Nhà tài trợ",
+    "en": "Funded by"
+  },
+  "results": {
+    "vi": "Kết quả",
+    "en": "Results"
+  },
+  "documents": {
+    "vi": "Tài liệu",
+    "en": "Documents"
+  },
+  "supportLikeThis": {
+    "vi": "Đồng hành cùng những dự án như thế này",
+    "en": "Support work like this"
+  },
+  "partnerOnProgram": {
+    "vi": "Hợp tác trong một dự án",
+    "en": "Partner on a program"
+  },
+  "share": {
+    "vi": "Chia sẻ",
+    "en": "Share"
+  },
+  "copyLink": {
+    "vi": "Sao chép liên kết",
+    "en": "Copy link"
+  },
+  "newWindow": {
+    "vi": "mở cửa sổ mới",
+    "en": "opens in a new window"
+  },
+  "prevPage": {
+    "vi": "Trang trước",
+    "en": "Previous page"
+  },
+  "nextPage": {
+    "vi": "Trang sau",
+    "en": "Next page"
+  },
+  "pagination": {
+    "vi": "Phân trang",
+    "en": "Pages"
+  },
+  "noNews": {
+    "vi": "Chưa có bài viết nào trong mục này.",
+    "en": "No posts here yet."
+  },
+  "searchResults": {
+    "vi": "Kết quả tìm kiếm cho “{q}”",
+    "en": "Search results for “{q}”"
+  },
+  "noSearchResults": {
+    "vi": "Không tìm thấy kết quả nào. Hãy thử từ khóa khác.",
+    "en": "Nothing found. Try other words."
+  },
+  "download": {
+    "vi": "Tải xuống",
+    "en": "Download"
   }
 }

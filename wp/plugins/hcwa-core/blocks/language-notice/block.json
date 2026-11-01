@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/language-notice",
+	"title": "Language notice",
+	"category": "hcwa",
+	"icon": "translation",
+	"description": "\"This article is only available in Vietnamese\" with links to read it and to this language's news. Pick the article (by ID). The theme already shows this automatically when someone switches language on an untranslated post.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"postId": { "type": "integer", "default": 0 }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

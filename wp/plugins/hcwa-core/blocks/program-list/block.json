@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/program-list",
+	"title": "Program rows",
+	"category": "hcwa",
+	"icon": "list-view",
+	"description": "Projects and programs as rows (status, years, name, summary, partners), so they look different from center cards. Active ones first.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"status": { "type": "string", "enum": [ "", "active", "completed", "planned" ], "default": "" },
+		"center": { "type": "string", "default": "" },
+		"area": { "type": "string", "default": "" },
+		"followFilter": { "type": "boolean", "default": false },
+		"count": { "type": "integer", "default": 4 }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

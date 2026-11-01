@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/partner-wall",
+	"title": "Partner logos",
+	"category": "hcwa",
+	"icon": "groups",
+	"description": "One-tone logo wall. Logos show on the live site only when the partner agreed.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"homepageOnly": { "type": "boolean", "default": true },
+		"type": { "type": "string", "default": "" },
+		"count": { "type": "integer", "default": 12 }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

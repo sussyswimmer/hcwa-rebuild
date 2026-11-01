@@ -1,0 +1,19 @@
+{
+  "name": "hcwa-wordpress",
+  "private": true,
+  "type": "module",
+  "description": "HCWA WordPress theme (hcwa-2026) and plugin (hcwa-core): local dev, asset sync, checks",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:production": "node scripts/dev.mjs --production",
+    "sync": "node scripts/sync-assets.mjs",
+    "test": "node scripts/sync-assets.mjs --check && node --test \"test/*.test.mjs\"",
+    "lint:php": "node scripts/lint-php.mjs",
+    "check:pages": "node scripts/check-pages.mjs",
+    "check:production": "node scripts/check-pages.mjs --production",
+    "check:editor": "node scripts/check-editor.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

@@ -51,6 +51,15 @@ Note on post URLs: keep existing news post slugs exactly as they are today (only
 `/en/` prefix is added on English). Polylang setting: "The language is set from the
 directory name in pretty permalinks", hide the default language (VI) prefix.
 
+Built in Phase 2 (1 Nov 2026):
+- Center, program and report URLs use different bases per language (`/hoat-dong/co-so/…`
+  and `/en/our-work/centers/…`). Polylang free can't do this, so `hcwa-core` adds the rules
+  itself. A slug opened under the wrong language's base 301s to the right URL.
+- Slugs must be unique per content type across both languages (Polylang free). So the
+  English Cau Han page is `/en/our-work/centers/cau-han-project/`, not `…/cau-han/`.
+- Reports also have a library page with type and year filters: `/tac-dong/bao-cao/` and
+  `/en/impact/reports/`. The footer's "Annual reports" link goes there.
+
 ## Content types (registered in the `hcwa-core` plugin)
 
 ### Center (`hcwa_center`)
@@ -124,7 +133,7 @@ center/program/story templates refuse to output an image where `approved_for_web
 | `/gbws/` | `/en/our-work/centers/green-bamboo/` |
 | `/charity-classes/` | `/en/our-work/programs/charity-class/` |
 | `/lrws/` | `/en/our-work/centers/little-rose/` |
-| `/chp-2/` | `/en/our-work/centers/cau-han/` |
+| `/chp-2/` | `/en/our-work/centers/cau-han-project/` |
 | `/dva/`, `/dva-child-abuse-prevention-project/` | `/en/our-work/programs/thrive-together/` |
 | `/our-news/` | `/en/news/` |
 | `/support-us/` | `/en/get-involved/donate/` |

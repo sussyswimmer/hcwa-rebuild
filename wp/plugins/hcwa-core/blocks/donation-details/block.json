@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/donation-details",
+	"title": "Donation details",
+	"category": "hcwa",
+	"icon": "money-alt",
+	"description": "Bank transfer, transfer from abroad or PayPal, from Settings → HCWA, with copy buttons. Nothing shows until HCWA finance has confirmed the details in writing.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"method": { "type": "string", "enum": [ "vietnam", "abroad", "paypal" ], "default": "vietnam" }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

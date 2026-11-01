@@ -1,0 +1,13 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/focus-areas",
+	"title": "Focus areas",
+	"category": "hcwa",
+	"icon": "screenoptions",
+	"description": "The focus areas (Education, Child protection…) as a 2×2 list, each linking to Our Work filtered by that area. Edit the names and sentences under Centers → Focus areas.",
+	"textdomain": "hcwa-core",
+	"attributes": {},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

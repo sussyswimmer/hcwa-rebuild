@@ -3,6 +3,11 @@
 Run on the prototype at the end of Phase 1 and on staging before launch. Save every report
 in `qa/{date}/`.
 
+Automated for WordPress (Phase 2): `wp hcwa audit` (or Tools → HCWA checks) covers the
+content and safety blockers; `wp hcwa coverage` the bilingual counts;
+`wp/scripts/check-pages.mjs` (`--base=<staging URL> --production` for the live rules) the
+per-template checks at 390 and 1440. The items they don't cover still need a person.
+
 ## Content and safety (blockers)
 - [ ] No impact figure renders with `verified = no` on production
 - [ ] No `[DRAFT` text anywhere in production HTML (grep the built pages / crawl staging)

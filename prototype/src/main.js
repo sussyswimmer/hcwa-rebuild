@@ -105,6 +105,8 @@ if (!reduced && "IntersectionObserver" in window) {
     const show = (n) => {
       i = (n + items.length) % items.length;
       const ph = items[i].firstElementChild.cloneNode(true);
+      // Real photos (WordPress theme): pick a large file from srcset, not the thumbnail size.
+      if (ph.tagName === "IMG") { ph.sizes = "94vw"; ph.loading = "eager"; }
       $("[data-lightbox-stage]", box).replaceChildren(ph);
       $("[data-lightbox-count]", box).textContent = `${i + 1} / ${items.length}`;
     };

@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/report-list",
+	"title": "Report list",
+	"category": "hcwa",
+	"icon": "media-document",
+	"description": "Reports as rows with year, type and a language badge on every PDF (\"PDF · Tiếng Việt\").",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"type": { "type": "string", "default": "" },
+		"year": { "type": "integer", "default": 0 },
+		"program": { "type": "string", "default": "" },
+		"count": { "type": "integer", "default": 6 },
+		"showAllLink": { "type": "boolean", "default": true }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

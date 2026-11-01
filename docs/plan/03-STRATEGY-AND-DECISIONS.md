@@ -31,6 +31,23 @@ Plain HTML on purpose: every section maps 1:1 to a WordPress block pattern later
   strings per language reliably in PHP templates, while translated template parts in
   block themes may need Polylang Pro. Task 2.1 in the build plan checks this; if Polylang
   free handles it cleanly, a full block theme is fine.
+- **Decision (task 2.1, 1 Nov 2026): hybrid theme.** Tested in WordPress Playground with
+  WordPress 7.1.4 and Polylang 3.9.1 (free), languages vi (default, no prefix) and en (`/en/`):
+  - Polylang free does not translate `wp_template`, `wp_template_part` or `wp_navigation`
+    (`pll_is_translated_post_type()` is false for all three). Only Pro has full-site-editing
+    support.
+  - Forcing `wp_template_part` into Polylang with `pll_get_post_types` does not work either:
+    WordPress gives the English header part the slug `header-2` (slugs must be unique), so
+    `/en/` pages still render the theme's file header. A block theme on Polylang free would
+    show the Vietnamese header and footer, or one shared header, on English pages.
+  - What does work in free: nav menu locations per language, `pll_register_string()` /
+    string translations, translated pages, posts, custom post types and taxonomies.
+  So header, footer, menus and archive layouts are PHP templates; page bodies stay blocks
+  and patterns. If HCWA ever buys Polylang Pro, a block theme becomes possible, but nothing
+  here depends on it.
+- Polylang free cannot translate custom post type URL bases (`/hoat-dong/co-so/` vs
+  `/en/our-work/centers/`). `hcwa-core` adds its own rewrite rules per language for centers,
+  programs and reports so the URLs in `04-SITEMAP-AND-CONTENT-MODEL.md` hold.
 - Plugin `hcwa-core`: registers content types (centers, programs, reports, impact
   figures, partners), their fields and the custom blocks that render them. Keeping these
   in a plugin means a future theme change does not lose content.
@@ -41,7 +58,9 @@ Plain HTML on purpose: every section maps 1:1 to a WordPress block pattern later
   Facebook Likebox, Easy PayPal Donation, Ultimate Social Media Icons, Recent Posts
   Widget, Visitors Traffic stats, Content Views. Target: 8 plugins or fewer.
 - Fonts self-hosted in the theme (no Google Fonts CDN call).
-- Local dev: `@wordpress/env` (needs Docker) or the WordPress Studio app.
+- Local dev: WordPress Playground (`cd wp && npm run dev`): PHP runs in WebAssembly, so no
+  Docker or PHP install is needed, and it runs PHP 7.4 like the live host. `@wordpress/env`
+  (`wp/.wp-env.json`, needs Docker) or the WordPress Studio app also work.
 
 ## Phases
 

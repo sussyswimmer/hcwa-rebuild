@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/link",
+	"title": "HCWA link or button",
+	"category": "hcwa",
+	"icon": "admin-links",
+	"description": "A text link with an arrow, or a button. Point it at a page role (Donate, Our Work…) and it links to the right language automatically.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"label": { "type": "string", "default": "", "role": "content" },
+		"target": { "type": "string", "default": "", "role": "content" },
+		"url": { "type": "string", "default": "", "role": "content" },
+		"kind": { "type": "string", "enum": [ "text", "primary", "secondary", "on-blue" ], "default": "text" }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

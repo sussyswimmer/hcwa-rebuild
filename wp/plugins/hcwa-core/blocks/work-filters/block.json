@@ -1,0 +1,13 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/work-filters",
+	"title": "Focus area filter",
+	"category": "hcwa",
+	"icon": "filter",
+	"description": "Filter chips for the Our Work page. They are plain links (?area=…), so they work without JavaScript. Center cards and program rows set to \"follow the filter\" react to them.",
+	"textdomain": "hcwa-core",
+	"attributes": {},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

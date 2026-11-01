@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/contact-details",
+	"title": "HCWA contact details",
+	"category": "hcwa",
+	"icon": "phone",
+	"description": "Phone, email and address from Settings → HCWA. Hidden on the live site until the details are marked verified.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"variant": { "type": "string", "enum": [ "band", "card" ], "default": "band" }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

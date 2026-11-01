@@ -94,6 +94,42 @@
           "en": "Green Bamboo cover"
         },
         "ratio": "4:3"
+      },
+      "shortName": {
+        "vi": "Tre Xanh",
+        "en": "Green Bamboo"
+      },
+      "activities": {
+        "draft": true,
+        "vi": [
+          "Lớp bồi dưỡng văn hóa và tiếng Anh",
+          "Câu lạc bộ giáo dục và kỹ năng sống cho thanh thiếu niên",
+          "Hội thảo cho phụ huynh và tư vấn gia đình",
+          "Hỗ trợ chăm sóc sức khỏe cho trẻ"
+        ],
+        "en": [
+          "Catch-up classes and English",
+          "Education and life-skills clubs for young people",
+          "Workshops for parents and family counseling",
+          "Help accessing healthcare"
+        ]
+      },
+      "story": {
+        "draft": true,
+        "source": "condensed from the current Green Bamboo page (VI and EN)",
+        "vi": [
+          "Tre Xanh bắt đầu là một câu lạc bộ, sau đó trở thành mái ấm cho trẻ trai không nơi nương tựa, giúp các em có chỗ ở, được học và học nghề.",
+          "Từ [tháng/năm], Tre Xanh chuyển sang mô hình cơ sở bảo trợ xã hội. Thay vì nuôi dạy tập trung, cơ sở hỗ trợ trẻ và gia đình ngay tại cộng đồng: lớp học, câu lạc bộ, tư vấn, chăm sóc sức khỏe và kết nối dịch vụ xã hội."
+        ],
+        "en": [
+          "Green Bamboo began as a club and later became a shelter for homeless boys, giving them a home, schooling and vocational training.",
+          "In [month/year] Green Bamboo became a social protection center. Instead of residential care, it now supports children and families in their community: classes, clubs, counseling, healthcare and links to social services."
+        ]
+      },
+      "help": {
+        "draft": true,
+        "vi": "[Nhu cầu cụ thể của cơ sở do HCWA cung cấp, ví dụ học bổng, đồ dùng học tập, giáo viên tình nguyện.]",
+        "en": "[Specific needs supplied by HCWA, for example scholarships, school supplies, volunteer teachers.]"
       }
     },
     {
@@ -130,14 +166,19 @@
         },
         "ratio": "4:3",
         "illustration": true
-      }
+      },
+      "shortName": {
+        "vi": "Hoa Hồng Nhỏ",
+        "en": "Little Rose"
+      },
+      "illustrationOnly": true
     },
     {
       "id": "cau-han",
       "built": false,
       "path": {
         "vi": "/hoat-dong/co-so/cau-han/",
-        "en": "/en/our-work/centers/cau-han/"
+        "en": "/en/our-work/centers/cau-han-project/"
       },
       "accent": "cau-han",
       "name": {
@@ -164,7 +205,12 @@
           "en": "Cau Han cover"
         },
         "ratio": "4:3"
-      }
+      },
+      "shortName": {
+        "vi": "Cầu Hàn",
+        "en": "Cau Han"
+      },
+      "_slugNote": "EN slug differs from VI (cau-han): Polylang free needs unique slugs per post type. See 04-SITEMAP."
     }
   ],
   "programs": [
@@ -205,7 +251,36 @@
         "green-bamboo",
         "little-rose",
         "cau-han"
-      ]
+      ],
+      "focus": {
+        "draft": true,
+        "vi": "Chương trình đặc biệt hướng đến trẻ em di cư, trẻ thiếu giấy tờ pháp lý, trẻ khuyết tật, trẻ chịu ảnh hưởng bởi HIV/AIDS và trẻ sống trong môi trường thiếu an toàn.",
+        "en": "It focuses on migrant children, children without legal documents, children with disabilities, children affected by HIV/AIDS and children living in unsafe places."
+      },
+      "goals": {
+        "draft": true,
+        "vi": [
+          "Trẻ được tiếp cận liên tục với giáo dục",
+          "Trẻ được chăm sóc sức khỏe thể chất và tinh thần",
+          "Trẻ phát triển kỹ năng phù hợp với độ tuổi"
+        ],
+        "en": [
+          "Children keep steady access to education",
+          "Children get physical and mental healthcare",
+          "Children build age-appropriate skills"
+        ]
+      },
+      "activities": {
+        "draft": true,
+        "vi": [
+          "Củng cố và mở rộng hoạt động tại các cơ sở của Hội",
+          "Tập huấn cho phụ huynh, nhân viên và cộng tác viên"
+        ],
+        "en": [
+          "Strengthen and expand activities at HCWA's centers",
+          "Train parents, staff and community collaborators"
+        ]
+      }
     },
     {
       "id": "charity-class",

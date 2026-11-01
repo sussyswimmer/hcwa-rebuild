@@ -1,0 +1,14 @@
+/*
+Theme Name:        HCWA 2026
+Description:       Theme for hcwa.org.vn (Hội Bảo trợ Trẻ em TP. Hồ Chí Minh). Hybrid: PHP header, footer and archive templates, block patterns for page bodies. Needs the HCWA Core plugin and Polylang.
+Version:           0.1.0
+Requires at least: 6.6
+Requires PHP:      7.4
+Author:            HCWA volunteers
+License:           GPL-2.0-or-later
+License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain:       hcwa-2026
+
+Styles live in assets/css: tokens.css and site.css are copied from the prototype by
+`npm run sync` in wp/ (do not edit them here); wp.css holds the WordPress-only rules.
+*/

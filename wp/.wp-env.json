@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/wp-env.json",
+	"phpVersion": "7.4",
+	"plugins": [ "https://downloads.wordpress.org/plugin/polylang.zip", "./plugins/hcwa-core" ],
+	"themes": [ "./themes/hcwa-2026" ],
+	"mappings": {
+		"hcwa/content": "../content",
+		"hcwa/dev": "./dev",
+		"hcwa/img": "../prototype/public/img"
+	},
+	"config": {
+		"WP_ENVIRONMENT_TYPE": "local",
+		"WP_DEBUG": true
+	}
+}

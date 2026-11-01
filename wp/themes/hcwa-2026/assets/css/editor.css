@@ -1,0 +1,5 @@
+/* Block editor only: the canvas starts with the page background, and locked sections show
+   their layout the way visitors see it. */
+body { background: var(--color-paper); }
+.editor-styles-wrapper .section, .editor-styles-wrapper .cta-band, .editor-styles-wrapper .hero { margin-block: 0; }
+.editor-styles-wrapper [data-draft] { outline: 1.5px dashed rgb(138 90 0 / .55); outline-offset: 3px; }

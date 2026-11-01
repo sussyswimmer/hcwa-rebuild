@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/latest-news",
+	"title": "Latest news",
+	"category": "hcwa",
+	"icon": "megaphone",
+	"description": "One featured story (latest post in Stories) plus the latest news items, or a row of related news by tag.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"featured": { "type": "boolean", "default": true },
+		"count": { "type": "integer", "default": 3 },
+		"tag": { "type": "string", "default": "" },
+		"exclude": { "type": "integer", "default": 0 }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

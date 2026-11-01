@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/center-grid",
+	"title": "Center cards",
+	"category": "hcwa",
+	"icon": "building",
+	"description": "Photo cards for the centers, with each unit's color band. On phones the cards scroll sideways with the next one peeking.",
+	"textdomain": "hcwa-core",
+	"attributes": {
+		"area": { "type": "string", "default": "" },
+		"followFilter": { "type": "boolean", "default": false },
+		"count": { "type": "integer", "default": 0 }
+	},
+	"supports": { "html": false, "className": true, "reusable": false },
+	"render": "file:./render.php"
+}

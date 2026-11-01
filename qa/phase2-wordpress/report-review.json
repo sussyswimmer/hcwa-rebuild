@@ -1,0 +1,415 @@
+{
+  "base": "http://127.0.0.1:9400",
+  "production": false,
+  "date": "2026-11-01T10:09:07.761Z",
+  "report": [
+    {
+      "path": "/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 35,
+      "requests": 9,
+      "kb": 290,
+      "problems": [],
+      "notes": [
+        "9 requests, 290 KB"
+      ]
+    },
+    {
+      "path": "/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 35,
+      "requests": 9,
+      "kb": 290,
+      "problems": [],
+      "notes": [
+        "9 requests, 290 KB"
+      ]
+    },
+    {
+      "path": "/en/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 35,
+      "requests": 9,
+      "kb": 288,
+      "problems": [],
+      "notes": [
+        "9 requests, 288 KB"
+      ]
+    },
+    {
+      "path": "/en/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 35,
+      "requests": 9,
+      "kb": 288,
+      "problems": [],
+      "notes": [
+        "9 requests, 288 KB"
+      ]
+    },
+    {
+      "path": "/hoat-dong/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 17,
+      "requests": 9,
+      "kb": 277,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 17,
+      "requests": 9,
+      "kb": 277,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/?area=education",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 15,
+      "requests": 9,
+      "kb": 275,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/?area=education",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 15,
+      "requests": 9,
+      "kb": 275,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/co-so/tre-xanh/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 18,
+      "requests": 9,
+      "kb": 299,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/co-so/tre-xanh/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 18,
+      "requests": 9,
+      "kb": 299,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/centers/little-rose/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 10,
+      "requests": 9,
+      "kb": 273,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/centers/little-rose/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 10,
+      "requests": 9,
+      "kb": 273,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/programs/thrive-together/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 12,
+      "requests": 9,
+      "kb": 273,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/programs/thrive-together/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 12,
+      "requests": 9,
+      "kb": 273,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/du-an/cung-vuon-len/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 12,
+      "requests": 9,
+      "kb": 275,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/du-an/cung-vuon-len/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 12,
+      "requests": 9,
+      "kb": 275,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tac-dong/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 11,
+      "requests": 9,
+      "kb": 272,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tac-dong/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 11,
+      "requests": 9,
+      "kb": 272,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/impact/reports/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 5,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/impact/reports/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 5,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tin-tuc/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tin-tuc/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/?untranslated=80",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 268,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/?untranslated=80",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 268,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/chung-tay/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 14,
+      "requests": 9,
+      "kb": 274,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/chung-tay/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 14,
+      "requests": 9,
+      "kb": 274,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/get-involved/donate/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 6,
+      "requests": 9,
+      "kb": 274,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/get-involved/donate/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 6,
+      "requests": 9,
+      "kb": 274,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/lien-he/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 6,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/lien-he/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 6,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/about/policies/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 5,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/about/policies/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 5,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/?s=tr%E1%BA%BB+em",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/?s=tr%E1%BA%BB+em",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/khong-co-trang-nay/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 268,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/khong-co-trang-nay/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 268,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/no-such-page/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/no-such-page/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 3,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    }
+  ]
+}

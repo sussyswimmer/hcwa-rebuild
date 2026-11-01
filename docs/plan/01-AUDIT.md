@@ -105,6 +105,10 @@ The VI homepage adds a Vision block, the 3 latest news posts and a contact form.
 - A floating social icon bar sits over the content on every page.
 - PayPal tracking pixels load on every page from the donation plugin.
 - Elementor 3.21.4 dates from 2024; plugin updates are behind.
+- The server runs PHP 7.4.33 (response header, checked 1 Nov 2026), which stopped getting
+  security fixes in November 2022. WordPress itself is current (7.1.4) and the host uses
+  LiteSpeed with its page cache. Ask the host to move to PHP 8.2 or newer; the new theme
+  and plugin work on both.
 
 ## Mobile audit (task 0.1, 30 Oct 2026)
 

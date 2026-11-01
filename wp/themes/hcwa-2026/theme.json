@@ -1,0 +1,86 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": false,
+		"useRootPaddingAwareAlignments": false,
+		"layout": { "contentSize": "720px", "wideSize": "1200px" },
+		"color": {
+			"custom": false,
+			"customGradient": false,
+			"customDuotone": false,
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"defaultDuotone": false,
+			"gradients": [],
+			"duotone": [],
+			"palette": [
+				{ "slug": "paper", "name": "Paper (page)", "color": "#FBF8F3" },
+				{ "slug": "surface", "name": "Surface (cards)", "color": "#FFFFFF" },
+				{ "slug": "sunken", "name": "Sunken (alternate sections)", "color": "#F3EEE6" },
+				{ "slug": "ink", "name": "Ink (text)", "color": "#1C2333" },
+				{ "slug": "ink-2", "name": "Ink 2 (secondary text)", "color": "#4A5265" },
+				{ "slug": "blue-900", "name": "HCWA blue, dark", "color": "#23236A" },
+				{ "slug": "blue-700", "name": "HCWA blue", "color": "#313188" },
+				{ "slug": "blue-100", "name": "HCWA blue, tint", "color": "#ECECF7" },
+				{ "slug": "sun-400", "name": "Sun (Donate and primary button only)", "color": "#FFC42E" },
+				{ "slug": "sun-100", "name": "Sun, tint", "color": "#FFF4D6" }
+			]
+		},
+		"typography": {
+			"customFontSize": false,
+			"defaultFontSizes": false,
+			"dropCap": false,
+			"fontStyle": false,
+			"letterSpacing": false,
+			"textTransform": false,
+			"textDecoration": false,
+			"writingMode": false,
+			"fluid": false,
+			"fontFamilies": [
+				{
+					"slug": "display",
+					"name": "Fraunces (headings)",
+					"fontFamily": "\"Fraunces\", \"Iowan Old Style\", \"Georgia\", serif",
+					"fontFace": [
+						{ "fontFamily": "Fraunces", "fontWeight": "500 700", "fontStyle": "normal", "fontDisplay": "swap", "src": [ "file:./assets/fonts/fraunces-vf.woff2" ] }
+					]
+				},
+				{
+					"slug": "body",
+					"name": "Be Vietnam Pro (text)",
+					"fontFamily": "\"Be Vietnam Pro\", \"Segoe UI\", system-ui, sans-serif",
+					"fontFace": [
+						{ "fontFamily": "Be Vietnam Pro", "fontWeight": "400", "fontStyle": "normal", "fontDisplay": "swap", "src": [ "file:./assets/fonts/be-vietnam-pro-400.woff2" ] },
+						{ "fontFamily": "Be Vietnam Pro", "fontWeight": "500", "fontStyle": "normal", "fontDisplay": "swap", "src": [ "file:./assets/fonts/be-vietnam-pro-500.woff2" ] },
+						{ "fontFamily": "Be Vietnam Pro", "fontWeight": "600", "fontStyle": "normal", "fontDisplay": "swap", "src": [ "file:./assets/fonts/be-vietnam-pro-600.woff2" ] }
+					]
+				}
+			],
+			"fontSizes": [
+				{ "slug": "meta", "name": "Small (dates, badges)", "size": "0.875rem" },
+				{ "slug": "base", "name": "Body", "size": "1.0625rem" },
+				{ "slug": "lead", "name": "Lead paragraph", "size": "1.25rem" }
+			]
+		},
+		"spacing": {
+			"blockGap": null,
+			"margin": false,
+			"padding": false,
+			"customSpacingSize": false,
+			"defaultSpacingSizes": false,
+			"units": [ "px", "rem" ]
+		},
+		"border": { "color": false, "radius": false, "style": false, "width": false },
+		"shadow": { "defaultPresets": false, "presets": [] },
+		"dimensions": { "aspectRatio": false, "minHeight": false },
+		"blocks": {
+			"core/button": { "border": { "radius": false } },
+			"core/image": { "lightbox": { "allowEditing": false } }
+		}
+	},
+	"styles": {
+		"color": { "background": "var(--wp--preset--color--paper)", "text": "var(--wp--preset--color--ink)" },
+		"typography": { "fontFamily": "var(--wp--preset--font-family--body)", "fontSize": "var(--wp--preset--font-size--base)", "lineHeight": "1.65" }
+	}
+}

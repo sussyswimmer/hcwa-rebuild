@@ -1,0 +1,435 @@
+{
+  "base": "http://127.0.0.1:9401",
+  "production": true,
+  "date": "2026-11-01T10:10:57.929Z",
+  "report": [
+    {
+      "path": "/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 272,
+      "problems": [],
+      "notes": [
+        "no h1 (draft heading hidden on production)",
+        "9 requests, 272 KB"
+      ]
+    },
+    {
+      "path": "/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 272,
+      "problems": [],
+      "notes": [
+        "no h1 (draft heading hidden on production)",
+        "9 requests, 272 KB"
+      ]
+    },
+    {
+      "path": "/en/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": [
+        "no h1 (draft heading hidden on production)",
+        "9 requests, 271 KB"
+      ]
+    },
+    {
+      "path": "/en/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 271,
+      "problems": [],
+      "notes": [
+        "no h1 (draft heading hidden on production)",
+        "9 requests, 271 KB"
+      ]
+    },
+    {
+      "path": "/hoat-dong/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/?area=education",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/our-work/?area=education",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/hoat-dong/co-so/tre-xanh/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/hoat-dong/co-so/tre-xanh/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/en/our-work/centers/little-rose/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/en/our-work/centers/little-rose/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/en/our-work/programs/thrive-together/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/en/our-work/programs/thrive-together/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/hoat-dong/du-an/cung-vuon-len/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/hoat-dong/du-an/cung-vuon-len/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": [
+        "404: draft wording, hidden on production"
+      ]
+    },
+    {
+      "path": "/tac-dong/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tac-dong/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/impact/reports/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/impact/reports/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tin-tuc/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/tin-tuc/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/?untranslated=0",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/news/?untranslated=0",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 265,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/chung-tay/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/chung-tay/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/get-involved/donate/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/get-involved/donate/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 267,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/lien-he/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/lien-he/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/about/policies/",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/about/policies/",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/?s=tr%E1%BA%BB+em",
+      "size": "mobile",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/?s=tr%E1%BA%BB+em",
+      "size": "desktop",
+      "status": 200,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 269,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/khong-co-trang-nay/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/khong-co-trang-nay/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 266,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/no-such-page/",
+      "size": "mobile",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "path": "/en/no-such-page/",
+      "size": "desktop",
+      "status": 404,
+      "drafts": 0,
+      "requests": 9,
+      "kb": 264,
+      "problems": [],
+      "notes": []
+    }
+  ]
+}
