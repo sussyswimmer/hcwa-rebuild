@@ -41,6 +41,22 @@ Plain HTML on purpose: every section maps 1:1 to a WordPress block pattern later
   Facebook Likebox, Easy PayPal Donation, Ultimate Social Media Icons, Recent Posts
   Widget, Visitors Traffic stats, Content Views. Target: 8 plugins or fewer.
 - Fonts self-hosted in the theme (no Google Fonts CDN call).
+
+**Task 2.1 decision (5 Nov 2026): hybrid theme, confirmed.** Settled by reading the
+Polylang 3.9.1 and WordPress 7.1.4 source rather than a running spike (running downloaded
+WordPress needs Maxwell's permission in the build environment). Two findings:
+- Polylang free does not translate block-theme template parts, and it cannot give a
+  custom post type or category a different URL base per language (that is Pro's
+  "translate slugs"). The spec wants `/hoat-dong/co-so/tre-xanh/` and
+  `/en/our-work/centers/green-bamboo/`, so `hcwa-core` registers those types with
+  `rewrite => false` and adds its own per-language rules and link filters. Polylang only
+  rewrites rules that contain `post_type=` at the `rewrite_rules_array` stage
+  (`src/links-directory.php`), so rules that carry `lang=vi|en` pass through untouched.
+- Patterns load once at startup, before WordPress knows which page is being edited, so
+  they cannot switch language. Patterns ship as VI/EN pairs.
+Details and every name the plugin and theme share: `wp/CONTRACT.md`. To verify on a real
+install: both URL sets resolve, the switch links them, and Polylang's canonical redirect
+does not bounce either one.
 - Local dev: `@wordpress/env` (needs Docker) or the WordPress Studio app.
 
 ## Phases

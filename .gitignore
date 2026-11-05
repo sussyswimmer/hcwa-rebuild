@@ -6,3 +6,4 @@ dist/
 prototype/.site/
 .omc/
 __pycache__/
+.wp-local/
