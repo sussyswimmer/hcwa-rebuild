@@ -65,6 +65,17 @@ $GLOBALS['hcwa_test']['options']['hcwa_settings'] = array(
 );
 hcwa_assert_same( 'Hội chợ Tết', hcwa_setting_l( 'announcement_text', 'vi' ), 'per-language setting' );
 hcwa_assert_same( '', hcwa_setting_l( 'announcement_text', 'en' ), 'no fallback to the other language' );
+$hcwa_saved_settings = $GLOBALS['hcwa_test']['options']['hcwa_settings'] ?? null;
+$hcwa_saved_env      = $GLOBALS['hcwa_test']['env'] ?? null;
+$GLOBALS['hcwa_test']['options']['hcwa_settings'] = array( 'address_vi' => '[DRAFT: địa chỉ]', 'address_en' => '14 Example Street' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+hcwa_assert_same( '[DRAFT: địa chỉ]', hcwa_setting_l( 'address', 'vi' ), 'staging: draft setting text shown for review' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_setting_l( 'address', 'vi' ), 'production: draft setting text reads as empty for every caller' );
+hcwa_assert_same( '14 Example Street', hcwa_setting_l( 'address', 'en' ), 'production: ordinary setting text kept' );
+hcwa_assert_same( '[DRAFT: địa chỉ]', hcwa_setting( 'address_vi' ), 'hcwa_setting() stays the raw value' );
+$GLOBALS['hcwa_test']['options']['hcwa_settings'] = $hcwa_saved_settings;
+$GLOBALS['hcwa_test']['env']                      = $hcwa_saved_env;
 hcwa_assert_same( 'fallback', hcwa_setting( 'announcement_text_en', 'fallback' ), 'empty value returns the default' );
 hcwa_assert_same( array( 'hcwa.vn@gmail.com', 'sponsorshiprelations@hcwa.org.vn' ), hcwa_contact_emails(), 'valid emails only' );
 
@@ -89,3 +100,13 @@ hcwa_assert_same( null, hcwa_announcement_from( array_merge( $bar, array( 'annou
 $draft_bar = array_merge( $bar, array( 'announcement_text_vi' => '[DRAFT: Tết 2027]' ) );
 hcwa_assert_same( null, hcwa_announcement_from( $draft_bar, 'vi', true ), 'draft text hidden on production' );
 hcwa_assert_same( '[DRAFT: Tết 2027]', hcwa_announcement_from( $draft_bar, 'vi', false )['text'], 'draft text shown on staging' );
+
+// The option is registered on every request (not only in wp-admin), so WP-CLI, the seed and
+// cron writes go through the sanitizer and its re-confirmation guard.
+$init = array_filter( $GLOBALS['hcwa_test']['hooks']['init'] ?? array(), static fn( $h ) => 'hcwa_register_settings' === $h[0] );
+hcwa_assert_true( (bool) $init, 'register_setting() runs on init' );
+$GLOBALS['hcwa_test']['options']['hcwa_settings'] = $details;
+$patched = hcwa_sanitize_settings( array_merge( $details, array( 'donation_account' => '9999' ) ) );
+hcwa_assert_same( '9999', $patched['donation_account'], 'patched account kept' );
+hcwa_assert_same( '', $patched['donation_confirmed_by'], 'a patched account clears the finance confirmation' );
+hcwa_assert_same( null, hcwa_donation_details_from( $patched, 'vi' ), 'so the changed details do not render' );

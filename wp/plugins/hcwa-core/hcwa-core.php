@@ -3,7 +3,7 @@
  * Plugin Name:       HCWA Core
  * Plugin URI:        https://hcwa.org.vn
  * Description:       Content types, fields, bilingual UI strings, localized URLs and the safety gates (photo approval, verified figures, finance-confirmed donation details, no draft text on the live site) for the HCWA website.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            HCWA website volunteers
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'HCWA_CORE_VERSION', '0.1.0' );
+define( 'HCWA_CORE_VERSION', '0.1.1' ); // A version change re-flushes the rewrite rules (localized-urls.php).
 define( 'HCWA_CORE_FILE', __FILE__ );
 define( 'HCWA_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HCWA_CORE_URL', plugin_dir_url( __FILE__ ) );

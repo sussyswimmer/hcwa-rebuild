@@ -46,28 +46,21 @@ if ( $hcwa_center_id > 0 ) {
 	);
 }
 
-$hcwa_rows = array();
-foreach ( get_posts( $hcwa_args ) as $hcwa_program ) {
-	if ( ! $hcwa_program instanceof WP_Post ) {
-		continue;
-	}
-	$hcwa_row = hcwa_blocks_program_data( $hcwa_program );
-	// Status is filtered here, not in SQL: a program saved without a status row is "active".
-	if ( 'any' === $hcwa_status || $hcwa_status === $hcwa_row['status'] ) {
-		$hcwa_rows[] = $hcwa_row;
-	}
-}
-$hcwa_rows = array_slice( hcwa_blocks_sort_programs( $hcwa_rows ), 0, $hcwa_limit );
+// Status is filtered here, not in SQL: a program saved without a status row is "active".
+// Filter, sort and cut on the status alone; rows are built only for the programs shown.
+$hcwa_programs = hcwa_blocks_pick_programs( get_posts( $hcwa_args ), $hcwa_status, $hcwa_limit );
 
-if ( ! $hcwa_rows ) {
+if ( ! $hcwa_programs ) {
 	echo hcwa_blocks_empty_note( 'blk_noPrograms' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	return;
 }
+
+hcwa_blocks_prime_partners( $hcwa_programs );
 ?>
 <ul <?php echo get_block_wrapper_attributes( array( 'class' => 'program-list', 'data-filter-group' => '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
 	<?php
-	foreach ( $hcwa_rows as $hcwa_row ) {
-		echo hcwa_blocks_program_row( $hcwa_row, $hcwa_lang, $hcwa_production ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+	foreach ( $hcwa_programs as $hcwa_program ) {
+		echo hcwa_blocks_program_row( hcwa_blocks_program_data( $hcwa_program ), $hcwa_lang, $hcwa_production ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	}
 	?>
 </ul>

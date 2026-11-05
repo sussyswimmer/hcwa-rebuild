@@ -34,9 +34,14 @@ while ( have_posts() ) :
 
 	// Funders: names always; a small one-tone logo only where hcwa-core allows it (contract
 	// rule 5, the same gate as the hcwa/partner-wall block: written permission on the live site).
-	$hcwa_partners = array();
-	foreach ( hcwa_theme_meta_ids( $hcwa_id, 'hcwa_partner_ids' ) as $hcwa_partner_id ) {
-		$hcwa_partner = get_post( hcwa_theme_translated_id( $hcwa_partner_id ) );
+	$hcwa_partners    = array();
+	$hcwa_partner_ids = hcwa_theme_meta_ids( $hcwa_id, 'hcwa_partner_ids' );
+	hcwa_theme_prime_ids( $hcwa_partner_ids ); // Originals with their language terms, then the translations and their logos.
+	$hcwa_partner_ids = array_map( 'hcwa_theme_translated_id', $hcwa_partner_ids );
+	hcwa_theme_prime_ids( $hcwa_partner_ids );
+	hcwa_theme_prime_attachments( $hcwa_partner_ids );
+	foreach ( $hcwa_partner_ids as $hcwa_partner_id ) {
+		$hcwa_partner = get_post( $hcwa_partner_id );
 		if ( ! $hcwa_partner instanceof WP_Post || 'publish' !== $hcwa_partner->post_status ) {
 			continue;
 		}
@@ -113,6 +118,7 @@ while ( have_posts() ) :
 	);
 	if ( '' !== $hcwa_cover ) {
 		echo '<div class="container cover">' . $hcwa_cover . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image().
+		hcwa_theme_cover_printed();
 	}
 
 	$hcwa_content = str_replace( ']]>', ']]&gt;', (string) apply_filters( 'the_content', get_the_content() ) );

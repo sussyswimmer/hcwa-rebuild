@@ -48,6 +48,25 @@ $hcwa_names = array_keys( $hcwa_contract );
 sort( $hcwa_names );
 hcwa_assert_same( $hcwa_names, hcwa_blocks_names(), 'exactly the contract blocks are registered' );
 
+// blocks-manifest.php (what WordPress registers from) is exactly the block.json files.
+// After changing a block.json: php wp/tests/blocks-manifest-build.php
+$hcwa_manifest = require "$hcwa_blocks_dir/blocks-manifest.php";
+$hcwa_folders  = array();
+foreach ( glob( "$hcwa_blocks_dir/*/block.json" ) as $hcwa_file ) {
+	$hcwa_folders[ basename( dirname( $hcwa_file ) ) ] = json_decode( (string) file_get_contents( $hcwa_file ), true );
+}
+hcwa_assert_true( is_array( $hcwa_manifest ), 'manifest returns an array' );
+$hcwa_manifest = is_array( $hcwa_manifest ) ? $hcwa_manifest : array();
+ksort( $hcwa_manifest );
+ksort( $hcwa_folders );
+hcwa_assert_same( array_keys( $hcwa_folders ), array_keys( $hcwa_manifest ), 'manifest: one entry per block folder (run php wp/tests/blocks-manifest-build.php)' );
+foreach ( $hcwa_folders as $hcwa_name => $hcwa_meta ) {
+	hcwa_assert_same( $hcwa_meta, $hcwa_manifest[ $hcwa_name ] ?? null, "manifest: $hcwa_name matches its block.json (run php wp/tests/blocks-manifest-build.php)" );
+}
+$hcwa_register_src = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks.php' );
+hcwa_assert_contains( "wp_register_block_metadata_collection( HCWA_CORE_DIR . 'blocks', HCWA_CORE_DIR . 'blocks/blocks-manifest.php' )", $hcwa_register_src, 'blocks register from the manifest' );
+hcwa_assert_false( str_contains( $hcwa_register_src, 'glob(' ), 'no folder scan on every request' );
+
 foreach ( $hcwa_contract as $hcwa_name => $hcwa_attrs ) {
 	$hcwa_dir = "$hcwa_blocks_dir/$hcwa_name";
 	foreach ( array( 'block.json', 'index.js', 'index.asset.php', 'render.php' ) as $hcwa_file ) {

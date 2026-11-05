@@ -47,6 +47,19 @@ $hcwa_block_attrs = array(
 	'announcement-bar' => array(),
 );
 
+// Every hcwa/* block may print nothing on production (contract "Markup and CSS"), so in a
+// pattern each one sits inside a wrapper that patterns.css hides when the block printed
+// nothing, taking the section heading with it: block => [wrapper class, what the rule's
+// :has() looks for].
+$hcwa_empty_hides = array(
+	'impact-strip'     => array( 'hcwa-impact-slot', '*' ),
+	'partner-wall'     => array( 'hcwa-partners', '.hcwa-partner-slot > *' ),
+	'center-grid'      => array( 'hcwa-block-section', '.wp-block-hcwa-center-grid' ),
+	'program-list'     => array( 'hcwa-block-section', '.wp-block-hcwa-program-list' ),
+	'news-latest'      => array( 'hcwa-block-section', '.wp-block-hcwa-news-latest' ),
+	'donation-methods' => array( 'donate-methods', '.wp-block-hcwa-donation-methods' ),
+);
+
 foreach ( $hcwa_pattern_names as $hcwa_name ) {
 	foreach ( array( 'vi', 'en' ) as $hcwa_lang ) {
 		hcwa_assert_true( is_file( "$hcwa_pattern_dir/$hcwa_name-$hcwa_lang.php" ), "$hcwa_name-$hcwa_lang.php exists" );
@@ -100,6 +113,8 @@ foreach ( $hcwa_pattern_files as $hcwa_file ) {
 	// Block comments: balanced, JSON parses, escaped like serializeAttributes().
 	preg_match_all( '/<!--\s+(\/)?wp:([a-z][a-z0-9_-]*\/)?([a-z][a-z0-9_-]*)\s+(\{.*?\}\s+)?(\/)?-->/s', $hcwa_html, $hcwa_blocks, PREG_SET_ORDER );
 	$hcwa_stack     = array();
+	$hcwa_classes   = array(); // className of each open block, parallel to $hcwa_stack.
+	$hcwa_hides_ok  = true;
 	$hcwa_balanced  = true;
 	$hcwa_json_ok   = true;
 	$hcwa_top_ok    = true;
@@ -111,6 +126,7 @@ foreach ( $hcwa_pattern_files as $hcwa_file ) {
 		$hcwa_void   = '/' === ( $hcwa_block[5] ?? '' );
 		if ( $hcwa_closer ) {
 			$hcwa_balanced = $hcwa_balanced && array_pop( $hcwa_stack ) === $hcwa_bname;
+			array_pop( $hcwa_classes );
 			continue;
 		}
 		$hcwa_raw   = trim( $hcwa_block[4] ?? '' );
@@ -142,11 +158,16 @@ foreach ( $hcwa_pattern_files as $hcwa_file ) {
 				}
 			}
 			$hcwa_attrs_ok = $hcwa_attrs_ok && $hcwa_ok;
+
+			$hcwa_wrapper  = $hcwa_empty_hides[ $hcwa_short ][0] ?? null;
+			$hcwa_hides_ok = $hcwa_hides_ok && null !== $hcwa_wrapper
+				&& in_array( $hcwa_wrapper, preg_split( '/\s+/', implode( ' ', $hcwa_classes ) ), true );
 		}
 		// Structure shared by the VI and EN files: block names, classes, tags, locks.
 		$hcwa_structure[] = $hcwa_bname . '|' . ( $hcwa_attrs['className'] ?? '' ) . '|' . ( $hcwa_attrs['tagName'] ?? '' ) . '|' . ( $hcwa_attrs['level'] ?? '' ) . '|' . ( $hcwa_attrs['templateLock'] ?? '' );
 		if ( ! $hcwa_void ) {
-			$hcwa_stack[] = $hcwa_bname;
+			$hcwa_stack[]   = $hcwa_bname;
+			$hcwa_classes[] = (string) ( $hcwa_attrs['className'] ?? '' );
 		}
 	}
 	$hcwa_structures[ $hcwa_name ][ $hcwa_lang ] = $hcwa_structure;
@@ -155,6 +176,7 @@ foreach ( $hcwa_pattern_files as $hcwa_file ) {
 	hcwa_assert_true( $hcwa_json_ok, "$hcwa_base: block attributes are valid, escaped JSON" );
 	hcwa_assert_true( $hcwa_top_ok, "$hcwa_base: top-level groups are full width and contentOnly-locked" );
 	hcwa_assert_true( $hcwa_attrs_ok, "$hcwa_base: hcwa/* blocks are self-closing with contract attributes only" );
+	hcwa_assert_true( $hcwa_hides_ok, "$hcwa_base: each hcwa/* block sits in a wrapper that hides when it prints nothing" );
 
 	hcwa_assert_same( ( $hcwa_is_page || 'page-header' === $hcwa_name ) ? 1 : 0, substr_count( $hcwa_html, '<h1' ), "$hcwa_base: H1 count (one per page body, none in sections)" );
 	hcwa_assert_false( (bool) preg_match( '/<img[^>]*\ssrc=/', $hcwa_html ), "$hcwa_base: image slots carry no src (no stock photos)" );
@@ -184,3 +206,13 @@ $hcwa_css = (string) file_get_contents( dirname( __DIR__ ) . '/themes/hcwa-2026/
 hcwa_assert_true( '' !== $hcwa_css, 'patterns.css exists' );
 hcwa_assert_false( (bool) preg_match( '/text-transform\s*:\s*uppercase/i', $hcwa_css ), 'patterns.css never uppercases (Vietnamese diacritics)' );
 hcwa_assert_same( substr_count( $hcwa_css, '{' ), substr_count( $hcwa_css, '}' ), 'patterns.css braces balance' );
+
+// The wrapper rules: ".wrapper:not(:has(…)) { display: none; }", whose :has() names the block.
+preg_match_all( '/^\.([\w-]+):not\(:has\((.+)\)\)\s*\{\s*display:\s*none;\s*\}/m', $hcwa_css, $hcwa_hide_rules, PREG_SET_ORDER );
+foreach ( $hcwa_empty_hides as $hcwa_short => list( $hcwa_wrapper, $hcwa_needle ) ) {
+	$hcwa_found = array_filter(
+		$hcwa_hide_rules,
+		static fn( $rule ) => $hcwa_wrapper === $rule[1] && false !== strpos( $rule[2], $hcwa_needle )
+	);
+	hcwa_assert_true( (bool) $hcwa_found, "patterns.css hides .$hcwa_wrapper when hcwa/$hcwa_short printed nothing" );
+}

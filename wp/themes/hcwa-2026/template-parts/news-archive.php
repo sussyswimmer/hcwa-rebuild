@@ -78,6 +78,8 @@ if ( is_home() || is_category() ) {
 		<?php if ( have_posts() ) : ?>
 			<ul class="news-grid">
 				<?php
+				// Story cards print the featured image: load all of them before the loop.
+				hcwa_theme_prime_attachments( (array) ( $GLOBALS['wp_query']->posts ?? array() ) );
 				while ( have_posts() ) {
 					the_post();
 					get_template_part(

@@ -83,6 +83,12 @@ figure.way__art { margin: 0; }
 /* (:has() cannot nest inside :has(), hence :not(:has(slot > *)).) */
 .hcwa-partners:not(:has(.hcwa-partner-slot > *)) { display: none; }
 
+/* ---------- sections built around a list block (home, Our Work) ---------- */
+/* On production these blocks print nothing when there is nothing to show; the section's
+   heading (and the home "See all" link) goes with them. Staging keeps the block's
+   .empty-state note, which carries the same wrapper class, so the section stays. */
+.hcwa-block-section:not(:has(:is(.wp-block-hcwa-center-grid, .wp-block-hcwa-program-list, .wp-block-hcwa-news-latest))) { display: none; }
+
 /* ---------- CTA and contact bands ---------- */
 .wp-block-buttons.cta-band__actions { gap: 12px; }
 /* site.css turns every link in the band white; the sun button keeps ink text (9.86:1). */
@@ -127,6 +133,9 @@ figure.way__art { margin: 0; }
 .page-crumbs + .entry-content--page > .page-header:first-child { padding-top: 0; }
 
 /* ---------- donate ---------- */
+/* hcwa/donation-methods prints nothing on production until finance confirms the details
+   (contract rule 3): the "How to give" heading goes too, and "Tell us you gave" stays. */
+.donate-methods:not(:has(.wp-block-hcwa-donation-methods)) { display: none; }
 .gift-list strong { font: 600 var(--fs-h3) / 1.1 var(--font-display); color: var(--color-blue-700); }
 
 /* ---------- contact ---------- */

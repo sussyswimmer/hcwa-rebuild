@@ -30,11 +30,16 @@
  *   gets the English name as its English slug (hcwa_seed_cpt_slugs()). Term slugs used
  *   twice get a "-<lang>" suffix (src/term-slug.php), so Vietnamese focus areas are
  *   seeded as "<slug>-vi" from the start (wp/CONTRACT.md).
- * - With custom field sync on, Polylang copies every unprotected custom field between
- *   translations (src/modules/sync/sync-post-metas.php). hcwa_seed_id therefore holds
- *   the same value on both translations, and the post's language tells them apart.
+ * - "Custom fields" sync stays off (hcwa_seed_polylang_options()). With it on, Polylang
+ *   syncs every public meta key (src/modules/sync/sync-post-metas.php:51), including
+ *   per-language text such as core's footnotes. hcwa-core's pll_copy_post_metas filter
+ *   adds the shared fields whatever the option says (sync-post-metas.php:78).
+ * - Polylang copies every unprotected custom field into a translation made with "+"
+ *   (sync-post-metas.php:51-58, is_protected_meta()), so the seed's bookkeeping key is the
+ *   protected _hcwa_seed_id. Both translations carry the same value; the post's language
+ *   tells them apart.
  *
- * Idempotent: everything seeded carries hcwa_seed_id (post or term meta) and is updated in
+ * Idempotent: everything seeded carries _hcwa_seed_id (post or term meta) and is updated in
  * place on the next run, never duplicated. Content made by hand is left alone; seeded
  * posts are reset to the seed. Refuses to run on production.
  *
@@ -205,6 +210,17 @@ function hcwa_seed_block_dynamic( string $name, array $attrs = array() ): string
 }
 
 /**
+ * A group with the class `container`, as the page patterns wrap their hcwa/* blocks, so a
+ * block and its heading share the container's left edge instead of the heading sitting in
+ * the narrower reading column (site.css .entry-content--page rules).
+ *
+ * @param string[] $blocks Serialized inner blocks.
+ */
+function hcwa_seed_block_container( array $blocks ): string {
+	return '<!-- wp:group {"className":"container"} -->' . "\n" . '<div class="wp-block-group container">' . "\n" . implode( "\n\n", $blocks ) . "\n</div>\n<!-- /wp:group -->";
+}
+
+/**
  * The "more" block: the theme folds the text after it into "Read the full history".
  */
 function hcwa_seed_block_more(): string {
@@ -246,7 +262,7 @@ function hcwa_seed_find_post( string $seed_id, string $post_type, string $lang )
 	$ids = $wpdb->get_col(
 		$wpdb->prepare(
 			"SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
-			WHERE m.meta_key = 'hcwa_seed_id' AND m.meta_value = %s AND p.post_type = %s AND p.post_status <> 'trash'
+			WHERE m.meta_key = '_hcwa_seed_id' AND m.meta_value = %s AND p.post_type = %s AND p.post_status <> 'trash'
 			ORDER BY p.ID",
 			$seed_id,
 			$post_type
@@ -272,7 +288,7 @@ function hcwa_seed_find_term( string $seed_id, string $taxonomy, string $lang ):
 	$ids = $wpdb->get_col(
 		$wpdb->prepare(
 			"SELECT tt.term_id FROM {$wpdb->term_taxonomy} tt INNER JOIN {$wpdb->termmeta} m ON m.term_id = tt.term_id
-			WHERE m.meta_key = 'hcwa_seed_id' AND m.meta_value = %s AND tt.taxonomy = %s
+			WHERE m.meta_key = '_hcwa_seed_id' AND m.meta_value = %s AND tt.taxonomy = %s
 			ORDER BY tt.term_id",
 			$seed_id,
 			$taxonomy
@@ -335,7 +351,7 @@ function hcwa_seed_upsert_post( string $seed_id, string $lang, array $fields, ar
 	if ( pll_get_post_language( $id ) !== $lang ) {
 		pll_set_post_language( $id, $lang );
 	}
-	update_post_meta( $id, 'hcwa_seed_id', $seed_id );
+	update_post_meta( $id, '_hcwa_seed_id', $seed_id );
 
 	return $id;
 }
@@ -402,7 +418,7 @@ function hcwa_seed_term_pair( string $taxonomy, string $seed_id, array $by_lang 
 		if ( pll_get_term_language( $id ) !== $lang ) {
 			pll_set_term_language( $id, $lang );
 		}
-		update_term_meta( $id, 'hcwa_seed_id', $seed_id );
+		update_term_meta( $id, '_hcwa_seed_id', $seed_id );
 		$pair[ $lang ] = $id;
 
 		$saved = get_term( $id, $taxonomy );
@@ -423,6 +439,30 @@ function hcwa_seed_term_pair( string $taxonomy, string $seed_id, array $by_lang 
 function hcwa_seed_has_languages(): bool {
 	$languages = PLL()->model->languages;
 	return (bool) $languages->get( 'vi' ) && (bool) $languages->get( 'en' );
+}
+
+/**
+ * Polylang settings from 07-BILINGUAL. Order matters: hide_default and browser depend on
+ * force_lang.
+ *
+ * Sync leaves out 'post_meta' ("Custom fields"): with it on, Polylang syncs every public
+ * meta key on every save (src/modules/sync/sync-post-metas.php:51), so per-language text
+ * such as core's footnotes would overwrite the other language. 07 syncs only fields that
+ * are not text, and hcwa-core's pll_copy_post_metas filter adds those itself (Polylang
+ * applies the filter whatever this option says, sync-post-metas.php:78).
+ *
+ * @return array<string, mixed>
+ */
+function hcwa_seed_polylang_options(): array {
+	return array(
+		'force_lang'    => 1,     // Language from the directory name.
+		'hide_default'  => true,  // Vietnamese has no /vi/ prefix.
+		'rewrite'       => true,  // /en/…, not /language/en/….
+		'redirect_lang' => true,  // English front page is /en/, not /en/home/.
+		'browser'       => false, // No redirect by browser language: the theme shows a "View in English" bar.
+		'media_support' => true,  // Alt text and captions per language.
+		'sync'          => array( 'taxonomies', 'post_parent', '_thumbnail_id' ),
+	);
 }
 
 /**
@@ -474,24 +514,14 @@ function hcwa_seed_languages( array $site ): void {
 		}
 	}
 
-	// 07-BILINGUAL. Order matters: hide_default and browser depend on force_lang.
-	$wanted = array(
-		'force_lang'    => 1,     // Language from the directory name.
-		'hide_default'  => true,  // Vietnamese has no /vi/ prefix.
-		'rewrite'       => true,  // /en/…, not /language/en/….
-		'redirect_lang' => true,  // English front page is /en/, not /en/home/.
-		'browser'       => false, // No redirect by browser language: the theme shows a "View in English" bar.
-		'media_support' => true,  // Alt text and captions per language.
-		'sync'          => array( 'taxonomies', 'post_meta', 'post_parent', '_thumbnail_id' ),
-	);
-	foreach ( $wanted as $key => $value ) {
+	foreach ( hcwa_seed_polylang_options() as $key => $value ) {
 		$errors = $model->options->set( $key, $value );
 		if ( $errors->has_errors() ) {
 			WP_CLI::warning( "Polylang setting $key: " . implode( ' ', $errors->get_error_messages() ) );
 		}
 	}
 	$model->options->save();
-	WP_CLI::log( 'Polylang: directory URLs, Vietnamese without prefix, no browser detection, media translation and field sync on.' );
+	WP_CLI::log( 'Polylang: directory URLs, Vietnamese without prefix, no browser detection, media translation on; taxonomies, page parent and featured image synced (custom fields: only the shared ones hcwa-core names).' );
 
 	global $wp_rewrite;
 	$wp_rewrite->set_permalink_structure( '/%postname%/' );
@@ -526,6 +556,10 @@ function hcwa_seed_languages( array $site ): void {
  * @param string $manifest Where to write the seeded URL list ('' for nowhere).
  */
 function hcwa_seed_content( array $data, string $manifest ): void {
+	$renamed = hcwa_seed_migrate_key();
+	if ( $renamed ) {
+		WP_CLI::log( "Renamed the seed marker hcwa_seed_id to the protected _hcwa_seed_id on $renamed items." );
+	}
 	hcwa_seed_remove_wp_samples();
 	hcwa_seed_default_category();
 
@@ -533,6 +567,7 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 	$categories = hcwa_seed_categories();
 	$pages      = hcwa_seed_pages();
 	$centers    = hcwa_seed_centers( $data['work'], $focus );
+	hcwa_seed_news_tags( $data['work'], $centers );
 	$partners   = hcwa_seed_partners( $data['work'] );
 	$programs   = hcwa_seed_programs( $data['work'], $focus, $centers, $partners );
 	$scopes     = hcwa_seed_impact( $data['impact'], $centers, $programs );
@@ -563,6 +598,23 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 }
 
 /**
+ * Earlier seeds marked items with the unprotected key hcwa_seed_id, which Polylang copies
+ * into translations made by hand. Renames it to _hcwa_seed_id in post and term meta, so
+ * existing instances keep their seeded items. Returns the number of rows renamed.
+ */
+function hcwa_seed_migrate_key(): int {
+	global $wpdb;
+	$renamed = 0;
+	foreach ( array( $wpdb->postmeta, $wpdb->termmeta ) as $table ) {
+		$renamed += (int) $wpdb->update( $table, array( 'meta_key' => '_hcwa_seed_id' ), array( 'meta_key' => 'hcwa_seed_id' ) );
+	}
+	if ( $renamed ) {
+		wp_cache_flush(); // The update bypassed the meta API, so drop any cached meta.
+	}
+	return $renamed;
+}
+
+/**
  * Deletes WordPress's sample post and pages on a fresh local install (no language, no
  * seed ID), so they do not show up in news lists without a language.
  */
@@ -572,7 +624,7 @@ function hcwa_seed_remove_wp_samples(): void {
 	}
 	foreach ( array( array( 'post', 'hello-world' ), array( 'page', 'sample-page' ), array( 'page', 'privacy-policy' ) ) as $sample ) {
 		$post = get_page_by_path( $sample[1], OBJECT, $sample[0] );
-		if ( ! $post || get_post_meta( $post->ID, 'hcwa_seed_id', true ) || pll_get_post_language( $post->ID ) ) {
+		if ( ! $post || get_post_meta( $post->ID, '_hcwa_seed_id', true ) || pll_get_post_language( $post->ID ) ) {
 			continue;
 		}
 		if ( (int) get_option( 'wp_page_for_privacy_policy' ) === (int) $post->ID ) {
@@ -869,19 +921,29 @@ function hcwa_seed_page_body( string $key, array $def, string $lang ): string {
 		);
 	}
 
-	$blocks = array( hcwa_seed_block_p( hcwa_seed_draft( (string) ( $def['text'][ $lang ] ?? '' ) ) ) );
+	$blocks  = array( hcwa_seed_block_p( hcwa_seed_draft( (string) ( $def['text'][ $lang ] ?? '' ) ) ) );
+	$dynamic = array();
 	foreach ( (array) ( $def['blocks'] ?? array() ) as $block ) {
-		$blocks[] = hcwa_seed_block_dynamic( $block[0], $block[1] );
+		$dynamic[] = hcwa_seed_block_dynamic( $block[0], $block[1] );
+	}
+	if ( $dynamic ) {
+		$blocks[] = hcwa_seed_block_container( $dynamic );
 	}
 	$paths = hcwa_page_paths();
 	foreach ( (array) ( $def['sections'] ?? array() ) as $section ) {
 		list( $anchor_key, $label_key, $text ) = $section;
-		$anchor   = ltrim( (string) ( $paths[ $anchor_key ][ $lang ] ?? $anchor_key ), '#' );
-		$blocks[] = hcwa_seed_block_h2( hcwa_t_in( $label_key, $lang ), $anchor );
-		$blocks[] = hcwa_seed_block_p( hcwa_seed_draft( $text[ $lang ] ) );
+		$anchor = ltrim( (string) ( $paths[ $anchor_key ][ $lang ] ?? $anchor_key ), '#' );
+		$inner  = array(
+			hcwa_seed_block_h2( hcwa_t_in( $label_key, $lang ), $anchor ),
+			hcwa_seed_block_p( hcwa_seed_draft( $text[ $lang ] ) ),
+		);
+		$dynamic = array();
 		foreach ( (array) ( $section[3] ?? array() ) as $block ) {
-			$blocks[] = hcwa_seed_block_dynamic( $block[0], $block[1] );
+			$dynamic[] = hcwa_seed_block_dynamic( $block[0], $block[1] );
 		}
+		// A section with an hcwa/* block is one container (heading, text and block aligned,
+		// as in the page patterns); a text-only section stays in the reading column.
+		$blocks = $dynamic ? array_merge( $blocks, array( hcwa_seed_block_container( array_merge( $inner, $dynamic ) ) ) ) : array_merge( $blocks, $inner );
 	}
 	return implode( "\n\n", $blocks );
 }
@@ -1141,6 +1203,46 @@ function hcwa_seed_centers( array $work, array $focus ): array {
 	}
 
 	WP_CLI::log( sprintf( 'Centers: %d in each language (Little Rose marked "no identifiable children").', count( $out ) ) );
+	return $out;
+}
+
+/**
+ * One post tag per center, in both languages and linked, set as the center's news tag
+ * (shared field, the Vietnamese slug). The center page lists news with that tag, and for
+ * Little Rose it is what extends the "no identifiable children" photo rule to its news
+ * (hcwa_no_identifiable_news_tags()); `wp hcwa coverage` fails while a center with that
+ * flag has no news tag. Tag slugs are the centers' own slugs, which already differ per
+ * language (Polylang free gives each term its own slug). No seeded post is tagged: none
+ * of the posts in content/draft/news.json is about one center, and tagging one would
+ * claim it is.
+ *
+ * @param array $work    content/draft/work.json.
+ * @param array $centers hcwa_seed_centers() result: center id => ['vi' => ID, 'en' => ID].
+ * @return array<string, array{vi: int, en: int}> center id => tag term IDs.
+ */
+function hcwa_seed_news_tags( array $work, array $centers ): array {
+	$out = array();
+	foreach ( (array) ( $work['centers'] ?? array() ) as $center ) {
+		$id = sanitize_title( (string) ( $center['id'] ?? '' ) );
+		if ( empty( $centers[ $id ]['vi'] ) || empty( $centers[ $id ]['en'] ) ) {
+			continue;
+		}
+		$by_lang = array();
+		foreach ( array( 'vi', 'en' ) as $lang ) {
+			$by_lang[ $lang ] = array(
+				'name' => (string) ( $center['name'][ $lang ] ?? '' ),
+				'slug' => (string) get_post_field( 'post_name', (int) $centers[ $id ][ $lang ] ),
+			);
+		}
+		$out[ $id ] = hcwa_seed_term_pair( 'post_tag', 'tag:' . $id, $by_lang );
+
+		$vi_tag = get_term( (int) $out[ $id ]['vi'], 'post_tag' );
+		$slug   = $vi_tag instanceof WP_Term ? $vi_tag->slug : $by_lang['vi']['slug'];
+		foreach ( $centers[ $id ] as $post_id ) {
+			hcwa_seed_meta( (int) $post_id, array( 'hcwa_news_tag' => $slug ) );
+		}
+	}
+	WP_CLI::log( sprintf( 'News tags: %d centers, each with a linked VI / EN tag (no posts tagged).', count( $out ) ) );
 	return $out;
 }
 

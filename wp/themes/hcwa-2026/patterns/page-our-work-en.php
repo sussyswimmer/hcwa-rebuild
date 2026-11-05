@@ -66,8 +66,8 @@ defined( 'ABSPATH' ) || exit;
 </nav>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight","metadata":{"name":"Centers"}} -->
-<section class="wp-block-group alignfull section section--tight">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight hcwa-block-section","metadata":{"name":"Centers"}} -->
+<section class="wp-block-group alignfull section section--tight hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:heading {"anchor":"centers"} -->
@@ -80,8 +80,8 @@ defined( 'ABSPATH' ) || exit;
 </section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight","metadata":{"name":"Programs"}} -->
-<section class="wp-block-group alignfull section section--tight">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight hcwa-block-section","metadata":{"name":"Programs"}} -->
+<section class="wp-block-group alignfull section section--tight hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:heading {"anchor":"programs"} -->

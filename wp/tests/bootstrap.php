@@ -15,6 +15,15 @@
  *   can          current_user_can() / user_can() result
  *   hooks        add_action/add_filter calls, [hook][] => [callback, priority, args]
  *   fired        do_action calls, [] => [hook, args]
+ * Optional (absent after a reset, read with defaults):
+ *   translations [post_id] => [lang => id] for pll_get_post_translations() (the only
+ *                Polylang function stubbed, so other code keeps its no-Polylang paths)
+ *   is           [conditional tag name] => bool for is_embed(), is_feed(), ...
+ *   query_vars   get_query_var() values
+ *   upload_urls  [url] => attachment ID for attachment_url_to_postid()
+ *   children     [parent_id] => attachment IDs for get_children()
+ *   updated      wp_update_post() calls
+ *   current_post the global post: get_post() without an argument
  *
  * @package hcwa-core
  */
@@ -508,6 +517,9 @@ if ( ! function_exists( 'get_post' ) ) {
 		if ( $post instanceof WP_Post ) {
 			return $post;
 		}
+		if ( empty( $post ) ) {
+			return $GLOBALS['hcwa_test']['current_post'] ?? null;
+		}
 		return $GLOBALS['hcwa_test']['posts'][ (int) $post ] ?? null;
 	}
 }
@@ -573,6 +585,137 @@ if ( ! function_exists( 'wp_force_plain_post_permalink' ) ) {
 if ( ! function_exists( 'get_queried_object_id' ) ) {
 	function get_queried_object_id() {
 		return 0;
+	}
+}
+
+if ( ! function_exists( 'metadata_exists' ) ) {
+	function metadata_exists( $meta_type, $object_id, $meta_key ) {
+		return array_key_exists( $meta_key, $GLOBALS['hcwa_test']['post_meta'][ (int) $object_id ] ?? array() );
+	}
+}
+if ( ! function_exists( 'wp_update_post' ) ) {
+	/** Records the call and applies the status to the test post. */
+	function wp_update_post( $postarr = array(), $wp_error = false ) {
+		$GLOBALS['hcwa_test']['updated'][] = $postarr;
+		$post = get_post( (int) ( $postarr['ID'] ?? 0 ) );
+		if ( $post && isset( $postarr['post_status'] ) ) {
+			$post->post_status = $postarr['post_status'];
+		}
+		return $post ? $post->ID : 0;
+	}
+}
+if ( ! function_exists( 'get_post_types' ) ) {
+	function get_post_types( $args = array(), $output = 'names' ) {
+		return array( 'post' => 'post', 'page' => 'page', 'attachment' => 'attachment', 'hcwa_center' => 'hcwa_center', 'hcwa_program' => 'hcwa_program', 'hcwa_report' => 'hcwa_report' );
+	}
+}
+if ( ! function_exists( 'get_registered_meta_keys' ) ) {
+	function get_registered_meta_keys( $object_type, $object_subtype = '' ) {
+		return array();
+	}
+}
+if ( ! function_exists( 'wp_get_post_parent_id' ) ) {
+	function wp_get_post_parent_id( $post = null ) {
+		$post = get_post( $post );
+		return $post ? (int) $post->post_parent : false;
+	}
+}
+if ( ! function_exists( 'get_children' ) ) {
+	function get_children( $args = '', $output = OBJECT ) {
+		return $GLOBALS['hcwa_test']['children'][ (int) ( $args['post_parent'] ?? 0 ) ] ?? array();
+	}
+}
+if ( ! function_exists( 'pll_get_post_translations' ) ) {
+	function pll_get_post_translations( $post_id ) {
+		return $GLOBALS['hcwa_test']['translations'][ (int) $post_id ] ?? array();
+	}
+}
+
+/* ---------- conditional tags and query vars ---------- */
+
+/**
+ * Value of a stubbed conditional tag (false unless a test sets it).
+ *
+ * @param string $tag Function name, e.g. 'is_embed'.
+ */
+function hcwa_test_is( string $tag ): bool {
+	return ! empty( $GLOBALS['hcwa_test']['is'][ $tag ] );
+}
+if ( ! function_exists( 'is_embed' ) ) {
+	function is_embed() {
+		return hcwa_test_is( 'is_embed' );
+	}
+}
+if ( ! function_exists( 'is_feed' ) ) {
+	function is_feed( $feeds = '' ) {
+		return hcwa_test_is( 'is_feed' );
+	}
+}
+if ( ! function_exists( 'is_preview' ) ) {
+	function is_preview() {
+		return hcwa_test_is( 'is_preview' );
+	}
+}
+if ( ! function_exists( 'is_attachment' ) ) {
+	function is_attachment( $attachment = '' ) {
+		return hcwa_test_is( 'is_attachment' );
+	}
+}
+if ( ! function_exists( 'is_category' ) ) {
+	function is_category( $category = '' ) {
+		return hcwa_test_is( 'is_category' );
+	}
+}
+if ( ! function_exists( 'get_query_var' ) ) {
+	function get_query_var( $name, $default = '' ) {
+		return $GLOBALS['hcwa_test']['query_vars'][ $name ] ?? $default;
+	}
+}
+
+/* ---------- media and REST ---------- */
+
+if ( ! function_exists( 'wp_get_upload_dir' ) ) {
+	function wp_get_upload_dir() {
+		return array( 'baseurl' => rtrim( (string) get_option( 'home' ), '/' ) . '/wp-content/uploads' );
+	}
+}
+if ( ! function_exists( 'attachment_url_to_postid' ) ) {
+	function attachment_url_to_postid( $url ) {
+		return (int) ( $GLOBALS['hcwa_test']['upload_urls'][ $url ] ?? 0 );
+	}
+}
+if ( ! function_exists( 'gallery_shortcode' ) ) {
+	/** Prints the IDs it was given, so tests can see what the gate passed on. */
+	function gallery_shortcode( $attr ) {
+		return '<div class="gallery">' . esc_html( (string) ( $attr['ids'] ?? '' ) ) . '</div>';
+	}
+}
+if ( ! function_exists( 'status_header' ) ) {
+	function status_header( $code, $description = '' ) {
+		$GLOBALS['hcwa_test']['status'] = (int) $code;
+	}
+}
+if ( ! function_exists( 'nocache_headers' ) ) {
+	function nocache_headers() {
+	}
+}
+if ( ! function_exists( 'rest_authorization_required_code' ) ) {
+	function rest_authorization_required_code() {
+		return 401;
+	}
+}
+if ( ! class_exists( 'WP_REST_Request' ) ) {
+	/** Minimal WP_REST_Request: a route. */
+	class WP_REST_Request {
+		private $route;
+
+		public function __construct( $method = '', $route = '' ) {
+			$this->route = $route;
+		}
+
+		public function get_route() {
+			return $this->route;
+		}
 	}
 }
 

@@ -280,22 +280,40 @@ function hcwa_title_placeholder( $text, $post ) {
 add_filter( 'enter_title_here', 'hcwa_title_placeholder', 10, 2 );
 
 /**
- * Impact figures and partners are admin-only, but show_in_rest (needed for the editor)
- * would let anyone read published ones, including unverified figures and internal
- * source notes. Their REST routes are limited to people who can edit posts.
+ * REST routes limited to people who can edit posts (the site renders on the server and
+ * never needs them in public):
+ * - impact figures and partners are admin-only, but show_in_rest (needed for the editor)
+ *   would let anyone read published ones, including unverified figures;
+ * - media (/wp/v2/media, also reached by ?_embed through wp:featuredmedia) would list every
+ *   upload with its file URLs, captions and parent, approved for web or not, including
+ *   photos of identifiable children and a VietQR image finance has not confirmed.
  *
- * @param mixed           $result  Response to short-circuit with, or null.
- * @param WP_REST_Server  $server  Server.
- * @param WP_REST_Request $request Request.
+ * Checked on the matched request (rest_request_before_callbacks, which also runs for
+ * embedded and batch requests), case-insensitively, because WordPress matches routes
+ * case-insensitively (wp-includes/rest-api/class-wp-rest-server.php
+ * match_request_to_handler()).
+ *
+ * @param mixed           $response Response so far (a WP_Error from validation is kept).
+ * @param array           $handler  Matched route handler.
+ * @param WP_REST_Request $request  Request.
  * @return mixed
  */
-function hcwa_rest_protect_admin_types( $result, $server, $request ) {
-	if ( null !== $result || ! $request instanceof WP_REST_Request ) {
-		return $result;
+function hcwa_rest_protect_routes( $response, $handler, $request ) {
+	if ( is_wp_error( $response ) || ! $request instanceof WP_REST_Request ) {
+		return $response;
 	}
-	if ( preg_match( '#^/wp/v2/(hcwa_impact|hcwa_partner)(/|$)#', (string) $request->get_route() ) && ! current_user_can( 'edit_posts' ) ) {
+	if ( hcwa_rest_route_is_protected( (string) $request->get_route() ) && ! current_user_can( 'edit_posts' ) ) {
 		return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to do that.', 'hcwa' ), array( 'status' => rest_authorization_required_code() ) );
 	}
-	return $result;
+	return $response;
 }
-add_filter( 'rest_pre_dispatch', 'hcwa_rest_protect_admin_types', 10, 3 );
+add_filter( 'rest_request_before_callbacks', 'hcwa_rest_protect_routes', 10, 3 );
+
+/**
+ * Whether a REST route is one of hcwa_rest_protect_routes()'s (any letter case).
+ *
+ * @param string $route Route, e.g. /wp/v2/media/12.
+ */
+function hcwa_rest_route_is_protected( string $route ): bool {
+	return (bool) preg_match( '#^/+wp/v2/(?:hcwa_impact|hcwa_partner|media)(?:/|$)#i', $route );
+}

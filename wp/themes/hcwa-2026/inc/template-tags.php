@@ -73,7 +73,10 @@ function hcwa_theme_text_link( string $url, string $label ): string {
 }
 
 /**
- * VI / EN switch: text not flags, aria-current on the current one, lang + hreflang on each.
+ * VI / EN switch: text not flags, aria-current on the current one, lang on each, and
+ * hreflang only where the target is this page in that language: a link to a post without a
+ * translation leads to the same post in the page's language (with the language notice), or
+ * to that language's home page, so it promises no hreflang.
  * The visible "VI" stays inside the accessible name (WCAG 2.5.3): "VI (Tiếng Việt)".
  *
  * @param string $class Extra class.
@@ -82,12 +85,13 @@ function hcwa_theme_lang_switch( string $class = '' ): string {
 	$parts = array();
 	foreach ( hcwa_theme_language_links() as $code => $link ) {
 		$parts[] = sprintf(
-			'<a href="%1$s" lang="%2$s" hreflang="%2$s"%3$s>%4$s<span class="sr-only"> (%5$s)</span></a>',
+			'<a href="%1$s" lang="%2$s"%6$s%3$s>%4$s<span class="sr-only"> (%5$s)</span></a>',
 			esc_url( $link['url'] ),
 			esc_attr( $code ),
 			$link['current'] ? ' aria-current="true"' : '',
 			esc_html( strtoupper( $code ) ),
-			esc_html( $link['name'] )
+			esc_html( $link['name'] ),
+			( $link['current'] || $link['has_translation'] ) ? ' hreflang="' . esc_attr( $code ) . '"' : ''
 		);
 	}
 	return sprintf(
@@ -146,6 +150,58 @@ function hcwa_theme_split_lines( string $text ): array {
  */
 function hcwa_theme_meta_ids( int $post_id, string $key ): array {
 	return hcwa_theme_parse_ids( get_post_meta( $post_id, $key, true ) );
+}
+
+/**
+ * Loads some posts (attachments, partners) with their meta and terms in three queries in
+ * all, before a loop reads them one by one: hcwa_image() reads the approval flags and, for
+ * the identifiable-child check, the attachment's Polylang translations (kept in terms);
+ * wp_get_attachment_image() reads the metadata for srcset. _prime_post_caches() is core's
+ * (wp-includes/post.php:8502) and skips posts already cached.
+ *
+ * @param int[] $ids Post IDs.
+ */
+function hcwa_theme_prime_ids( array $ids ): void {
+	$ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ), static fn( int $id ): bool => $id > 0 ) ) );
+	if ( $ids && function_exists( '_prime_post_caches' ) ) {
+		_prime_post_caches( $ids, true, true );
+	}
+}
+
+/**
+ * Attachment IDs that some posts point to through meta keys (the featured image by
+ * default), each once. Reads the posts' meta, which their query has already loaded.
+ * Pure apart from get_post_meta() (tested).
+ *
+ * @param array    $posts WP_Post objects or IDs.
+ * @param string[] $keys  Meta keys that hold one attachment ID.
+ * @return int[]
+ */
+function hcwa_theme_attachment_ids( array $posts, array $keys = array( '_thumbnail_id' ) ): array {
+	$ids = array();
+	foreach ( $posts as $post ) {
+		$post_id = $post instanceof WP_Post ? (int) $post->ID : ( is_int( $post ) ? $post : 0 );
+		if ( $post_id <= 0 ) {
+			continue;
+		}
+		foreach ( $keys as $key ) {
+			$id = (int) get_post_meta( $post_id, $key, true );
+			if ( $id > 0 ) {
+				$ids[] = $id;
+			}
+		}
+	}
+	return array_values( array_unique( $ids ) );
+}
+
+/**
+ * Primes the attachments a list of posts is about to print (cards, report rows).
+ *
+ * @param array    $posts WP_Post objects or IDs, usually $wp_query->posts.
+ * @param string[] $keys  Meta keys that hold one attachment ID.
+ */
+function hcwa_theme_prime_attachments( array $posts, array $keys = array( '_thumbnail_id' ) ): void {
+	hcwa_theme_prime_ids( hcwa_theme_attachment_ids( $posts, $keys ) );
 }
 
 /**
@@ -220,7 +276,8 @@ function hcwa_theme_category_key( WP_Term $term ): string {
 }
 
 /**
- * Seeded category in the current language, or null.
+ * Seeded category in the current language, or null when it has no version in this
+ * language (never the other language's category: its chip would mix languages).
  *
  * @param string $key news | stories | events | announcements.
  */
@@ -230,7 +287,7 @@ function hcwa_theme_category( string $key ): ?WP_Term {
 		$slugs = array_reverse( $slugs );
 	}
 	foreach ( $slugs as $slug ) {
-		$term = hcwa_theme_term_in_lang( 'category', $slug );
+		$term = hcwa_theme_term_in_lang( 'category', $slug, true );
 		if ( $term ) {
 			return $term;
 		}
@@ -239,12 +296,34 @@ function hcwa_theme_category( string $key ): ?WP_Term {
 }
 
 /**
- * A term looked up by slug in any language, returned in the current language.
+ * Which term to use for the current language. Pure part of hcwa_theme_term_in_lang() (tested).
+ *
+ * @param WP_Term      $term       Term found by slug, in any language.
+ * @param int|null     $translated pll_get_term() for the current language: the term itself
+ *                                 when it is in that language, its translation, or 0 when it
+ *                                 has none; null without Polylang.
+ * @param WP_Term|null $other      The translation, when it is another term.
+ * @param bool         $strict     Null instead of a term in the other language.
+ */
+function hcwa_theme_pick_term( WP_Term $term, ?int $translated, ?WP_Term $other, bool $strict ): ?WP_Term {
+	if ( null === $translated || $translated === (int) $term->term_id ) {
+		return $term;
+	}
+	if ( $translated > 0 && $other instanceof WP_Term ) {
+		return $other;
+	}
+	return $strict ? null : $term;
+}
+
+/**
+ * A term looked up by slug in any language, returned in the current language. Without a
+ * version in the current language: the term as found, or null when $strict.
  *
  * @param string $taxonomy Taxonomy.
  * @param string $slug     Term slug (sync meta stores the VI one).
+ * @param bool   $strict   Never return a term in the other language.
  */
-function hcwa_theme_term_in_lang( string $taxonomy, string $slug ): ?WP_Term {
+function hcwa_theme_term_in_lang( string $taxonomy, string $slug, bool $strict = false ): ?WP_Term {
 	if ( '' === $slug ) {
 		return null;
 	}
@@ -261,17 +340,10 @@ function hcwa_theme_term_in_lang( string $taxonomy, string $slug ): ?WP_Term {
 	if ( is_wp_error( $terms ) || empty( $terms ) ) {
 		return null;
 	}
-	$term = $terms[0];
-	if ( function_exists( 'pll_get_term' ) ) {
-		$translated = (int) pll_get_term( $term->term_id, hcwa_theme_lang() );
-		if ( $translated > 0 && $translated !== $term->term_id ) {
-			$other = get_term( $translated, $taxonomy );
-			if ( $other instanceof WP_Term ) {
-				return $other;
-			}
-		}
-	}
-	return $term;
+	$term       = $terms[0];
+	$translated = function_exists( 'pll_get_term' ) ? (int) pll_get_term( $term->term_id, hcwa_theme_lang() ) : null;
+	$other      = ( $translated > 0 && $translated !== (int) $term->term_id ) ? get_term( $translated, $taxonomy ) : null;
+	return hcwa_theme_pick_term( $term, $translated, $other instanceof WP_Term ? $other : null, $strict );
 }
 
 /**
@@ -393,8 +465,28 @@ function hcwa_theme_vi_name( int $post_id ): string {
 	if ( $vi_id <= 0 || $vi_id === $post_id ) {
 		return '';
 	}
-	$name = wp_strip_all_tags( get_the_title( $vi_id ) );
-	return $name === wp_strip_all_tags( get_the_title( $post_id ) ) ? '' : $name;
+	$post = get_post( $post_id );
+	return hcwa_theme_vi_name_of( get_post( $vi_id ), $post instanceof WP_Post ? $post->post_title : '' );
+}
+
+/**
+ * Pure part of hcwa_theme_vi_name() (tested): the Vietnamese translation's raw title, only
+ * when that translation is public (published, no password: an unreviewed draft title never
+ * reaches the live English page), differs from the English title, and holds no draft
+ * marker on the live site.
+ *
+ * @param WP_Post|null $vi       Vietnamese translation.
+ * @param string       $en_title Raw title of the English post.
+ */
+function hcwa_theme_vi_name_of( ?WP_Post $vi, string $en_title ): string {
+	if ( ! $vi instanceof WP_Post || 'publish' !== $vi->post_status || ! empty( $vi->post_password ) ) {
+		return '';
+	}
+	$name = trim( wp_strip_all_tags( (string) $vi->post_title ) );
+	if ( '' === $name || trim( wp_strip_all_tags( $en_title ) ) === $name ) {
+		return '';
+	}
+	return hcwa_theme_public_text( $name );
 }
 
 /**
@@ -406,8 +498,17 @@ function hcwa_theme_vi_name( int $post_id ): string {
 function hcwa_theme_report_info( WP_Post $post ): array {
 	$file_id  = (int) get_post_meta( $post->ID, 'hcwa_file_id', true );
 	$file_url = $file_id > 0 ? (string) wp_get_attachment_url( $file_id ) : '';
-	$path     = $file_id > 0 ? get_attached_file( $file_id ) : false;
-	$size     = ( $path && file_exists( $path ) ) ? (string) size_format( (int) filesize( $path ), 1 ) : '';
+	// WordPress stores the size in the attachment metadata at upload, PDFs included
+	// (wp-admin/includes/image.php:735-736, 'filesize'), which the row's priming already
+	// loaded; stat the file only for older uploads without it. Same rule as hcwa-core's
+	// report rows (includes/blocks.php).
+	$meta     = $file_id > 0 ? wp_get_attachment_metadata( $file_id ) : false;
+	$bytes    = is_array( $meta ) && ! empty( $meta['filesize'] ) ? (int) $meta['filesize'] : 0;
+	if ( ! $bytes && $file_id > 0 ) {
+		$path  = get_attached_file( $file_id );
+		$bytes = ( $path && is_readable( $path ) ) ? (int) filesize( $path ) : 0;
+	}
+	$size     = $bytes > 0 ? (string) size_format( $bytes, 1 ) : '';
 	$format   = '' !== $file_url ? strtolower( pathinfo( (string) wp_parse_url( $file_url, PHP_URL_PATH ), PATHINFO_EXTENSION ) ) : '';
 	$year     = (int) get_post_meta( $post->ID, 'hcwa_year', true );
 	$type     = (string) get_post_meta( $post->ID, 'hcwa_report_type', true );
@@ -476,6 +577,22 @@ function hcwa_theme_is_section_path( string $path, string $current ): bool {
 		return false;
 	}
 	return str_starts_with( $current, $path );
+}
+
+/**
+ * Call right after printing a cover image with loading="eager" and fetchpriority="high"
+ * (news, center and program pages). An explicit loading attribute keeps core from counting
+ * the cover as content media (wp-includes/media.php, wp_get_loading_optimization_attributes()),
+ * so the first three images of the body would load eagerly and compete with the cover.
+ * Counting the cover as the whole above-the-fold allowance makes every body image lazy.
+ * Not called when the gate refused the cover: then the first body image may be the largest
+ * one on screen and must stay eager.
+ */
+function hcwa_theme_cover_printed(): void {
+	// Core's counter (media.php, @access private, stable since 5.9); guarded in case it goes.
+	if ( function_exists( 'wp_increase_content_media_count' ) && function_exists( 'wp_omit_loading_attr_threshold' ) ) {
+		wp_increase_content_media_count( wp_omit_loading_attr_threshold() );
+	}
 }
 
 /**

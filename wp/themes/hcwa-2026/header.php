@@ -11,6 +11,21 @@ defined( 'ABSPATH' ) || exit;
 
 $hcwa_lang  = hcwa_theme_lang();
 $hcwa_links = hcwa_theme_language_links();
+
+// "View this page in English" only where it is true. A VI-only article points to the English
+// news page with a label that says so (07-BILINGUAL); an untranslated page or archive, or the
+// language notice already on screen, gets no bar.
+$hcwa_en_bar_url   = '';
+$hcwa_en_bar_label = '';
+if ( 'vi' === $hcwa_lang ) {
+	if ( ! empty( $hcwa_links['en']['has_translation'] ) ) {
+		$hcwa_en_bar_url   = $hcwa_links['en']['url'];
+		$hcwa_en_bar_label = hcwa_theme_t_in( 'enBar', 'en' );
+	} elseif ( is_singular( 'post' ) && 'en' !== hcwa_theme_lang_notice_request() ) {
+		$hcwa_en_bar_url   = hcwa_theme_url( 'news', 'en' );
+		$hcwa_en_bar_label = hcwa_theme_t_in( 'langNoticeHub', 'en' );
+	}
+}
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
@@ -31,14 +46,16 @@ $hcwa_links = hcwa_theme_language_links();
 	</div>
 <?php endif; ?>
 
-<?php if ( 'vi' === $hcwa_lang ) : ?>
-	<?php // English-speaking visitors on VI pages get a pointer to /en/; never an automatic redirect (07-BILINGUAL). ?>
+<?php if ( '' !== $hcwa_en_bar_url ) : ?>
+	<?php // English-speaking visitors on VI pages get a pointer to English; never an automatic redirect (07-BILINGUAL). ?>
 	<div class="en-bar" lang="en" data-en-bar hidden>
 		<div class="container en-bar__inner">
-			<a href="<?php echo esc_url( $hcwa_links['en']['url'] ); ?>" hreflang="en"><?php echo esc_html( hcwa_theme_t_in( 'enBar', 'en' ) ); ?><?php echo hcwa_theme_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></a>
+			<a href="<?php echo esc_url( $hcwa_en_bar_url ); ?>" hreflang="en"><?php echo esc_html( $hcwa_en_bar_label ); ?><?php echo hcwa_theme_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></a>
 			<button class="icon-btn icon-btn--sm" type="button" data-dismiss-en-bar aria-label="<?php echo esc_attr( hcwa_theme_t_in( 'enBarDismiss', 'en' ) ); ?>"><?php echo hcwa_theme_icon( 'close' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 		</div>
 	</div>
+	<?php // Shown before first paint (assets/js/bars.js), so the page never jumps down. ?>
+	<?php wp_print_inline_script_tag( 'window.hcwaBars && window.hcwaBars.enBar(document.currentScript.previousElementSibling);' ); ?>
 <?php endif; ?>
 
 <?php
@@ -46,6 +63,8 @@ $hcwa_links = hcwa_theme_language_links();
 $hcwa_announcement = hcwa_theme_block( 'hcwa/announcement-bar' );
 if ( '' !== $hcwa_announcement ) {
 	echo '<div class="container announce-slot">' . $hcwa_announcement . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- block render output.
+	// A dismissed announcement is hidden before first paint (assets/js/bars.js), so the page never jumps up.
+	wp_print_inline_script_tag( 'window.hcwaBars && window.hcwaBars.announce(document.currentScript.previousElementSibling);' );
 }
 ?>
 

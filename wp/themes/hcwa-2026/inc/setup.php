@@ -95,13 +95,54 @@ add_filter( 'wp_robots', 'hcwa_theme_robots', 99 );
  * @return array
  */
 function hcwa_theme_robots( array $robots ): array {
-	if ( hcwa_theme_is_production() ) {
-		return $robots;
+	if ( ! hcwa_theme_is_production() ) {
+		return array(
+			'noindex'  => true,
+			'nofollow' => true,
+		);
 	}
-	return array(
-		'noindex'  => true,
-		'nofollow' => true,
-	);
+	// Attachment pages are leftovers of the old site, not content: keep them out of search.
+	if ( is_attachment() ) {
+		$robots['noindex'] = true;
+	}
+	return $robots;
+}
+
+// Priority 5: before core's redirect_canonical (10), which would send a disabled attachment
+// page to the raw file.
+add_action( 'template_redirect', 'hcwa_theme_refuse_attachment_page', 5 );
+
+/**
+ * Attachment page of a photo the approval gate refuses in its context (or of any photo
+ * without hcwa-core): a plain 404, so neither the photo nor its title or caption, which
+ * often carry a child's name, is printed. Same steps as core's WP::handle_404().
+ */
+function hcwa_theme_refuse_attachment_page(): void {
+	if ( ! is_attachment() || ! hcwa_theme_attachment_refused( (int) get_queried_object_id() ) ) {
+		return;
+	}
+	global $wp_query;
+	$wp_query->set_404();
+	status_header( 404 );
+	nocache_headers();
+}
+
+add_action( 'template_redirect', 'hcwa_theme_lang_notice_redirect' );
+
+/**
+ * ?hcwa_lang_notice=<lang> on a post that has a published translation in that language
+ * by now (a bookmarked or shared switch link): go to the translation instead of saying the
+ * article only exists in one language. 302, because the translation may be unpublished again.
+ */
+function hcwa_theme_lang_notice_redirect(): void {
+	$lang = hcwa_theme_lang_notice_request();
+	if ( '' === $lang || ! is_singular() ) {
+		return;
+	}
+	$translation = hcwa_theme_published_translation( (int) get_queried_object_id(), $lang );
+	if ( $translation > 0 && wp_safe_redirect( (string) get_permalink( $translation ), 302 ) ) {
+		exit;
+	}
 }
 
 add_action( 'pre_get_posts', 'hcwa_theme_main_query' );

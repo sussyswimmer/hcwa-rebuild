@@ -5,8 +5,9 @@
  * On the live site, saving a post as published or scheduled while its title, content,
  * excerpt or one of our text fields still contains a draft marker ([DRAFT: …] or a
  * placeholder token such as [N], [year], [năm]) puts it back to draft and explains why.
- * Covers the classic editor, quick edit, REST (block editor) and the block editor's
- * separate meta box save. Staging is not affected. `wp hcwa draft-scan` lists offenders.
+ * Covers the classic editor, quick edit, REST (block editor), the block editor's
+ * separate meta box save and scheduled posts published by cron. Staging is not affected.
+ * `wp hcwa draft-scan` lists offenders (run it after any database push to production).
  *
  * @package hcwa-core
  */
@@ -166,6 +167,11 @@ add_filter( 'wp_insert_post_data', 'hcwa_publish_guard_data', 99, 2 );
  * wp_after_insert_post (fires after REST meta and after meta box saves): also checks our
  * registered text fields, reverts to draft if needed and records the reason.
  *
+ * Title, content and excerpt are checked here again: scheduled posts are published by
+ * cron through wp_publish_post(), which sets the status with $wpdb and never runs
+ * wp_insert_post_data (wp-includes/post.php), so a post scheduled where the guard was not
+ * active (a staging copy pushed live) would otherwise go live with draft text.
+ *
  * @param int     $post_id Post ID.
  * @param WP_Post $post    Post.
  * @param bool    $update  Whether an existing post was updated.
@@ -185,7 +191,11 @@ function hcwa_publish_guard_after( $post_id, $post, $update = true ): void {
 	$live = in_array( $post->post_status, array( 'publish', 'future' ), true );
 
 	if ( $live ) {
-		$texts = array();
+		$texts = array(
+			__( 'Title', 'hcwa' )   => (string) $post->post_title,
+			__( 'Content', 'hcwa' ) => (string) $post->post_content,
+			__( 'Excerpt', 'hcwa' ) => (string) $post->post_excerpt,
+		);
 		foreach ( get_registered_meta_keys( 'post', $post->post_type ) as $key => $args ) {
 			if ( 0 === strpos( $key, 'hcwa_' ) && 'string' === ( $args['type'] ?? '' ) ) {
 				$texts[ (string) ( $args['description'] ?? $key ) ] = (string) get_post_meta( $post->ID, $key, true );

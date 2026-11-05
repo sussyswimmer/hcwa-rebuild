@@ -66,8 +66,8 @@ defined( 'ABSPATH' ) || exit;
 </nav>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight","metadata":{"name":"Cơ sở"}} -->
-<section class="wp-block-group alignfull section section--tight">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight hcwa-block-section","metadata":{"name":"Cơ sở"}} -->
+<section class="wp-block-group alignfull section section--tight hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:heading {"anchor":"co-so"} -->
@@ -80,8 +80,8 @@ defined( 'ABSPATH' ) || exit;
 </section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight","metadata":{"name":"Dự án"}} -->
-<section class="wp-block-group alignfull section section--tight">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dtight hcwa-block-section","metadata":{"name":"Dự án"}} -->
+<section class="wp-block-group alignfull section section--tight hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:heading {"anchor":"du-an"} -->

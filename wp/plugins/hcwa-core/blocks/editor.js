@@ -14,6 +14,7 @@
 	var components = wp.components;
 	var blockEditor = wp.blockEditor;
 	var useSelect = wp.data.useSelect;
+	var useState = wp.element.useState;
 	var decodeEntities = wp.htmlEntities.decodeEntities;
 	var ServerSideRender = wp.serverSideRender;
 
@@ -33,7 +34,8 @@
 	 * Server-rendered preview in the post's language (Polylang reads ?lang= on REST
 	 * requests). Disabled, so a click on a link inside it cannot leave the editor.
 	 *
-	 * @param {Object} props block, attributes, label, empty.
+	 * @param {Object} props block, attributes, label, empty, query (extra query arguments
+	 *                       of the preview request, optional).
 	 * @return {Object} Element.
 	 */
 	function Preview( props ) {
@@ -44,7 +46,7 @@
 			el( ServerSideRender, {
 				block: props.block,
 				attributes: props.attributes,
-				urlQueryArgs: lang ? { lang: lang } : {},
+				urlQueryArgs: Object.assign( lang ? { lang: lang } : {}, props.query || {} ),
 				EmptyResponsePlaceholder: function () {
 					return el( components.Placeholder, { label: props.label, instructions: props.empty } );
 				},
@@ -104,8 +106,12 @@
 	 *
 	 * @param {string} name Block name, e.g. 'hcwa/impact-strip'.
 	 * @param {Object} spec title, description, empty (shown when the preview is empty),
-	 *                      controls( props ) => array of sidebar controls (optional),
-	 *                      panel( props ) => extra sidebar content (optional).
+	 *                      controls( props, preview, setPreview ) => array of sidebar
+	 *                      controls (optional),
+	 *                      previewQuery( preview ) => extra query arguments of the preview
+	 *                      request (optional).
+	 *                      preview is editor-only state (default ''): it changes what the
+	 *                      preview shows and is never saved with the block.
 	 */
 	function register( name, spec ) {
 		wp.blocks.registerBlockType( name, {
@@ -113,7 +119,8 @@
 			description: spec.description,
 			edit: function ( props ) {
 				var blockProps = blockEditor.useBlockProps();
-				var controls = spec.controls ? spec.controls( props ) : null;
+				var previewState = useState( '' );
+				var controls = spec.controls ? spec.controls( props, previewState[ 0 ], previewState[ 1 ] ) : null;
 				var sidebar = controls
 					? el(
 						blockEditor.InspectorControls,
@@ -129,6 +136,7 @@
 					el( Preview, {
 						block: name,
 						attributes: props.attributes,
+						query: spec.previewQuery ? spec.previewQuery( previewState[ 0 ] ) : null,
 						label: spec.title,
 						empty: spec.empty,
 					} )

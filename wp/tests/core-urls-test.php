@@ -34,7 +34,11 @@ hcwa_assert_same( 'index.php?hcwa_center=tre-xanh&lang=vi', $match( 'hoat-dong/c
 hcwa_assert_same( 'index.php?hcwa_center=green-bamboo&lang=en', $match( 'en/our-work/centers/green-bamboo/' ), 'en center rule' );
 hcwa_assert_same( 'index.php?hcwa_program=thrive-together&lang=en', $match( 'en/our-work/programs/thrive-together' ), 'en program rule' );
 hcwa_assert_same( 'index.php?hcwa_report=annual-2025&lang=en', $match( 'en/impact/reports/annual-2025' ), 'en report rule' );
-hcwa_assert_same( 'index.php?hcwa_center=tre-xanh&embed=true&lang=vi', $match( 'hoat-dong/co-so/tre-xanh/embed' ), 'embed rule' );
+hcwa_assert_same( null, $match( 'hoat-dong/co-so/tre-xanh/embed' ), 'no embed rule (embeds are switched off)' );
+hcwa_assert_same( null, $match( 'en/our-work/centers/green-bamboo/feed' ), 'feed is not taken for an attachment slug' );
+hcwa_assert_same( 'index.php?attachment=anh-1&lang=vi', $match( 'hoat-dong/co-so/tre-xanh/anh-1/' ), 'attachment page under a center (parent permalink + slug)' );
+hcwa_assert_same( 'index.php?attachment=photo&lang=en', $match( 'en/our-work/programs/thrive-together/attachment/photo' ), 'attachment page, /attachment/ form' );
+hcwa_assert_same( 'index.php?hcwa_report=bao-cao-2025&page=2&lang=vi', $match( 'tac-dong/bao-cao/bao-cao-2025/2/' ), 'paged report' );
 hcwa_assert_same( 'index.php?category_name=stories&lang=en', $match( 'en/news/stories' ), 'en category rule' );
 hcwa_assert_same( 'index.php?category_name=stories&paged=2&lang=en', $match( 'en/news/stories/page/2' ), 'en category pagination' );
 hcwa_assert_same( 'index.php?category_name=cau-chuyen&paged=3&lang=vi', $match( 'tin-tuc/cau-chuyen/page/3/' ), 'vi category pagination' );
@@ -113,3 +117,16 @@ hcwa_assert_same( 'https://hcwa.test/', hcwa_page_url( 'nope', 'vi' ), 'unknown 
 hcwa_test_post( array( 'ID' => 40, 'post_type' => 'page', 'post_name' => 'lien-he-moi', 'post_status' => 'publish' ) );
 $GLOBALS['hcwa_test']['options']['hcwa_settings'] = array( 'page_map' => array( 'contact' => 40 ) );
 hcwa_assert_same( 'https://hcwa.test/lien-he-moi/', hcwa_page_url( 'contact', 'vi' ), 'page map wins over the path table' );
+
+// Canonical redirect for localized objects (hcwa_pll_check_canonical_url): the permalink's
+// path on the requested host, the visitor's own query kept, object query vars dropped.
+hcwa_assert_same(
+	'https://hcwa.test/hoat-dong/co-so/cau-han/?utm_source=x',
+	hcwa_canonical_with_request( 'https://hcwa.test/hoat-dong/co-so/cau-han/', 'https://hcwa.test/our-work/centers/cau-han/?utm_source=x&lang=vi' ),
+	'wrong-language base: permalink path, query kept'
+);
+hcwa_assert_same( 'http://hcwa.test:8080/en/news/news/', hcwa_canonical_with_request( 'https://hcwa.test/en/news/news/', 'http://hcwa.test:8080/en/category/news/' ), 'scheme, host and port come from the request' );
+hcwa_assert_same( 'https://hcwa.test/en/x/', hcwa_pll_check_canonical_url( 'https://hcwa.test/en/x/' ), 'other objects: Polylang decides' );
+hcwa_assert_same( false, hcwa_pll_check_canonical_url( false ), 'no redirect stays no redirect' );
+$GLOBALS['hcwa_test']['is']['is_feed'] = true;
+hcwa_assert_same( 'https://hcwa.test/a/', hcwa_pll_check_canonical_url( 'https://hcwa.test/a/' ), 'feeds untouched' );

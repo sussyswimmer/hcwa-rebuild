@@ -30,6 +30,13 @@ hcwa_assert_same( array( 3, 4 ), hcwa_theme_parse_ids( array( 3, '4', 0, -1, 3 )
 hcwa_assert_same( array( 5, 6, 7 ), hcwa_theme_parse_ids( '5, 6 7' ), 'ids from a string' );
 hcwa_assert_same( array(), hcwa_theme_parse_ids( null ), 'no ids' );
 
+// Attachments a loop prints, collected once before it runs (priming).
+hcwa_test_post( array( 'ID' => 930, 'post_type' => 'hcwa_report' ), array( '_thumbnail_id' => 41, 'hcwa_file_id' => 42 ) );
+hcwa_test_post( array( 'ID' => 931, 'post_type' => 'hcwa_report' ), array( '_thumbnail_id' => '41' ) );
+hcwa_assert_same( array( 41 ), hcwa_theme_attachment_ids( array( get_post( 930 ), 931, 'x', 0 ) ), 'attachment ids: featured images from posts or IDs, each once' );
+hcwa_assert_same( array( 41, 42 ), hcwa_theme_attachment_ids( array( 930, 931 ), array( '_thumbnail_id', 'hcwa_file_id' ) ), 'attachment ids: covers and files' );
+hcwa_assert_same( array(), hcwa_theme_attachment_ids( array() ), 'attachment ids: none' );
+
 // Program years.
 hcwa_assert_same( '2023–2026', hcwa_theme_year_range( 2023, 2026 ), 'start–end' );
 hcwa_assert_same( '2023–', hcwa_theme_year_range( 2023, 0 ), 'open-ended' );
@@ -138,6 +145,11 @@ $hcwa_css     = (string) file_get_contents( $hcwa_theme_dir . '/assets/css/site.
 foreach ( array( 'paper', 'ink', 'blue-700', 'sun-400' ) as $hcwa_slug ) {
 	hcwa_assert_contains( '--color-' . $hcwa_slug . ': ' . $hcwa_palette[ $hcwa_slug ] . ';', $hcwa_css, "palette $hcwa_slug matches the CSS token" );
 }
+
+// Donation rows: the copy button sits inside the <dd> (a <dl> group holds only dt and dd),
+// so the dd is the grid and the button its second column.
+hcwa_assert_contains( '.pay-details dd > .btn { grid-column: 2; grid-row: 1 / span 2;', $hcwa_css, 'copy button is placed inside its dd' );
+hcwa_assert_same( 0, preg_match( '/\.pay-details__row\s*>\s*:last-child/', $hcwa_css ), 'no rule still targets the old row-level button slot' );
 
 // CSS: never uppercase, drafts outlined on staging only.
 hcwa_assert_same( 0, preg_match( '/text-transform:\s*uppercase/i', $hcwa_css ), 'no uppercase in site.css' );

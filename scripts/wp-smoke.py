@@ -4,8 +4,9 @@ at 390x844 and 1440x900.
 Checks on every URL and width:
   - HTTP 200 with no redirect (the not-found probes must answer 404)
   - <html lang> is the URL's language
-  - hreflang alternates for vi, en and x-default, the other language pointing at the
-    seeded translation (not on 404 pages)
+  - hreflang alternates for vi, en and x-default (not on 404 pages): the page's own
+    language points at the page, the other language at the seeded translation, x-default
+    at the Vietnamese URL, and all of them at the host being tested (a stale port fails)
   - exactly one rendered <h1>
   - no PHP "Warning:", "Notice:", "Deprecated:" or "Fatal error" output, no WordPress
     critical-error or database-error message
@@ -13,8 +14,16 @@ Checks on every URL and width:
   - no text-transform: uppercase on Vietnamese text
   - not production: <meta name="robots"> has noindex, and pages with impact figures show
     the pending-verification chip
-  - --production: no pending chip or pending value anywhere, no noindex, and no "[DRAFT"
-    anywhere in the HTML (skip that last one with --allow-draft)
+  - --production: no pending chip or pending value anywhere, no noindex, no "[DRAFT"
+    anywhere in the HTML, and none of the publish guard's other draft markers in the
+    page text: placeholder tokens such as [N], [năm], [year] and bracketed notes that
+    mention HCWA (skip both draft checks with --allow-draft)
+With a manifest it also sends plain HTTP requests (no browser, redirects not followed)
+for gates no page view shows:
+  - a center's /embed/ URL answers 404 (embeds are off)
+  - /wp-json/wp/v2/media answers 401 to a visitor, in any letter case
+  - a center URL under the English base with the Vietnamese slug answers one 301 to the
+    Vietnamese permalink on the host being tested
 Full-page screenshots go to qa/wp/<date>/ with a report.json. Exit code 1 when any
 check fails.
 
@@ -26,8 +35,9 @@ Usage:
   .venv/bin/python -I scripts/wp-smoke.py http://127.0.0.1:8881 --manifest .wp-local/main/seed-urls.json
   .venv/bin/python -I scripts/wp-smoke.py https://staging.example.org --production
 scripts/wp-local.sh smoke <name> passes the manifest written by the seed (and
---production when the instance is set to production). Without --manifest the built pages
-from prototype/src/routes.mjs are checked.
+--production when the instance is set to production), and uses the repo-local Chromium
+in .playwright-browsers/ when it exists (otherwise set PLAYWRIGHT_BROWSERS_PATH yourself).
+Without --manifest the built pages from prototype/src/routes.mjs are checked.
 """
 import argparse
 import datetime
@@ -35,11 +45,17 @@ import io
 import json
 import re
 import sys
+import unicodedata
+import urllib.error
+import urllib.request
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from playwright.sync_api import Error as PlaywrightError
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import Error as PlaywrightError
+    from playwright.sync_api import sync_playwright
+except ImportError:  # check() still loads without it (wp/tests/runtime-scripts-test.php).
+    PlaywrightError, sync_playwright = Exception, None
 
 try:
     from PIL import Image, ImageFilter
@@ -64,6 +80,13 @@ PHP_ERROR = re.compile(
 PHP_ERROR_TEXT = re.compile(r"(?m)^\s*(?:PHP )?(Warning|Notice|Deprecated|Fatal error|Parse error):\s")
 WP_ERROR_TEXT = re.compile(r"There has been a critical error on this website|WordPress database error|Error establishing a database connection")
 DRAFT = re.compile(r"\[\s*DRAFT", re.I)
+# The publish guard's other draft markers (hcwa_contains_draft() in
+# wp/plugins/hcwa-core/includes/publish-guard.php). Keep DRAFT_TOKENS equal to
+# hcwa_draft_tokens(); wp/tests/runtime-scripts-test.php compares the two.
+DRAFT_TOKENS = ("N", "year", "năm", "amount", "số tiền", "start", "end", "năm bắt đầu", "năm kết thúc",
+                "age range", "độ tuổi", "ward", "phường", "date", "ngày", "month/year", "tháng/năm")
+DRAFT_TOKEN = re.compile(r"\[\s*(?:" + "|".join(map(re.escape, DRAFT_TOKENS)) + r")\s*\]", re.I)
+HCWA_NOTE = re.compile(r"\[[^\[\]=]*\bHCWA\b[^\[\]=]*\]", re.A)  # \b as in PHP's /u (ASCII words)
 
 PAGE_JS = r"""
 () => {
@@ -195,9 +218,14 @@ def path_of(url: str) -> str:
     return urlsplit(url).path or "/"
 
 
-def check(target: dict, status: int | None, redirects: list[str], final_url: str, html: str,
+def snippet(text: str, match: re.Match) -> str:
+    """The match with a little context, on one line."""
+    return re.sub(r"\s+", " ", text[max(0, match.start() - 20):match.end() + 40]).strip()
+
+
+def check(target: dict, base: str, status: int | None, redirects: list[str], final_url: str, html: str,
           data: dict, production: bool, allow_draft: bool) -> list[str]:
-    """Failures for one page view."""
+    """Failures for one page view. base is the site root being tested."""
     fails = []
     not_found = target.get("expect") == 404
     lang = target["lang"]
@@ -220,8 +248,18 @@ def check(target: dict, status: int | None, redirects: list[str], final_url: str
         if missing:
             fails.append("hreflang: missing " + ", ".join(missing))
         other = "en" if lang == "vi" else "vi"
+        if lang in found and path_of(found[lang]) != target["path"]:
+            fails.append(f"hreflang: {lang} points to {path_of(found[lang])}, expected {target['path']}")
         if target.get("translation") and other in found and path_of(found[other]) != target["translation"]:
             fails.append(f"hreflang: {other} points to {path_of(found[other])}, expected {target['translation']}")
+        # 07-BILINGUAL: x-default is the Vietnamese URL.
+        vi_path = target["path"] if lang == "vi" else target.get("translation")
+        if vi_path and "x-default" in found and path_of(found["x-default"]) != vi_path:
+            fails.append(f"hreflang: x-default points to {path_of(found['x-default'])}, expected {vi_path}")
+        host = urlsplit(base).netloc
+        hosts = sorted({urlsplit(alt["href"]).netloc for alt in data["hreflang"]} - {host})
+        if hosts:
+            fails.append(f"hreflang: links to {', '.join(hosts)}, expected {host}")
 
     if len(data["h1"]) != 1:
         fails.append(f"h1: {len(data['h1'])} rendered, expected 1" + (f" {data['h1']}" if data["h1"] else ""))
@@ -246,14 +284,92 @@ def check(target: dict, status: int | None, redirects: list[str], final_url: str
         if not allow_draft:
             draft = DRAFT.search(html)
             if draft:
-                start = max(0, draft.start() - 20)
-                fails.append("draft text: " + re.sub(r"\s+", " ", html[start:draft.start() + 60]).strip())
+                fails.append("draft text: " + snippet(html, draft))
+            # Tokens and notes only in the rendered text, so shortcodes and attributes pass.
+            text = unicodedata.normalize("NFC", data["text"])
+            for pattern in (DRAFT_TOKEN, HCWA_NOTE):
+                marker = pattern.search(text)
+                if marker:
+                    fails.append("draft text: " + snippet(text, marker))
     else:
         if not not_found and "noindex" not in data["robots"]:
             fails.append("robots: no noindex on a non-production site")
         if target.get("figures") and not data["chipsVisible"]:
             fails.append("pending chip: none shown, so the impact figures did not render")
     return fails
+
+
+def gate_probes(urls: list[dict]) -> list[dict]:
+    """HTTP-only checks built from the seed's URL list: embeds off, the media REST route
+    closed to visitors (core routes REST case-insensitively, so an upper-case variant
+    too), and a center URL that reuses the Vietnamese slug under the English base sent to
+    the Vietnamese permalink in one 301 (hcwa-core's pll_check_canonical_url filter)."""
+    probes = [
+        {"id": "gate:rest-media", "path": "/wp-json/wp/v2/media", "status": 401},
+        {"id": "gate:rest-media-case", "path": "/wp-json/wp/v2/MEDIA", "status": 401},
+    ]
+    vi_centers = [u for u in urls if u.get("kind") == "center" and u.get("lang") == "vi" and u.get("path")]
+    if vi_centers:
+        probes.append({"id": "gate:embed", "path": vi_centers[0]["path"].rstrip("/") + "/embed/", "status": 404})
+    for center in vi_centers:
+        vi_slug = center["path"].rstrip("/").rsplit("/", 1)[-1]
+        en_base, _, en_slug = str(center.get("translation") or "").rstrip("/").rpartition("/")
+        if en_base and en_slug and en_slug != vi_slug:
+            probes.append({"id": "gate:other-language-slug", "path": f"{en_base}/{vi_slug}/", "status": 301,
+                           "location": center["path"]})
+            break
+    return probes
+
+
+def check_probe(probe: dict, base: str, status: int | None, location: str) -> list[str]:
+    """Failures for one HTTP probe. location is the raw Location header ('' if none)."""
+    fails = []
+    if status != probe["status"]:
+        fails.append(f"{probe['id']}: HTTP {status}, expected {probe['status']}")
+    want = probe.get("location")
+    if want is not None and status == probe["status"]:
+        got = urlsplit(location or "")
+        if path_of(location or "") != want:
+            fails.append(f"{probe['id']}: redirects to {location or '(nothing)'}, expected {want}")
+        elif got.netloc and got.netloc != urlsplit(base).netloc:
+            fails.append(f"{probe['id']}: redirects to host {got.netloc}, not {urlsplit(base).netloc}")
+    return fails
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102 - report the redirect itself
+        return None
+
+
+def fetch_status(url: str) -> tuple[int | None, str]:
+    """Status and Location of one GET, redirects not followed. Loopback addresses skip any
+    proxy set in the environment."""
+    handlers: list = [_NoRedirect()]
+    if urlsplit(url).hostname in ("127.0.0.1", "localhost", "::1"):
+        handlers.append(urllib.request.ProxyHandler({}))
+    opener = urllib.request.build_opener(*handlers)
+    req = urllib.request.Request(url, headers={"User-Agent": "hcwa-smoke", "Accept": "*/*"})
+    try:
+        with opener.open(req, timeout=30) as resp:
+            return resp.status, resp.headers.get("Location", "") or ""
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.headers.get("Location", "") or ""
+    except (urllib.error.URLError, OSError) as exc:
+        print(f"       - could not reach {url}: {exc}", flush=True)
+        return None, ""
+
+
+def run_probes(base: str, probes: list[dict]) -> list[dict]:
+    results = []
+    for probe in probes:
+        status, location = fetch_status(base + probe["path"])
+        fails = check_probe(probe, base, status, location)
+        results.append({"id": probe["id"], "lang": "-", "path": probe["path"], "viewport": "http",
+                        "status": status, "location": location, "fails": fails})
+        print(f"{'ok  ' if not fails else 'FAIL'} http    {probe['path']}", flush=True)
+        for fail in fails:
+            print(f"       - {fail}", flush=True)
+    return results
 
 
 def shot_name(target: dict, viewport: str) -> str:
@@ -295,7 +411,7 @@ def run(base: str, targets: list[dict], out: Path, production: bool, allow_draft
                         html = resp.text() if resp else ""
                         settle(page)
                         data = page.evaluate(PAGE_JS)
-                        result["fails"] = check(target, resp.status if resp else None, redirects, page.url,
+                        result["fails"] = check(target, base, resp.status if resp else None, redirects, page.url,
                                                 html, data, production, allow_draft)
                         result["h1"] = data["h1"]
                         result["screenshot"] = shot_name(target, viewport)
@@ -317,9 +433,9 @@ def main() -> int:
     ap.add_argument("base", help="site root, e.g. http://127.0.0.1:8881")
     ap.add_argument("--manifest", type=Path, help="seed-urls.json written by scripts/wp-seed.php")
     ap.add_argument("--production", action="store_true",
-                    help="expect production: no pending chips, no noindex, no [DRAFT text")
+                    help="expect production: no pending chips, no noindex, no [DRAFT text or placeholder tokens")
     ap.add_argument("--allow-draft", action="store_true",
-                    help="with --production, skip the [DRAFT check (to test the other gates on seeded content)")
+                    help="with --production, skip the draft text checks (to test the other gates on seeded content)")
     ap.add_argument("--only", nargs="*", default=[], help="only URLs whose id or path contains one of these")
     ap.add_argument("--out", type=Path, help="screenshot folder (default qa/wp/<date>)")
     args = ap.parse_args()
@@ -329,20 +445,26 @@ def main() -> int:
         ap.error("base must start with http:// or https://")
     if args.manifest and not args.manifest.is_file():
         ap.error(f"no manifest at {args.manifest}")
+    if sync_playwright is None:
+        ap.error("Playwright is not installed for this Python: use the repo's .venv (see wp/README.md)")
 
     urls, not_found = load_targets(args.manifest)
     targets = urls + [dict(nf, id="not-found", kind="404", expect=404) for nf in not_found]
+    probes = gate_probes(urls) if args.manifest else []  # Without a manifest there is no WordPress.
     if args.only:
         targets = [t for t in targets if any(o in str(t.get("id", "")) or o in t["path"] for o in args.only)]
-    if not targets:
+        probes = [p for p in probes if any(o in p["id"] or o in p["path"] for o in args.only)]
+    if not targets and not probes:
         print("No URLs to check.", file=sys.stderr)
         return 1
 
     out = args.out or REPO / "qa" / "wp" / datetime.date.today().isoformat()
     mode = "production" if args.production else "non-production"
-    print(f"Checking {len(targets)} URLs x {len(VIEWPORTS)} widths on {base} ({mode})", flush=True)
+    print(f"Checking {len(targets)} URLs x {len(VIEWPORTS)} widths and {len(probes)} HTTP gates on {base} ({mode})",
+          flush=True)
 
     report = run(base, targets, out, args.production, args.allow_draft)
+    report["results"].extend(run_probes(base, probes))
     (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     failed = [r for r in report["results"] if r["fails"]]

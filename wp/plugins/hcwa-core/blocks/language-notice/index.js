@@ -1,6 +1,8 @@
 /**
- * hcwa/language-notice editor: which language the notice speaks. Empty = only when the
- * language switch sends a visitor here with ?hcwa_lang_notice=.
+ * hcwa/language-notice editor. The notice shows only when the language switch sends a
+ * visitor here with ?hcwa_lang_notice=, so the sidebar picks the language of the preview
+ * alone: it is editor state, never saved (a saved forceLang would show the notice to
+ * every reader of the post). single.php passes forceLang itself.
  */
 ( function ( wp, hcwa ) {
 	'use strict';
@@ -12,23 +14,25 @@
 	hcwa.register( 'hcwa/language-notice', {
 		title: __( 'Language notice', 'hcwa' ),
 		description: __( 'Tells visitors that an article exists in one language only, with links to it and to the news page.', 'hcwa' ),
-		empty: __( 'Shows on a post when a visitor switches to a language the post is not translated into. Pick the other language to preview it.', 'hcwa' ),
-		controls: function ( props ) {
+		empty: __( 'Shows only to visitors the language switch sends here because this post has no translation in their language. Choose a language under "Preview for a visitor who asked for" to see it.', 'hcwa' ),
+		controls: function ( props, preview, setPreview ) {
 			return [
 				el( c.SelectControl, {
-					key: 'lang',
-					label: __( 'Language the visitor asked for', 'hcwa' ),
-					value: props.attributes.forceLang,
+					key: 'preview',
+					label: __( 'Preview for a visitor who asked for', 'hcwa' ),
+					help: __( 'Changes only this preview. Nothing is saved with the post.', 'hcwa' ),
+					value: preview,
 					options: [
-						{ value: '', label: __( 'Only when the language switch asks for it', 'hcwa' ) },
+						{ value: '', label: __( 'No preview', 'hcwa' ) },
 						{ value: 'vi', label: __( 'Vietnamese', 'hcwa' ) },
 						{ value: 'en', label: __( 'English', 'hcwa' ) },
 					],
-					onChange: function ( value ) {
-						props.setAttributes( { forceLang: value } );
-					},
+					onChange: setPreview,
 				} ),
 			];
+		},
+		previewQuery: function ( preview ) {
+			return preview ? { hcwa_lang_notice: preview } : {};
 		},
 	} );
 }( window.wp, window.hcwaBlocks ) );

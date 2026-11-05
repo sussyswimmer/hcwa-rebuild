@@ -33,6 +33,8 @@ if ( ! $hcwa_centers ) {
 	echo hcwa_blocks_empty_note( 'blk_noCenters' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	return;
 }
+
+hcwa_blocks_prime_attachments( $hcwa_centers );
 ?>
 <div <?php echo get_block_wrapper_attributes( array( 'class' => 'center-grid', 'data-filter-group' => '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
 	<?php

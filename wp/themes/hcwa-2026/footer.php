@@ -11,7 +11,8 @@
 defined( 'ABSPATH' ) || exit;
 
 // Settings → HCWA keys (hcwa-core includes/settings.php). The tagline is translated by Polylang.
-$hcwa_description  = wp_strip_all_tags( get_bloginfo( 'description' ) );
+// Neither goes through the publish guard: the bridge drops draft text on the live site.
+$hcwa_description  = hcwa_theme_public_text( wp_strip_all_tags( get_bloginfo( 'description' ) ) );
 $hcwa_registration = hcwa_theme_setting_l( 'registration' );
 $hcwa_address      = hcwa_theme_setting_l( 'address' );
 $hcwa_phone        = (string) hcwa_theme_setting( 'phone', '' );
@@ -46,10 +47,10 @@ $hcwa_col = static function ( string $title, callable $body ): void {
 			<img src="<?php echo esc_url( get_theme_file_uri( 'assets/img/hcwa-logo.png' ) ); ?>" width="73" height="96" alt="" loading="lazy">
 			<p class="foot-brand__name"><?php echo esc_html( wp_strip_all_tags( get_bloginfo( 'name' ) ) ); ?></p>
 			<?php if ( '' !== $hcwa_description ) : ?>
-				<p><?php echo esc_html( $hcwa_description ); ?></p>
+				<p<?php echo hcwa_theme_draft_attr( $hcwa_description ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo esc_html( $hcwa_description ); ?></p>
 			<?php endif; ?>
 			<?php if ( '' !== $hcwa_registration ) : ?>
-				<p class="foot-brand__reg"><?php echo esc_html( $hcwa_registration ); ?></p>
+				<p class="foot-brand__reg"<?php echo hcwa_theme_draft_attr( $hcwa_registration ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo esc_html( $hcwa_registration ); ?></p>
 			<?php endif; ?>
 		</div>
 
@@ -60,10 +61,10 @@ $hcwa_col = static function ( string $title, callable $body ): void {
 				?>
 				<ul class="foot-contact">
 					<?php if ( '' !== $hcwa_address ) : ?>
-						<li><?php echo hcwa_theme_icon( 'pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><span><?php echo nl2br( esc_html( $hcwa_address ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped first. ?></span></li>
+						<li><?php echo hcwa_theme_icon( 'pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><span<?php echo hcwa_theme_draft_attr( $hcwa_address ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo nl2br( esc_html( $hcwa_address ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped first. ?></span></li>
 					<?php endif; ?>
 					<?php if ( '' !== $hcwa_phone ) : ?>
-						<li><?php echo hcwa_theme_icon( 'phone' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><a href="<?php echo esc_url( $hcwa_phone_tel, array( 'tel' ) ); ?>"><?php echo esc_html( $hcwa_phone ); ?></a></li>
+						<li><?php echo hcwa_theme_icon( 'phone' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><a href="<?php echo esc_url( $hcwa_phone_tel, array( 'tel' ) ); ?>"<?php echo hcwa_theme_draft_attr( $hcwa_phone ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo esc_html( $hcwa_phone ); ?></a></li>
 					<?php endif; ?>
 					<?php if ( '' !== $hcwa_email && is_email( $hcwa_email ) ) : ?>
 						<li><?php echo hcwa_theme_icon( 'mail' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><a href="<?php echo esc_url( 'mailto:' . $hcwa_email, array( 'mailto' ) ); ?>"><?php echo esc_html( $hcwa_email ); ?></a></li>

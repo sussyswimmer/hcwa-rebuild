@@ -24,21 +24,24 @@ defined( 'ABSPATH' ) || exit;
  * ---------------------------------------------------------------------- */
 
 /**
- * Folder names of the blocks (each has a block.json).
+ * Folder names of the blocks: the keys of blocks/blocks-manifest.php, which holds each
+ * folder's block.json as PHP (wp/tests/blocks-files-test.php keeps the two equal).
  *
  * @return string[]
  */
 function hcwa_blocks_names(): array {
-	$names = array();
-	foreach ( (array) glob( HCWA_CORE_DIR . 'blocks/*/block.json' ) as $file ) {
-		$names[] = basename( dirname( (string) $file ) );
-	}
+	$names = array_keys( (array) require HCWA_CORE_DIR . 'blocks/blocks-manifest.php' );
 	sort( $names );
 	return $names;
 }
 
 /**
  * Registers the shared editor script and every block folder.
+ *
+ * WordPress 6.7+ reads the block metadata from the manifest (one PHP file that opcache
+ * keeps) instead of reading and decoding each block.json on every request
+ * (wp_register_block_metadata_collection()). Older versions, or a manifest WordPress
+ * refuses, fall back to the block.json files.
  */
 function hcwa_blocks_register(): void {
 	// Shared editor helpers (window.hcwaBlocks); each block's index.asset.php depends on it.
@@ -51,6 +54,9 @@ function hcwa_blocks_register(): void {
 	);
 	wp_set_script_translations( 'hcwa-blocks-editor', 'hcwa' );
 
+	if ( function_exists( 'wp_register_block_metadata_collection' ) ) {
+		wp_register_block_metadata_collection( HCWA_CORE_DIR . 'blocks', HCWA_CORE_DIR . 'blocks/blocks-manifest.php' );
+	}
 	foreach ( hcwa_blocks_names() as $name ) {
 		register_block_type( HCWA_CORE_DIR . 'blocks/' . $name );
 	}
@@ -211,11 +217,12 @@ function hcwa_blocks_editor_vi(): array {
 		// Language notice.
 		'Language notice'                             => 'Thông báo ngôn ngữ',
 		'Tells visitors that an article exists in one language only, with links to it and to the news page.' => 'Báo cho khách rằng bài viết chỉ có bằng một ngôn ngữ, kèm liên kết đến bài và trang tin tức.',
-		'Language the visitor asked for'              => 'Ngôn ngữ khách yêu cầu',
-		'Only when the language switch asks for it'   => 'Chỉ khi khách bấm nút chuyển ngôn ngữ',
+		'Preview for a visitor who asked for'         => 'Xem trước cho khách đã chọn',
+		'Changes only this preview. Nothing is saved with the post.' => 'Chỉ thay đổi bản xem trước này, không lưu gì vào bài viết.',
+		'No preview'                                  => 'Không xem trước',
 		'Vietnamese'                                  => 'Tiếng Việt',
 		'English'                                     => 'Tiếng Anh',
-		'Shows on a post when a visitor switches to a language the post is not translated into. Pick the other language to preview it.' => 'Hiện trên bài viết khi khách chuyển sang ngôn ngữ mà bài chưa được dịch. Chọn ngôn ngữ còn lại để xem trước.',
+		'Shows only to visitors the language switch sends here because this post has no translation in their language. Choose a language under "Preview for a visitor who asked for" to see it.' => 'Chỉ hiện cho khách được nút chuyển ngôn ngữ đưa đến đây vì bài viết chưa có bản dịch bằng ngôn ngữ của họ. Chọn một ngôn ngữ ở mục “Xem trước cho khách đã chọn” để xem thử.',
 
 		// Announcement bar.
 		'Announcement bar'                            => 'Thanh thông báo',
@@ -591,6 +598,47 @@ function hcwa_blocks_accent( string $accent ): string {
 }
 
 /**
+ * Attachment IDs some posts point to through meta keys (the featured image by default),
+ * each once. get_posts() has already loaded the posts' meta, so this reads no database.
+ *
+ * @param WP_Post[] $posts Posts (anything else is skipped).
+ * @param string[]  $keys  Meta keys that hold one attachment ID.
+ * @return int[]
+ */
+function hcwa_blocks_attachment_ids( array $posts, array $keys = array( '_thumbnail_id' ) ): array {
+	$ids = array();
+	foreach ( $posts as $post ) {
+		if ( ! $post instanceof WP_Post ) {
+			continue;
+		}
+		foreach ( $keys as $key ) {
+			$id = (int) get_post_meta( $post->ID, $key, true );
+			if ( $id > 0 ) {
+				$ids[] = $id;
+			}
+		}
+	}
+	return array_values( array_unique( $ids ) );
+}
+
+/**
+ * Loads the attachments a block is about to print in one query for the posts, one for
+ * their meta and one for their terms, instead of several per image: hcwa_image() reads
+ * the approval flags and, for the identifiable-child check, the attachment's Polylang
+ * translations (kept in terms); wp_get_attachment_image() reads the metadata for srcset.
+ * _prime_post_caches() is core's (wp-includes/post.php:8502) and skips cached posts.
+ *
+ * @param WP_Post[] $posts Posts whose attachments will be printed.
+ * @param string[]  $keys  Meta keys that hold one attachment ID.
+ */
+function hcwa_blocks_prime_attachments( array $posts, array $keys = array( '_thumbnail_id' ) ): void {
+	$ids = hcwa_blocks_attachment_ids( $posts, $keys );
+	if ( $ids && function_exists( '_prime_post_caches' ) ) {
+		_prime_post_caches( $ids, true, true );
+	}
+}
+
+/**
  * Data for one center card. The cover photo goes through hcwa_image() with the center as
  * context, so Little Rose never shows an identifiable child.
  *
@@ -710,6 +758,80 @@ function hcwa_blocks_sort_programs( array $rows ): array {
 }
 
 /**
+ * Status of a program: active, completed or planned. A program saved without one (or
+ * with an unknown value) is active.
+ *
+ * @param int $program_id Program ID.
+ */
+function hcwa_blocks_program_status( int $program_id ): string {
+	$status = (string) hcwa_meta( $program_id, 'hcwa_status' );
+	return in_array( $status, array( 'active', 'completed', 'planned' ), true ) ? $status : 'active';
+}
+
+/**
+ * The programs a list shows: those with the wanted status, active first (query order
+ * inside a status), at most $limit. Reads only the status, from meta get_posts() already
+ * loaded, so rows (partners, links, summaries) are built just for the programs shown.
+ *
+ * @param array  $programs Programs in query order (WP_Post; anything else is skipped).
+ * @param string $status   'any', 'active' or 'completed'.
+ * @param int    $limit    Maximum number of programs.
+ * @return WP_Post[]
+ */
+function hcwa_blocks_pick_programs( array $programs, string $status, int $limit ): array {
+	$rows = array();
+	foreach ( $programs as $program ) {
+		if ( ! $program instanceof WP_Post ) {
+			continue;
+		}
+		$program_status = hcwa_blocks_program_status( $program->ID );
+		if ( 'any' === $status || $status === $program_status ) {
+			$rows[] = array(
+				'post'   => $program,
+				'status' => $program_status,
+			);
+		}
+	}
+	return array_column( array_slice( hcwa_blocks_sort_programs( $rows ), 0, max( 0, $limit ) ), 'post' );
+}
+
+/**
+ * Partner IDs (the stored Vietnamese originals) of some programs, each once.
+ *
+ * @param WP_Post[] $programs Programs.
+ * @return int[]
+ */
+function hcwa_blocks_partner_ids( array $programs ): array {
+	$ids = array();
+	foreach ( $programs as $program ) {
+		$ids = array_merge( $ids, hcwa_id_list( get_post_meta( $program->ID, 'hcwa_partner_ids', true ) ) );
+	}
+	return array_values( array_unique( $ids ) );
+}
+
+/**
+ * Loads the partners of the programs shown in at most three queries in all, instead of
+ * two per partner in hcwa_blocks_program_data() (translation lookup, then status and title).
+ *
+ * @param WP_Post[] $programs Programs about to be shown.
+ */
+function hcwa_blocks_prime_partners( array $programs ): void {
+	$ids = hcwa_blocks_partner_ids( $programs );
+	if ( ! $ids || ! function_exists( '_prime_post_caches' ) ) {
+		return;
+	}
+	// The originals with their terms: Polylang keeps a post's language and translation group in terms.
+	_prime_post_caches( $ids, true, false );
+	if ( function_exists( 'pll_get_post' ) ) {
+		$lang       = hcwa_lang();
+		$translated = array_filter( array_map( static fn( int $id ): int => (int) pll_get_post( $id, $lang ), $ids ) );
+		if ( $translated ) {
+			_prime_post_caches( array_values( array_unique( $translated ) ), false, false );
+		}
+	}
+}
+
+/**
  * Data for one program row. Partner names come from the shared hcwa_partner_ids (VI
  * originals), shown in the current language when a translation exists.
  *
@@ -717,8 +839,6 @@ function hcwa_blocks_sort_programs( array $rows ): array {
  * @return array{title: string, url: string, status: string, years: string, summary: string, partners: string[], areas: string[]}
  */
 function hcwa_blocks_program_data( WP_Post $program ): array {
-	$status = (string) hcwa_meta( $program->ID, 'hcwa_status' );
-
 	$partners = array();
 	foreach ( hcwa_id_list( get_post_meta( $program->ID, 'hcwa_partner_ids', true ) ) as $partner_id ) {
 		$partner_id = hcwa_blocks_in_lang( $partner_id );
@@ -733,7 +853,7 @@ function hcwa_blocks_program_data( WP_Post $program ): array {
 	return array(
 		'title'    => hcwa_blocks_title( $program ),
 		'url'      => (string) get_permalink( $program ),
-		'status'   => in_array( $status, array( 'active', 'completed', 'planned' ), true ) ? $status : 'active',
+		'status'   => hcwa_blocks_program_status( $program->ID ),
 		'years'    => hcwa_blocks_year_range( (int) get_post_meta( $program->ID, 'hcwa_start_year', true ), (int) get_post_meta( $program->ID, 'hcwa_end_year', true ) ),
 		'summary'  => hcwa_blocks_summary( $program, 28 ),
 		'partners' => $partners,
@@ -1188,8 +1308,9 @@ function hcwa_blocks_news_item( array $n, string $lang, bool $production ): stri
  * ---------------------------------------------------------------------- */
 
 /**
- * Language the notice speaks: the block's forceLang, else ?hcwa_lang_notice=. '' when
- * neither is set, or when it is the page's own language (nothing to explain then).
+ * Language the notice speaks: the block's forceLang (set by single.php, never by the
+ * editor), else ?hcwa_lang_notice=. '' when neither is set, or when it is the page's own
+ * language (nothing to explain then).
  *
  * @param string $force     forceLang attribute.
  * @param string $requested hcwa_lang_notice_request().
@@ -1201,6 +1322,42 @@ function hcwa_blocks_notice_lang( string $force, string $requested, string $curr
 		return '';
 	}
 	return $lang;
+}
+
+/**
+ * Published translation of a post in a language, or 0 (none, not published, or no
+ * Polylang). A post with one needs no "only available in" notice.
+ *
+ * @param int    $post_id Post ID.
+ * @param string $lang    'vi' or 'en'.
+ */
+function hcwa_blocks_published_translation( int $post_id, string $lang ): int {
+	if ( $post_id <= 0 || ! function_exists( 'pll_get_post_translations' ) ) {
+		return 0;
+	}
+	$translation = (int) ( ( (array) pll_get_post_translations( $post_id ) )[ $lang ] ?? 0 );
+	if ( $translation <= 0 || $translation === $post_id ) {
+		return 0;
+	}
+	return 'publish' === get_post_status( $translation ) ? $translation : 0;
+}
+
+/**
+ * One language notice per request: true the first time (the caller prints the panel),
+ * false after that. single.php prints the notice above the article, so a notice block
+ * an editor placed inside the article does not add a second panel.
+ *
+ * @param bool $reset Forget an earlier notice (tests render many pages in one process).
+ */
+function hcwa_blocks_notice_claim( bool $reset = false ): bool {
+	static $claimed = false;
+	if ( $reset ) {
+		$claimed = false;
+		return false;
+	}
+	$first   = ! $claimed;
+	$claimed = true;
+	return $first;
 }
 
 /* -------------------------------------------------------------------------
@@ -1260,6 +1417,9 @@ function hcwa_blocks_placeholder_rows( string $lang ): array {
  * Payment detail rows with copy buttons (prototype detailRows()). A row without a value
  * is a placeholder: "Waiting for HCWA finance" and a disabled copy button.
  *
+ * The copy button sits inside the <dd>, after the value: a <div> in a <dl> may hold only
+ * <dt> and <dd> (HTML, axe "definition-list").
+ *
  * @param array[] $rows Rows: id, label, value, copy, hint.
  * @param string  $lang 'vi' or 'en'.
  */
@@ -1282,15 +1442,10 @@ function hcwa_blocks_pay_rows( array $rows, string $lang ): string {
 		if ( '' !== $hint ) {
 			$html .= '<span class="pay-details__hint">' . esc_html( $hint ) . '</span>';
 		}
-		$html .= '</dd>';
-
 		if ( $copy ) {
 			$html .= '<button class="btn btn--small btn--secondary" type="button" data-copy="' . esc_attr( $value ) . '"' . ( '' === $value ? ' disabled' : '' ) . ' aria-label="' . esc_attr( hcwa_t_in( 'copy', $lang ) . ': ' . $label ) . '">' . hcwa_blocks_icon( 'copy' ) . '<span>' . esc_html( hcwa_t_in( 'copy', $lang ) ) . '</span></button>';
-		} else {
-			// Keeps the two-column grid of the row (prototype).
-			$html .= '<span></span>';
 		}
-		$html .= '</div>';
+		$html .= '</dd></div>';
 	}
 	return $html . '</dl>';
 }

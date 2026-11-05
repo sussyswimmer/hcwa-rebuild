@@ -58,3 +58,36 @@ $data = array(
 );
 $GLOBALS['hcwa_test']['env'] = 'staging';
 hcwa_assert_same( 'publish', hcwa_publish_guard_data( $data, array( 'ID' => 7 ) )['post_status'], 'staging publishes drafts' );
+
+// Cron publishes scheduled posts with wp_publish_post(), which skips wp_insert_post_data:
+// the after-insert check reads title, content and excerpt itself.
+$GLOBALS['hcwa_test']['env'] = 'production';
+$scheduled = hcwa_test_post(
+	array(
+		'ID'           => 70,
+		'post_type'    => 'post',
+		'post_status'  => 'publish',
+		'post_title'   => 'Tết 2027',
+		'post_content' => '<p>[DRAFT: lịch sự kiện]</p>',
+	)
+);
+hcwa_publish_guard_after( 70, $scheduled, true );
+hcwa_assert_same( 'draft', $scheduled->post_status, 'scheduled post with draft text goes back to draft' );
+hcwa_assert_same( 'Content', get_post_meta( 70, '_hcwa_publish_blocked', true ), 'and the reason names the field' );
+
+$clean_post = hcwa_test_post(
+	array(
+		'ID'           => 71,
+		'post_type'    => 'post',
+		'post_status'  => 'publish',
+		'post_title'   => 'Tết 2027',
+		'post_content' => '<p>Lịch sự kiện</p>',
+	)
+);
+hcwa_publish_guard_after( 71, $clean_post, true );
+hcwa_assert_same( 'publish', $clean_post->post_status, 'clean scheduled post stays published' );
+
+$GLOBALS['hcwa_test']['env'] = 'staging';
+$staging_post = hcwa_test_post( array( 'ID' => 72, 'post_type' => 'post', 'post_status' => 'publish', 'post_title' => '[DRAFT: x]' ) );
+hcwa_publish_guard_after( 72, $staging_post, true );
+hcwa_assert_same( 'publish', $staging_post->post_status, 'staging is not affected' );

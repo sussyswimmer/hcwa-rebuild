@@ -168,8 +168,8 @@ defined( 'ABSPATH' ) || exit;
 </section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dsunken","metadata":{"name":"Centers"}} -->
-<section class="wp-block-group alignfull section section--sunken">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dsunken hcwa-block-section","metadata":{"name":"Centers"}} -->
+<section class="wp-block-group alignfull section section--sunken hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:group {"className":"section-head"} -->
@@ -194,8 +194,8 @@ defined( 'ABSPATH' ) || exit;
 </section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section","metadata":{"name":"Programs"}} -->
-<section class="wp-block-group alignfull section">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section hcwa-block-section","metadata":{"name":"Programs"}} -->
+<section class="wp-block-group alignfull section hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:group {"className":"section-head"} -->
@@ -216,8 +216,8 @@ defined( 'ABSPATH' ) || exit;
 </section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dline","metadata":{"name":"Latest news"}} -->
-<section class="wp-block-group alignfull section section--line">
+<!-- wp:group {"tagName":"section","templateLock":"contentOnly","align":"full","className":"section section\u002d\u002dline hcwa-block-section","metadata":{"name":"Latest news"}} -->
+<section class="wp-block-group alignfull section section--line hcwa-block-section">
 	<!-- wp:group {"className":"container"} -->
 	<div class="wp-block-group container">
 		<!-- wp:group {"className":"section-head"} -->

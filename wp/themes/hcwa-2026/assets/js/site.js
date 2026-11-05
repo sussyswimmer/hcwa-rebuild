@@ -111,7 +111,14 @@
     var cols = $$(".foot-col");
     if (!cols.length || !window.matchMedia) return;
     var desktop = window.matchMedia("(min-width: 1024px)");
-    var sync = function () { cols.forEach(function (d) { d.open = desktop.matches; }); };
+    // On desktop the summaries do nothing, so they leave the tab order too.
+    var sync = function () {
+      cols.forEach(function (d) {
+        d.open = desktop.matches;
+        var s = d.querySelector("summary");
+        if (s) s.tabIndex = desktop.matches ? -1 : 0;
+      });
+    };
     sync();
     if (desktop.addEventListener) desktop.addEventListener("change", sync);
     $$(".foot-col summary").forEach(function (s) {
@@ -119,27 +126,22 @@
     });
   })();
 
-  // "View this page in English" for English browsers on VI pages; no automatic redirect (07-BILINGUAL).
+  // "View this page in English": bars.js shows it before first paint (header.php); this remembers a dismissal.
   (function () {
     var bar = $("[data-en-bar]");
-    var lang = (navigator.language || "").toLowerCase();
-    if (bar && lang.indexOf("en") === 0 && !store.get("hcwa-en-bar")) bar.hidden = false;
     var dismiss = $("[data-dismiss-en-bar]");
     if (bar && dismiss) {
       dismiss.addEventListener("click", function () { bar.hidden = true; store.set("hcwa-en-bar", "1"); });
     }
   })();
 
-  // Announcement bar: dismissal is remembered per announcement text, so a new one shows again.
+  // Announcement bar: bars.js hides a dismissed one before first paint (header.php). The
+  // dismissal is remembered per text (bars.js announceKey), so a new announcement shows again.
   (function () {
+    var bars = window.hcwaBars;
     $$("[data-announce]").forEach(function (box) {
-      var text = box.getAttribute("data-announce") || box.textContent.replace(/\s+/g, " ").trim();
-      var hash = 0;
-      for (var i = 0; i < text.length; i++) { hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0; }
-      var key = "hcwa-announce-" + hash;
-      if (store.get(key)) { box.hidden = true; return; }
       var btn = $("[data-dismiss-announce]", box);
-      if (btn) btn.addEventListener("click", function () { box.hidden = true; store.set(key, "1"); });
+      if (btn) btn.addEventListener("click", function () { box.hidden = true; if (bars) store.set(bars.announceKey(box), "1"); });
     });
   })();
 

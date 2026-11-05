@@ -3,8 +3,13 @@
  * WP-CLI commands (loaded only under WP-CLI):
  *
  *   wp hcwa coverage     Every published page, center, program, report, partner and
- *                        impact figure, menu and UI string missing a VI or EN counterpart.
- *                        Exits non-zero when pages or content types are missing one.
+ *                        impact figure, category, center or program news tag, menu and UI
+ *                        string missing a VI or EN counterpart, and every center marked "No
+ *                        identifiable children" without a news tag. Exits non-zero when pages
+ *                        or content types are missing one, or such a center has no news tag
+ *                        or its tag has no linked version in both languages. Get_terms() is
+ *                        called with 'lang' => '' so Polylang does not filter by language
+ *                        (polylang src/crud-terms.php:192-195).
  *   wp hcwa draft-scan   Published content, our text fields and Settings → HCWA values
  *                        that still contain draft markers ([DRAFT: …], [N], [year] …).
  *                        Exits non-zero when anything is found.
@@ -88,7 +93,15 @@ function hcwa_cli_coverage( $args, $assoc_args ): void {
 		}
 	}
 
-	$rows = array_merge( $rows, hcwa_cli_menu_coverage(), hcwa_cli_string_coverage() );
+	// Little Rose and similar centers: their news is protected only through the news tag.
+	$protection = hcwa_cli_protection_coverage();
+	$blocking  += count( $protection );
+
+	// Categories and news tags in one language only (a protected center's tag blocks).
+	$terms     = hcwa_cli_term_coverage();
+	$blocking += $terms['blocking'];
+
+	$rows = array_merge( $rows, $protection, $terms['rows'], hcwa_cli_menu_coverage(), hcwa_cli_string_coverage() );
 
 	$news = hcwa_cli_post_language_counts();
 	WP_CLI::log( sprintf( 'News posts: %d with both languages, %d Vietnamese only, %d English only (allowed; the language notice covers them).', $news['both'], $news['vi'], $news['en'] ) );
@@ -98,15 +111,113 @@ function hcwa_cli_coverage( $args, $assoc_args ): void {
 	}
 
 	if ( $blocking ) {
-		WP_CLI::error( sprintf( '%d page or content entries are missing a translation. Launch rule: zero.', $blocking ) );
+		WP_CLI::error( sprintf( '%d page or content entries are missing a translation, or a protected center has no news tag in both languages. Launch rule: zero.', $blocking ) );
 	}
 
 	if ( $rows ) {
-		WP_CLI::warning( sprintf( '%d menu or string gaps (see the table). Pages and content types are complete.', count( $rows ) ) );
+		WP_CLI::warning( sprintf( '%d category, news tag, menu or string gaps (see the table). Pages and content types are complete.', count( $rows ) ) );
 		return;
 	}
 
-	WP_CLI::success( 'Every page, content entry, menu and UI string exists in Vietnamese and English.' );
+	WP_CLI::success( 'Every page, content entry, category, news tag, menu and UI string exists in Vietnamese and English.' );
+}
+
+/**
+ * Categories, and the news tags centers and programs point to, that lack a version in a
+ * language. The theme shows a category chip only in a language the category exists in
+ * (hcwa_theme_category()), and a center or program page lists only news carrying the
+ * tag's version in the page language. A tag of a center marked "No identifiable children"
+ * blocks: hcwa_post_has_protected_tag() maps a tag to its Vietnamese version through the
+ * Polylang link, so an English post carrying an unlinked English tag would not count as
+ * that center's news.
+ *
+ * @return array{rows: array[], blocking: int}
+ */
+function hcwa_cli_term_coverage(): array {
+	$rows     = array();
+	$blocking = 0;
+	if ( ! function_exists( 'pll_get_term_translations' ) || ! function_exists( 'pll_get_term_language' ) ) {
+		return compact( 'rows', 'blocking' );
+	}
+
+	$missing = static function ( WP_Term $term ): array {
+		$translations = array_map( 'intval', (array) pll_get_term_translations( $term->term_id ) );
+		return array_values( array_filter( hcwa_languages(), static fn( string $lang ): bool => empty( $translations[ $lang ] ) ) );
+	};
+
+	// Categories (the seeded news, stories, events and announcements, and any staff add).
+	$seen       = array();
+	$categories = get_terms(
+		array(
+			'taxonomy'   => 'category',
+			'hide_empty' => false,
+			'lang'       => '',
+		)
+	);
+	foreach ( is_array( $categories ) ? $categories : array() as $term ) {
+		if ( ! $term instanceof WP_Term || isset( $seen[ $term->term_id ] ) ) {
+			continue;
+		}
+		foreach ( (array) pll_get_term_translations( $term->term_id ) as $tr_id ) {
+			$seen[ (int) $tr_id ] = true;
+		}
+		$lang = (string) pll_get_term_language( $term->term_id );
+		foreach ( '' === $lang ? hcwa_languages() : $missing( $term ) as $want ) {
+			$rows[] = hcwa_cli_row( 'category', $term->term_id, $term->name . ' (' . $term->slug . ')', '' === $lang ? '-' : $lang, $want, '' === $lang ? 'No language set' : 'No translation: the category chip and archive exist in one language only' );
+		}
+	}
+
+	// News tags named by centers and programs (shared field: the Vietnamese slug).
+	$owners = get_posts(
+		array(
+			'post_type'        => array( 'hcwa_center', 'hcwa_program' ),
+			'post_status'      => 'any',
+			'numberposts'      => -1,
+			'fields'           => 'ids',
+			'lang'             => '',
+			'suppress_filters' => false,
+		)
+	);
+	$tags   = array();
+	foreach ( $owners as $owner_id ) {
+		$owner_id = hcwa_original_id( (int) $owner_id );
+		$slug     = trim( (string) get_post_meta( $owner_id, 'hcwa_news_tag', true ) );
+		if ( '' === $slug ) {
+			continue;
+		}
+		$protected = 'hcwa_center' === get_post_type( $owner_id ) && hcwa_meta_flag_any( $owner_id, 'hcwa_no_identifiable_children' );
+		if ( ! isset( $tags[ $slug ] ) || ( $protected && ! $tags[ $slug ]['protected'] ) ) {
+			// One row per tag, named after a protected center when one uses it.
+			$tags[ $slug ] = array(
+				'owner'     => $owner_id,
+				'protected' => $protected,
+			);
+		}
+	}
+	foreach ( $tags as $slug => $tag ) {
+		$found = get_terms(
+			array(
+				'taxonomy'   => 'post_tag',
+				'slug'       => (string) $slug,
+				'hide_empty' => false,
+				'lang'       => '',
+			)
+		);
+		$term  = is_array( $found ) && $found && $found[0] instanceof WP_Term ? $found[0] : null;
+		$owner = $tag['owner'];
+		$note  = $tag['protected'] ? ' "No identifiable children" applies to this tag\'s news, so this blocks.' : '';
+		if ( ! $term ) {
+			$rows[]    = hcwa_cli_row( 'news tag', $owner, get_the_title( $owner ), 'vi', 'vi, en', sprintf( 'The news tag "%s" does not exist.', $slug ) . $note );
+			$blocking += $tag['protected'] ? 1 : 0;
+			continue;
+		}
+		foreach ( $missing( $term ) as $want ) {
+			$rows[]    = hcwa_cli_row( 'news tag', $owner, get_the_title( $owner ), (string) pll_get_term_language( $term->term_id ), $want, sprintf( 'The news tag "%s" has no %s version linked in Polylang.', $slug, hcwa_language_name( $want ) ) . $note );
+			$blocking += $tag['protected'] ? 1 : 0;
+		}
+	}
+
+	return compact( 'rows', 'blocking' );
 }
 
 /**
@@ -122,6 +233,38 @@ function hcwa_cli_coverage( $args, $assoc_args ): void {
  */
 function hcwa_cli_row( string $area, int $id, string $title, string $language, string $missing, string $note ): array {
 	return compact( 'area', 'id', 'title', 'language', 'missing', 'note' );
+}
+
+/**
+ * Centers marked "No identifiable children" (in any language) without a news tag: none of
+ * their news posts would be recognised as a protected context (media-approval.php).
+ *
+ * @return array[]
+ */
+function hcwa_cli_protection_coverage(): array {
+	$rows = array();
+	$ids  = get_posts(
+		array(
+			'post_type'        => 'hcwa_center',
+			'post_status'      => 'any',
+			'numberposts'      => -1,
+			'fields'           => 'ids',
+			'lang'             => '',
+			'suppress_filters' => false,
+		)
+	);
+	$seen = array();
+	foreach ( $ids as $id ) {
+		$original = hcwa_original_id( (int) $id );
+		if ( isset( $seen[ $original ] ) ) {
+			continue;
+		}
+		$seen[ $original ] = true;
+		if ( hcwa_center_news_unprotected( $original ) ) {
+			$rows[] = hcwa_cli_row( 'protection', $original, get_the_title( $original ), 'vi', 'news tag', '"No identifiable children" is ticked but the news tag is empty, so this center\'s news is not protected' );
+		}
+	}
+	return $rows;
 }
 
 /**

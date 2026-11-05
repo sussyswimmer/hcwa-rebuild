@@ -28,14 +28,19 @@ function hcwa_setting( string $key, $default = null ) {
 
 /**
  * Per-language setting: reads "{$key}_vi" or "{$key}_en". No fallback to the other
- * language, so a page never mixes languages; '' when not filled in.
+ * language, so a page never mixes languages; '' when not filled in. These are the
+ * visitor-facing texts (address, registration line, announcement), which never pass the
+ * publish guard, so on the live site text that still carries a draft marker
+ * (hcwa_contains_draft(), rule 4) reads as '' for every caller, not only the theme.
+ * hcwa_setting() stays the raw value.
  *
  * @param string      $key  Base key, e.g. 'announcement_text', 'address', 'registration'.
  * @param string|null $lang 'vi' or 'en'; defaults to the current language.
  */
 function hcwa_setting_l( string $key, ?string $lang = null ): string {
 	$value = hcwa_setting( $key . '_' . hcwa_normalize_lang( $lang ?? hcwa_lang() ), '' );
-	return is_scalar( $value ) ? (string) $value : '';
+	$value = is_scalar( $value ) ? (string) $value : '';
+	return ( '' !== $value && hcwa_is_production() && hcwa_contains_draft( $value ) ) ? '' : $value;
 }
 
 /**
@@ -266,9 +271,12 @@ function hcwa_settings_menu(): void {
 add_action( 'admin_menu', 'hcwa_settings_menu' );
 
 /**
- * Registers the option, sections and fields.
+ * Registers the option on every request, not only in wp-admin: register_setting() adds the
+ * sanitize_option_hcwa_settings filter (wp-includes/option.php), so every
+ * update_option( 'hcwa_settings' ) — WP-CLI, the seed, cron — goes through
+ * hcwa_sanitize_settings() and its donation re-confirmation guard.
  */
-function hcwa_settings_init(): void {
+function hcwa_register_settings(): void {
 	register_setting(
 		'hcwa_settings',
 		'hcwa_settings',
@@ -279,7 +287,13 @@ function hcwa_settings_init(): void {
 			'show_in_rest'      => false,
 		)
 	);
+}
+add_action( 'init', 'hcwa_register_settings' );
 
+/**
+ * Registers the sections and fields of Settings → HCWA.
+ */
+function hcwa_settings_init(): void {
 	foreach ( hcwa_settings_sections() as $section_id => $section ) {
 		add_settings_section(
 			'hcwa_' . $section_id,

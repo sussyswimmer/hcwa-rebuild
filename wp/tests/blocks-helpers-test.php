@@ -108,6 +108,26 @@ hcwa_assert_same( '', hcwa_blocks_notice_lang( '', '', 'vi' ), 'notice: nothing 
 hcwa_assert_same( '', hcwa_blocks_notice_lang( '', 'vi', 'vi' ), 'notice: same language as the page' );
 hcwa_assert_same( '', hcwa_blocks_notice_lang( 'fr', '', 'vi' ), 'notice: unknown language' );
 
+// Published translation (no notice needed when one exists).
+hcwa_test_post( array( 'ID' => 40, 'post_type' => 'post' ) );
+hcwa_test_post( array( 'ID' => 41, 'post_type' => 'post', 'post_status' => 'draft' ) );
+hcwa_assert_same( 0, hcwa_blocks_published_translation( 40, 'en' ), 'translation: none' );
+$GLOBALS['hcwa_test']['translations'][40] = array( 'vi' => 40, 'en' => 41 );
+hcwa_assert_same( 0, hcwa_blocks_published_translation( 40, 'en' ), 'translation: draft does not count' );
+$GLOBALS['hcwa_test']['posts'][41]->post_status = 'publish';
+hcwa_assert_same( 41, hcwa_blocks_published_translation( 40, 'en' ), 'translation: published' );
+hcwa_assert_same( 0, hcwa_blocks_published_translation( 40, 'vi' ), 'translation: the post itself is not a translation' );
+hcwa_assert_same( 0, hcwa_blocks_published_translation( 0, 'en' ), 'translation: no post' );
+unset( $GLOBALS['hcwa_test']['translations'] );
+
+// One notice per request.
+hcwa_blocks_notice_claim( true );
+hcwa_assert_true( hcwa_blocks_notice_claim(), 'notice claim: the first one prints' );
+hcwa_assert_false( hcwa_blocks_notice_claim(), 'notice claim: a second one does not' );
+hcwa_assert_false( hcwa_blocks_notice_claim( true ), 'notice claim: reset' );
+hcwa_assert_true( hcwa_blocks_notice_claim(), 'notice claim: prints again after a reset' );
+hcwa_blocks_notice_claim( true );
+
 // Accent and method anchors.
 hcwa_assert_same( 'little-rose', hcwa_blocks_accent( 'little-rose' ), 'accent: known' );
 hcwa_assert_same( 'blue', hcwa_blocks_accent( 'red";x' ), 'accent: unknown falls back to blue' );

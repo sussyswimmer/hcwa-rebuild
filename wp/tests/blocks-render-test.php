@@ -98,20 +98,51 @@ hcwa_assert_same( '', $hcwa_render( 'donation-methods' ), 'donation: confirmed b
 $GLOBALS['hcwa_test']['env'] = 'staging';
 hcwa_assert_contains( 'empty-state', $hcwa_render( 'donation-methods' ), 'donation: confirmed but empty shows a note on staging' );
 
-// Language notice (07-BILINGUAL): only when asked for, in the language asked for.
+// Language notice (07-BILINGUAL): only when asked for, in the language asked for, once
+// per page, and only while the post has no published translation in that language.
+// $hcwa_notice renders it as the first notice of a new page.
+$hcwa_notice = static function ( array $attributes = array() ) use ( $hcwa_render ): string {
+	hcwa_blocks_notice_claim( true );
+	return $hcwa_render( 'language-notice', $attributes );
+};
 $_SERVER['REQUEST_URI'] = '/mot-bai-viet/?hcwa_lang_notice=en';
-hcwa_assert_same( '', $hcwa_render( 'language-notice' ), 'notice: nothing without a request' );
+hcwa_assert_same( '', $hcwa_notice(), 'notice: nothing without a request' );
 $_GET['hcwa_lang_notice'] = 'en';
-$hcwa_html                = $hcwa_render( 'language-notice' );
+$hcwa_html                = $hcwa_notice();
 hcwa_assert_contains( '<aside class="wp-block-hcwa-test lang-notice" lang="en">', $hcwa_html, 'notice: speaks the requested language' );
 hcwa_assert_contains( '<p>This article is only available in Vietnamese.</p>', $hcwa_html, 'notice: text' );
 hcwa_assert_contains( 'href="https://hcwa.test/mot-bai-viet/" hreflang="vi"><span>Read it in Vietnamese</span>', $hcwa_html, 'notice: link back to the article without the argument' );
 hcwa_assert_contains( 'href="https://hcwa.test/en/news/" hreflang="en"><span>See English news</span>', $hcwa_html, 'notice: link to English news' );
 $_GET['hcwa_lang_notice'] = 'vi';
-hcwa_assert_same( '', $hcwa_render( 'language-notice' ), 'notice: not in the page language' );
+hcwa_assert_same( '', $hcwa_notice(), 'notice: not in the page language' );
 $_GET['hcwa_lang_notice'] = '<script>';
-hcwa_assert_same( '', $hcwa_render( 'language-notice' ), 'notice: junk request ignored' );
+hcwa_assert_same( '', $hcwa_notice(), 'notice: junk request ignored' );
 unset( $_GET['hcwa_lang_notice'] );
-hcwa_assert_contains( 'lang="en"', $hcwa_render( 'language-notice', array( 'forceLang' => 'en' ) ), 'notice: forceLang' );
-hcwa_assert_same( '', $hcwa_render( 'language-notice', array( 'forceLang' => 'xx' ) ), 'notice: invalid forceLang ignored' );
-unset( $_SERVER['REQUEST_URI'] );
+hcwa_assert_contains( 'lang="en"', $hcwa_notice( array( 'forceLang' => 'en' ) ), 'notice: forceLang (single.php passes the request through it)' );
+hcwa_assert_same( '', $hcwa_notice( array( 'forceLang' => 'xx' ) ), 'notice: invalid forceLang ignored' );
+
+// One panel per page: single.php prints it above the article (forceLang), so the same
+// block placed inside the article prints nothing. A render that prints nothing does not
+// use up the page's notice.
+hcwa_blocks_notice_claim( true );
+$_GET['hcwa_lang_notice'] = 'en';
+hcwa_assert_contains( 'lang-notice', $hcwa_render( 'language-notice', array( 'forceLang' => 'en' ) ), 'notice: the template prints the first one' );
+hcwa_assert_same( '', $hcwa_render( 'language-notice' ), 'notice: a block inside the article adds no second panel' );
+hcwa_blocks_notice_claim( true );
+unset( $_GET['hcwa_lang_notice'] );
+hcwa_assert_same( '', $hcwa_render( 'language-notice' ), 'notice: nothing to show (no request)' );
+$_GET['hcwa_lang_notice'] = 'en';
+hcwa_assert_contains( 'lang-notice', $hcwa_render( 'language-notice' ), 'notice: an empty render left the notice for the page' );
+
+// The post on screen: its own link, and no notice once an English version is published
+// (a bookmarked switch link, or a forceLang saved on a post translated later).
+$GLOBALS['hcwa_test']['current_post'] = hcwa_test_post( array( 'ID' => 300, 'post_type' => 'post', 'post_name' => 'bai-viet-goc' ) );
+hcwa_test_post( array( 'ID' => 301, 'post_type' => 'post', 'post_name' => 'the-article', 'post_status' => 'draft' ) );
+$GLOBALS['hcwa_test']['translations'][300] = array( 'vi' => 300, 'en' => 301 );
+hcwa_assert_contains( 'href="https://hcwa.test/bai-viet-goc/" hreflang="vi"', $hcwa_notice(), 'notice: draft translation, still shown, read link to the post itself' );
+$GLOBALS['hcwa_test']['posts'][301]->post_status = 'publish';
+hcwa_assert_same( '', $hcwa_notice(), 'notice: none once the translation is published' );
+hcwa_assert_same( '', $hcwa_notice( array( 'forceLang' => 'en' ) ), 'notice: a saved forceLang stops once the translation is published' );
+
+hcwa_blocks_notice_claim( true );
+unset( $_GET['hcwa_lang_notice'], $_SERVER['REQUEST_URI'], $GLOBALS['hcwa_test']['current_post'], $GLOBALS['hcwa_test']['translations'] );

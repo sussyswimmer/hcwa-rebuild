@@ -4,7 +4,8 @@
  *
  * Templates call these hcwa_theme_* wrappers instead of the core functions directly.
  * With hcwa-core active they pass straight through (see wp/CONTRACT.md). Without it the
- * theme still renders a reduced page instead of a fatal error, refuses every image and
+ * theme still renders a reduced page instead of a fatal error, shows no photo from the
+ * Media Library (templates, content and featured images; see the end of this file) and
  * shows an admin notice (inc/admin.php).
  *
  * @package hcwa-2026
@@ -209,7 +210,39 @@ function hcwa_theme_language_links(): array {
 }
 
 /**
- * Raw HCWA setting (Settings → HCWA).
+ * Whether text still holds a draft marker ("[DRAFT: …]" and the other markers core knows).
+ *
+ * @param string $text Text.
+ */
+function hcwa_theme_contains_draft( string $text ): bool {
+	if ( function_exists( 'hcwa_contains_draft' ) ) {
+		return (bool) hcwa_contains_draft( $text );
+	}
+	return false !== stripos( $text, '[DRAFT' );
+}
+
+/**
+ * Text that did not pass the publish guard (settings, captions, the tagline, a translation's
+ * title) as it may be printed: '' on the live site while it holds a draft marker (CLAUDE.md,
+ * contract rule 4), unchanged on staging, where hcwa_theme_draft_attr() outlines it.
+ *
+ * @param string $text Text.
+ */
+function hcwa_theme_public_text( string $text ): string {
+	return hcwa_theme_is_production() && hcwa_theme_contains_draft( $text ) ? '' : $text;
+}
+
+/**
+ * ' data-draft' for an element whose text holds a draft marker (staging outline), else ''.
+ *
+ * @param string $text Text the element prints.
+ */
+function hcwa_theme_draft_attr( string $text ): string {
+	return hcwa_theme_contains_draft( $text ) ? ' data-draft' : '';
+}
+
+/**
+ * HCWA setting (Settings → HCWA). Text holding a draft marker counts as unset on the live site.
  *
  * @param string $key     Setting key.
  * @param mixed  $default Value when unset.
@@ -218,18 +251,22 @@ function hcwa_theme_language_links(): array {
 function hcwa_theme_setting( string $key, $default = '' ) {
 	if ( function_exists( 'hcwa_setting' ) ) {
 		$value = hcwa_setting( $key, $default );
+		if ( is_string( $value ) && '' === hcwa_theme_public_text( $value ) ) {
+			return $default;
+		}
 		return null === $value ? $default : $value;
 	}
 	return $default;
 }
 
 /**
- * Per-language HCWA setting (key_vi / key_en) in the current language.
+ * Per-language HCWA setting (key_vi / key_en) in the current language; '' on the live site
+ * while it holds a draft marker.
  *
  * @param string $key Setting key without the language suffix.
  */
 function hcwa_theme_setting_l( string $key ): string {
-	return function_exists( 'hcwa_setting_l' ) ? (string) hcwa_setting_l( $key ) : '';
+	return function_exists( 'hcwa_setting_l' ) ? hcwa_theme_public_text( (string) hcwa_setting_l( $key ) ) : '';
 }
 
 /**
@@ -246,6 +283,127 @@ function hcwa_theme_image( int $attachment_id, string $size, array $attr = array
 		return '';
 	}
 	return (string) hcwa_image( $attachment_id, $size, $attr, $context );
+}
+
+/**
+ * Library IDs a center shows: featured image, logo and gallery (contract meta).
+ *
+ * @param int $center_id Center ID.
+ * @return int[]
+ */
+function hcwa_theme_center_media_ids( int $center_id ): array {
+	return hcwa_theme_parse_ids(
+		array_merge(
+			array( get_post_meta( $center_id, '_thumbnail_id', true ), get_post_meta( $center_id, 'hcwa_logo_id', true ) ),
+			hcwa_theme_parse_ids( get_post_meta( $center_id, 'hcwa_gallery_ids', true ) )
+		)
+	);
+}
+
+/**
+ * Whether an attachment page must treat its photo as being in a no-identifiable context.
+ * The parent alone is not enough: photos are picked from the library, so a Little Rose
+ * gallery photo can be unattached or attached to another post. It counts when its parent is
+ * such a context, when a center marked "No identifiable children" shows it (featured image,
+ * logo or gallery), or when it is the featured image of a post, center or program that is
+ * such a context. Without hcwa-core: true (the strictest answer).
+ *
+ * @param int $attachment_id Attachment ID.
+ */
+function hcwa_theme_attachment_no_identifiable( int $attachment_id ): bool {
+	if ( ! function_exists( 'hcwa_image_context_no_identifiable' ) ) {
+		return true;
+	}
+	// hcwa-core 0.1.1+ answers this itself (and refuses such pages without the theme).
+	if ( function_exists( 'hcwa_attachment_no_identifiable' ) ) {
+		return (bool) hcwa_attachment_no_identifiable( $attachment_id );
+	}
+
+	$attachment = get_post( $attachment_id );
+	$parent     = $attachment instanceof WP_Post ? (int) $attachment->post_parent : 0;
+	if ( $parent > 0 && hcwa_image_context_no_identifiable( $parent ) ) {
+		return true;
+	}
+
+	// The photo and its Polylang media translations: shared meta stores the VI original's ID.
+	$ids = array( $attachment_id );
+	if ( function_exists( 'pll_get_post_translations' ) ) {
+		$ids = hcwa_theme_parse_ids( array_merge( $ids, array_values( (array) pll_get_post_translations( $attachment_id ) ) ) );
+	}
+
+	$query = array(
+		'post_status'      => 'any',
+		'numberposts'      => 50,
+		'suppress_filters' => false,
+		'lang'             => '', // Every language (Polylang).
+	);
+
+	$centers = get_posts(
+		$query + array(
+			'post_type'  => 'hcwa_center',
+			'fields'     => 'ids',
+			'meta_key'   => 'hcwa_no_identifiable_children', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value' => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+		)
+	);
+	foreach ( $centers as $center_id ) {
+		if ( array_intersect( $ids, hcwa_theme_center_media_ids( (int) $center_id ) ) ) {
+			return true;
+		}
+	}
+
+	$users = get_posts(
+		$query + array(
+			'post_type'  => array( 'post', 'hcwa_center', 'hcwa_program' ),
+			'fields'     => 'ids',
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_thumbnail_id',
+					'value'   => array_map( 'strval', $ids ),
+					'compare' => 'IN',
+				),
+			),
+		)
+	);
+	foreach ( $users as $user_id ) {
+		if ( hcwa_image_context_no_identifiable( (int) $user_id ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Whether an attachment page must not exist: an image the approval gate refuses in its
+ * context (hcwa_theme_attachment_no_identifiable()), or any image without hcwa-core.
+ * inc/setup.php turns such a page into a 404 that says nothing about the file.
+ *
+ * @param int $attachment_id Attachment ID.
+ */
+function hcwa_theme_attachment_refused( int $attachment_id ): bool {
+	if ( $attachment_id <= 0 || ! wp_attachment_is_image( $attachment_id ) ) {
+		return false;
+	}
+	if ( ! function_exists( 'hcwa_image_allowed' ) ) {
+		return true;
+	}
+	return ! hcwa_image_allowed( $attachment_id, hcwa_theme_attachment_no_identifiable( $attachment_id ) );
+}
+
+/**
+ * ID of a post's translation in $lang when it is published, else 0 (the post itself, no
+ * translation, or one that is still a draft). Same rule as core's language switch.
+ *
+ * @param int    $post_id Post ID.
+ * @param string $lang    'vi' or 'en'.
+ */
+function hcwa_theme_published_translation( int $post_id, string $lang ): int {
+	$translation = function_exists( 'hcwa_translation_id' ) ? (int) hcwa_translation_id( $post_id, $lang ) : 0;
+	if ( $translation <= 0 || $translation === $post_id ) {
+		return 0;
+	}
+	return 'publish' === get_post_status( $translation ) ? $translation : 0;
 }
 
 /**
@@ -323,4 +481,53 @@ function hcwa_theme_translated_id( int $post_id ): int {
 		}
 	}
 	return $post_id;
+}
+
+/*
+ * Without hcwa-core there is no approval gate, so no photo from the Media Library may render.
+ * Templates already get '' from hcwa_theme_image(); these filters do the same for photos
+ * placed in content (core/image blocks and gallery blocks, classic HTML, cover and media-text
+ * images: core finds their library ID in the wp-image-N class), classic [gallery] shortcodes
+ * and featured images printed by any other code. Plugins load before the theme, so the
+ * check is reliable here.
+ */
+if ( ! hcwa_theme_core_active() ) {
+	add_filter( 'render_block_core/image', 'hcwa_theme_drop_library_image_block', 10, 2 );
+	add_filter( 'wp_content_img_tag', 'hcwa_theme_drop_library_img_tag', 10, 3 );
+	add_filter( 'post_gallery', 'hcwa_theme_drop_gallery' );
+	add_filter( 'post_thumbnail_html', '__return_empty_string' );
+}
+
+/**
+ * core/image block without hcwa-core: the whole figure goes when it shows a library photo.
+ *
+ * @param string $block_content Rendered block.
+ * @param array  $block         Parsed block.
+ * @return string
+ */
+function hcwa_theme_drop_library_image_block( $block_content, $block ) {
+	return (int) ( $block['attrs']['id'] ?? 0 ) > 0 ? '' : $block_content;
+}
+
+/**
+ * img tag in content without hcwa-core: removed when it is a library photo.
+ *
+ * @param string $image         img tag.
+ * @param string $context       Where it is printed.
+ * @param int    $attachment_id Library ID or 0 (external image).
+ * @return string
+ */
+function hcwa_theme_drop_library_img_tag( $image, $context, $attachment_id ) {
+	return (int) $attachment_id > 0 ? '' : $image;
+}
+
+/**
+ * Classic [gallery] shortcode without hcwa-core: its images carry no wp-image-N class, so
+ * the img filter above cannot see them. A non-empty return replaces the gallery.
+ *
+ * @param string $output Gallery HTML ('' lets core build it).
+ * @return string
+ */
+function hcwa_theme_drop_gallery( $output ) {
+	return ' ';
 }

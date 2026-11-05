@@ -76,12 +76,19 @@ function hcwa_localized_path( string $object, string $lang, string $slug ): stri
  * /en/news/page/2/ still paginates the posts page instead of looking for a category
  * named "page".
  *
+ * Centers, programs and reports get the sub-rules WordPress would generate for them:
+ * attachment pages (WordPress links an attachment as its parent's permalink plus the
+ * attachment slug, wp-includes/link-template.php get_attachment_link()) and paged content
+ * (/x/2/). There is no embed rule: embeds are switched off (media-approval.php), since
+ * the embed view prints the featured image past the photo approval gate.
+ *
  * @return array<string, string>
  */
 function hcwa_localized_rewrite_rules(): array {
 	$rules    = array();
 	$bases    = hcwa_url_bases();
 	$reserved = '(?!(?:page|feed|embed)(?:/|$))';
+	$sub      = '(?!(?:embed|feed|trackback)/?$)';
 
 	foreach ( hcwa_languages() as $lang ) {
 		foreach ( array( 'hcwa_center', 'hcwa_program', 'hcwa_report' ) as $post_type ) {
@@ -90,8 +97,10 @@ function hcwa_localized_rewrite_rules(): array {
 			}
 			$base = trim( $bases[ $post_type ][ $lang ], '/' );
 
-			$rules[ $base . '/([^/]+)/embed/?$' ] = 'index.php?' . $post_type . '=$matches[1]&embed=true&lang=' . $lang;
-			$rules[ $base . '/([^/]+)/?$' ]       = 'index.php?' . $post_type . '=$matches[1]&lang=' . $lang;
+			$rules[ $base . '/[^/]+/attachment/([^/]+)/?$' ]  = 'index.php?attachment=$matches[1]&lang=' . $lang;
+			$rules[ $base . '/([^/]+)/([0-9]+)/?$' ]          = 'index.php?' . $post_type . '=$matches[1]&page=$matches[2]&lang=' . $lang;
+			$rules[ $base . '/[^/]+/' . $sub . '([^/]+)/?$' ] = 'index.php?attachment=$matches[1]&lang=' . $lang;
+			$rules[ $base . '/([^/]+)/?$' ]                   = 'index.php?' . $post_type . '=$matches[1]&lang=' . $lang;
 		}
 
 		if ( ! empty( $bases['category'][ $lang ] ) ) {

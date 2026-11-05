@@ -58,14 +58,12 @@ if ( ! $hcwa_posts ) {
 	return;
 }
 
-$hcwa_rows = array_map( 'hcwa_blocks_news_data', $hcwa_posts );
-
 if ( ! $hcwa_featured ) {
 	?>
 	<ul <?php echo get_block_wrapper_attributes( array( 'class' => 'news-list news-list--row' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
 		<?php
-		foreach ( array_slice( $hcwa_rows, 0, $hcwa_limit ) as $hcwa_row ) {
-			echo hcwa_blocks_news_item( $hcwa_row, $hcwa_lang, $hcwa_production ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+		foreach ( array_slice( $hcwa_posts, 0, $hcwa_limit ) as $hcwa_post ) {
+			echo hcwa_blocks_news_item( hcwa_blocks_news_data( $hcwa_post ), $hcwa_lang, $hcwa_production ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 		}
 		?>
 	</ul>
@@ -73,20 +71,20 @@ if ( ! $hcwa_featured ) {
 	return;
 }
 
+// The pick needs only sticky and category; card data is built for the posts printed.
 $hcwa_pick = hcwa_blocks_pick_featured(
 	array_map(
-		static fn( $post, $row ) => array(
+		static fn( $post ) => array(
 			'sticky'   => in_array( (int) $post->ID, $hcwa_sticky, true ),
-			'category' => $row['category'],
+			'category' => hcwa_blocks_post_category( $post )['key'],
 		),
-		$hcwa_posts,
-		$hcwa_rows
+		$hcwa_posts
 	)
 );
 
 $hcwa_story = hcwa_blocks_news_data( $hcwa_posts[ $hcwa_pick ], true );
-unset( $hcwa_rows[ $hcwa_pick ] );
-$hcwa_rows = array_slice( array_values( $hcwa_rows ), 0, $hcwa_limit );
+unset( $hcwa_posts[ $hcwa_pick ] );
+$hcwa_rows = array_map( 'hcwa_blocks_news_data', array_slice( array_values( $hcwa_posts ), 0, $hcwa_limit ) );
 ?>
 <div <?php echo get_block_wrapper_attributes( array( 'class' => 'latest' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
 	<?php echo hcwa_blocks_story_card( $hcwa_story, $hcwa_lang, $hcwa_production ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>

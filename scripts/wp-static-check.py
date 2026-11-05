@@ -20,7 +20,8 @@ Checks (E = error, W = warning):
   contract  contract function signatures, block names, pattern names, meta keys.
   blocks    every <!-- wp:hcwa/... --> in patterns and the seed, and every
             hcwa_theme_block() call, names a block folder and only attributes its
-            block.json declares (type and enum checked); attribute JSON parses.
+            block.json declares (type and enum checked); attribute JSON parses;
+            blocks/blocks-manifest.php equals the block.json files.
   patterns  headers, slugs, VI/EN twins, referenced slugs, balanced block comments.
   pages     every page key passed to hcwa_page_url / hcwa_theme_url is known.
   css       every class used in block markup, patterns and theme templates exists in
@@ -83,7 +84,7 @@ META_FUNCS = {
 # Meta keys that are deliberately not registered (with the reason).
 META_UNREGISTERED = {
     "_hcwa_publish_blocked": "protected (leading underscore) bookkeeping of the production publish guard",
-    "hcwa_seed_id": "seed idempotency key, local instances only (scripts/wp-seed.php)",
+    "_hcwa_seed_id": "protected seed idempotency key, local instances only (scripts/wp-seed.php)",
 }
 
 # Functions taking a callback name: argument index of the callback.
@@ -304,6 +305,23 @@ if (is_file($root . '/scripts/wp-seed.php')) {
         }
     }
 }
+// blocks-manifest.php is what WordPress registers from: it must equal the block.json files.
+$manifest_diff = [];
+$manifest_file = $root . '/wp/plugins/hcwa-core/blocks/blocks-manifest.php';
+$manifest      = is_file($manifest_file) ? require $manifest_file : null;
+if (!is_array($manifest)) {
+    $manifest_diff[] = 'missing or not an array';
+} else {
+    $folders = [];
+    foreach (glob($root . '/wp/plugins/hcwa-core/blocks/*/block.json') as $file) {
+        $folders[basename(dirname($file))] = json_decode((string) file_get_contents($file), true);
+    }
+    foreach (array_diff(array_keys($folders), array_keys($manifest)) as $name) { $manifest_diff[] = "$name has no entry"; }
+    foreach (array_diff(array_keys($manifest), array_keys($folders)) as $name) { $manifest_diff[] = "$name has no block folder"; }
+    foreach ($folders as $name => $meta) {
+        if (array_key_exists($name, $manifest) && $manifest[$name] !== $meta) { $manifest_diff[] = "$name differs from its block.json"; }
+    }
+}
 $blocks = function_exists('hcwa_blocks_strings') ? hcwa_blocks_strings() : [];
 $theme  = function_exists('hcwa_theme_strings') ? hcwa_theme_strings() : [];
 
@@ -339,6 +357,7 @@ echo json_encode([
     'post_types'     => hcwa_post_types(),
     'sigs'           => $sigs,
     'seed_blocks'    => $seed_blocks,
+    'manifest_diff'  => $manifest_diff,
 ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 """
 
@@ -576,7 +595,7 @@ def check_functions(report: Report, tokens: dict[Path, dict]) -> dict[str, set[s
         "core": {"core"},
         "theme": {"theme"},
         "seed": {"seed", "core", "theme"},
-        "tests": {"tests", "core", "theme"},
+        "tests": {"tests", "core", "theme", "seed"},  # runtime-scripts-test.php loads the seed
         "other": {"core"},
     }
 
@@ -653,7 +672,7 @@ def check_contract_functions(report: Report, dump: dict) -> None:
             report.error("contract", f"CONTRACT.md {name}", f"return type: contract {ret}, code {sigs[name]['return']}")
 
 
-def load_blocks(report: Report) -> dict[str, dict]:
+def load_blocks(report: Report, dump: dict | None = None) -> dict[str, dict]:
     blocks: dict[str, dict] = {}
     for d in sorted(p for p in BLOCKS.iterdir() if p.is_dir()):
         bj = d / "block.json"
@@ -672,6 +691,10 @@ def load_blocks(report: Report) -> dict[str, dict]:
         if meta.get("category") != "hcwa":
             report.error("blocks", rel(bj), "category must be 'hcwa'")
         blocks[name] = meta
+
+    for diff in dump.get("manifest_diff", []) if dump else []:
+        report.error("blocks", rel(BLOCKS / "blocks-manifest.php"),
+                     f"{diff}; regenerate with php wp/tests/blocks-manifest-build.php")
 
     m = re.search(r"- Blocks: (.*?)Category", read(CONTRACT), re.S)
     if m:
@@ -1104,7 +1127,7 @@ def main() -> int:
         check_pages(report, dump, tokens)
         check_meta(report, dump, tokens)
     check_functions(report, tokens)
-    blocks = load_blocks(report)
+    blocks = load_blocks(report, dump)
     check_patterns(report, blocks, tokens, dump)
     check_css(report)
     check_text(report)

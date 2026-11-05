@@ -102,7 +102,8 @@ hcwa_assert_contains( 'hcwa_partner_logo_allowed(', $hcwa_program, 'program page
 hcwa_assert_false( (bool) preg_match( "/get_post_meta\([^)]*'hcwa_logo_permission'/", $hcwa_program ), 'program page does not read the permission flag itself' );
 
 // Rule 2 for photos placed in content (core/image blocks, classic HTML, cover, media-text).
-hcwa_assert_true( hcwa_content_image_decision( 0, true, false ), 'no library ID (hcwa_image()/block output, external URL): left alone' );
+hcwa_assert_true( hcwa_content_image_decision( 0, true, false ), 'not a library photo (printed by gated code, or a theme file): left alone' );
+hcwa_assert_false( hcwa_content_image_decision( -1, true, false ), 'cannot be checked (another site, unknown upload) in a gated context: removed' );
 hcwa_assert_true( hcwa_content_image_decision( 5, false, false ), 'ungated context: left alone' );
 hcwa_assert_false( hcwa_content_image_decision( 5, true, false ), 'gated context, not allowed: removed' );
 hcwa_assert_true( hcwa_content_image_decision( 5, true, true ), 'gated context, allowed: kept' );
@@ -123,6 +124,6 @@ hcwa_assert_false( hcwa_content_images_gated( 304 ), 'ordinary news posts keep t
 hcwa_assert_false( hcwa_content_images_gated( 999 ), 'no post, no gate' );
 
 $hcwa_img = '<img src="https://hcwa.test/a.jpg" class="wp-image-5">';
-hcwa_assert_same( $hcwa_img, hcwa_gate_content_img_tag( $hcwa_img, 'the_content', 0 ), 'img without library ID passes' );
+hcwa_assert_same( $hcwa_img, hcwa_gate_content_img_tag( $hcwa_img, 'the_content', 0 ), 'outside a gated post, img tags pass' );
 hcwa_assert_same( $hcwa_img, hcwa_gate_content_img_tag( $hcwa_img, 'widget_text_content', 5 ), 'only post content and excerpts are filtered' );
 hcwa_assert_same( 'x', hcwa_gate_image_block( 'x', array( 'attrs' => array() ) ), 'core/image without an ID passes' );

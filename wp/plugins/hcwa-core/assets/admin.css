@@ -53,3 +53,6 @@
 .hcwa-media__buttons {
 	margin: 0.25em 0 0;
 }
+.hcwa-field__value {
+	display: block;
+}

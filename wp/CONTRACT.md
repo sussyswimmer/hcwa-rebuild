@@ -39,7 +39,9 @@ wp/
   CONTRACT.md                         this file (integration agent may edit)
   README.md                           how to run locally (dev-runtime agent)
   tests/bootstrap.php, run.php        minimal WP stubs + runner (core agent)
-  tests/<area>-*-test.php             each agent adds its own
+  tests/<area>-*-test.php             each agent adds its own (core-rest, theme-gates, runtime-scripts …)
+  tests/<area>-stubs.php              extra WP stubs per area, loaded by bootstrap.php
+  tests/blocks-manifest-build.php     regenerates blocks/blocks-manifest.php (blocks agent)
   tests/integration-test.php          integration fixes between the parts (integration agent)
   plugins/hcwa-core/                  CORE agent, except blocks
     hcwa-core.php                     header, constants, requires
@@ -54,14 +56,16 @@ wp/
     includes/impact.php               hcwa_get_impact_figures() with the verified gate
     includes/publish-guard.php        production refuses to publish [DRAFT text
     includes/cli.php                  wp hcwa coverage | draft-scan
+    assets/editor-images.js           editor warning for images the live site will leave out
     languages/                        admin strings, Vietnamese (.l10n.php)
     includes/blocks.php               BLOCKS agent
     blocks/<name>/                    BLOCKS agent (block.json, index.js, index.asset.php, render.php)
+    blocks/blocks-manifest.php        BLOCKS agent, generated: every block.json as PHP
   themes/hcwa-2026/                   THEME agent, except patterns/
     style.css, theme.json, functions.php, header.php, footer.php, templates, inc/, template-parts/
     assets/css/site.css               port of prototype CSS
     assets/css/patterns.css           PATTERNS agent (theme enqueues it front + editor if present)
-    assets/js/site.js, assets/fonts/, assets/img/
+    assets/js/site.js, assets/js/bars.js (inlined in <head>), assets/fonts/, assets/img/
     patterns/*.php                    PATTERNS agent
 scripts/wp-local.sh, wp-router.php, wp-seed.php, wp-smoke.py   DEV-RUNTIME agent
 scripts/wp-static-check.py            cross-part static check (integration agent)
@@ -117,6 +121,13 @@ name below and list it under "needs" in your report.
 | category | `tin-tuc/{slug}/` | `en/news/{slug}/` |
 | post | `{slug}/` | `en/{slug}/` (Polylang default) |
 
+Each center, program and report base also has attachment (`{base}/x/attachment/y/`,
+`{base}/x/y/`) and paged (`{base}/x/2/`) sub-rules. There is no embed rule: embeds and the
+oEmbed endpoint are off. A `pll_check_canonical_url` filter sends a center, program,
+report (or one of their attachments) or category requested under the wrong base, such as
+the other language's slug or an old `/category/x/` URL, to its own permalink in one 301.
+`HCWA_CORE_VERSION` changes re-flush the rules.
+
 Pages keep normal hierarchical slugs per language (`/hoat-dong/`, `/en/our-work/`).
 Logical page keys and their default paths mirror `prototype/src/routes.mjs` (home,
 ourWork, impact, news, getInvolved, donate, volunteer, partner, inKind, contact, about,
@@ -124,13 +135,16 @@ ourStory, team, partners, policies).
 
 ## Meta keys (all registered with `register_post_meta`, `show_in_rest`, sanitize + auth callbacks)
 
-"sync" = copied between translations via `pll_copy_post_metas`; others are per language.
+"sync" = shared: copied between translations via `pll_copy_post_metas`; others are per
+language. "protective" = never copied, and true when any translation has it
+(`hcwa_meta_flag_any()`), so saving or linking one language version can never clear it.
 
 - center: `hcwa_summary`, `hcwa_who_we_serve`, `hcwa_what_we_do` (one item per line),
   `hcwa_location`, `hcwa_help_text`, `hcwa_contact_name`; sync: `hcwa_since_year` (int),
   `hcwa_accent` (green-bamboo | little-rose | cau-han | blue), `hcwa_logo_id`,
   `hcwa_gallery_ids` (int[]), `hcwa_contact_approved` (bool), `hcwa_phone`, `hcwa_email`,
-  `hcwa_news_tag` (term slug), `hcwa_no_identifiable_children` (bool, true for Little Rose).
+  `hcwa_news_tag` (term slug, the VI tag); protective: `hcwa_no_identifiable_children`
+  (bool, true for Little Rose).
 - program: `hcwa_summary`, `hcwa_goals`, `hcwa_activities` (one per line); sync:
   `hcwa_status` (active | completed | planned), `hcwa_start_year`, `hcwa_end_year`,
   `hcwa_partner_ids` (int[]), `hcwa_center_id`, `hcwa_news_tag`.
@@ -143,10 +157,25 @@ ourStory, team, partners, policies).
 - partner (featured image = logo): sync: `hcwa_website`, `hcwa_partner_type`
   (corporate | ngo | government | foundation | academic), `hcwa_active_years`,
   `hcwa_show_on_home` (bool), `hcwa_logo_permission` (bool).
-- attachment: `hcwa_approved_for_web` (bool), `hcwa_identifiable_child` (bool).
+- attachment: sync: `hcwa_approved_for_web` (bool); protective: `hcwa_identifiable_child`
+  (bool). A photo counts as approved only when every translation is.
 
 IDs stored in sync meta point at the VI original; resolve with
 `pll_get_post( $id, hcwa_lang() )` when rendering.
+
+Shared fields are edited on the Vietnamese original only: the details box shows them
+read-only on a translation (with a link to the VI version) and `hcwa_save_meta_box()` skips
+them there. `hcwa_pll_seed_shared_meta()` (`pll_save_post`, priority 5, before Polylang's
+own copy at 10) copies the original's shared values onto a translation, so linking a
+separately created translation never wipes the original. Every `hcwa_*` post meta key is
+protected (`is_protected_meta`), so the editor's Custom Fields panel cannot show or delete
+it; REST access still follows each key's auth callback.
+
+Polylang's "Custom fields" sync stays off (the seed sets taxonomies, page parent and
+featured image only). Shared custom fields come only from `hcwa_meta_sync_keys()`, through
+`hcwa_pll_copy_post_metas()`, which also drops every other public key when Polylang
+synchronizes (so a live install with that option on cannot copy per-language text) and
+never copies core's `footnotes`. The seed's bookkeeping key is the protected `_hcwa_seed_id`.
 
 ## Functions the core plugin provides (theme and blocks may call these)
 
@@ -160,7 +189,8 @@ hcwa_date( string $ymd ): string           // 08/02/2026 (vi) / 8 Feb 2026 (en)
 hcwa_page_url( string $key, ?string $lang = null ): string
 hcwa_language_links(): array               // ['vi' => [url, name, current, has_translation], 'en' => …]
 hcwa_setting( string $key, $default = null )            // raw option value
-hcwa_setting_l( string $key, ?string $lang = null ): string  // per-language variant (key_vi / key_en)
+hcwa_setting_l( string $key, ?string $lang = null ): string  // per-language variant (key_vi / key_en);
+    // production: '' when the text still has a draft marker
 hcwa_get_impact_figures( array $args ): array           // args: scope_type, scope_id, limit
     // each: [ 'value' => ?float, 'suffix', 'label', 'year', 'verified' => bool, 'id' ]
     // production: unverified figures are never returned
@@ -192,6 +222,11 @@ hcwa_id_list( $value ): array
 hcwa_contains_draft( string $s ): bool     // rule 4
 hcwa_content_images_gated( $post = null ): bool  // rule 2 for photos placed in content
 hcwa_strings(): array                      // the whole dictionary (after the filters)
+hcwa_post_translation_ids( int $post_id ): array      // the post and its Polylang translations
+hcwa_meta_flag_any( int $post_id, string $key ): bool // protective flag set on any translation
+hcwa_center_media_ids( int $center_id ): array        // featured image, logo, gallery
+hcwa_attachment_no_identifiable( int $attachment_id ): bool  // a photo's own context (rule 2)
+hcwa_attachment_page_refused( int $attachment_id ): bool     // its attachment page must 404
 ```
 
 `scripts/wp-static-check.py` compares every signature in this block with the code.
@@ -228,20 +263,34 @@ editable in Polylang.
    "Verified" means the tick plus a "verified by" name and a valid date. Non-production
    shows a strip from 1 figure, with a note that the live site needs 2.
 2. Images in center, program and story contexts render only if `hcwa_approved_for_web`.
-   Little Rose context (`hcwa_no_identifiable_children`) also refuses
-   `hcwa_identifiable_child`. Refusals leave no broken markup and log in admin.
-   Templates and blocks use `hcwa_image()`. Photos placed in post content (core/image
-   blocks, the patterns' image slots, classic HTML, cover and media-text) are gated by
-   `hcwa_gate_image_block()` (`render_block_core/image`) and `hcwa_gate_content_img_tag()`
-   (`wp_content_img_tag`) when `hcwa_content_images_gated()` is true: pages, centers,
-   programs, reports, story posts and Little Rose news. Other news posts keep their inline
-   photos (open question for HCWA, see Status). Only editors and administrators can tick
-   the approval flags (`edit_others_posts`).
+   Little Rose context (`hcwa_no_identifiable_children`, on the center in any language,
+   its programs, and news carrying its news tag in any language version) also refuses
+   `hcwa_identifiable_child`. Refusals leave no broken markup and are logged for staff
+   only (users with `edit_posts`, and WP-CLI), at most one option write per request.
+   Templates and blocks use `hcwa_image()`. Photos placed in post content are gated when
+   `hcwa_content_images_gated()` is true (pages, centers, programs, reports, story posts
+   and Little Rose news): core/image blocks and pattern image slots
+   (`render_block_core/image`), cover backgrounds (`render_block_core/cover`), media-text
+   featured images, classic HTML (`wp_content_img_tag`), classic `[gallery]`
+   (`post_gallery`), and images inserted by URL, which are refused unless the URL resolves
+   to an approved upload. A refused image takes its link and caption with it. Other news
+   posts keep their inline photos (open question for HCWA, see Status). Featured images
+   printed through `get_the_post_thumbnail()` (core blocks included) are gated everywhere
+   outside wp-admin (`post_thumbnail_html`); partner logos follow rule 5 instead. A
+   photo's attachment page is a 404 when the gate refuses it in its own context
+   (`hcwa_attachment_page_refused()`, in the plugin and the theme). Embeds and the oEmbed
+   endpoint are off. `/wp/v2/media`, `/wp/v2/hcwa_impact` and `/wp/v2/hcwa_partner` need
+   `edit_posts` in any letter case (`rest_request_before_callbacks`). The block editor
+   warns about images the live site will leave out. Only editors and administrators can
+   tick the approval flags (`edit_others_posts`).
 3. Donation details render only from finance-confirmed settings. Otherwise: production
    renders nothing (plus an admin notice); non-production renders the labelled
    placeholder panel from the prototype.
 4. Production refuses to publish content containing `[DRAFT` (post goes back to draft,
-   admin notice explains why). `wp hcwa draft-scan` lists every offender.
+   admin notice explains why), scheduled posts included. `wp hcwa draft-scan` lists every
+   offender; run it after any database push to production. Settings → HCWA texts never
+   pass the guard, so `hcwa_setting_l()` and the theme's bridge print nothing for a value
+   with a draft marker on production.
 5. Partner logos need `hcwa_logo_permission` on production: `hcwa_partner_logo_allowed()`
    is the only gate, used by `hcwa/partner-wall` and the program page alike. Logos and the
    VietQR image are not child photos, so they use `wp_get_attachment_image()`, not the
@@ -266,8 +315,27 @@ Agreed during integration:
   as `.story-card--featured`, `.figure__year`, `.pay__qr`).
 - Blocks print nothing when there is nothing to show on production, and a short
   `.empty-state[data-draft]` note on staging (the announcement bar and the language
-  notice print nothing in both). The theme drops the heading around a block that printed
-  nothing.
+  notice print nothing in both). Each pattern section around an `hcwa/*` block carries a
+  hide wrapper: `.hcwa-impact-slot`, `.hcwa-partners`, `.hcwa-block-section`
+  (center-grid, program-list, news-latest) or `.donate-methods` (donation-methods), and
+  `patterns.css` hides it with `:not(:has(...))` when the block printed nothing, heading
+  included. A new pattern that uses an `hcwa/*` block adds its entry to
+  `$hcwa_empty_hides` in `wp/tests/patterns-markup-test.php`. The seed wraps its own
+  `hcwa/*` blocks in a `container` group with their heading.
+- Donation details are `<div class="pay-details__row"><dt/><dd>value, hint, copy
+  button</dd></div>`: a `<dl>` group holds only dt and dd. `site.css` makes the dd the
+  grid (button in column 2).
+- `hcwa/language-notice`: `forceLang` is set only by the template (single.php through
+  `hcwa_theme_block()`); the editor's language picker is preview-only and never saved.
+  The notice prints at most once per request and never when the post has a published
+  translation in that language.
+- Block metadata registers from `blocks/blocks-manifest.php`
+  (`wp_register_block_metadata_collection`). After changing any block.json, run
+  `php wp/tests/blocks-manifest-build.php`; the blocks test and `wp-static-check.py` fail
+  while the two differ.
+- Blocks and theme loops load the attachments they print in one go before printing
+  (`hcwa_blocks_prime_attachments()`, `hcwa_theme_prime_attachments()`, both on core's
+  `_prime_post_caches()`).
 - The Our Work filter: `hcwa/center-grid` and `hcwa/program-list` mark their root
   `[data-filter-group]` and each item `[data-areas]` (focus area slugs without a `-vi` /
   `-en` suffix: education, protection, family, policy). The page pattern's chips are plain
@@ -293,15 +361,16 @@ Agreed during integration:
 ## Checks every agent runs before reporting
 
 ```
-find wp -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v 'No syntax errors'
+find wp scripts -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v 'No syntax errors'
 find wp -name '*.js' -print0 | xargs -0 -n1 node --check
+bash -n scripts/wp-local.sh && python3 -m py_compile scripts/wp-smoke.py
 php wp/tests/run.php
 python3 -I scripts/wp-static-check.py
 ```
 Never download or execute WordPress, WP-CLI, Composer packages or other external code.
 Never `git commit` or push; the orchestrator commits.
 
-## Status (integration, 5 Nov 2026)
+## Status (integration, 5 Nov 2026; review round the same day)
 
 ### Built
 
@@ -317,8 +386,8 @@ All five parts are in the repo and fit together statically.
   programs, reports, search, attachments and 404, `site.css` (prototype port), `site.js`.
 - **Patterns**: 24 files, 12 VI/EN pairs, including the five page compositions.
 - **Dev runtime**: `scripts/wp-local.sh`, `wp-router.php`, `wp-seed.php`, `wp-smoke.py`,
-  `wp/README.md`. The seed now also places the impact strip and the report list on the
-  Impact page and the partner wall on the Partners page.
+  `wp/README.md`. The seed also places the impact strip and the report list on the Impact
+  page and the partner wall on the Partners page.
 - **Integration**: `scripts/wp-static-check.py` (0 errors) and
   `wp/tests/integration-test.php`. Changes made while fitting the parts together:
   - English for keys that share a Vietnamese source comes from the dictionary
@@ -332,44 +401,182 @@ All five parts are in the repo and fit together statically.
   - The program page gates partner logos with `hcwa_partner_logo_allowed()`, like the
     partner wall, instead of reading the flag and requiring photo approval.
 
-Checks: `php -l` on 112 PHP files and `node --check` on 13 JS files are clean;
-`php wp/tests/run.php` passes (blocks, core, theme, patterns and integration suites);
-`python3 -I scripts/wp-static-check.py` reports 0 errors. Its warnings are the five
-shared-source groups above, the unregistered bookkeeping meta keys (`_hcwa_publish_blocked`,
-`hcwa_seed_id`) and nothing else. Each kind of fault the checker looks for was injected
-into a scratch copy once and was reported.
+### Review round (5 Nov 2026)
+
+A code review by reading (WordPress still not run) found gaps, mostly in the safeguarding
+gates. The part owners fixed them; the integration pass then did the cross-part items and
+updated this file. Contract-level changes, all written into the sections above:
+
+- **Meta keys**: `hcwa_no_identifiable_children` and `hcwa_identifiable_child` are
+  protective (never copied, true when any translation has them). Shared fields are edited
+  on the Vietnamese original only and seeded onto a translation before Polylang copies.
+  Polylang's "Custom fields" sync stays off; shared fields come only from
+  `hcwa_meta_sync_keys()`; `footnotes` are never copied. `hcwa_*` post meta is protected.
+- **Rule 2** now covers images inserted by URL, classic `[gallery]`, cover backgrounds,
+  media-text featured images, featured images printed anywhere, attachment pages, embeds
+  (off), and the media REST route (staff only). Refusals are logged for staff only.
+- **Rule 4** covers scheduled posts and Settings → HCWA texts.
+- **URLs**: attachment and paged sub-rules, no embed rule, one 301 from a wrong base
+  (including old `/category/x/` URLs) to the localized permalink. `HCWA_CORE_VERSION`
+  is 0.1.1, so the rules re-flush.
+- **Functions**: `hcwa_post_translation_ids()`, `hcwa_meta_flag_any()`,
+  `hcwa_center_media_ids()`, `hcwa_attachment_no_identifiable()`,
+  `hcwa_attachment_page_refused()`. `hcwa_setting_l()` returns '' on production for text
+  with a draft marker; `hcwa_setting()` stays raw.
+- **Markup**: hide wrappers around `hcwa/*` blocks in patterns, donation rows with the
+  copy button inside the `<dd>`, the language notice's `forceLang` template-only, block
+  metadata from `blocks/blocks-manifest.php`, attachment priming in blocks and loops.
+
+What each part changed:
+
+- **hcwa-core**: embeds and the oEmbed endpoint off; `/wp/v2/media`, `hcwa_impact` and
+  `hcwa_partner` closed to visitors in any letter case, `_embed` and batch requests
+  included; the gates listed under rule 2; Little Rose protection read across
+  translations (center flag, program's center, news tags of every language version);
+  `wp hcwa coverage` blocks while a protected center has no news tag; shared-field seeding
+  when a translation is linked; localized sub-rules and the canonical filter; the publish
+  guard on scheduled posts; the settings sanitizer registered on `init`, so WP-CLI, seed
+  and cron writes go through it and the donation re-confirmation guard; refusal log
+  written once per request on shutdown, staff and WP-CLI only; editor warning for images
+  the live site will drop (`assets/editor-images.js`); content images primed before
+  `do_blocks`. Integration pass: the attachment page of a refused photo is a 404 in the
+  plugin too (`hcwa_refuse_attachment_page`, `template_redirect` priority 5), and the
+  theme now asks core for the photo's context; translated term archives keep their
+  hreflang and switch link while empty (`pll_hide_archive_translation_url`); when Polylang
+  synchronizes, `hcwa_pll_copy_post_metas()` drops public keys other than ours; `wp hcwa
+  coverage` also lists categories and center/program news tags missing a language (a
+  protected center's tag blocks); JPEG uploads are saved as WebP (see the decision below).
+- **hcwa-2026**: attachment pages built from the photo's full context, a 404 when refused,
+  noindex on production; draft text in Settings → HCWA, captions, the tagline and the
+  meta description hidden on production and outlined on staging; no Media Library photo
+  at all without hcwa-core; the "only in Vietnamese" notice only while no published
+  translation exists, the switch's hreflang only on real translations; category chips
+  only in the page language; the VI name on EN pages only from a published translation;
+  quote line-height 1.65; `hcwa/*` blocks placed straight into a page get the container
+  width; 44 px targets for the language switch, submenu toggles and report links; scoped
+  list spacing; footer summaries not focusable on desktop; body images lazy after an eager
+  cover; top bars shown or hidden before first paint. Integration pass: donation-row CSS
+  for the new markup; attachments primed in the news and report archives, the center
+  gallery and the program's partners; report file size read from attachment metadata
+  first.
+- **Blocks**: the language notice's editor picker is preview-only, the notice prints once
+  per request and never with a published translation; valid `<dl>` markup for donation
+  details; program-list builds rows only for the programs shown and primes their
+  partners; registration from the generated manifest. Integration pass: center-grid,
+  partner-wall and report-list prime the attachments they print
+  (`hcwa_blocks_prime_attachments()`).
+- **Patterns**: hide wrappers on the home, Our Work and Donate sections, with matching
+  `patterns.css` rules and a test that each `hcwa/*` block sits inside one.
+- **Dev runtime**: seed sync list without "Custom fields"; `PLL_CACHE_HOME_URL` false and
+  Polylang's language cache cleared when the port changes; the smoke test's production
+  draft check uses the publish guard's tokens; hreflang checked for x-default, self link
+  and host; repo-local Playwright browsers; seed marker renamed to `_hcwa_seed_id` (with a
+  migration); SQLite 3.37+ check. Integration pass: the seed gives every center a linked
+  VI / EN news tag (Little Rose's now protects its news; no post is tagged, since none in
+  `news.json` is about one center) and wraps its `hcwa/*` blocks in `container` groups;
+  the smoke test sends HTTP probes for the embed 404, the media REST 401 (also in upper
+  case) and the wrong-base 301; `wp-static-check.py` fails when `blocks-manifest.php`
+  differs from the block.json files.
+
+Deliberate decisions in this round:
+
+- Refused photo attachment pages answer 404 (plugin and theme); attachment pages are
+  noindex on production.
+- `?hcwa_lang_notice=<lang>` on a post that has a published translation by now redirects
+  there with a 302 (the translation may be unpublished again).
+- `assets/js/bars.js` is printed inline in `<head>`, so the EN bar and the announcement
+  bar are decided before first paint. The header shows the logo name from 1280 px.
+- JPEG uploads are converted to WebP by WordPress (`hcwa_image_output_format()`): main
+  file and sizes, original JPEG kept as `original_image`, JPEG kept when the server
+  cannot write WebP. WordPress prints a plain `<img>`, so 05-DESIGN's "JPEG fallback" is
+  not served; every current browser reads WebP. AVIF is not used (no `<picture>`).
+  Existing media stays JPEG until `wp media regenerate` in Phase 3. Maxwell to confirm.
+- A `forceLang` saved by the earlier editor control still prints until the post gets a
+  published translation; no pattern or seed sets it, so staff would remove and re-insert
+  such a block.
+
+Left for owners outside `wp/` and `scripts/wp-*`:
+
+- `docs/plan/04` redirect map and `content/draft/work.json:140`: the `/chp-2/` target
+  should be the English Cau Han slug HCWA settles (now
+  `/en/our-work/centers/cau-han-project/`). Old `/category/*` URLs from `urls-live.csv`
+  go in the task 3.4 list; they now redirect to the new bases by themselves.
+- `docs/plan/09-QA`: run `wp hcwa draft-scan` after any database push to production.
+  `docs/plan/05-DESIGN` "Formats": align with the WebP decision above.
+- `docs/plan/07-BILINGUAL`: "Custom fields" sync is off and non-text fields sync through
+  hcwa-core's filter; hreflang on empty term archives relies on the core filter.
+- `prototype/`: footer summaries `tabIndex = -1` from 1024 px; in `pages/involve.mjs` the
+  copy button inside the `<dd>` after value and hint, the empty `<span>` removed, and the
+  theme's `.pay-details` rules.
+
+Checks after this round: `php -l` on 119 PHP files and `node --check` on 15 JS files are
+clean; `bash -n scripts/wp-local.sh` and `py_compile` of `wp-smoke.py` pass;
+`php wp/tests/run.php` reports 2398 passed, 0 failed; `python3 -I
+scripts/wp-static-check.py` reports 0 errors and 7 warnings: the five shared-source
+groups above and the unregistered bookkeeping keys `_hcwa_publish_blocked` and
+`_hcwa_seed_id`. The new manifest check was shown to fire on a scratch copy with an
+edited block.json.
 
 ### Unverified until WordPress runs
 
 Nothing here has run inside WordPress, WP-CLI or a browser. In particular:
 
 - Rewrite rules and links with Polylang in directory mode: CPT and category URLs in both
-  languages, paged archives, canonical redirects, the activation and per-version flush.
-- Polylang behaviour: translatable types forced on, meta sync (shared vs per-language
-  keys), `pll_register_string` in Languages → Translations, `hcwa_language_links()` on
-  every template, hreflang output with our x-default, per-language menus.
-- Block registration (`register_block_type` from each folder, `hcwa-blocks-editor`
-  dependency), the editor previews with `?lang=`, Vietnamese editor labels, PostSelect.
+  languages, attachment and paged sub-rules, paged archives, the canonical filter's single
+  301 from a wrong base, the activation and per-version flush (0.1.1).
+- Polylang behaviour: translatable types forced on, meta sync (shared, per-language and
+  protective keys; shared-field seeding when a translation is linked),
+  `pll_register_string` in Languages → Translations, `hcwa_language_links()` on every
+  template, hreflang output with our x-default, empty term archives linked, per-language
+  menus.
+- Block registration from `blocks-manifest.php` (`wp_register_block_metadata_collection`),
+  the `hcwa-blocks-editor` dependency, editor previews with `?lang=` and the notice's
+  preview query, Vietnamese editor labels, PostSelect, the editor image warning.
 - Every pattern loading without an "invalid block" warning; contentOnly locking;
-  full-width sections in the editor; the `:has()` rules in `patterns.css`.
+  full-width sections in the editor; the `:has()` hide rules in `patterns.css`.
 - The content image gate on real content: core/image, gallery, cover and media-text
-  output; legacy classic content; the refusal log.
+  output, URL-only images, classic content and `[gallery]`, featured images in core
+  blocks, attachment page 404s, the refusal log; WebP conversion on upload.
+- Embeds and oEmbed answering 404; REST media and admin types answering 401 to visitors,
+  with `_embed` and batch requests.
 - The publish guard on production (classic, quick edit, REST, scheduled), the meta box
-  save path in both editors, the media modal approval checkboxes, REST protection.
-- `theme.json` acceptance and font output, editor styles, sticky header and menus in
-  real browsers; tastegate at 390 px and 1440 px.
-- The seed and smoke test end to end (`wp-local.sh setup|seed|start|smoke`), then
-  `wp hcwa coverage` and `wp hcwa draft-scan`.
+  save path in both editors (read-only shared fields on translations), the media modal
+  approval checkboxes.
+- `theme.json` acceptance and font output, editor styles, sticky header and menus in real
+  browsers; tastegate at 320, 390, 1100, 1200 and 1440 px in both languages (the header
+  widths were measured on prototype screenshots, not rendered); the Donate page rows at
+  390 and 1440 px; no layout shift from the top bars.
+- The seed and smoke test end to end (`wp-local.sh setup|seed|start|smoke`, including the
+  HTTP gates), then `wp hcwa coverage` and `wp hcwa draft-scan`.
 
 ### Open questions for HCWA (collected from the part reports)
 
 - Rule 2 scope: should inline photos in ordinary news posts (including posts migrated
   from the current site) also need "Approved for web"? Today only pages, centers,
   programs, reports, stories and Little Rose news do (`hcwa_content_images_gated`).
-- Should approving a photo require an explicit yes/no on "identifiable child"?
+- Little Rose and identifiable children: today an approved photo nobody marked
+  "Identifiable child" counts as non-identifiable, and an identifiable resident's photo
+  could show outside Little Rose contexts once approved. Options: a required yes / no /
+  not reviewed answer on approval, a "Little Rose resident" flag refused everywhere, or
+  illustrations only for Little Rose enforced in code. (Decision for HCWA and Maxwell;
+  code unchanged.)
+- Who may mark impact figures verified, grant logo permission and approve contact
+  details? Today any user who can edit the record can, Authors included. Suggested: the
+  approval capability (`edit_others_posts`) on those fields, plus the same check when
+  the details box saves. (Code unchanged.)
 - Impact strips on center and program pages need 2 verified figures on the live site
   (rule 1), where the prototype showed one. Keep 2?
 - Partner logos: permission only (as built), or permission plus photo approval?
+- Locked page sections (Q12): in WP 7.1.4 every top-level contentOnly group is a section
+  with an "Edit pattern" button that any editor of the page can press to unlock its
+  layout; without it, FAQ items, filter chips, contact lines and gift-list rows cannot be
+  added or removed. Keep the soft lock and document "Edit pattern", unlock the list
+  containers, or move fixed sections to PHP or dynamic blocks? The editing guide needs a
+  matching paragraph.
+- Donate page until finance confirms the details: the "How to give" column hides and
+  only "Tell us you gave" shows. Should approved bilingual fallback copy appear instead,
+  such as a pointer to the contact page for transfer details? (It would go through the
+  blocks' `hcwa_strings` filter in `donation-methods/render.php`.)
 - The shared-source strings above: give them distinct Vietnamese wording so staff can
   edit their English in Polylang?
 - The English Cau Han URL is `/en/our-work/centers/cau-han-project/` (Polylang free does

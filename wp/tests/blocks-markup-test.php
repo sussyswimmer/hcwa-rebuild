@@ -134,11 +134,33 @@ hcwa_assert_contains( '<li class="news-item"><p class="news-item__meta"><time da
 hcwa_assert_false( str_contains( $hcwa_html, '<script>' ), 'news row: title escaped' );
 
 // Donation methods (contract gating rule 3).
+// A dl's div group may hold only dt and dd (HTML; axe "definition-list", serious): the copy
+// button belongs inside the dd. Returns [stray children of the groups, copy buttons
+// outside a dd, copy buttons].
+$hcwa_dl_check = static function ( string $html ): array {
+	$errors = libxml_use_internal_errors( true );
+	$doc    = new DOMDocument();
+	$doc->loadHTML( '<?xml encoding="utf-8"?><body>' . $html . '</body>' );
+	libxml_clear_errors();
+	libxml_use_internal_errors( $errors );
+	$xpath = new DOMXPath( $doc );
+	return array(
+		$xpath->query( '//dl/div/*[not(self::dt or self::dd)] | //dl/div/text()[normalize-space()]' )->length,
+		$xpath->query( '//button[@data-copy][not(parent::dd)]' )->length,
+		$xpath->query( '//button[@data-copy]' )->length,
+	);
+};
+
 $hcwa_html = hcwa_blocks_donation_methods( null, 'vi' );
 hcwa_assert_true( substr_count( $hcwa_html, 'data-donation-placeholder' ) >= 10, 'placeholder: every value, the QR and PayPal are marked' );
 hcwa_assert_contains( '<details class="method" id="trong-nuoc" open>', $hcwa_html, 'placeholder: first method open' );
-hcwa_assert_contains( '<dt>Số tài khoản</dt><dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>', $hcwa_html, 'placeholder: labelled pending value' );
+hcwa_assert_contains( '<dt>Số tài khoản</dt><dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span><button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="Sao chép: Số tài khoản">', $hcwa_html, 'placeholder: labelled pending value, disabled copy button in the dd' );
+hcwa_assert_contains( '<dt>Ngân hàng</dt><dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd></div>', $hcwa_html, 'placeholder: row without copy button ends with its dd' );
 hcwa_assert_contains( 'data-copy="" disabled', $hcwa_html, 'placeholder: copy buttons disabled' );
+list( $hcwa_stray, $hcwa_outside, $hcwa_buttons ) = $hcwa_dl_check( $hcwa_html );
+hcwa_assert_same( 0, $hcwa_stray, 'placeholder: dl groups hold only dt and dd' );
+hcwa_assert_same( 0, $hcwa_outside, 'placeholder: every copy button is inside a dd' );
+hcwa_assert_same( 4, $hcwa_buttons, 'placeholder: the four copyable rows (account, note, SWIFT, account abroad) have copy buttons' );
 hcwa_assert_false( (bool) preg_match( '/\d{6,}/', $hcwa_html ), 'placeholder: no account-like numbers' );
 hcwa_assert_contains( '<details class="method" id="quoc-te">', $hcwa_html, 'placeholder: abroad method' );
 
@@ -156,9 +178,14 @@ $hcwa_details = hcwa_donation_details_from(
 );
 $hcwa_html = hcwa_blocks_donation_methods( $hcwa_details, 'en', '<img class="pay__qr" alt="QR">' );
 hcwa_assert_contains( '<details class="method" id="in-vietnam" open>', $hcwa_html, 'confirmed: in Vietnam method' );
-hcwa_assert_contains( '<dd><code>0123 456 789</code></dd><button class="btn btn--small btn--secondary" type="button" data-copy="0123 456 789" aria-label="Copy: Account number">', $hcwa_html, 'confirmed: account with copy button' );
-hcwa_assert_contains( '<dt>Bank</dt><dd>Example Bank</dd><span></span>', $hcwa_html, 'confirmed: bank without copy button' );
-hcwa_assert_contains( '<span class="pay-details__hint">So HCWA can match your gift and send a receipt.</span>', $hcwa_html, 'confirmed: transfer note hint' );
+hcwa_assert_contains( '<dd><code>0123 456 789</code><button class="btn btn--small btn--secondary" type="button" data-copy="0123 456 789" aria-label="Copy: Account number">', $hcwa_html, 'confirmed: account with copy button in the dd' );
+hcwa_assert_contains( '<span>Copy</span></button></dd></div>', $hcwa_html, 'confirmed: the copy button closes its dd' );
+hcwa_assert_contains( '<dt>Bank</dt><dd>Example Bank</dd></div>', $hcwa_html, 'confirmed: bank without copy button, no filler' );
+hcwa_assert_contains( '<code>GIFT + phone</code><span class="pay-details__hint">So HCWA can match your gift and send a receipt.</span><button', $hcwa_html, 'confirmed: transfer note hint before its copy button' );
+list( $hcwa_stray, $hcwa_outside, $hcwa_buttons ) = $hcwa_dl_check( $hcwa_html );
+hcwa_assert_same( 0, $hcwa_stray, 'confirmed: dl groups hold only dt and dd' );
+hcwa_assert_same( 0, $hcwa_outside, 'confirmed: every copy button is inside a dd' );
+hcwa_assert_same( 2, $hcwa_buttons, 'confirmed: account and transfer note have copy buttons' );
 hcwa_assert_contains( '<img class="pay__qr" alt="QR"></div>', $hcwa_html, 'confirmed: QR next to the rows' );
 hcwa_assert_contains( '<details class="method" id="from-abroad"><summary>', $hcwa_html, 'confirmed: abroad method for PayPal only' );
 hcwa_assert_contains( '<a class="btn btn--secondary btn--small" href="https://paypal.example/hcwa">Give through PayPal</a>', $hcwa_html, 'confirmed: PayPal button' );
@@ -196,6 +223,41 @@ hcwa_assert_same( 'active', $hcwa_data['status'], 'program data: missing status 
 hcwa_assert_same( '2023–', $hcwa_data['years'], 'program data: running since 2023' );
 hcwa_assert_same( array( 'Funder One' ), $hcwa_data['partners'], 'program data: published partners only' );
 hcwa_assert_same( 'Short excerpt.', $hcwa_data['summary'], 'program data: excerpt when no summary' );
+
+// Program list: filter, sort and cut on the status alone, before any row is built.
+$hcwa_programs = array(
+	hcwa_test_post( array( 'ID' => 110, 'post_type' => 'hcwa_program', 'post_title' => 'Done' ), array( 'hcwa_status' => 'completed', 'hcwa_partner_ids' => array( 91, 93 ) ) ),
+	hcwa_test_post( array( 'ID' => 111, 'post_type' => 'hcwa_program', 'post_title' => 'Next' ), array( 'hcwa_status' => 'planned' ) ),
+	hcwa_test_post( array( 'ID' => 112, 'post_type' => 'hcwa_program', 'post_title' => 'Running' ), array( 'hcwa_status' => 'active', 'hcwa_partner_ids' => '93,94' ) ),
+	'not a post',
+	hcwa_test_post( array( 'ID' => 113, 'post_type' => 'hcwa_program', 'post_title' => 'No status' ), array() ),
+	hcwa_test_post( array( 'ID' => 114, 'post_type' => 'hcwa_program', 'post_title' => 'Odd status' ), array( 'hcwa_status' => '"><b>' ) ),
+);
+$hcwa_ids = static fn( array $posts ): array => array_map( static fn( $p ) => $p->ID, $posts );
+hcwa_assert_same( 'completed', hcwa_blocks_program_status( 110 ), 'program status: stored value' );
+hcwa_assert_same( 'active', hcwa_blocks_program_status( 113 ), 'program status: none stored is active' );
+hcwa_assert_same( 'active', hcwa_blocks_program_status( 114 ), 'program status: unknown value is active' );
+hcwa_assert_same( array( 112, 113, 114, 111, 110 ), $hcwa_ids( hcwa_blocks_pick_programs( $hcwa_programs, 'any', 50 ) ), 'pick programs: active first, then planned, then completed; non-posts skipped' );
+hcwa_assert_same( array( 112, 113 ), $hcwa_ids( hcwa_blocks_pick_programs( $hcwa_programs, 'any', 2 ) ), 'pick programs: cut to the limit after sorting' );
+hcwa_assert_same( array( 110 ), $hcwa_ids( hcwa_blocks_pick_programs( $hcwa_programs, 'completed', 4 ) ), 'pick programs: completed only' );
+hcwa_assert_same( array( 112, 113, 114 ), $hcwa_ids( hcwa_blocks_pick_programs( $hcwa_programs, 'active', 4 ) ), 'pick programs: active includes programs without a status' );
+hcwa_assert_same( array(), hcwa_blocks_pick_programs( array(), 'any', 4 ), 'pick programs: none' );
+hcwa_assert_same( array( 91, 93, 94 ), hcwa_blocks_partner_ids( array( $hcwa_programs[0], $hcwa_programs[2], $hcwa_programs[1] ) ), 'partner ids: each once, from arrays and comma lists' );
+hcwa_assert_same( array(), hcwa_blocks_partner_ids( array( $hcwa_programs[1] ) ), 'partner ids: none' );
+
+// Attachments a block prints are collected once, from the meta get_posts() already loaded.
+$hcwa_with_media = array(
+	hcwa_test_post( array( 'ID' => 120, 'post_type' => 'hcwa_report' ), array( '_thumbnail_id' => 501, 'hcwa_file_id' => 502 ) ),
+	hcwa_test_post( array( 'ID' => 121, 'post_type' => 'hcwa_report' ), array( '_thumbnail_id' => '501', 'hcwa_file_id' => 0 ) ),
+	'not a post',
+	hcwa_test_post( array( 'ID' => 122, 'post_type' => 'hcwa_report' ), array() ),
+);
+hcwa_assert_same( array( 501 ), hcwa_blocks_attachment_ids( $hcwa_with_media ), 'attachment ids: featured images, each once' );
+hcwa_assert_same( array( 501, 502 ), hcwa_blocks_attachment_ids( $hcwa_with_media, array( '_thumbnail_id', 'hcwa_file_id' ) ), 'attachment ids: covers and files; 0 and missing skipped' );
+hcwa_assert_same( array(), hcwa_blocks_attachment_ids( array() ), 'attachment ids: none' );
+foreach ( array( 'center-grid' => "hcwa_blocks_prime_attachments( \$hcwa_centers );", 'partner-wall' => 'hcwa_blocks_prime_attachments( array_slice( $hcwa_partners, 0, $hcwa_limit ) );', 'report-list' => "array( '_thumbnail_id', 'hcwa_file_id' )" ) as $hcwa_block => $hcwa_call ) {
+	hcwa_assert_contains( $hcwa_call, (string) file_get_contents( dirname( __DIR__ ) . "/plugins/hcwa-core/blocks/$hcwa_block/render.php" ), "$hcwa_block primes the attachments it prints" );
+}
 
 $hcwa_news_post = hcwa_test_post( array( 'ID' => 100, 'post_type' => 'post', 'post_title' => '📣 Tết fair', 'post_date' => '2026-01-20 09:00:00', 'post_content' => 'One two three' ), array() );
 $GLOBALS['hcwa_test']['terms'][100]['category'] = array( new WP_Term( array( 'term_id' => 1, 'slug' => 'su-kien', 'name' => 'Sự kiện', 'taxonomy' => 'category' ) ) );

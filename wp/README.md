@@ -30,10 +30,12 @@ set once permission is given. Automated runs are refused with a message pointing
 
 ## Run it locally
 
-You need PHP 8.1 or newer with `pdo_sqlite` and `mbstring` (and ideally `intl`), plus `curl`
-and `unzip`. You do not need MySQL or Docker: the database is one SQLite file. The smoke
-test needs the repo's Python virtualenv with Playwright (`.venv`, as for
-`scripts/live-audit.py`).
+You need PHP 8.1 or newer with `pdo_sqlite` linked against SQLite 3.37.0 or newer (the
+sqlite-database-integration plugin refuses older ones; `setup` checks it) and `mbstring`
+(and ideally `intl`), plus `curl` and `unzip`. You do not need MySQL or Docker: the
+database is one SQLite file. The smoke test needs the repo's Python virtualenv with
+Playwright (`.venv`, as for `scripts/live-audit.py`). `smoke` uses the repo-local Chromium
+in `.playwright-browsers/` when that folder exists.
 
 ```sh
 scripts/wp-local.sh setup main      # once: WordPress + Polylang + SQLite, our plugin and theme
@@ -48,7 +50,7 @@ because the server only listens on this computer. Never expose it.
 | Command | What it does |
 |---|---|
 | `setup <name> [port]` | Creates `.wp-local/<name>/` (default port 8881). Downloads into `.wp-local/cache/` once: WordPress (`wordpress.org/latest.zip`, SHA-1 checked), WP-CLI (`wp-cli.phar`, SHA-512 checked), Polylang 3.9.1 and sqlite-database-integration 3.1.3 from downloads.wordpress.org, and the Vietnamese language packs. It then writes the SQLite drop-in (`wp-content/db.php`, from the plugin's `db.copy`) and `wp-config.php` (environment `local`, `WP_DEBUG` and `WP_DEBUG_LOG` on, no outgoing HTTP, no cron). It installs WordPress, links `wp/plugins/hcwa-core` and `wp/themes/hcwa-2026` into `wp-content` as symlinks, activates Polylang, hcwa-core and hcwa-2026, and sets permalinks to `/%postname%/`. Safe to run again. |
-| `start <name> [port]` | Runs PHP's built-in server in the background with `scripts/wp-router.php` and `PHP_CLI_SERVER_WORKERS` (default 4). Giving a port moves the instance there; the database is not touched. |
+| `start <name> [port]` | Runs PHP's built-in server in the background with `scripts/wp-router.php` and `PHP_CLI_SERVER_WORKERS` (default 4). Giving a port moves the instance there; the database is not touched. `wp-config.php` sets `PLL_CACHE_HOME_URL` to false, and a port change also clears Polylang's language cache, so links follow the new port. |
 | `stop [name]` | Stops one instance, or all of them. |
 | `seed <name>` | Fills the instance from `content/draft/` (details below). Safe to run again. |
 | `smoke <name> [-- args]` | Runs `scripts/wp-smoke.py` against the running instance (details below). |
@@ -92,8 +94,11 @@ its content hooks when languages already exist at startup.
 - **Languages and Polylang settings** (07-BILINGUAL): Tiếng Việt (`vi`, default) and
   English (`en`, locale `en_GB`). The language comes from the URL directory, Vietnamese has
   no prefix, and the English front page is `/en/`. Browser detection is off, media
-  translation is on, and taxonomies, custom fields, page parent and featured image are
-  synced. The English site title is set as a Polylang string translation.
+  translation is on, and taxonomies, page parent and featured image are synced.
+  Polylang's "Custom fields" sync stays off, because it would copy per-language text (such
+  as WordPress's footnotes) between the languages. hcwa-core syncs its own shared fields
+  (years, status, the verified flag and so on) either way. The English site title is set
+  as a Polylang string translation.
 - **Focus areas** (`education`, `protection`, `family`, `policy`; Vietnamese slugs end in
   `-vi`) and **news categories** (Tin tức/News, Câu chuyện/Stories, Sự kiện/Events,
   Thông báo/Announcements), each linked as translations.
@@ -102,10 +107,17 @@ its content hooks when languages already exist at startup.
   take their body from the theme's `hcwa-2026/page-*-vi|en` patterns. The other pages get
   the page header plus one `[DRAFT: …]` paragraph, and the headings other pages link to
   (`#bao-cao`, `#bao-ve-tre-em`, `#quyen-rieng-tu`, `#tiem-banh` and their English
-  versions). If a page pattern is not there yet, the seed says so; run it again later.
+  versions). The Impact page gets the impact strip and the report list, and the Partners
+  page the partner wall; each `hcwa/*` block sits in a `container` group with its heading,
+  as in the page patterns. If a page pattern is not there yet, the seed says so; run it
+  again later.
 - **Front page and posts page** for each language.
 - **Centers and programs** from `work.json`. Little Rose gets
-  `hcwa_no_identifiable_children`. Funders named in `work.json` (CapitaLand Vietnam) become
+  `hcwa_no_identifiable_children`. Each center gets a linked VI / EN post tag with its own
+  slugs (`hoa-hong-nho` / `little-rose` and so on) as its news tag, which is what extends
+  the Little Rose photo rule to its news; `wp hcwa coverage` fails while a center with
+  that flag has no news tag. No seeded post is tagged, because none of the posts in
+  `news.json` is about one center. Funders named in `work.json` (CapitaLand Vietnam) become
   partner records, hidden from the home page and without logo permission.
 - **Impact figures** from `impact.json`. All are unverified, with no values, so staging
   shows them with the "Đang xác minh / Pending verification" chip and production shows
@@ -120,9 +132,12 @@ its content hooks when languages already exist at startup.
   HCWA finance has not confirmed any.
 
 Every draft field in `content/draft/` is wrapped in `[DRAFT: …]`, so `wp hcwa draft-scan`
-and the production publish guard catch it. Seeded items carry `hcwa_seed_id`, so running
-the seed again updates them in place and never duplicates them. Content you add by hand is
-left alone. The seed refuses to run when the instance is set to `production`.
+and the production publish guard catch it. Seeded items carry the protected meta key
+`_hcwa_seed_id`, so running the seed again updates them in place and never duplicates
+them. Content you add by hand is left alone: Polylang never copies a protected key, so a
+translation you create with "+" is not mistaken for a seeded one. (Instances seeded before
+this change used `hcwa_seed_id`; the seed renames it on its next run.) The seed refuses to
+run when the instance is set to `production`.
 
 One known difference from `work.json`: Polylang free cannot give an English post the same
 slug as its Vietnamese translation. Cau Han wants `cau-han` in both languages, so its
@@ -136,8 +151,9 @@ language, at 390×844 and 1440×900. On each page it checks:
 
 - the response is HTTP 200 with no redirect (404 for the missing pages)
 - `<html lang>` is right for the language
-- the `hreflang` links for `vi`, `en` and `x-default` are there, and the one for the other
-  language points to the seeded translation
+- the `hreflang` links for `vi`, `en` and `x-default` are there: the page's own language
+  points to the page, the other language to the seeded translation, `x-default` to the
+  Vietnamese URL, and all of them to the address being tested (so a stale port fails)
 - there is exactly one `<h1>`
 - there are no PHP warnings, notices, deprecations or fatal errors, and no WordPress error
   page
@@ -146,8 +162,10 @@ language, at 390×844 and 1440×900. On each page it checks:
 - on a non-production instance: a `noindex` robots tag, and a pending chip on pages with
   impact figures
 - with `--production` (set automatically after `env <name> production`): no pending
-  chips, no `noindex`, and no `[DRAFT` anywhere. The seeded content is draft by design, so
-  this last check fails on a seeded instance until HCWA's real content replaces it. Add
+  chips, no `noindex`, no `[DRAFT` anywhere, and none of the publish guard's other draft
+  markers in the page text (placeholder tokens such as `[N]`, `[năm]`, `[year]`, and
+  bracketed notes that mention HCWA). The seeded content is draft by design, so these
+  draft checks fail on a seeded instance until HCWA's real content replaces it. Add
   `-- --allow-draft` to check the other production gates on seeded content.
 
 Both failures listed here earlier are fixed in the code: hcwa-core adds `x-default` (the
@@ -155,6 +173,13 @@ Vietnamese URL) through Polylang's `pll_rel_hreflang_attributes` filter
 (`includes/polylang.php`), and the `hcwa/impact-strip` block prints the pending chip on
 staging. Polylang prints hreflang links only for content that has a translation, so a
 VI-only news post has none; that is expected.
+
+With the seed's URL list it also sends plain HTTP requests, without a browser and without
+following redirects, for gates that no page view shows: a center's `/embed/` URL answers
+404 (embeds are off), `/wp-json/wp/v2/media` answers 401 to a visitor (also in upper case,
+since WordPress matches REST routes in any case), and a center URL under the English base
+with the Vietnamese slug (`/en/our-work/centers/tre-xanh/`) answers one 301 to the
+Vietnamese permalink on the host being tested.
 
 It saves full-page screenshots and `report.json` to `qa/wp/<date>/`, prints a summary,
 and exits with 1 if anything fails. Images from the media library and from other sites are

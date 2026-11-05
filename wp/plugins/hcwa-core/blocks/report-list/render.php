@@ -48,6 +48,9 @@ if ( ! $hcwa_rows ) {
 	echo hcwa_blocks_empty_note( 'blk_noReports' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	return;
 }
+
+// Covers and PDF files of the rows shown, loaded together (URL, metadata with file size).
+hcwa_blocks_prime_attachments( array_column( $hcwa_rows, 'post' ), array( '_thumbnail_id', 'hcwa_file_id' ) );
 ?>
 <ul <?php echo get_block_wrapper_attributes( array( 'class' => 'report-list' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
 	<?php

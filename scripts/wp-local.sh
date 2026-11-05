@@ -104,6 +104,14 @@ check_php() {
 		"$PHP_BIN" -r "exit( extension_loaded( '$ext' ) ? 0 : 1 );" \
 			|| die "the PHP extension '$ext' is required (php -m lists the loaded ones)"
 	done
+	# sqlite-database-integration refuses older SQLite libraries (MINIMUM_SQLITE_VERSION in
+	# wp-includes/database/sqlite/class-wp-mysql-on-sqlite.php), which would only show up
+	# halfway through "wp core install".
+	local sqlite
+	sqlite="$("$PHP_BIN" -r 'echo ( new PDO( "sqlite::memory:" ) )->query( "select sqlite_version()" )->fetchColumn();')" \
+		|| die "PHP could not open an SQLite database through pdo_sqlite"
+	"$PHP_BIN" -r 'exit( version_compare( $argv[1], "3.37.0", "<" ) ? 1 : 0 );' "$sqlite" \
+		|| die "SQLite 3.37.0 or newer is required by sqlite-database-integration $SQLITE_VERSION (PHP's pdo_sqlite uses $sqlite)"
 	"$PHP_BIN" -r "exit( extension_loaded( 'intl' ) ? 0 : 1 );" \
 		|| warn "the PHP extension 'intl' is missing; Vietnamese text is not Unicode-normalized before the draft check"
 }
@@ -405,6 +413,11 @@ define( 'WP_HOME', \$hcwa_local_url );
 define( 'WP_SITEURL', \$hcwa_local_url );
 unset( \$hcwa_local_url );
 
+// Polylang caches each language's home URL and clears the cache only when the home or
+// siteurl option changes, which never happens here. Computed per request, links follow
+// the port (src/language.php get_home_url()).
+define( 'PLL_CACHE_HOME_URL', false );
+
 EOF
 		for key in AUTH_KEY SECURE_AUTH_KEY LOGGED_IN_KEY NONCE_KEY AUTH_SALT SECURE_AUTH_SALT LOGGED_IN_SALT NONCE_SALT; do
 			printf "define( '%s', '%s' );\n" "$key" "$(salt)"
@@ -442,6 +455,16 @@ EOF
 	note "wp-config.php written"
 }
 
+# After a port change. Polylang keeps each language's home URL in the pll_languages_list
+# transient (src/Model/Languages.php) and clears it only on update_option_home or
+# update_option_siteurl (src/model.php), which never fire because the address is a
+# constant. Instances whose wp-config.php predates PLL_CACHE_HOME_URL need this.
+clear_language_cache() {
+	local name=$1
+	wpcli "$name" transient delete pll_languages_list >/dev/null 2>&1 \
+		|| warn "could not clear Polylang's language cache; if links still use the old port: scripts/wp-local.sh wp $name -- transient delete pll_languages_list"
+}
+
 link_repo_code() {
 	local name=$1 content
 	content="$(docroot "$name")/wp-content"
@@ -470,8 +493,9 @@ cmd_setup() {
 	check_php
 	need_cmd unzip
 
-	local dir
+	local dir old_port
 	dir="$(inst_dir "$name")"
+	old_port="$(inst_port "$name")"
 	say "Setting up '$name' in .wp-local/$name (http://127.0.0.1:$port)"
 	mkdir -p "$dir/data" "$dir/logs"
 	printf '%s\n' "$port" >"$dir/port"
@@ -491,6 +515,7 @@ cmd_setup() {
 	say "Installing WordPress"
 	if wpcli "$name" core is-installed >/dev/null 2>&1; then
 		note "already installed"
+		[[ "$port" == "$old_port" ]] || clear_language_cache "$name"
 	else
 		wpcli "$name" core install --url="http://127.0.0.1:$port" --title="$SITE_TITLE" \
 			--admin_user="$ADMIN_USER" --admin_password="$ADMIN_PASS" --admin_email="$ADMIN_EMAIL" --skip-email
@@ -529,7 +554,10 @@ cmd_start() {
 	fi
 	if [[ -n "$port" ]]; then
 		check_port "$port"
+		local old_port
+		old_port="$(inst_port "$name")"
 		printf '%s\n' "$port" >"$dir/port"
+		[[ "$port" == "$old_port" ]] || clear_language_cache "$name"
 	fi
 	port="$(inst_port "$name")"
 	url="$(inst_url "$name")"
@@ -660,6 +688,10 @@ cmd_smoke() {
 	[[ -s "$manifest" ]] || die "no seed-urls.json for '$name': scripts/wp-local.sh seed $name"
 	args=("$(inst_url "$name")" --manifest "$manifest")
 	[[ "$(inst_env "$name")" == "production" ]] && args+=(--production)
+	# The repo keeps its Chromium in .playwright-browsers/ (see scripts/screenshots.py).
+	if [[ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" && -d "$REPO/.playwright-browsers" ]]; then
+		export PLAYWRIGHT_BROWSERS_PATH="$REPO/.playwright-browsers"
+	fi
 	"$(python_bin)" -I "$REPO/scripts/wp-smoke.py" "${args[@]}" "$@"
 }
 
@@ -717,4 +749,7 @@ main() {
 	esac
 }
 
-main "$@"
+# Sourcing defines the functions without running a command (wp/tests/runtime-scripts-test.php).
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+	main "$@"
+fi

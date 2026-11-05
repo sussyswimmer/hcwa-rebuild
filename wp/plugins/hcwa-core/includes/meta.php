@@ -16,7 +16,9 @@ defined( 'ABSPATH' ) || exit;
  *
  * Each field: type (register_post_meta type), input (form control), label, help,
  * sync (shared by translations), default, options (select), post_type (post pickers),
- * media (image | application/pdf), box (false = no meta box), auth (edit | approve).
+ * media (image | application/pdf), box (false = no meta box), auth (edit | approve),
+ * protective (a safety flag that is never copied between translations and counts when
+ * any translation has it: hcwa_meta_flag_any()).
  *
  * @return array<string, array<string, array>>
  */
@@ -46,17 +48,19 @@ function hcwa_meta_fields_build(): array {
 	$f = static function ( string $type, string $input, string $label, array $extra = array() ): array {
 		return array_merge(
 			array(
-				'type'  => $type,
-				'input' => $input,
-				'label' => $label,
-				'help'  => '',
-				'sync'  => false,
-				'box'   => true,
-				'auth'  => 'edit',
+				'type'       => $type,
+				'input'      => $input,
+				'label'      => $label,
+				'help'       => '',
+				'sync'       => false,
+				'box'        => true,
+				'auth'       => 'edit',
+				'protective' => false,
 			),
 			$extra
 		);
 	};
+	$protective = static fn( string $label, array $extra = array() ) => $f( 'boolean', 'checkbox', $label, array_merge( array( 'default' => false, 'protective' => true ), $extra ) );
 
 	$year       = static fn( string $label, array $extra = array() ) => $f( 'integer', 'year', $label, array_merge( array( 'default' => 0, 'sync' => true ), $extra ) );
 	$news_tag   = $f( 'string', 'term_slug', __( 'News tag', 'hcwa' ), array( 'default' => '', 'sync' => true, 'help' => __( 'Slug of the post tag whose news appears on this page, for example tre-xanh. Use the Vietnamese tag.', 'hcwa' ) ) );
@@ -96,7 +100,7 @@ function hcwa_meta_fields_build(): array {
 			'hcwa_phone'                    => $shared_txt( 'tel', __( 'Phone', 'hcwa' ) ),
 			'hcwa_email'                    => $shared_txt( 'email', __( 'Email', 'hcwa' ) ),
 			'hcwa_news_tag'                 => $news_tag,
-			'hcwa_no_identifiable_children' => $shared_yes( __( 'No identifiable children', 'hcwa' ), __( 'Tick for Little Rose and any unit whose children must never be identifiable. Photos marked "Identifiable child" are then refused on this center, its programs and its tagged news.', 'hcwa' ) ),
+			'hcwa_no_identifiable_children' => $protective( __( 'No identifiable children', 'hcwa' ), array( 'help' => __( 'Tick for Little Rose and any unit whose children must never be identifiable. Photos marked "Identifiable child" are then refused on this center, its programs and its tagged news. Ticked in either language, it applies to both; to clear it, untick it in both.', 'hcwa' ) ) ),
 		),
 		'hcwa_program' => array(
 			'hcwa_summary'     => $summary( __( 'One or two sentences, at most 160 characters. Shown in program lists.', 'hcwa' ) ),
@@ -207,7 +211,7 @@ function hcwa_meta_fields_build(): array {
 		),
 		'attachment'   => array(
 			'hcwa_approved_for_web'   => $f( 'boolean', 'checkbox', __( 'Approved for web', 'hcwa' ), array( 'default' => false, 'sync' => true, 'box' => false, 'auth' => 'approve' ) ),
-			'hcwa_identifiable_child' => $f( 'boolean', 'checkbox', __( 'Identifiable child', 'hcwa' ), array( 'default' => false, 'sync' => true, 'box' => false, 'auth' => 'approve' ) ),
+			'hcwa_identifiable_child' => $protective( __( 'Identifiable child', 'hcwa' ), array( 'box' => false, 'auth' => 'approve' ) ),
 		),
 	);
 }
@@ -241,7 +245,8 @@ function hcwa_meta_sync_keys(): array {
 }
 
 /**
- * Meta keys that hold text per language (never copied between translations).
+ * Meta keys never copied between translations: text per language, and the protective
+ * flags (read across translations instead, hcwa_meta_flag_any()).
  *
  * @return string[]
  */
@@ -517,6 +522,24 @@ function hcwa_add_meta_boxes(): void {
 add_action( 'add_meta_boxes', 'hcwa_add_meta_boxes' );
 
 /**
+ * Our keys are edited only in the details box and the media approval fields. Marking them
+ * protected keeps them out of the core "Custom Fields" panel, where an edit would be
+ * silently overwritten by the details box and a delete (an immediate AJAX call) could drop
+ * "No identifiable children" on Little Rose. REST still works: the registered
+ * auth_callback decides edit_post_meta for registered keys (wp-includes/capabilities.php,
+ * map_meta_cap() 'edit_post_meta'), and Polylang's sync adds our shared keys back itself
+ * (hcwa_pll_copy_post_metas()).
+ *
+ * @param bool   $protected Whether the key is protected.
+ * @param string $meta_key  Meta key.
+ * @param string $meta_type Object type.
+ */
+function hcwa_protect_meta( $protected, $meta_key, $meta_type = '' ): bool {
+	return (bool) $protected || ( 'post' === $meta_type && 0 === strpos( (string) $meta_key, 'hcwa_' ) );
+}
+add_filter( 'is_protected_meta', 'hcwa_protect_meta', 10, 3 );
+
+/**
  * Prints the details box.
  *
  * @param WP_Post $post Post being edited.
@@ -532,6 +555,12 @@ function hcwa_render_meta_box( WP_Post $post ): void {
 	if ( 'hcwa_impact' === $post->post_type ) {
 		hcwa_render_impact_status( $post );
 	}
+	if ( 'hcwa_center' === $post->post_type ) {
+		hcwa_render_center_protection_status( $post );
+	}
+
+	// Shared fields are edited on the Vietnamese original only (see hcwa_pll_seed_shared_meta()).
+	$original = hcwa_original_id( $post->ID );
 
 	$groups = array(
 		'lang' => array(
@@ -540,23 +569,97 @@ function hcwa_render_meta_box( WP_Post $post ): void {
 		),
 		'sync' => array(
 			'title' => __( 'Shared by both languages', 'hcwa' ),
-			'intro' => __( 'Enter these once. They are copied to the translation when you save.', 'hcwa' ),
+			'intro' => $original === $post->ID
+				? __( 'Enter these once. They are copied to the translation when you save.', 'hcwa' )
+				: __( 'These come from the Vietnamese version and are copied here when you save. Change them there.', 'hcwa' ),
 		),
 	);
 
 	echo '<div class="hcwa-fields">';
 	foreach ( $groups as $group => $text ) {
-		$in_group = array_filter( $fields, static fn( $spec ) => ( 'sync' === $group ) === $spec['sync'] );
+		$in_group = array_filter( $fields, static fn( $spec ) => ( 'sync' === $group ) === ( $spec['sync'] || $spec['protective'] ) );
 		if ( ! $in_group ) {
 			continue;
 		}
 		echo '<h3 class="hcwa-fields__group">' . esc_html( $text['title'] ) . '</h3>';
-		echo '<p class="hcwa-fields__intro">' . esc_html( $text['intro'] ) . '</p>';
+		echo '<p class="hcwa-fields__intro">' . esc_html( $text['intro'] );
+		if ( 'sync' === $group && $original !== $post->ID && current_user_can( 'edit_post', $original ) ) {
+			printf( ' <a href="%1$s">%2$s</a>', esc_url( (string) get_edit_post_link( $original ) ), esc_html__( 'Edit the Vietnamese version', 'hcwa' ) );
+		}
+		echo '</p>';
 		foreach ( $in_group as $key => $spec ) {
-			hcwa_render_meta_field( $post, $key, $spec );
+			if ( $spec['sync'] && $original !== $post->ID ) {
+				hcwa_render_meta_field_readonly( $original, $key, $spec );
+			} else {
+				hcwa_render_meta_field( $post, $key, $spec );
+			}
 		}
 	}
 	echo '</div>';
+}
+
+/**
+ * Warning on a center marked "No identifiable children" without a news tag: its news posts
+ * are recognised only by that tag, so none of them would be protected.
+ *
+ * @param WP_Post $post Center.
+ */
+function hcwa_render_center_protection_status( WP_Post $post ): void {
+	if ( ! hcwa_center_news_unprotected( $post->ID ) ) {
+		return;
+	}
+	printf(
+		'<div class="notice inline notice-warning"><p>%s</p></div>',
+		esc_html__( '"No identifiable children" is ticked but "News tag" is empty, so this center\'s news posts are not checked for identifiable children. Fill in the news tag (the Vietnamese tag slug).', 'hcwa' )
+	);
+}
+
+/**
+ * Whether a center is marked "No identifiable children" (in any language) but has no news
+ * tag, so its news cannot be recognised as a protected context.
+ *
+ * @param int $center_id Center ID.
+ */
+function hcwa_center_news_unprotected( int $center_id ): bool {
+	return hcwa_meta_flag_any( $center_id, 'hcwa_no_identifiable_children' )
+		&& '' === trim( (string) get_post_meta( hcwa_original_id( $center_id ), 'hcwa_news_tag', true ) );
+}
+
+/**
+ * A shared field shown read-only on a translation: the original's value.
+ *
+ * @param int    $original_id The Vietnamese original.
+ * @param string $key         Meta key.
+ * @param array  $spec        Field definition.
+ */
+function hcwa_render_meta_field_readonly( int $original_id, string $key, array $spec ): void {
+	$value = hcwa_meta( $original_id, $key );
+
+	switch ( $spec['input'] ) {
+		case 'checkbox':
+			$html = esc_html( $value ? __( 'Yes', 'hcwa' ) : __( 'No', 'hcwa' ) );
+			break;
+		case 'select':
+			$html = esc_html( (string) ( $spec['options'][ (string) $value ] ?? $value ) );
+			break;
+		case 'post_select':
+		case 'post_multi':
+			$titles = array_map( static fn( $id ) => get_the_title( (int) $id ), array_filter( (array) $value ) );
+			$html   = esc_html( implode( ', ', $titles ) );
+			break;
+		case 'media':
+		case 'media_multi':
+			$html = hcwa_media_preview_html( array_filter( array_map( 'intval', (array) $value ) ) ); // Escaped inside.
+			break;
+		default:
+			$html = esc_html( null === $value || ( 'year' === $spec['input'] && 0 === (int) $value ) ? '' : (string) $value );
+	}
+
+	printf(
+		'<div class="hcwa-field hcwa-field--readonly"><span class="hcwa-field__label">%1$s</span> <span class="hcwa-field__value">%2$s</span></div>',
+		esc_html( $spec['label'] ),
+		'' !== $html ? $html : '&mdash;' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+	);
 }
 
 /**
@@ -592,7 +695,7 @@ function hcwa_render_impact_status( WP_Post $post ): void {
 function hcwa_render_meta_field( WP_Post $post, string $key, array $spec ): void {
 	$id    = 'hcwa-' . str_replace( '_', '-', $key );
 	$name  = 'hcwa_meta[' . $key . ']';
-	$value = hcwa_meta( $post->ID, $key );
+	$value = $spec['protective'] ? hcwa_meta_flag_any( $post->ID, $key ) : hcwa_meta( $post->ID, $key );
 	$help  = '' !== $spec['help'] ? '<p class="description" id="' . esc_attr( $id ) . '-help">' . esc_html( $spec['help'] ) . '</p>' : '';
 	$desc  = '' !== $spec['help'] ? ' aria-describedby="' . esc_attr( $id ) . '-help"' : '';
 
@@ -817,8 +920,12 @@ function hcwa_save_meta_box( $post_id, $post ): void {
 
 	$input = isset( $_POST['hcwa_meta'] ) && is_array( $_POST['hcwa_meta'] ) ? wp_unslash( $_POST['hcwa_meta'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each value goes through hcwa_sanitize_meta via update_post_meta.
 
+	// On a translation, shared fields are read-only and come from the Vietnamese original
+	// (hcwa_pll_seed_shared_meta()); writing them here would sync straight back over it.
+	$is_translation = hcwa_original_id( (int) $post_id ) !== (int) $post_id;
+
 	foreach ( hcwa_meta_fields()[ $post->post_type ] ?? array() as $key => $spec ) {
-		if ( ! $spec['box'] || ! array_key_exists( $key, $input ) ) {
+		if ( ! $spec['box'] || ! array_key_exists( $key, $input ) || ( $spec['sync'] && $is_translation ) ) {
 			continue;
 		}
 

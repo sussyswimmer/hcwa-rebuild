@@ -97,6 +97,7 @@ while ( have_posts() ) :
 	);
 	if ( '' !== $hcwa_cover ) {
 		echo '<div class="container cover">' . $hcwa_cover . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image().
+		hcwa_theme_cover_printed();
 	}
 
 	$hcwa_story = hcwa_theme_split_content();
@@ -183,9 +184,14 @@ while ( have_posts() ) :
 	endif;
 
 	// Gallery: approved photos only, in the page language (alt text comes from the translation).
-	$hcwa_gallery = array();
-	foreach ( hcwa_theme_meta_ids( $hcwa_id, 'hcwa_gallery_ids' ) as $hcwa_att ) {
-		$hcwa_att = hcwa_theme_translated_id( $hcwa_att );
+	// The stored IDs are the Vietnamese originals: load them (their language terms answer the
+	// translation lookup), then the photos in this language, before hcwa_image() reads each.
+	$hcwa_gallery     = array();
+	$hcwa_gallery_ids = hcwa_theme_meta_ids( $hcwa_id, 'hcwa_gallery_ids' );
+	hcwa_theme_prime_ids( $hcwa_gallery_ids );
+	$hcwa_gallery_ids = array_map( 'hcwa_theme_translated_id', $hcwa_gallery_ids );
+	hcwa_theme_prime_ids( $hcwa_gallery_ids );
+	foreach ( $hcwa_gallery_ids as $hcwa_att ) {
 		$hcwa_img = hcwa_theme_image(
 			$hcwa_att,
 			'medium_large',

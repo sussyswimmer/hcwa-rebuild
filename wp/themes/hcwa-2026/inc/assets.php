@@ -38,7 +38,17 @@ function hcwa_theme_enqueue_assets(): void {
 			'in_footer' => false,
 		)
 	);
-	wp_add_inline_script( 'hcwa-site', 'window.hcwaI18n = ' . wp_json_encode( hcwa_theme_js_strings() ) . ';', 'before' );
+	// Inline in <head> before site.js: the strings, and bars.js, which header.php calls right
+	// after each top bar so they are shown or hidden before first paint (no layout shift).
+	wp_add_inline_script( 'hcwa-site', 'window.hcwaI18n = ' . wp_json_encode( hcwa_theme_js_strings() ) . ";\n" . hcwa_theme_bars_js(), 'before' );
+}
+
+/**
+ * assets/js/bars.js, for printing inline ('' if the file is missing).
+ */
+function hcwa_theme_bars_js(): string {
+	$path = get_theme_file_path( 'assets/js/bars.js' );
+	return file_exists( $path ) ? trim( (string) file_get_contents( $path ) ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local theme file.
 }
 
 /**
@@ -108,10 +118,13 @@ function hcwa_theme_meta_description(): void {
 	} elseif ( is_category() || is_tax() ) {
 		$description = term_description();
 	}
-	if ( '' === trim( wp_strip_all_tags( $description ) ) ) {
-		$description = get_bloginfo( 'description' );
+	// Meta, captions (attachment excerpts), term descriptions and the tagline skip the
+	// publish guard: no draft text on the live site.
+	$description = hcwa_theme_public_text( trim( wp_strip_all_tags( (string) $description ) ) );
+	if ( '' === $description ) {
+		$description = hcwa_theme_public_text( trim( wp_strip_all_tags( get_bloginfo( 'description' ) ) ) );
 	}
-	$description = wp_html_excerpt( wp_strip_all_tags( $description ), 160, '…' );
+	$description = wp_html_excerpt( $description, 160, '…' );
 	if ( '' !== $description ) {
 		printf( '<meta name="description" content="%s">' . "\n", esc_attr( $description ) );
 	}

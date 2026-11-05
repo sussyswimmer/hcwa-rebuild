@@ -41,6 +41,8 @@ get_template_part(
 		<?php if ( have_posts() ) : ?>
 			<ul class="report-list">
 				<?php
+				// Rows print the cover and link the file (URL and size): load both before the loop.
+				hcwa_theme_prime_attachments( (array) ( $GLOBALS['wp_query']->posts ?? array() ), array( '_thumbnail_id', 'hcwa_file_id' ) );
 				while ( have_posts() ) {
 					the_post();
 					get_template_part(

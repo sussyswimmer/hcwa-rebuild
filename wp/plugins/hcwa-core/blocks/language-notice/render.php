@@ -6,7 +6,10 @@
  * page in their language. Never a silent redirect to the home page.
  *
  * Shown when ?hcwa_lang_notice=<lang> is present (hcwa_language_links() adds it) or when
- * forceLang is set; never in the page's own language.
+ * forceLang is set (single.php passes the request through it); never in the page's own
+ * language, never once the post has a published translation in that language, and at
+ * most once per page (single.php prints it above the article, so a copy of the block
+ * inside the article stays quiet).
  *
  * @package hcwa-core
  *
@@ -28,8 +31,12 @@ if ( '' === $hcwa_notice_lang ) {
 	return;
 }
 
+$hcwa_post_id = hcwa_blocks_context_post_id( $block ?? null );
+if ( hcwa_blocks_published_translation( $hcwa_post_id, $hcwa_notice_lang ) > 0 || ! hcwa_blocks_notice_claim() ) {
+	return;
+}
+
 // "Read it in Vietnamese": the article itself, without the notice argument.
-$hcwa_post_id  = hcwa_blocks_context_post_id( $block ?? null );
 $hcwa_read_url = $hcwa_post_id ? (string) get_permalink( $hcwa_post_id ) : '';
 if ( '' === $hcwa_read_url ) {
 	$hcwa_read_url = hcwa_current_url();

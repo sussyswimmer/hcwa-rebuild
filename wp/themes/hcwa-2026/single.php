@@ -55,8 +55,10 @@ while ( have_posts() ) :
 		)
 	);
 
+	// Only while the post really has no published version in the language asked for: a bookmarked
+	// ?hcwa_lang_notice= link to a post translated since is redirected (inc/setup.php).
 	$hcwa_notice_lang = hcwa_theme_lang_notice_request();
-	if ( '' !== $hcwa_notice_lang ) {
+	if ( '' !== $hcwa_notice_lang && 0 === hcwa_theme_published_translation( (int) get_the_ID(), $hcwa_notice_lang ) ) {
 		$hcwa_notice = hcwa_theme_block( 'hcwa/language-notice', array( 'forceLang' => $hcwa_notice_lang ) );
 		if ( '' !== $hcwa_notice ) {
 			echo '<div class="container post-notice">' . $hcwa_notice . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- block render output.
@@ -79,12 +81,14 @@ while ( have_posts() ) :
 	<article class="post-body">
 		<?php if ( '' !== $hcwa_cover ) : ?>
 			<figure class="container post-cover">
-				<?php echo $hcwa_cover; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image(). ?>
 				<?php
-				$hcwa_caption = wp_get_attachment_caption( $hcwa_thumb_id );
-				if ( $hcwa_caption ) :
+				echo $hcwa_cover; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image().
+				hcwa_theme_cover_printed();
+				// Captions skip the publish guard: no draft text on the live site.
+				$hcwa_caption = hcwa_theme_public_text( (string) wp_get_attachment_caption( $hcwa_thumb_id ) );
+				if ( '' !== $hcwa_caption ) :
 					?>
-					<figcaption><?php echo esc_html( $hcwa_caption ); ?></figcaption>
+					<figcaption<?php echo hcwa_theme_draft_attr( $hcwa_caption ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo esc_html( $hcwa_caption ); ?></figcaption>
 				<?php endif; ?>
 			</figure>
 		<?php endif; ?>
