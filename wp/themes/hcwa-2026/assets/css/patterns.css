@@ -1,0 +1,148 @@
+/* HCWA 2026: styles for the theme's block patterns (patterns/*.php). Loaded on the front end
+   and in the editor (inc/assets.php, inc/setup.php).
+
+   The patterns reuse the prototype class names (.hero, .split, .ways, .cta-band, …), so
+   site.css styles most of them. This file covers only what core block markup changes:
+   wrapper elements (figure, group divs), list padding from the .entry-content rules,
+   core buttons, arrows and icons drawn with CSS (rich text cannot hold inline SVG), image
+   slots that stay empty until HCWA supplies an approved asset, and hcwa/* blocks that
+   print nothing (empty sections hide). No draft styling here: draft copy is marked by its
+   "[DRAFT: …]" text, which production refuses to publish. */
+
+:root {
+  /* Lucide outline icons, 1.5px stroke (05-DESIGN), used as masks so they take currentColor. */
+  --hcwa-icon-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+  --hcwa-icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --hcwa-icon-phone: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E");
+  --hcwa-icon-mail: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='16' x='2' y='4' rx='2'/%3E%3Cpath d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/%3E%3C/svg%3E");
+  --hcwa-icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+  --hcwa-icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+  --hcwa-icon-external: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E");
+}
+
+/* ---------- lists that are layouts, not bullet lists ---------- */
+/* site.css indents every .entry-content .wp-block-list and spaces li + li; these lists
+   are grids and rows, so the indent and the stagger go. */
+.entry-content .wp-block-list:is(.cta-band__contact, .contact-lines, .gift-list, .hcwa-chips) { padding-left: 0; list-style: none; }
+.entry-content :is(.cta-band__contact, .contact-lines, .gift-list, .hcwa-chips, .focus-list, .ways) > li { margin-top: 0; }
+.wp-block-group:is(.focus-list, .ways) { margin: 0; }
+
+/* ---------- text links with an arrow (prototype .text-link) ---------- */
+.hcwa-link a, .hcwa-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 600; color: var(--color-blue-700); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.hcwa-link a:hover, .hcwa-links a:hover { text-decoration-thickness: 2px; }
+.hcwa-link a::after, .hcwa-links a::after {
+  content: ""; flex: none; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: var(--hcwa-icon-arrow) center / contain no-repeat; mask: var(--hcwa-icon-arrow) center / contain no-repeat;
+  transition: translate var(--t-press) var(--ease);
+}
+.hcwa-link a:hover::after, .hcwa-links a:hover::after { translate: 3px 0; }
+.hcwa-link--external a::after { width: 18px; height: 18px; -webkit-mask-image: var(--hcwa-icon-external); mask-image: var(--hcwa-icon-external); }
+.hcwa-link--external a:hover::after { translate: none; }
+.hcwa-links { display: flex; flex-wrap: wrap; gap: 12px 32px; }
+
+/* Section head: the "See all" link sits right of the H2, as in the prototype. */
+.section-head > .hcwa-link { grid-column: 2; grid-row: 1; }
+@media (max-width: 639px) { .section-head > .hcwa-link { grid-column: 1; grid-row: auto; } }
+
+/* ---------- hero ---------- */
+.wp-block-buttons.hero__actions { display: grid; gap: 12px; margin-top: 8px; }
+.hero__actions > .wp-block-button { margin: 0; }
+.hero__actions .wp-block-button__link { width: 100%; }
+@media (min-width: 640px) {
+  .wp-block-buttons.hero__actions { display: flex; flex-wrap: wrap; }
+  .hero__actions .wp-block-button__link { width: auto; }
+}
+/* The photo is a core/image figure: the figure takes the crop, the img fills it. */
+figure.hero__media { margin: 0; overflow: hidden; }
+.hero__media img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+/* No approved photo chosen yet: core/image prints nothing, so the text takes the row. */
+.hero__grid:not(:has(.hero__media)) { grid-template-columns: minmax(0, 1fr); }
+
+/* Impact strip slot (home hero). hcwa/impact-strip prints nothing when fewer than two
+   figures may show; when it prints a bare .figures grid, the slot becomes the panel. */
+.hcwa-impact-slot:not(:has(*)) { display: none; }
+.hcwa-impact-slot:has(> .figures) { display: grid; gap: 20px; margin-top: clamp(32px, 4vw, 48px); padding: 24px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--r-lg); }
+.hcwa-impact-slot > .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hcwa-impact-slot > .text-link { justify-self: start; }
+@media (min-width: 900px) {
+  .hcwa-impact-slot:has(> .figures) { grid-template-columns: 1fr auto; align-items: end; padding: 28px 32px; }
+  .hcwa-impact-slot > .figures { grid-template-columns: repeat(4, 1fr); }
+  .hcwa-impact-slot > .figures .figure + .figure { border-left: 1px solid var(--color-line); padding-left: 24px; }
+}
+
+/* ---------- focus areas ---------- */
+.focus-item__icon { width: 48px; margin: 0; }
+.focus-item__icon img { width: 48px; height: 48px; object-fit: contain; border-radius: 0; }
+.focus-item:not(:has(.focus-item__icon)) { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- ways to help ---------- */
+figure.way__art { margin: 0; }
+.way__art img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: var(--r-md); }
+
+/* ---------- partners: the section hides when no logo may show (permission, home flag) ---------- */
+/* (:has() cannot nest inside :has(), hence :not(:has(slot > *)).) */
+.hcwa-partners:not(:has(.hcwa-partner-slot > *)) { display: none; }
+
+/* ---------- CTA and contact bands ---------- */
+.wp-block-buttons.cta-band__actions { gap: 12px; }
+/* site.css turns every link in the band white; the sun button keeps ink text (9.86:1). */
+.cta-band .wp-block-button:not(.is-style-outline) > .wp-block-button__link { color: var(--color-ink); }
+/* On the blue band the outline style is the prototype's .btn--on-blue. */
+.cta-band .wp-block-button.is-style-outline > .wp-block-button__link { background: transparent; color: var(--color-on-blue); border-color: var(--color-on-blue); }
+.cta-band .wp-block-button.is-style-outline > .wp-block-button__link:hover { background: var(--color-blue-900); }
+
+/* Icons in contact rows: phone and email from the link, a pin for the address line. */
+:is(.cta-band__contact, .contact-lines) > li::before {
+  content: ""; flex: none; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: var(--hcwa-icon-pin) center / contain no-repeat; mask: var(--hcwa-icon-pin) center / contain no-repeat;
+}
+:is(.cta-band__contact, .contact-lines) > li:has(a[href^="tel:"])::before { -webkit-mask-image: var(--hcwa-icon-phone); mask-image: var(--hcwa-icon-phone); }
+:is(.cta-band__contact, .contact-lines) > li:has(a[href^="mailto:"])::before { -webkit-mask-image: var(--hcwa-icon-mail); mask-image: var(--hcwa-icon-mail); }
+.contact-lines > li::before { margin-top: 3px; background: var(--color-ink-2); }
+
+/* ---------- FAQ (core/details in .accordion) ---------- */
+.accordion .wp-block-details > summary { color: var(--color-ink); }
+.accordion .wp-block-details > summary::after {
+  content: ""; flex: none; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: var(--hcwa-icon-chevron) center / contain no-repeat; mask: var(--hcwa-icon-chevron) center / contain no-repeat;
+  transition: rotate var(--t-open) var(--ease);
+}
+.accordion .wp-block-details[open] > summary::after { rotate: 180deg; }
+
+/* ---------- Our Work: focus area chips (plain ?area= links) ---------- */
+.hcwa-chips a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1.5px solid var(--color-input-border); border-radius: var(--r-pill); background: var(--color-surface); color: var(--color-ink); font-size: var(--fs-sm); font-weight: 500; text-decoration: none; }
+.hcwa-chips a:hover { border-color: var(--color-blue-700); color: var(--color-blue-700); }
+.hcwa-chips a:is([aria-current="true"], [aria-current="page"]) { background: var(--color-blue-700); border-color: var(--color-blue-700); color: var(--color-on-blue); }
+
+/* Note panel: info icon before the text (prototype .note). */
+.note.wp-block-group::before {
+  content: ""; flex: none; width: 24px; height: 24px; background: var(--color-blue-700);
+  -webkit-mask: var(--hcwa-icon-info) center / contain no-repeat; mask: var(--hcwa-icon-info) center / contain no-repeat;
+}
+
+/* ---------- page header pattern ---------- */
+/* page.php prints the breadcrumb just before the content when the page body carries its
+   own H1. Give that row the header's white band so breadcrumb and H1 read as one block. */
+.page-crumbs:has(+ .entry-content--page > .page-header:first-child) { width: 100%; padding-inline: max(var(--gutter), (100% - var(--container)) / 2); background: var(--color-surface); }
+.page-crumbs + .entry-content--page > .page-header:first-child { padding-top: 0; }
+
+/* ---------- donate ---------- */
+.gift-list strong { font: 600 var(--fs-h3) / 1.1 var(--font-display); color: var(--color-blue-700); }
+
+/* ---------- contact ---------- */
+.form-slot { display: grid; gap: 12px; align-content: start; align-self: start; max-width: 560px; padding: 28px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--r-lg); }
+.form-slot > p { color: var(--color-ink-2); }
+.office--green-bamboo { --unit: var(--color-unit-green-bamboo); }
+.office--little-rose { --unit: var(--color-unit-little-rose); }
+.office--cau-han { --unit: var(--color-unit-cau-han); }
+figure.office__map { margin: 0; }
+.office__map img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-sm); }
+.offices__chat { color: var(--color-ink-2); }
+
+/* ---------- editor: empty image slots show the upload placeholder at a usable size ---------- */
+:is(.hero__media, .focus-item__icon, .way__art, .office__map):has(.components-placeholder) { width: 100%; height: auto; max-height: none; aspect-ratio: auto; overflow: visible; }
+.focus-item:has(.focus-item__icon .components-placeholder) { grid-template-columns: minmax(0, 1fr); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hcwa-link a::after, .hcwa-links a::after, .accordion .wp-block-details > summary::after { transition: none; }
+}

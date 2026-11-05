@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/announcement-bar",
+	"title": "Announcement bar",
+	"category": "hcwa",
+	"icon": "megaphone",
+	"description": "The one-line announcement above the header. Edit it in Settings → HCWA.",
+	"textdomain": "hcwa",
+	"supports": {
+		"html": false,
+		"inserter": false,
+		"multiple": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

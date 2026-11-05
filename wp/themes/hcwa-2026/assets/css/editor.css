@@ -1,0 +1,5 @@
+/* Block editor only (add_editor_style): WordPress scopes these to the editor canvas.
+   Editors always see draft outlines and pending chips, whatever the environment. */
+[data-draft] { outline: 1.5px dashed rgb(138 90 0 / .55); outline-offset: 3px; }
+.cta-band [data-draft], .site-footer [data-draft] { outline-color: rgb(255 196 46 / .75); }
+.chip-pending, .pending-value { display: inline-flex; align-items: center; padding: 1px 10px; border: 1.5px dashed var(--color-warn); border-radius: var(--r-pill); background: var(--color-sun-100); color: var(--color-warn); font-size: var(--fs-meta); font-weight: 500; line-height: 1.5; }

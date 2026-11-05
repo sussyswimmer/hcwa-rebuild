@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/report-list",
+	"title": "Report list",
+	"category": "hcwa",
+	"icon": "media-document",
+	"description": "Reports with a language badge and file size, newest year first.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"reportType": {
+			"type": "string",
+			"enum": [ "any", "annual", "financial", "program", "policy" ],
+			"default": "any"
+		},
+		"limit": {
+			"type": "integer",
+			"default": 6
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

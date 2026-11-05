@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/news-latest",
+	"title": "Latest news",
+	"category": "hcwa",
+	"icon": "megaphone",
+	"description": "A featured story and the latest posts in this language.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"featured": {
+			"type": "boolean",
+			"default": true
+		},
+		"limit": {
+			"type": "integer",
+			"default": 3
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

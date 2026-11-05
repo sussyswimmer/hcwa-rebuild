@@ -1,0 +1,35 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/impact-strip",
+	"title": "Impact strip",
+	"category": "hcwa",
+	"icon": "chart-bar",
+	"description": "Verified impact figures for the organization, a center or a program. Unverified figures never show on the live site.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"scopeType": {
+			"type": "string",
+			"enum": [ "organization", "center", "program" ],
+			"default": "organization"
+		},
+		"scopeId": {
+			"type": "integer",
+			"default": 0
+		},
+		"limit": {
+			"type": "integer",
+			"default": 4
+		},
+		"showLink": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"usesContext": [ "postId", "postType" ],
+	"supports": {
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

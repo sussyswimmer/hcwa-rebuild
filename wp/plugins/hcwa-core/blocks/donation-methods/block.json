@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/donation-methods",
+	"title": "Donation methods",
+	"category": "hcwa",
+	"icon": "heart",
+	"description": "Bank transfer and giving from abroad. Shows only details HCWA finance has confirmed in Settings → HCWA.",
+	"textdomain": "hcwa",
+	"supports": {
+		"html": false,
+		"multiple": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

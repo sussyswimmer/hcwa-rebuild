@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/language-notice",
+	"title": "Language notice",
+	"category": "hcwa",
+	"icon": "translation",
+	"description": "Tells visitors that an article exists in one language only, with links to it and to the news page.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"forceLang": {
+			"type": "string",
+			"enum": [ "", "vi", "en" ],
+			"default": ""
+		}
+	},
+	"usesContext": [ "postId", "postType" ],
+	"supports": {
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}
