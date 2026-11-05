@@ -7,10 +7,10 @@
 
 $request = static fn( string $route ) => new WP_REST_Request( 'GET', $route );
 
-foreach ( array( '/wp/v2/media', '/wp/v2/media/12', '/wp/v2/MEDIA', '/WP/V2/Media/12', '/wp/v2/hcwa_impact', '/wp/v2/HCWA_PARTNER/5', '/wp/v2/Hcwa_impact/3/revisions' ) as $route ) {
+foreach ( array( '/wp/v2/media', '/wp/v2/media/12', '/wp/v2/MEDIA', '/WP/V2/Media/12', '/wp/v2/hcwa_impact', '/wp/v2/HCWA_PARTNER/5', '/wp/v2/Hcwa_impact/3/revisions', '/yoast/v1/get_head', '/Yoast/V1/Get_Head' ) as $route ) {
 	hcwa_assert_true( hcwa_rest_route_is_protected( $route ), "protected: $route" );
 }
-foreach ( array( '/wp/v2/posts', '/wp/v2/hcwa_center', '/wp/v2/media-other', '/oembed/1.0/proxy' ) as $route ) {
+foreach ( array( '/wp/v2/posts', '/wp/v2/hcwa_center', '/wp/v2/media-other', '/oembed/1.0/proxy', '/yoast/v1/get_headings' ) as $route ) {
 	hcwa_assert_false( hcwa_rest_route_is_protected( $route ), "not protected: $route" );
 }
 
@@ -21,6 +21,7 @@ hcwa_assert_true( $denied instanceof WP_Error, 'anonymous /wp/v2/Media refused' 
 hcwa_assert_true( hcwa_rest_protect_routes( null, array(), $request( '/wp/v2/media' ) ) instanceof WP_Error, 'anonymous media list refused (?parent=N is a query parameter of this route)' );
 hcwa_assert_true( hcwa_rest_protect_routes( null, array(), $request( '/wp/v2/HCWA_IMPACT' ) ) instanceof WP_Error, 'anonymous impact figures refused in any case' );
 hcwa_assert_same( null, hcwa_rest_protect_routes( null, array(), $request( '/wp/v2/posts' ) ), 'public routes untouched' );
+hcwa_assert_true( hcwa_rest_protect_routes( null, array(), $request( '/yoast/v1/get_head' ) ) instanceof WP_Error, 'anonymous /yoast/v1/get_head refused (any page\'s share image and schema)' );
 
 // Staff: allowed. An earlier error is kept.
 $GLOBALS['hcwa_test']['can'] = true;

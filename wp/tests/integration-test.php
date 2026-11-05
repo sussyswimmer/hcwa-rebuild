@@ -127,3 +127,28 @@ $hcwa_img = '<img src="https://hcwa.test/a.jpg" class="wp-image-5">';
 hcwa_assert_same( $hcwa_img, hcwa_gate_content_img_tag( $hcwa_img, 'the_content', 0 ), 'outside a gated post, img tags pass' );
 hcwa_assert_same( $hcwa_img, hcwa_gate_content_img_tag( $hcwa_img, 'widget_text_content', 5 ), 'only post content and excerpts are filtered' );
 hcwa_assert_same( 'x', hcwa_gate_image_block( 'x', array( 'attrs' => array() ) ), 'core/image without an ID passes' );
+
+// One category map in core (hcwa_category_slugs()): the theme's chips and labels, the
+// blocks' card labels and `wp hcwa coverage` read it. Legacy story categories count as
+// stories, so the "names changed" note and the story photo gate always agree.
+hcwa_assert_same( hcwa_category_slugs(), hcwa_blocks_category_slugs(), 'blocks read the core category map' );
+hcwa_assert_same( array( 'news', 'stories', 'events', 'announcements' ), array_keys( hcwa_category_slugs() ), 'four sections' );
+hcwa_assert_same( 'stories', hcwa_category_key( array( 'our-stories' ) ), 'legacy English story category is a story' );
+hcwa_assert_same( 'stories', hcwa_category_key( array( 'chuyen-cua-chung-toi-vi' ) ), 'legacy Vietnamese story category, suffixed' );
+hcwa_assert_same( 'events', hcwa_category_key( array( 'other', 'su-kien-vi' ) ), 'seeded section through a translation slug' );
+hcwa_assert_same( '', hcwa_category_key( array( 'uncategorized' ) ), 'not a section' );
+hcwa_assert_same( 'stories', hcwa_blocks_category_key( array( 'our-stories' ) ), 'news-latest labels legacy stories as stories' );
+
+hcwa_assert_same( hcwa_category_slugs(), hcwa_theme_category_slugs(), 'theme reads the core category map' );
+hcwa_assert_same( 'stories', hcwa_theme_category_key( new WP_Term( array( 'term_id' => 9310, 'slug' => 'our-stories', 'taxonomy' => 'category' ) ) ), 'theme card label: legacy story category is a story' );
+hcwa_test_post( array( 'ID' => 9301, 'post_type' => 'post' ) );
+hcwa_test_post( array( 'ID' => 9302, 'post_type' => 'post' ) );
+$GLOBALS['hcwa_test']['terms'][9301]['category'] = array( new WP_Term( array( 'term_id' => 9311, 'slug' => 'chuyen-cua-chung-toi', 'taxonomy' => 'category' ) ) );
+$GLOBALS['hcwa_test']['terms'][9302]['category'] = array( new WP_Term( array( 'term_id' => 9312, 'slug' => 'news', 'taxonomy' => 'category' ) ) );
+$GLOBALS['hcwa_test']['translations'][9301]      = array( 'vi' => 9301, 'en' => 9302 );
+$GLOBALS['hcwa_test']['translations'][9302]      = array( 'vi' => 9301, 'en' => 9302 );
+hcwa_assert_true( hcwa_theme_is_story( get_post( 9301 ) ), 'names-changed note on a legacy story post' );
+hcwa_assert_true( hcwa_theme_is_story( get_post( 9302 ) ), 'and on its English version filed under news' );
+hcwa_assert_same( hcwa_content_images_gated( 9302 ), hcwa_theme_is_story( get_post( 9302 ) ), 'the note and the photo gate agree' );
+hcwa_assert_false( hcwa_theme_is_story( get_post( 304 ) ), 'ordinary news: no note' );
+unset( $GLOBALS['hcwa_test']['translations'][9301], $GLOBALS['hcwa_test']['translations'][9302] );

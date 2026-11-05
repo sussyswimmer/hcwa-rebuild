@@ -27,6 +27,8 @@ require_once HCWA_CORE_DIR . 'includes/strings.php';
 require_once HCWA_CORE_DIR . 'includes/post-types.php';
 require_once HCWA_CORE_DIR . 'includes/meta.php';
 require_once HCWA_CORE_DIR . 'includes/media-approval.php';
+require_once HCWA_CORE_DIR . 'includes/media-privacy.php';
+require_once HCWA_CORE_DIR . 'includes/seo.php';
 require_once HCWA_CORE_DIR . 'includes/localized-urls.php';
 require_once HCWA_CORE_DIR . 'includes/polylang.php';
 require_once HCWA_CORE_DIR . 'includes/settings.php';

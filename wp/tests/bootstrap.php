@@ -24,6 +24,11 @@
  *   children     [parent_id] => attachment IDs for get_children()
  *   updated      wp_update_post() calls
  *   current_post the global post: get_post() without an argument
+ *   term_list    WP_Term[] for get_terms() and get_term()
+ *   get_posts    callable( array $args ): array answering get_posts() (default: none)
+ *   upload_basedir  uploads folder for wp_get_upload_dir() and get_attached_file()
+ *                (post meta '_wp_attached_file' is relative to it; '_wp_attachment_metadata'
+ *                answers wp_get_attachment_metadata())
  *
  * @package hcwa-core
  */
@@ -384,6 +389,17 @@ if ( ! function_exists( 'wp_basename' ) ) {
 		return basename( (string) $path, $suffix );
 	}
 }
+if ( ! function_exists( 'wp_generate_password' ) ) {
+	/** Letters and digits only (core's $special_chars false, pluggable.php). */
+	function wp_generate_password( $length = 12, $special_chars = true, $extra_special_chars = false ) {
+		$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		$out   = '';
+		for ( $i = 0; $i < $length; $i++ ) {
+			$out .= $chars[ random_int( 0, strlen( $chars ) - 1 ) ];
+		}
+		return $out;
+	}
+}
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $thing ) {
 		return $thing instanceof WP_Error;
@@ -489,6 +505,16 @@ if ( ! function_exists( 'is_admin' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'wp_doing_ajax' ) ) {
+	function wp_doing_ajax() {
+		return false;
+	}
+}
+if ( ! function_exists( 'wp_doing_cron' ) ) {
+	function wp_doing_cron() {
+		return false;
+	}
+}
 if ( ! function_exists( 'is_ssl' ) ) {
 	function is_ssl() {
 		return true;
@@ -573,7 +599,41 @@ if ( ! function_exists( 'get_permalink' ) ) {
 }
 if ( ! function_exists( 'get_posts' ) ) {
 	function get_posts( $args = array() ) {
-		return array();
+		$answer = $GLOBALS['hcwa_test']['get_posts'] ?? null;
+		return is_callable( $answer ) ? (array) $answer( (array) $args ) : array();
+	}
+}
+if ( ! function_exists( 'get_terms' ) ) {
+	/** Filters term_list by taxonomy and slug; 'fields' => 'ids' returns IDs. */
+	function get_terms( $args = array() ) {
+		$out = array();
+		foreach ( $GLOBALS['hcwa_test']['term_list'] ?? array() as $term ) {
+			if ( isset( $args['taxonomy'] ) && ! in_array( $term->taxonomy, (array) $args['taxonomy'], true ) ) {
+				continue;
+			}
+			if ( isset( $args['slug'] ) && ! in_array( $term->slug, (array) $args['slug'], true ) ) {
+				continue;
+			}
+			$out[] = 'ids' === ( $args['fields'] ?? '' ) ? (int) $term->term_id : $term;
+		}
+		return $out;
+	}
+}
+if ( ! function_exists( 'get_term' ) ) {
+	function get_term( $term, $taxonomy = '' ) {
+		foreach ( $GLOBALS['hcwa_test']['term_list'] ?? array() as $candidate ) {
+			if ( (int) $candidate->term_id === (int) $term ) {
+				return $candidate;
+			}
+		}
+		return null;
+	}
+}
+if ( ! function_exists( 'remove_accents' ) ) {
+	/** Decomposes and drops combining marks, đ → d (enough for Vietnamese). */
+	function remove_accents( $text, $locale = '' ) {
+		$text = class_exists( 'Normalizer' ) ? (string) Normalizer::normalize( (string) $text, Normalizer::FORM_D ) : (string) $text;
+		return strtr( (string) preg_replace( '/\p{Mn}+/u', '', $text ), array( 'đ' => 'd', 'Đ' => 'D' ) );
 	}
 }
 if ( ! function_exists( 'wp_force_plain_post_permalink' ) ) {
@@ -676,7 +736,48 @@ if ( ! function_exists( 'get_query_var' ) ) {
 
 if ( ! function_exists( 'wp_get_upload_dir' ) ) {
 	function wp_get_upload_dir() {
-		return array( 'baseurl' => rtrim( (string) get_option( 'home' ), '/' ) . '/wp-content/uploads' );
+		return array(
+			'baseurl' => rtrim( (string) get_option( 'home' ), '/' ) . '/wp-content/uploads',
+			'basedir' => (string) ( $GLOBALS['hcwa_test']['upload_basedir'] ?? ABSPATH . 'wp-content/uploads' ),
+		);
+	}
+}
+if ( ! function_exists( 'get_attached_file' ) ) {
+	function get_attached_file( $attachment_id, $unfiltered = false ) {
+		$file = (string) get_post_meta( (int) $attachment_id, '_wp_attached_file', true );
+		return '' === $file ? false : wp_get_upload_dir()['basedir'] . '/' . $file;
+	}
+}
+if ( ! function_exists( 'wp_get_attachment_metadata' ) ) {
+	function wp_get_attachment_metadata( $attachment_id = 0, $unfiltered = false ) {
+		$meta = get_post_meta( (int) $attachment_id, '_wp_attachment_metadata', true );
+		return is_array( $meta ) ? $meta : false;
+	}
+}
+if ( ! function_exists( 'wp_attachment_is_image' ) ) {
+	/** True for an attachment post whose post_mime_type starts with image/. */
+	function wp_attachment_is_image( $post = null ) {
+		$post = get_post( $post );
+		return $post instanceof WP_Post && 'attachment' === $post->post_type && isset( $post->post_mime_type ) && 0 === strpos( (string) $post->post_mime_type, 'image/' );
+	}
+}
+if ( ! function_exists( 'wp_delete_file' ) ) {
+	function wp_delete_file( $file ) {
+		if ( is_file( $file ) ) {
+			unlink( $file );
+		}
+	}
+}
+if ( ! function_exists( 'wp_delete_file_from_directory' ) ) {
+	/** Like WordPress: only inside the directory. */
+	function wp_delete_file_from_directory( $file, $directory ) {
+		$real_file = realpath( $file );
+		$real_dir  = realpath( $directory );
+		if ( false === $real_file || false === $real_dir || 0 !== strpos( $real_file, rtrim( $real_dir, '/' ) . '/' ) ) {
+			return false;
+		}
+		wp_delete_file( $file );
+		return true;
 	}
 }
 if ( ! function_exists( 'attachment_url_to_postid' ) ) {
@@ -702,6 +803,24 @@ if ( ! function_exists( 'nocache_headers' ) ) {
 if ( ! function_exists( 'rest_authorization_required_code' ) ) {
 	function rest_authorization_required_code() {
 		return 401;
+	}
+}
+if ( ! class_exists( 'WP_REST_Response' ) ) {
+	/** Minimal WP_REST_Response: data. */
+	class WP_REST_Response {
+		private $data;
+
+		public function __construct( $data = null ) {
+			$this->data = $data;
+		}
+
+		public function get_data() {
+			return $this->data;
+		}
+
+		public function set_data( $data ) {
+			$this->data = $data;
+		}
 	}
 }
 if ( ! class_exists( 'WP_REST_Request' ) ) {

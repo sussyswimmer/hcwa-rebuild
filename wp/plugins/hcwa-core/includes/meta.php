@@ -1,7 +1,8 @@
 <?php
 /**
- * Custom fields for the five content types and the two media approval flags:
- * one definition table drives register_post_meta(), the meta boxes and saving.
+ * Custom fields for the five content types, the two media approval flags and the
+ * safeguarding flag on news posts: one definition table drives register_post_meta(), the
+ * meta boxes and saving.
  *
  * "Shared" fields are the same in both languages and are copied between translations
  * (polylang.php). IDs in shared fields point at the Vietnamese original.
@@ -208,6 +209,9 @@ function hcwa_meta_fields_build(): array {
 			'hcwa_active_years'    => $shared_txt( 'text', __( 'Active years', 'hcwa' ), __( 'For example 2019 to 2024.', 'hcwa' ) ),
 			'hcwa_show_on_home'    => $shared_yes( __( 'Show on the home page', 'hcwa' ) ),
 			'hcwa_logo_permission' => $shared_yes( __( 'Permission to show the logo', 'hcwa' ), __( 'Tick only when the partner has agreed in writing. Without it the logo never shows on the live site.', 'hcwa' ) ),
+		),
+		'post'         => array(
+			'hcwa_no_identifiable_children' => $protective( __( 'No identifiable children', 'hcwa' ), array( 'auth' => 'approve', 'help' => __( 'Tick for news about Little Rose residents or any child who must never be identifiable. Photos marked "Identifiable child" are then refused in this post, in both languages. Only editors can change it.', 'hcwa' ) ) ),
 		),
 		'attachment'   => array(
 			'hcwa_approved_for_web'   => $f( 'boolean', 'checkbox', __( 'Approved for web', 'hcwa' ), array( 'default' => false, 'sync' => true, 'box' => false, 'auth' => 'approve' ) ),
@@ -514,9 +518,10 @@ function hcwa_add_meta_boxes(): void {
 		'hcwa_impact'  => __( 'Figure', 'hcwa' ),
 		'hcwa_report'  => __( 'Report details', 'hcwa' ),
 		'hcwa_partner' => __( 'Partner details', 'hcwa' ),
+		'post'         => __( 'Child safeguarding', 'hcwa' ),
 	);
 	foreach ( $titles as $post_type => $title ) {
-		add_meta_box( 'hcwa_details', $title, 'hcwa_render_meta_box', $post_type, 'normal', 'high' );
+		add_meta_box( 'hcwa_details', $title, 'hcwa_render_meta_box', $post_type, 'post' === $post_type ? 'side' : 'normal', 'high' );
 	}
 }
 add_action( 'add_meta_boxes', 'hcwa_add_meta_boxes' );
@@ -574,6 +579,10 @@ function hcwa_render_meta_box( WP_Post $post ): void {
 				: __( 'These come from the Vietnamese version and are copied here when you save. Change them there.', 'hcwa' ),
 		),
 	);
+	if ( ! array_filter( $fields, static fn( $spec ) => $spec['sync'] ) ) {
+		// Only protective flags (news posts): they are not copied, they count in both languages.
+		$groups['sync']['intro'] = __( 'Applies to every language version.', 'hcwa' );
+	}
 
 	echo '<div class="hcwa-fields">';
 	foreach ( $groups as $group => $text ) {
@@ -590,12 +599,42 @@ function hcwa_render_meta_box( WP_Post $post ): void {
 		foreach ( $in_group as $key => $spec ) {
 			if ( $spec['sync'] && $original !== $post->ID ) {
 				hcwa_render_meta_field_readonly( $original, $key, $spec );
+			} elseif ( ! hcwa_meta_user_can_edit( $spec ) ) {
+				hcwa_render_meta_flag_readonly( $post, $key, $spec );
 			} else {
 				hcwa_render_meta_field( $post, $key, $spec );
 			}
 		}
 	}
 	echo '</div>';
+}
+
+/**
+ * Whether the current user may change a field in the details box: editors only for fields
+ * with auth 'approve' (the same rule as hcwa_meta_auth_approver() for REST).
+ *
+ * @param array $spec Field definition.
+ */
+function hcwa_meta_user_can_edit( array $spec ): bool {
+	return 'approve' !== $spec['auth'] || current_user_can( 'edit_others_posts' );
+}
+
+/**
+ * A flag only editors may change, shown to other users: its state (in any language for a
+ * protective flag) and who can change it.
+ *
+ * @param WP_Post $post Post being edited.
+ * @param string  $key  Meta key.
+ * @param array   $spec Field definition.
+ */
+function hcwa_render_meta_flag_readonly( WP_Post $post, string $key, array $spec ): void {
+	$value = $spec['protective'] ? hcwa_meta_flag_any( $post->ID, $key ) : (bool) hcwa_meta( $post->ID, $key );
+	printf(
+		'<div class="hcwa-field hcwa-field--readonly"><span class="hcwa-field__label">%1$s</span> <span class="hcwa-field__value">%2$s</span> <span class="description">%3$s</span></div>',
+		esc_html( $spec['label'] ),
+		esc_html( $value ? __( 'Yes', 'hcwa' ) : __( 'No', 'hcwa' ) ),
+		esc_html__( 'Only editors can change this.', 'hcwa' )
+	);
 }
 
 /**
@@ -925,7 +964,7 @@ function hcwa_save_meta_box( $post_id, $post ): void {
 	$is_translation = hcwa_original_id( (int) $post_id ) !== (int) $post_id;
 
 	foreach ( hcwa_meta_fields()[ $post->post_type ] ?? array() as $key => $spec ) {
-		if ( ! $spec['box'] || ! array_key_exists( $key, $input ) || ( $spec['sync'] && $is_translation ) ) {
+		if ( ! $spec['box'] || ! array_key_exists( $key, $input ) || ( $spec['sync'] && $is_translation ) || ! hcwa_meta_user_can_edit( $spec ) ) {
 			continue;
 		}
 
@@ -956,7 +995,7 @@ add_action( 'save_post', 'hcwa_save_meta_box', 10, 2 );
  */
 function hcwa_admin_assets( $hook_suffix ): void {
 	$screen  = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-	$on_edit = in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) && $screen && in_array( $screen->post_type, hcwa_post_types(), true );
+	$on_edit = in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) && $screen && in_array( $screen->post_type, array_merge( hcwa_post_types(), array( 'post' ) ), true );
 	$on_page = 'settings_page_hcwa-settings' === $hook_suffix;
 
 	if ( ! $on_edit && ! $on_page ) {
@@ -1043,7 +1082,7 @@ function hcwa_rest_hide_meta( $response, $post ) {
 
 	return $response;
 }
-foreach ( array( 'hcwa_center', 'hcwa_program', 'hcwa_report', 'hcwa_impact', 'hcwa_partner', 'attachment' ) as $hcwa_rest_type ) {
+foreach ( array( 'hcwa_center', 'hcwa_program', 'hcwa_report', 'hcwa_impact', 'hcwa_partner', 'attachment', 'post' ) as $hcwa_rest_type ) {
 	add_filter( "rest_prepare_{$hcwa_rest_type}", 'hcwa_rest_hide_meta', 10, 2 );
 }
 unset( $hcwa_rest_type );

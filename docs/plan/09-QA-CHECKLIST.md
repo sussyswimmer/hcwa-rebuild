@@ -10,6 +10,10 @@ in `qa/{date}/`.
 - [ ] No image with `approved_for_web = no` renders; Little Rose shows no identifiable child
 - [ ] Stories carry the "names changed" line
 - [ ] No social media auto-feed embeds
+- [ ] `wp hcwa draft-scan` is clean after every database push to production
+- [ ] A test upload with GPS keeps no GPS/EXIF in any served file, the original included; `wp hcwa media-scrub --dry-run` reports nothing
+- [ ] `wp hcwa coverage` shows no Little Rose rows; the Little Rose page shows no location and no invitation to visit
+- [ ] With the SEO plugin active: og:image, schema images, image sitemaps and its REST head output never carry a refused photo; media pages and headless endpoints stay off
 - [ ] Privacy notice and safeguarding policy linked in the footer in both languages
 
 ## Bilingual

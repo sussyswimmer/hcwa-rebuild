@@ -84,8 +84,8 @@ while ( have_posts() ) :
 				<?php
 				echo $hcwa_cover; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image().
 				hcwa_theme_cover_printed();
-				// Captions skip the publish guard: no draft text on the live site.
-				$hcwa_caption = hcwa_theme_public_text( (string) wp_get_attachment_caption( $hcwa_thumb_id ) );
+				// Only a caption staff wrote, never one read from the file; no draft text on the live site.
+				$hcwa_caption = hcwa_theme_attachment_text( $hcwa_thumb_id, 'caption' );
 				if ( '' !== $hcwa_caption ) :
 					?>
 					<figcaption<?php echo hcwa_theme_draft_attr( $hcwa_caption ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attribute. ?>><?php echo esc_html( $hcwa_caption ); ?></figcaption>

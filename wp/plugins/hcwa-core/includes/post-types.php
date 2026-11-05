@@ -21,6 +21,40 @@ function hcwa_post_types(): array {
 }
 
 /**
+ * The four post sections (contract "Names": seeded categories) and their slugs, English
+ * first, Vietnamese second. The theme's category chips and card labels, the blocks' card
+ * labels and `wp hcwa coverage` all read this one map. Legacy story categories are listed
+ * by hcwa_story_category_slugs(), not here, so a chip never links an old category.
+ *
+ * @return array<string, string[]> news | stories | events | announcements => [en, vi].
+ */
+function hcwa_category_slugs(): array {
+	return array(
+		'news'          => array( 'news', 'tin-tuc' ),
+		'stories'       => array( 'stories', 'cau-chuyen' ),
+		'events'        => array( 'events', 'su-kien' ),
+		'announcements' => array( 'announcements', 'thong-bao' ),
+	);
+}
+
+/**
+ * Section key of a category from the slugs of the category and its translations (any
+ * language, a "-vi" / "-en" suffix ignored): one of hcwa_category_slugs(), 'stories' for a
+ * legacy story category (hcwa_story_category_slugs()), or '' for any other category.
+ *
+ * @param string[] $slugs Slugs of one category and its translations.
+ */
+function hcwa_category_key( array $slugs ): string {
+	$slugs = array_map( static fn( $slug ): string => (string) preg_replace( '/-(vi|en)$/', '', (string) $slug ), $slugs );
+	foreach ( hcwa_category_slugs() as $key => $known ) {
+		if ( array_intersect( $slugs, $known ) ) {
+			return $key;
+		}
+	}
+	return array_intersect( $slugs, hcwa_story_category_slugs() ) ? 'stories' : '';
+}
+
+/**
  * Registers the five post types and the focus area taxonomy.
  */
 function hcwa_register_post_types(): void {
@@ -286,7 +320,10 @@ add_filter( 'enter_title_here', 'hcwa_title_placeholder', 10, 2 );
  *   would let anyone read published ones, including unverified figures;
  * - media (/wp/v2/media, also reached by ?_embed through wp:featuredmedia) would list every
  *   upload with its file URLs, captions and parent, approved for web or not, including
- *   photos of identifiable children and a VietQR image finance has not confirmed.
+ *   photos of identifiable children and a VietQR image finance has not confirmed;
+ * - Yoast SEO's /yoast/v1/get_head?url= returns any page's head (share image, schema with
+ *   image captions) without rendering it; seo.php also takes yoast_head and yoast_head_json
+ *   out of public post and term responses.
  *
  * Checked on the matched request (rest_request_before_callbacks, which also runs for
  * embedded and batch requests), case-insensitively, because WordPress matches routes
@@ -315,5 +352,5 @@ add_filter( 'rest_request_before_callbacks', 'hcwa_rest_protect_routes', 10, 3 )
  * @param string $route Route, e.g. /wp/v2/media/12.
  */
 function hcwa_rest_route_is_protected( string $route ): bool {
-	return (bool) preg_match( '#^/+wp/v2/(?:hcwa_impact|hcwa_partner|media)(?:/|$)#i', $route );
+	return (bool) preg_match( '#^/+(?:wp/v2/(?:hcwa_impact|hcwa_partner|media)|yoast/v1/get_head)(?:/|$)#i', $route );
 }

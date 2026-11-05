@@ -108,14 +108,18 @@ function hcwa_theme_robots( array $robots ): array {
 	return $robots;
 }
 
-// Priority 5: before core's redirect_canonical (10), which would send a disabled attachment
-// page to the raw file.
-add_action( 'template_redirect', 'hcwa_theme_refuse_attachment_page', 5 );
+// On 'wp' (class-wp.php:839), like hcwa-core's hcwa_refuse_attachment_page(): before every
+// template_redirect callback, so neither redirect_canonical (priority 10) nor an SEO
+// plugin's attachment redirect (Yoast: priority 1) can answer 301 to the raw file first.
+// set_404() clears is_attachment (class-wp-query.php:1846, :525), so they then do nothing.
+add_action( 'wp', 'hcwa_theme_refuse_attachment_page', 5, 0 );
 
 /**
  * Attachment page of a photo the approval gate refuses in its context (or of any photo
  * without hcwa-core): a plain 404, so neither the photo nor its title or caption, which
- * often carry a child's name, is printed. Same steps as core's WP::handle_404().
+ * often carry a child's name, is printed. Same steps as core's WP::handle_404(). With
+ * hcwa-core active the plugin's copy has already run (same hook and priority, loaded
+ * first), so this one finds no attachment left and does nothing.
  */
 function hcwa_theme_refuse_attachment_page(): void {
 	if ( ! is_attachment() || ! hcwa_theme_attachment_refused( (int) get_queried_object_id() ) ) {
@@ -148,7 +152,8 @@ function hcwa_theme_lang_notice_redirect(): void {
 add_action( 'pre_get_posts', 'hcwa_theme_main_query' );
 
 /**
- * News archives show 12 posts per page (06-PAGES); the reports archive can filter by type.
+ * News archives show 12 posts per page (06-PAGES); the reports archive can filter by type;
+ * search never lists attachments (hcwa_theme_search_post_types()).
  *
  * @param WP_Query $query Query being prepared.
  */
@@ -158,6 +163,9 @@ function hcwa_theme_main_query( WP_Query $query ): void {
 	}
 	if ( $query->is_home() || $query->is_category() || $query->is_tag() || $query->is_search() || $query->is_date() || $query->is_tax( 'hcwa_focus_area' ) ) {
 		$query->set( 'posts_per_page', 12 );
+	}
+	if ( $query->is_search() ) {
+		$query->set( 'post_type', hcwa_theme_search_post_types( $query->get( 'post_type' ), get_post_types( array( 'exclude_from_search' => false ) ) ) );
 	}
 	if ( $query->is_post_type_archive( 'hcwa_report' ) ) {
 		$query->set( 'posts_per_page', 24 );
@@ -174,6 +182,45 @@ function hcwa_theme_main_query( WP_Query $query ): void {
 			);
 		}
 	}
+}
+
+/**
+ * Post types the site search may list: those asked for (?post_type=) or every searchable
+ * type, never attachments. WordPress searches attachments by default (registered public,
+ * so not excluded from search: wp-includes/post.php:92-104, class-wp-post-type.php:606;
+ * those with a published parent: class-wp-query.php:2330-2332 and 2707-2710), and their
+ * title and caption are often the file name or text read from the file
+ * (hcwa_theme_attachment_text()). Pure helper (tested).
+ *
+ * @param mixed    $asked      The query's post_type: '', 'any', a name or a list.
+ * @param string[] $searchable Post types not excluded from search.
+ * @return string[]
+ */
+function hcwa_theme_search_post_types( $asked, array $searchable ): array {
+	$searchable = array_values( array_diff( array_map( 'strval', $searchable ), array( 'attachment' ) ) );
+	$asked      = array_values( array_intersect( array_map( 'strval', (array) $asked ), $searchable ) );
+	if ( $asked ) {
+		return $asked;
+	}
+	// Never an empty list: WordPress reads it as "any", attachments included.
+	return $searchable ? $searchable : array( 'post' );
+}
+
+add_filter( 'document_title_parts', 'hcwa_theme_attachment_document_title' );
+
+/**
+ * Browser title of an attachment page: the page's own heading, never the file name or text
+ * read from the file, which wp_get_document_title() would use (general-template.php:1462,
+ * filtered at :1520). An SEO plugin builds its own title instead.
+ *
+ * @param mixed $parts Title parts.
+ * @return mixed
+ */
+function hcwa_theme_attachment_document_title( $parts ) {
+	if ( is_array( $parts ) && is_attachment() ) {
+		$parts['title'] = hcwa_theme_attachment_heading( (int) get_queried_object_id() );
+	}
+	return $parts;
 }
 
 /**

@@ -119,6 +119,18 @@ its content hooks when languages already exist at startup.
   that flag has no news tag. No seeded post is tagged, because none of the posts in
   `news.json` is about one center. Funders named in `work.json` (CapitaLand Vietnam) become
   partner records, hidden from the home page and without logo permission.
+  On the imported live site the slugs are the other way round: the Vietnamese Little Rose
+  tag is `hoa-hong-nho-vi` and `hoa-hong-nho` is the English one. Either slug works in the
+  center's news tag field: hcwa-core protects the tag's whole Polylang translation group,
+  plus the always-protected `hoa-hong-nho`, `hoa-hong-nho-vi`, `little-rose` and `lrws`
+  tags (`hcwa_protected_tag_slugs()`). `wp hcwa coverage` still asks for the Vietnamese
+  slug, and lists posts and tags that name Little Rose but are not protected.
+- **A photo-gate fixture**: one synthetic flat-colour photo (no person in it) with a GPS
+  position, uploaded the way staff upload and set as the Vietnamese Little Rose center's
+  featured image, marked "Approved for web" and "Identifiable child". The seed stops if
+  any file WordPress kept still carries a location, and warns if the file or title did not
+  get a neutral `hcwa-…` name. The gate refuses the photo only because of the Little Rose
+  context, which the smoke test checks.
 - **Impact figures** from `impact.json`. All are unverified, with no values, so staging
   shows them with the "Đang xác minh / Pending verification" chip and production shows
   none.
@@ -179,7 +191,14 @@ following redirects, for gates that no page view shows: a center's `/embed/` URL
 404 (embeds are off), `/wp-json/wp/v2/media` answers 401 to a visitor (also in upper case,
 since WordPress matches REST routes in any case), and a center URL under the English base
 with the Vietnamese slug (`/en/our-work/centers/tre-xanh/`) answers one 301 to the
-Vietnamese permalink on the host being tested.
+Vietnamese permalink on the host being tested. It also checks that the SEO plugin's head
+stays out of public REST (`/wp-json/wp/v2/posts` carries no `yoast_head` or
+`yoast_head_json`, `/wp-json/yoast/v1/get_head` never answers 200) and that
+`post-sitemap.xml` lists no `<image:loc>`; these pass without Yoast too and become real
+checks once it is installed. For the seed's photo-gate fixture, its attachment page
+(`/?attachment_id=<id>`) must answer 404 with no `Location` header, and the Little Rose
+center page must not contain the photo's file name anywhere, so neither the page nor an
+SEO plugin's `og:image`, `twitter:image` or JSON-LD prints it.
 
 It saves full-page screenshots and `report.json` to `qa/wp/<date>/`, prints a summary,
 and exits with 1 if anything fails. Images from the media library and from other sites are

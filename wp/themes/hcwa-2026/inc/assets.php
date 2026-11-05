@@ -101,33 +101,82 @@ function hcwa_theme_favicon_fallback(): void {
 
 add_action( 'wp_head', 'hcwa_theme_meta_description', 1 );
 
+// Yoast prints its own descriptions and never reads hcwa_summary; where it has none for a
+// page, the page's own description fills in (meta, Open Graph and X). Priority 100: after
+// hcwa-core drops a Yoast text with a draft marker on production (seo.php, priority 99),
+// so such a page gets its own description instead of none.
+add_filter( 'wpseo_metadesc', 'hcwa_theme_seo_description_fallback', 100 );
+add_filter( 'wpseo_opengraph_desc', 'hcwa_theme_seo_description_fallback', 100 );
+add_filter( 'wpseo_twitter_description', 'hcwa_theme_seo_description_fallback', 100 );
+
 /**
- * Basic meta description when no SEO plugin is active. Yoast or Rank Math replace it.
+ * Whether an SEO plugin prints the meta description (Yoast, Rank Math, SEOPress).
  */
-function hcwa_theme_meta_description(): void {
-	if ( defined( 'WPSEO_VERSION' ) || class_exists( 'RankMath' ) || defined( 'SEOPRESS_VERSION' ) ) {
-		return;
-	}
+function hcwa_theme_seo_plugin_active(): bool {
+	return defined( 'WPSEO_VERSION' ) || class_exists( 'RankMath' ) || defined( 'SEOPRESS_VERSION' );
+}
+
+/**
+ * Description of the current page from its own fields, at most 160 characters: the summary
+ * (centers, programs, reports), else a hand-written excerpt; a photo's caption only when
+ * staff wrote it (hcwa_theme_attachment_text()); a category or term description. '' when
+ * the page has none.
+ */
+function hcwa_theme_page_description(): string {
 	$description = '';
 	if ( is_singular() ) {
-		$post        = get_queried_object();
-		$description = $post instanceof WP_Post ? (string) get_post_meta( $post->ID, 'hcwa_summary', true ) : '';
-		if ( '' === $description && $post instanceof WP_Post && has_excerpt( $post ) ) {
-			$description = get_the_excerpt( $post );
+		$post = get_queried_object();
+		if ( $post instanceof WP_Post && 'attachment' === $post->post_type ) {
+			$description = hcwa_theme_attachment_text( (int) $post->ID, 'caption' );
+		} elseif ( $post instanceof WP_Post ) {
+			$description = (string) get_post_meta( $post->ID, 'hcwa_summary', true );
+			if ( '' === trim( $description ) && has_excerpt( $post ) ) {
+				$description = get_the_excerpt( $post );
+			}
 		}
 	} elseif ( is_category() || is_tax() ) {
 		$description = term_description();
 	}
-	// Meta, captions (attachment excerpts), term descriptions and the tagline skip the
-	// publish guard: no draft text on the live site.
+	// Meta, captions, term descriptions and the tagline skip the publish guard: no draft
+	// text on the live site.
 	$description = hcwa_theme_public_text( trim( wp_strip_all_tags( (string) $description ) ) );
-	if ( '' === $description ) {
-		$description = hcwa_theme_public_text( trim( wp_strip_all_tags( get_bloginfo( 'description' ) ) ) );
+	return wp_html_excerpt( $description, 160, '…' );
+}
+
+/**
+ * Basic meta description when no SEO plugin is active: the page's own description, else
+ * the tagline.
+ */
+function hcwa_theme_meta_description(): void {
+	if ( hcwa_theme_seo_plugin_active() ) {
+		return;
 	}
-	$description = wp_html_excerpt( $description, 160, '…' );
+	$description = hcwa_theme_page_description();
+	if ( '' === $description ) {
+		$description = wp_html_excerpt( hcwa_theme_public_text( trim( wp_strip_all_tags( get_bloginfo( 'description' ) ) ) ), 160, '…' );
+	}
 	if ( '' !== $description ) {
 		printf( '<meta name="description" content="%s">' . "\n", esc_attr( $description ) );
 	}
+}
+
+/**
+ * Yoast's meta, Open Graph and X descriptions: Yoast's own text wins; when it has none for
+ * this page, the page's own description (hcwa_theme_page_description(), draft-safe). Never
+ * the tagline, which would repeat on every page. Yoast is not in the reference source:
+ * its presenters filter the value before dropping an empty tag (Yoast 14+, from memory),
+ * so check once on the installed version that a center without a Yoast description gets
+ * its summary.
+ *
+ * @param mixed $description Yoast's description.
+ * @return mixed
+ */
+function hcwa_theme_seo_description_fallback( $description ) {
+	if ( is_string( $description ) && '' !== trim( $description ) ) {
+		return $description;
+	}
+	$own = hcwa_theme_page_description();
+	return '' !== $own ? $own : $description;
 }
 
 add_action( 'init', 'hcwa_theme_clean_head' );

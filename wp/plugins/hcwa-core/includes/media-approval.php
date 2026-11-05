@@ -9,8 +9,10 @@
  *
  * The other ways WordPress prints photos are gated here too: images placed in content
  * (blocks, classic HTML, [gallery], captions, cover backgrounds, images inserted by URL),
- * featured images printed by core blocks, and embeds (switched off). The REST media
- * routes are closed to the public in post-types.php.
+ * featured images printed by core blocks or read by ID on the front end, attachment pages
+ * and embeds (switched off). Yoast SEO's share images, schema and image sitemaps are gated
+ * in seo.php, camera metadata (GPS) is removed from the files in media-privacy.php, and
+ * the REST media routes are closed to the public in post-types.php.
  *
  * @package hcwa-core
  */
@@ -64,8 +66,10 @@ function hcwa_image_flags( int $attachment_id ): array {
  * $context may be:
  * - null: the current post (inside the loop or on a single page);
  * - a post ID or WP_Post: a center with "No identifiable children" (in any language), a
- *   program run by such a center, or a news post that carries, in any of its language
- *   versions, such a center's news tag;
+ *   program run by such a center, or a news post that is marked "No identifiable children"
+ *   itself (in any language; `wp hcwa protect-little-rose` marks the imported Little Rose
+ *   posts) or carries, in any of its language versions, a protected news tag
+ *   (hcwa_no_identifiable_news_tags());
  * - a bool, or an array with 'no_identifiable_children' => bool, to say it directly.
  *
  * Translations are read too: Polylang drops a tag that has no linked translation when it
@@ -99,7 +103,7 @@ function hcwa_image_context_no_identifiable( $context ): bool {
 			}
 		}
 	} elseif ( 'post' === $post->post_type ) {
-		$result = hcwa_post_has_protected_tag( $post, hcwa_no_identifiable_news_tags() );
+		$result = hcwa_meta_flag_any( $post->ID, 'hcwa_no_identifiable_children' ) || hcwa_post_has_protected_tag( $post, hcwa_no_identifiable_news_tags() );
 	}
 
 	/**
@@ -112,56 +116,119 @@ function hcwa_image_context_no_identifiable( $context ): bool {
 }
 
 /**
- * News tag slugs (Vietnamese) of centers marked "No identifiable children".
+ * Term IDs of the protected news tags, every language version included: the news tag of
+ * each center marked "No identifiable children" and of each program such a center runs,
+ * plus hcwa_protected_tag_slugs(). A stored slug is resolved to its term in any language
+ * and then to the term's whole Polylang translation group, so it does not matter which
+ * language's slug was typed (on the imported site the Vietnamese Little Rose tag is
+ * hoa-hong-nho-vi and hoa-hong-nho is the English one).
  *
- * @return string[]
+ * @param bool $refresh Rebuild the cached list (tests, WP-CLI after changes).
+ * @return int[]
  */
-function hcwa_no_identifiable_news_tags(): array {
-	static $tags = null;
-	if ( null !== $tags ) {
-		return $tags;
+function hcwa_no_identifiable_news_tags( bool $refresh = false ): array {
+	static $ids = null;
+	if ( null !== $ids && ! $refresh ) {
+		return $ids;
 	}
 
 	$args = array(
-		'post_type'        => 'hcwa_center',
 		'post_status'      => 'any',
-		'numberposts'      => 50,
+		'numberposts'      => -1,
 		'fields'           => 'ids',
-		'meta_key'         => 'hcwa_no_identifiable_children', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-		'meta_value'       => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 		'suppress_filters' => false,
 	);
 	if ( function_exists( 'pll_get_post' ) ) {
 		$args['lang'] = '';
 	}
-
-	$tags = array();
-	foreach ( get_posts( $args ) as $center_id ) {
-		foreach ( hcwa_post_translation_ids( (int) $center_id ) as $id ) {
-			$slug = (string) get_post_meta( $id, 'hcwa_news_tag', true );
-			if ( '' !== $slug ) {
-				$tags[] = $slug;
-			}
+	$owners = get_posts(
+		$args + array(
+			'post_type'  => 'hcwa_center',
+			'meta_key'   => 'hcwa_no_identifiable_children', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'meta_value' => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+		)
+	);
+	foreach ( get_posts( $args + array( 'post_type' => 'hcwa_program' ) ) as $program_id ) {
+		if ( hcwa_image_context_no_identifiable( (int) $program_id ) ) {
+			$owners[] = $program_id;
 		}
 	}
-	return $tags = array_values( array_unique( $tags ) );
+
+	$slugs = hcwa_protected_tag_slugs();
+	foreach ( $owners as $owner_id ) {
+		foreach ( hcwa_post_translation_ids( (int) $owner_id ) as $id ) {
+			$slugs[] = trim( (string) get_post_meta( $id, 'hcwa_news_tag', true ) );
+		}
+	}
+
+	return $ids = hcwa_tag_group_ids( $slugs );
 }
 
 /**
- * Whether a news post, or any of its translations, carries one of the protected news tags
- * (Vietnamese slugs; English tags are mapped to their Vietnamese translation).
+ * Tag slugs that are always protected, whichever center they belong to: the Little Rose
+ * tags of the live site (scripts/urls-live.csv: hoa-hong-nho and lrws in English,
+ * hoa-hong-nho-vi in Vietnamese; two English tags cannot share one translation group) and
+ * the seeded English slug.
  *
- * @param WP_Post  $post           News post.
- * @param string[] $protected_tags hcwa_no_identifiable_news_tags().
+ * @return string[]
+ */
+function hcwa_protected_tag_slugs(): array {
+	/**
+	 * Filters the post tag slugs whose news is always a no-identifiable-children context.
+	 *
+	 * @param string[] $slugs Tag slugs, any language.
+	 */
+	return array_values( array_filter( array_map( 'strval', (array) apply_filters( 'hcwa_protected_tag_slugs', array( 'hoa-hong-nho', 'hoa-hong-nho-vi', 'little-rose', 'lrws' ) ) ) ) );
+}
+
+/**
+ * IDs of the post tags with these slugs (any language) and of their Polylang translations.
+ *
+ * @param string[] $slugs Tag slugs.
+ * @return int[]
+ */
+function hcwa_tag_group_ids( array $slugs ): array {
+	$slugs = array_values( array_unique( array_filter( array_map( 'strval', $slugs ) ) ) );
+	if ( ! $slugs ) {
+		return array();
+	}
+	$terms = get_terms(
+		array(
+			'taxonomy'   => 'post_tag',
+			'slug'       => $slugs,
+			'hide_empty' => false,
+			'fields'     => 'ids',
+			'lang'       => '', // Every language (polylang src/crud-terms.php:192-195).
+		)
+	);
+
+	$ids = array();
+	foreach ( is_array( $terms ) ? $terms : array() as $term_id ) {
+		$ids[] = (int) $term_id;
+		if ( function_exists( 'pll_get_term_translations' ) ) {
+			foreach ( (array) pll_get_term_translations( (int) $term_id ) as $translation ) {
+				$ids[] = (int) $translation;
+			}
+		}
+	}
+	return array_values( array_unique( array_filter( $ids ) ) );
+}
+
+/**
+ * Whether a news post, or any of its translations, carries one of the protected tags.
+ *
+ * @param WP_Post $post           News post.
+ * @param int[]   $protected_tags Term IDs, hcwa_no_identifiable_news_tags().
  */
 function hcwa_post_has_protected_tag( WP_Post $post, array $protected_tags ): bool {
 	if ( ! $protected_tags ) {
 		return false;
 	}
+	$protected_tags = array_map( 'intval', $protected_tags );
 	foreach ( hcwa_post_translation_ids( $post->ID ) as $id ) {
 		$terms = get_the_terms( $id, 'post_tag' ); // Cached with the post; wp_get_post_terms() always queries.
 		foreach ( is_array( $terms ) ? $terms : array() as $term ) {
-			if ( $term instanceof WP_Term && in_array( hcwa_original_term_slug( $term ), $protected_tags, true ) ) {
+			if ( $term instanceof WP_Term && in_array( (int) $term->term_id, $protected_tags, true ) ) {
 				return true;
 			}
 		}
@@ -170,7 +237,7 @@ function hcwa_post_has_protected_tag( WP_Post $post, array $protected_tags ): bo
 }
 
 /**
- * Slug of the Vietnamese version of a term (news tags are stored as VI slugs).
+ * Slug of the Vietnamese version of a term (shared fields store VI slugs).
  *
  * @param WP_Term $term Term.
  */
@@ -185,6 +252,124 @@ function hcwa_original_term_slug( WP_Term $term ): string {
 		}
 	}
 	return $term->slug;
+}
+
+/**
+ * Category slugs of story posts (photo gate, "names changed" note): the seeded stories /
+ * cau-chuyen and the live site's our-stories / chuyen-cua-chung-toi (scripts/urls-live.csv),
+ * until Phase 3 moves the old posts. A "-vi" or "-en" suffix Polylang adds is ignored.
+ *
+ * @return string[]
+ */
+function hcwa_story_category_slugs(): array {
+	/**
+	 * Filters the category slugs whose posts are stories.
+	 *
+	 * @param string[] $slugs Category slugs, any language.
+	 */
+	return array_values( array_map( 'strval', (array) apply_filters( 'hcwa_story_category_slugs', array( 'stories', 'cau-chuyen', 'our-stories', 'chuyen-cua-chung-toi' ) ) ) );
+}
+
+/**
+ * Whether a post, or any of its translations, is in a story category.
+ *
+ * @param WP_Post $post Post.
+ */
+function hcwa_post_is_story( WP_Post $post ): bool {
+	$stories = hcwa_story_category_slugs();
+	foreach ( hcwa_post_translation_ids( $post->ID ) as $id ) {
+		foreach ( (array) get_the_category( $id ) as $term ) {
+			if ( ! $term instanceof WP_Term ) {
+				continue;
+			}
+			foreach ( array_unique( array( $term->slug, hcwa_original_term_slug( $term ) ) ) as $slug ) {
+				if ( in_array( (string) preg_replace( '/-(vi|en)$/', '', $slug ), $stories, true ) ) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * Whether the live site still waits for `wp hcwa protect-little-rose --apply`, which marks
+ * the imported posts about Little Rose that carry no protected tag. Until then every news
+ * post's photos need "Approved for web" on production (hcwa_content_images_gated()), and
+ * `wp hcwa coverage` blocks.
+ */
+function hcwa_little_rose_review_pending(): bool {
+	return hcwa_is_production() && '' === (string) get_option( 'hcwa_little_rose_review', '' );
+}
+
+/**
+ * Words that mark a post as being about a protected center: hcwa_little_rose_aliases()
+ * compared with hcwa_mentions().
+ *
+ * @return string[] Normalised aliases (lower case, no accents, single spaces).
+ */
+function hcwa_little_rose_aliases(): array {
+	$aliases = array( 'hoa hong nho', 'little rose', 'litte rose', 'lrws', 'mai am hoa hong' );
+
+	$args = array(
+		'post_type'        => 'hcwa_center',
+		'post_status'      => 'any',
+		'numberposts'      => -1,
+		'fields'           => 'ids',
+		'suppress_filters' => false,
+		'meta_key'         => 'hcwa_no_identifiable_children', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		'meta_value'       => '1', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+	);
+	if ( function_exists( 'pll_get_post' ) ) {
+		$args['lang'] = '';
+	}
+	foreach ( get_posts( $args ) as $center_id ) {
+		foreach ( hcwa_post_translation_ids( (int) $center_id ) as $id ) {
+			$aliases[] = get_the_title( $id );
+		}
+	}
+	foreach ( hcwa_no_identifiable_news_tags() as $term_id ) {
+		$term = get_term( (int) $term_id, 'post_tag' );
+		if ( $term instanceof WP_Term ) {
+			$aliases[] = $term->name;
+		}
+	}
+
+	/**
+	 * Filters the words that mark a post as being about Little Rose (or another protected center).
+	 *
+	 * @param string[] $aliases Words or phrases, any case, accents allowed.
+	 */
+	$aliases = (array) apply_filters( 'hcwa_little_rose_aliases', $aliases );
+	$aliases = array_map( static fn( $alias ) => trim( hcwa_normalize_words( (string) $alias ) ), $aliases );
+	return array_values( array_unique( array_filter( $aliases, static fn( string $alias ): bool => strlen( $alias ) >= 3 ) ) );
+}
+
+/**
+ * Text as words for alias matching: no tags, no accents (đ = d), lower case, one space
+ * between words and one at each end.
+ *
+ * @param string $text Text, HTML or a slug.
+ */
+function hcwa_normalize_words( string $text ): string {
+	$text = strtolower( remove_accents( wp_strip_all_tags( $text ) ) );
+	return ' ' . trim( (string) preg_replace( '/[^a-z0-9]+/', ' ', $text ) ) . ' ';
+}
+
+/**
+ * The first alias that appears in a text as whole words, or ''.
+ *
+ * @param string   $text    Text, HTML or a slug.
+ * @param string[] $aliases Normalised aliases (hcwa_little_rose_aliases()).
+ */
+function hcwa_mentions( string $text, array $aliases ): string {
+	$words = hcwa_normalize_words( $text );
+	foreach ( $aliases as $alias ) {
+		if ( '' !== $alias && false !== strpos( $words, ' ' . $alias . ' ' ) ) {
+			return $alias;
+		}
+	}
+	return '';
 }
 
 /**
@@ -243,10 +428,122 @@ function hcwa_image( int $attachment_id, string $size, array $attr = array(), $c
 }
 
 /**
+ * An attachment's title, caption or alt text as the site may print it, or '' when nobody
+ * wrote it. WordPress fills these in by itself at upload: the title from the file name,
+ * and title, caption and alt from text a camera, phone app or photographer put in the file
+ * (IPTC, EXIF, XMP: wp-admin/includes/media.php:392-407, image.php:886-997). Nobody
+ * reviewed that text; it can hold a child's name and school. WordPress keeps what it read
+ * in the attachment metadata ('image_meta', image.php:258-261), so text still equal to it,
+ * or a title still equal to the file name, counts as unwritten. On the live site, text
+ * with a draft marker is dropped too (it never passes the publish guard). hcwa-2026's
+ * hcwa_theme_attachment_text() uses this when the plugin is active.
+ *
+ * @param int    $attachment_id Attachment ID.
+ * @param string $field         'title', 'caption' or 'alt'.
+ */
+function hcwa_attachment_text( int $attachment_id, string $field ): string {
+	$post = $attachment_id > 0 ? get_post( $attachment_id ) : null;
+	if ( ! $post instanceof WP_Post || 'attachment' !== $post->post_type ) {
+		return '';
+	}
+	$texts = array(
+		'title'   => (string) $post->post_title,
+		'caption' => (string) $post->post_excerpt,
+		'alt'     => (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+	);
+	$text = trim( wp_strip_all_tags( $texts[ $field ] ?? '' ) );
+	if ( '' === $text ) {
+		return '';
+	}
+
+	$meta      = wp_get_attachment_metadata( $attachment_id );
+	$meta      = is_array( $meta ) ? $meta : array();
+	$from_file = is_array( $meta['image_meta'] ?? null ) ? trim( (string) ( $meta['image_meta'][ $field ] ?? '' ) ) : '';
+	if ( '' !== $from_file && hcwa_attachment_text_key( $from_file ) === hcwa_attachment_text_key( $text ) ) {
+		return '';
+	}
+	if ( 'title' === $field ) {
+		$files = array( (string) get_post_meta( $attachment_id, '_wp_attached_file', true ), (string) ( $meta['original_image'] ?? '' ) );
+		foreach ( $files as $file ) {
+			$name = (string) preg_replace( '/\.[^.]*$/', '', wp_basename( $file ) );
+			if ( '' !== $name && hcwa_attachment_file_name_key( $name ) === hcwa_attachment_file_name_key( $text ) ) {
+				return '';
+			}
+		}
+	}
+	return ( hcwa_is_production() && hcwa_contains_draft( $text ) ) ? '' : $text;
+}
+
+/**
+ * Comparison key for attachment text: its slug, so case, spacing, accents and HTML entities
+ * do not matter.
+ *
+ * @param string $text Text.
+ */
+function hcwa_attachment_text_key( string $text ): string {
+	$key = sanitize_title( $text );
+	return '' !== $key ? $key : trim( $text );
+}
+
+/**
+ * Comparison key for a file name and a title made from one: the slug without the endings
+ * WordPress adds to stored files (-1, -2 … from wp_unique_filename(), -scaled, -rotated,
+ * -e{timestamp} after an edit).
+ *
+ * @param string $name File name without extension, or a title.
+ */
+function hcwa_attachment_file_name_key( string $name ): string {
+	return (string) preg_replace( '/(?:-(?:scaled|rotated|e?\d+))+$/', '', hcwa_attachment_text_key( $name ) );
+}
+
+/**
+ * wp_get_attachment_image_attributes on the front end: the default alt (the stored alt,
+ * media.php:1186) is printed only when staff wrote it (hcwa_attachment_text()), for
+ * hcwa_image(), the theme, the blocks and core's own image functions alike. An alt the
+ * caller passed is kept.
+ *
+ * @param array   $attr       Attributes.
+ * @param WP_Post $attachment Attachment.
+ * @return array
+ */
+function hcwa_attachment_alt_attr( $attr, $attachment = null ) {
+	if ( ! is_array( $attr ) || ! isset( $attr['alt'] ) || '' === $attr['alt'] || ! $attachment instanceof WP_Post || ! hcwa_is_front_end_view() ) {
+		return $attr;
+	}
+	$stored = trim( strip_tags( (string) get_post_meta( $attachment->ID, '_wp_attachment_image_alt', true ) ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- the same steps as core's default alt.
+	if ( (string) $attr['alt'] === $stored ) {
+		$attr['alt'] = hcwa_attachment_text( (int) $attachment->ID, 'alt' );
+	}
+	return $attr;
+}
+add_filter( 'wp_get_attachment_image_attributes', 'hcwa_attachment_alt_attr', 10, 2 );
+
+/**
+ * wp_get_attachment_caption (post.php:7295) on the front end: '' unless staff wrote the
+ * caption (hcwa_attachment_text()). Covers get_the_post_thumbnail_caption() and plugins
+ * that read captions through it (SEO image schema). The classic [gallery] reads
+ * post_excerpt itself (media.php:3063-3067), and block captions are saved in the content.
+ *
+ * @param string $caption Caption.
+ * @param int    $post_id Attachment ID.
+ * @return string
+ */
+function hcwa_attachment_caption( $caption, $post_id = 0 ) {
+	if ( ! is_string( $caption ) || '' === trim( $caption ) || ! hcwa_is_front_end_view() ) {
+		return $caption;
+	}
+	return '' === hcwa_attachment_text( (int) $post_id, 'caption' ) ? '' : $caption;
+}
+add_filter( 'wp_get_attachment_caption', 'hcwa_attachment_caption', 10, 2 );
+
+/**
  * Whether photos placed in a post's own content must pass hcwa_image_allowed() (contract
  * rule 2): pages (the HCWA patterns' image slots), centers, programs and reports, story
- * posts, and any no-identifiable-children context (news tagged for Little Rose). Other
- * news posts keep their inline photos as published on the old site.
+ * posts (hcwa_post_is_story(), any language version), and any no-identifiable-children
+ * context (Little Rose news). Other news posts keep their inline photos as published on the
+ * old site, except on the live site before `wp hcwa protect-little-rose --apply` has run
+ * (hcwa_little_rose_review_pending()): until then an imported Little Rose post may carry no
+ * protected tag, so every news photo needs "Approved for web".
  *
  * @param WP_Post|int|null $post Post whose content is rendered; null = current post.
  */
@@ -258,14 +555,7 @@ function hcwa_content_images_gated( $post = null ): bool {
 		if ( in_array( $post->post_type, array( 'page', 'hcwa_center', 'hcwa_program', 'hcwa_report' ), true ) ) {
 			$gated = true;
 		} elseif ( 'post' === $post->post_type ) {
-			$gated = hcwa_image_context_no_identifiable( $post );
-			foreach ( $gated ? array() : (array) get_the_category( $post->ID ) as $term ) {
-				$slug = $term instanceof WP_Term ? (string) preg_replace( '/-(vi|en)$/', '', hcwa_original_term_slug( $term ) ) : '';
-				if ( in_array( $slug, array( 'cau-chuyen', 'stories' ), true ) ) {
-					$gated = true;
-					break;
-				}
-			}
+			$gated = hcwa_little_rose_review_pending() || hcwa_image_context_no_identifiable( $post ) || hcwa_post_is_story( $post );
 		}
 	}
 
@@ -518,6 +808,44 @@ function hcwa_gate_post_thumbnail_html( $html, $post_id = 0, $thumbnail_id = 0 )
 add_filter( 'post_thumbnail_html', 'hcwa_gate_post_thumbnail_html', 10, 3 );
 
 /**
+ * Backstop for code that reads the featured image ID itself and prints its URL (share
+ * buttons, feeds, other plugins; core get_post_thumbnail_id(), post-thumbnail-template.php:70):
+ * on a front-end view a refused featured image counts as none. The editor (REST), admin
+ * screens, AJAX, cron and WP-CLI still see it, so staff can replace it. Yoast SEO is gated
+ * in seo.php, because it stores the image at save time.
+ *
+ * @param int|false        $thumbnail_id Attachment ID.
+ * @param int|WP_Post|null $post         Post.
+ * @return int
+ */
+function hcwa_gate_post_thumbnail_id( $thumbnail_id, $post = null ) {
+	$thumbnail_id = (int) $thumbnail_id;
+	if ( $thumbnail_id <= 0 || ! hcwa_is_front_end_view() ) {
+		return $thumbnail_id;
+	}
+	$post = get_post( $post );
+	if ( ! $post instanceof WP_Post ) {
+		return $thumbnail_id;
+	}
+
+	static $seen = array();
+	$key = $post->ID . ':' . $thumbnail_id;
+	if ( ! isset( $seen[ $key ] ) ) {
+		$seen[ $key ] = 'hcwa_partner' === $post->post_type ? hcwa_partner_logo_allowed( $post->ID ) : hcwa_image_allowed( $thumbnail_id, $post );
+	}
+	return $seen[ $key ] ? $thumbnail_id : 0;
+}
+add_filter( 'post_thumbnail_id', 'hcwa_gate_post_thumbnail_id', 10, 2 );
+
+/**
+ * Whether this request renders the public site (not admin, AJAX, REST, cron or WP-CLI).
+ */
+function hcwa_is_front_end_view(): bool {
+	return ! is_admin() && ! wp_doing_ajax() && ! wp_doing_cron()
+		&& ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) && ! ( defined( 'WP_CLI' ) && WP_CLI );
+}
+
+/**
  * Marker left where hcwa_gate_content_img_tag() removed an image, so the next pass can also
  * remove the link around it (to the full file) and a classic caption (often a name).
  */
@@ -698,16 +1026,23 @@ add_action( 'template_redirect', 'hcwa_disable_embed_view', 0 );
 add_filter( 'oembed_request_post_id', '__return_zero' );
 
 /**
- * JPEG uploads are served as WebP (05-DESIGN "Formats", 09-QA images). WordPress converts
- * the main file and every size, keeps the uploaded JPEG as the attachment's original_image
- * (wp-admin/includes/image.php:297-345, _wp_image_meta_replace_original()), and applies
- * the mapping only when the server's image editor can write WebP, otherwise keeping JPEG
- * (wp-includes/class-wp-image-editor.php:370-377). WordPress prints a plain <img>, so no
- * JPEG fallback is served: 05-DESIGN's "JPEG fallback" is covered only by every current
- * browser reading WebP (CONTRACT Status records this). PNG (logos, illustrations, the
- * VietQR code) and the HEIC-to-JPEG default are left alone. AVIF is not used for the same
- * reason (no <picture>). Media already in the library stays JPEG until `wp media
- * regenerate` (Phase 3 migration). Removing this filter restores JPEG for new uploads.
+ * JPEG uploads are served as WebP (05-DESIGN "Formats", 09-QA images). On the server path
+ * WordPress converts the main file and the sizes it makes and keeps the uploaded JPEG as the
+ * attachment's original_image (wp-admin/includes/image.php:297-345,
+ * _wp_image_meta_replace_original()); in the block editor's client-side path the browser
+ * makes the sizes in the format the REST API reports as image_output_format, which it
+ * works out by calling this filter with the identity mapping
+ * array( 'image/jpeg' => 'image/jpeg' ) (class-wp-rest-attachments-controller.php:1586-1595),
+ * so an identity JPEG mapping counts as unset. A mapping to another format (AVIF) set
+ * earlier is kept. WordPress applies the mapping only when the server's image editor can
+ * write WebP, otherwise keeping JPEG (wp-includes/class-wp-image-editor.php:370-377), and
+ * prints a plain <img>, so no JPEG fallback is served: 05-DESIGN's "JPEG fallback" is
+ * covered only by every current browser reading WebP (CONTRACT Status records this). PNG
+ * (logos, illustrations, the VietQR code) and the HEIC-to-JPEG default are left alone.
+ * AVIF is not used for the same reason (no <picture>). Media already in the library stays
+ * JPEG until its sizes are regenerated; its location data is removed by `wp hcwa
+ * media-scrub` (media-privacy.php), not by regenerating. Removing this filter restores
+ * JPEG for new uploads.
  *
  * @param array<string, string> $formats   Source mime type => output mime type.
  * @param string                $filename  Path to the image (unused).
@@ -716,7 +1051,7 @@ add_filter( 'oembed_request_post_id', '__return_zero' );
  */
 function hcwa_image_output_format( $formats, $filename = '', $mime_type = '' ) {
 	$formats = is_array( $formats ) ? $formats : array();
-	if ( ! isset( $formats['image/jpeg'] ) ) {
+	if ( 'image/jpeg' === ( $formats['image/jpeg'] ?? 'image/jpeg' ) ) {
 		$formats['image/jpeg'] = 'image/webp';
 	}
 	return $formats;
@@ -823,10 +1158,12 @@ function hcwa_attachment_page_refused( int $attachment_id ): bool {
  * The attachment page of a refused photo is a plain 404, whatever the theme: the default
  * attachment template prints the image, its title and caption (which often carry a
  * child's name) with wp_get_attachment_image(), past the gate. Same steps as core's
- * WP::handle_404(). Priority 5: before redirect_canonical (default-filters.php:687,
- * priority 10), which would send the page to the raw file when attachment pages are off
- * (canonical.php:551-552). hcwa-2026 does the same (inc/setup.php); whichever runs second
- * finds is_attachment() false after set_404() and does nothing.
+ * WP::handle_404(). It runs on 'wp' (class-wp.php:839), before every template_redirect
+ * callback: redirect_canonical (default-filters.php:687, priority 10) and Yoast SEO's
+ * attachment redirect (priority 1) would otherwise answer 301 to the raw file when
+ * attachment pages are off (canonical.php:551-552), and ?attachment_id=N is a public query
+ * var (class-wp.php:18). set_404() clears is_attachment (class-wp-query.php:1846 and :525),
+ * so those redirects, and hcwa-2026's own copy of this check (inc/setup.php), do nothing.
  */
 function hcwa_refuse_attachment_page(): void {
 	if ( ! is_attachment() || ! hcwa_attachment_page_refused( (int) get_queried_object_id() ) ) {
@@ -837,7 +1174,7 @@ function hcwa_refuse_attachment_page(): void {
 	status_header( 404 );
 	nocache_headers();
 }
-add_action( 'template_redirect', 'hcwa_refuse_attachment_page', 5 );
+add_action( 'wp', 'hcwa_refuse_attachment_page', 5, 0 );
 
 /**
  * Partner logos (contract gating rule 5): on the live site only with the partner's
@@ -970,7 +1307,7 @@ function hcwa_attachment_fields_to_edit( $form_fields, $post ) {
 	$fields      = array(
 		'hcwa_approved_for_web'   => array(
 			'label' => __( 'Approved for web', 'hcwa' ),
-			'help'  => __( 'HCWA has approved this image for the website. Pages, centers, programs, reports, stories and Little Rose news show only approved images, icons and illustrations included.', 'hcwa' ),
+			'help'  => __( 'HCWA has approved this image for the website. Pages, centers, programs, reports, stories and Little Rose news show only approved images, icons and illustrations included. Check the title, caption and alt text before approving: they can appear on the site. Write the alt text for each language and never name a child.', 'hcwa' ),
 		),
 		'hcwa_identifiable_child' => array(
 			'label' => __( 'Identifiable child', 'hcwa' ),

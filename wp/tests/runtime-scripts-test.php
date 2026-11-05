@@ -283,13 +283,27 @@ urls = [
     {"id": "center:green-bamboo", "kind": "center", "lang": "en", "path": "/en/our-work/centers/green-bamboo/", "translation": "/hoat-dong/co-so/tre-xanh/"},
     {"id": "page:about", "kind": "page", "lang": "vi", "path": "/gioi-thieu/", "translation": "/en/about/"},
 ]
-probes = {p["id"]: p for p in smoke.gate_probes(urls)}
+fixtures = {"refused_photo": 412, "refused_photo_file": "hcwa-20261105-ab12cd34", "refused_photo_page": "/hoat-dong/co-so/hoa-hong-nho/"}
+probes = {p["id"]: p for p in smoke.gate_probes(urls, fixtures)}
 base = "http://127.0.0.1:8881"
 redirect = probes["gate:other-language-slug"]
+refused = probes["gate:refused-attachment-page"]
+on_page = probes["gate:refused-photo-on-page"]
 print(json.dumps({
     "probes": probes,
     "none": smoke.gate_probes([]),
     "fails": {
+        "refused 404": smoke.check_probe(refused, base, 404, ""),
+        "refused redirect": smoke.check_probe(refused, base, 301, base + "/wp-content/uploads/2026/11/hcwa-20261105-ab12cd34.jpg"),
+        "refused 404 with location": smoke.check_probe(refused, base, 404, "/x/"),
+        "photo not on page": smoke.check_probe(on_page, base, 200, "", "<html><img src=\"/logo.svg\"></html>"),
+        "photo on page": smoke.check_probe(on_page, base, 200, "", '<meta property="og:image" content="/uploads/hcwa-20261105-ab12cd34-1200x630.webp">'),
+        "head absent": smoke.check_probe(probes["gate:rest-seo-head"], base, 200, "", '[{"id":5}]'),
+        "head present": smoke.check_probe(probes["gate:rest-seo-head"], base, 200, "", '[{"id":5,"yoast_head_json":{}}]'),
+        "get_head 404": smoke.check_probe(probes["gate:seo-get-head"], base, 404, ""),
+        "get_head open": smoke.check_probe(probes["gate:seo-get-head"], base, 200, ""),
+        "sitemap any status": smoke.check_probe(probes["gate:image-sitemap"], base, 404, "", "<html>not found</html>"),
+        "sitemap images": smoke.check_probe(probes["gate:image-sitemap"], base, 200, "", "<url><image:image><image:loc>x</image:loc></image:image></url>"),
         "embed ok": smoke.check_probe(probes["gate:embed"], base, 404, ""),
         "embed open": smoke.check_probe(probes["gate:embed"], base, 200, ""),
         "media open": smoke.check_probe(probes["gate:rest-media-case"], base, 200, ""),
@@ -311,8 +325,22 @@ hcwa_assert_same( 401, $hcwa_probes['gate:rest-media']['status'] ?? null, 'probe
 hcwa_assert_same( '/wp-json/wp/v2/MEDIA', $hcwa_probes['gate:rest-media-case']['path'] ?? null, 'probe: media REST in upper case too' );
 hcwa_assert_same( '/en/our-work/centers/tre-xanh/', $hcwa_probes['gate:other-language-slug']['path'] ?? null, 'probe: English base with the Vietnamese slug' );
 hcwa_assert_same( '/hoat-dong/co-so/tre-xanh/', $hcwa_probes['gate:other-language-slug']['location'] ?? null, 'probe: expected at the Vietnamese permalink' );
-hcwa_assert_same( 2, count( (array) ( $hcwa_result['none'] ?? array() ) ), 'probe: without centers only the REST checks' );
+hcwa_assert_same( 5, count( (array) ( $hcwa_result['none'] ?? array() ) ), 'probe: without centers or fixtures only the REST and sitemap checks' );
+hcwa_assert_same( '/?attachment_id=412', $hcwa_probes['gate:refused-attachment-page']['path'] ?? null, 'probe: the refused fixture\'s attachment page' );
+hcwa_assert_same( array( 'hcwa-20261105-ab12cd34' ), $hcwa_probes['gate:refused-photo-on-page']['body_absent'] ?? null, 'probe: the Little Rose page never names the refused file' );
+hcwa_assert_same( array( 401, 404 ), $hcwa_probes['gate:seo-get-head']['status'] ?? null, 'probe: the SEO head route never answers 200' );
 $hcwa_expect = array(
+	'refused 404'               => array(),
+	'refused redirect'          => array( 'gate:refused-attachment-page: HTTP 301, expected 404', 'gate:refused-attachment-page: redirects to http://127.0.0.1:8881/wp-content/uploads/2026/11/hcwa-20261105-ab12cd34.jpg, expected no redirect' ),
+	'refused 404 with location' => array( 'gate:refused-attachment-page: redirects to /x/, expected no redirect' ),
+	'photo not on page'         => array(),
+	'photo on page'             => array( "gate:refused-photo-on-page: the response contains 'hcwa-20261105-ab12cd34'" ),
+	'head absent'               => array(),
+	'head present'              => array( "gate:rest-seo-head: the response contains 'yoast_head'" ),
+	'get_head 404'              => array(),
+	'get_head open'             => array( 'gate:seo-get-head: HTTP 200, expected 401 or 404' ),
+	'sitemap any status'        => array(),
+	'sitemap images'            => array( "gate:image-sitemap: the response contains '<image:loc'" ),
 	'embed ok'          => array(),
 	'embed open'        => array( 'gate:embed: HTTP 200, expected 404' ),
 	'media open'        => array( 'gate:rest-media-case: HTTP 200, expected 401' ),

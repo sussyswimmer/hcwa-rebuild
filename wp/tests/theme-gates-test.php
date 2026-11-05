@@ -3,7 +3,8 @@
  * hcwa-2026 theme: the gates added after the Phase 2 review. Draft text from settings and
  * captions, attachment pages, the language switch and notice, category chips in one
  * language, the VI name on EN pages, no library photos without hcwa-core, lazy-loading
- * after the cover, the top bars before first paint, and the CSS hard rules.
+ * after the cover, the top bars before first paint, the CSS hard rules, attachment text
+ * nobody wrote (file names, text read from the file) and the description Yoast lacks.
  * Loads only the theme's helper files (no templates, no WordPress).
  *
  * @package hcwa-2026
@@ -14,6 +15,7 @@ require_once $hcwa_theme_dir . '/inc/strings.php';
 require_once $hcwa_theme_dir . '/inc/core-bridge.php';
 require_once $hcwa_theme_dir . '/inc/template-tags.php';
 require_once $hcwa_theme_dir . '/inc/assets.php'; // Theme file helpers: integration-stubs.php.
+require_once $hcwa_theme_dir . '/inc/setup.php';
 
 $hcwa_read = static fn( string $file ): string => (string) file_get_contents( $hcwa_theme_dir . '/' . $file );
 
@@ -47,8 +49,9 @@ $GLOBALS['hcwa_test']['env'] = 'staging';
 $hcwa_footer = $hcwa_read( 'footer.php' );
 hcwa_assert_contains( "hcwa_theme_public_text( wp_strip_all_tags( get_bloginfo( 'description' ) ) )", $hcwa_footer, 'footer tagline goes through the draft check' );
 hcwa_assert_contains( "hcwa_theme_draft_attr( \$hcwa_registration )", $hcwa_footer, 'footer marks a draft registration line on staging' );
-hcwa_assert_contains( 'hcwa_theme_public_text( (string) wp_get_attachment_caption(', $hcwa_read( 'single.php' ), 'post cover caption goes through the draft check' );
-hcwa_assert_contains( 'hcwa_theme_public_text( wp_strip_all_tags( get_the_excerpt() ) )', $hcwa_read( 'attachment.php' ), 'attachment caption goes through the draft check' );
+// Captions go through hcwa_theme_attachment_text(), which ends in hcwa_theme_public_text() (tested below).
+hcwa_assert_contains( "hcwa_theme_attachment_text( \$hcwa_thumb_id, 'caption' )", $hcwa_read( 'single.php' ), 'post cover caption: staff-written and draft-checked' );
+hcwa_assert_contains( "hcwa_theme_attachment_text( (int) get_the_ID(), 'caption' )", $hcwa_read( 'attachment.php' ), 'attachment caption: staff-written and draft-checked' );
 hcwa_assert_contains( 'hcwa_theme_public_text( trim( wp_strip_all_tags( (string) $description ) ) )', $hcwa_read( 'inc/assets.php' ), 'meta description goes through the draft check' );
 
 // ---------- Attachment pages ----------
@@ -73,7 +76,8 @@ hcwa_assert_same( array( 7, 8, 9, 10 ), hcwa_theme_center_media_ids( 510 ), 'cen
 hcwa_assert_same( array(), hcwa_theme_center_media_ids( 511 ), 'center without media' );
 
 $hcwa_setup = $hcwa_read( 'inc/setup.php' );
-hcwa_assert_contains( "add_action( 'template_redirect', 'hcwa_theme_refuse_attachment_page', 5 )", $hcwa_setup, 'refused attachment pages are handled before redirect_canonical' );
+hcwa_assert_contains( "add_action( 'wp', 'hcwa_theme_refuse_attachment_page', 5, 0 )", $hcwa_setup, 'refused attachment pages become a 404 on "wp", before every template_redirect redirect (SEO plugin, redirect_canonical)' );
+hcwa_assert_false( str_contains( $hcwa_setup, "add_action( 'template_redirect', 'hcwa_theme_refuse_attachment_page'" ), 'not on template_redirect any more (the plugin moved too)' );
 hcwa_assert_contains( '$wp_query->set_404();', $hcwa_setup, 'refused attachment page becomes a 404' );
 hcwa_assert_contains( "\$robots['noindex'] = true;", $hcwa_setup, 'attachment pages are noindex on production' );
 hcwa_assert_contains( 'hcwa_theme_attachment_no_identifiable( get_the_ID() )', $hcwa_read( 'attachment.php' ), 'attachment page uses the full context, not the parent only' );
@@ -167,3 +171,132 @@ hcwa_assert_true( (bool) preg_match( '/\.lang-switch a \{[^}]*min-width: 44px;[^
 hcwa_assert_true( (bool) preg_match( '/\.nav__toggle \{ width: 44px; height: 44px;/', $hcwa_css ), 'submenu toggle is 44 x 44' );
 hcwa_assert_false( (bool) preg_match( '/\.nav__toggle \{[^}]*margin-left: -/', $hcwa_css ), 'submenu toggle does not overlap its link' );
 hcwa_assert_true( (bool) preg_match( '/\.report-row__title a \{[^}]*min-height: 44px;/', $hcwa_css ), 'report links are 44 px tall' );
+
+// ---------- Attachment text nobody wrote: the file name, IPTC / EXIF / XMP text ----------
+$GLOBALS['hcwa_test']['env'] = 'staging';
+// Uploaded as "nguyen-thi-lan-lop-5.jpg" (a second one with that name, so -1), big (-scaled),
+// converted to WebP; the photo app wrote the caption and alt into the file.
+hcwa_test_post(
+	array( 'ID' => 560, 'post_type' => 'attachment', 'post_mime_type' => 'image/webp', 'post_title' => 'nguyen-thi-lan-lop-5', 'post_excerpt' => 'Nguyen Thi Lan, lop 5, truong X' ),
+	array(
+		'_wp_attached_file'        => '2026/11/nguyen-thi-lan-lop-5-1-scaled.webp',
+		'_wp_attachment_image_alt' => 'Lan at school',
+		'_wp_attachment_metadata'  => array(
+			'original_image' => 'nguyen-thi-lan-lop-5-1.jpg',
+			'image_meta'     => array( 'title' => '', 'caption' => 'Nguyen Thi Lan, lop 5, truong X', 'alt' => 'Lan at school' ),
+		),
+	)
+);
+hcwa_assert_same( '', hcwa_theme_attachment_text( 560, 'title' ), 'title still the file name: not printed' );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 560, 'caption' ), 'caption still the text read from the file: not printed' );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 560, 'alt' ), 'alt still the XMP alt text from the file: not printed' );
+hcwa_assert_same( 'Ảnh', hcwa_theme_attachment_heading( 560 ), 'photo page without a written title is headed "Ảnh"' );
+hcwa_assert_same( 'Photo', hcwa_theme_t_in( 'photo', 'en' ), 'and "Photo" in English' );
+
+// Title from the IPTC headline / EXIF description, in another case and spacing; REST upload
+// keeps the raw client file name as the title.
+hcwa_test_post(
+	array( 'ID' => 561, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg', 'post_title' => 'Olympus  digital camera' ),
+	array( '_wp_attached_file' => '2019/04/P1010203.JPG', '_wp_attachment_metadata' => array( 'image_meta' => array( 'title' => 'OLYMPUS DIGITAL CAMERA', 'caption' => 'OLYMPUS DIGITAL CAMERA' ) ) )
+);
+hcwa_assert_same( '', hcwa_theme_attachment_text( 561, 'title' ), 'title read from the file: not printed, whatever the case' );
+hcwa_test_post( array( 'ID' => 562, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg', 'post_title' => 'Nguyen Thi Lan lop 5' ), array( '_wp_attached_file' => '2026/11/Nguyen-Thi-Lan-lop-5.jpg' ) );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 562, 'title' ), 'raw client file name as the title: not printed' );
+
+// Staff wrote the text: printed, draft-checked like any caption.
+hcwa_test_post(
+	array( 'ID' => 563, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg', 'post_title' => 'Reading hour at the library', 'post_excerpt' => 'Volunteers read with a group of children.' ),
+	array(
+		'_wp_attached_file'        => '2026/11/img-2041.jpg',
+		'_wp_attachment_image_alt' => 'Two volunteers reading aloud to a group of children',
+		'_wp_attachment_metadata'  => array( 'image_meta' => array( 'title' => '', 'caption' => 'OLYMPUS DIGITAL CAMERA', 'alt' => '' ) ),
+	)
+);
+hcwa_assert_same( 'Reading hour at the library', hcwa_theme_attachment_text( 563, 'title' ), 'title staff wrote is printed' );
+hcwa_assert_same( 'Volunteers read with a group of children.', hcwa_theme_attachment_text( 563, 'caption' ), 'caption staff rewrote is printed' );
+hcwa_assert_same( 'Two volunteers reading aloud to a group of children', hcwa_theme_attachment_text( 563, 'alt' ), 'alt staff wrote is printed' );
+hcwa_assert_same( 'Reading hour at the library', hcwa_theme_attachment_heading( 563 ), 'written title heads the attachment page' );
+hcwa_test_post( array( 'ID' => 564, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg', 'post_excerpt' => '[DRAFT: chú thích ảnh]' ) );
+hcwa_assert_same( '[DRAFT: chú thích ảnh]', hcwa_theme_attachment_text( 564, 'caption' ), 'staging: draft caption shown for review' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_theme_attachment_text( 564, 'caption' ), 'production: draft caption never printed' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+
+hcwa_test_post( array( 'ID' => 565, 'post_type' => 'attachment', 'post_mime_type' => 'application/pdf', 'post_title' => 'bao-cao-2025' ), array( '_wp_attached_file' => '2026/01/bao-cao-2025.pdf' ) );
+hcwa_assert_same( 'Tệp đính kèm', hcwa_theme_attachment_heading( 565 ), 'other file without a written title is headed "Tệp đính kèm"' );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 520, 'title' ), 'not an attachment: nothing' );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 0, 'caption' ), 'no attachment: nothing' );
+hcwa_assert_same( '', hcwa_theme_attachment_text( 563, 'description' ), 'unknown field: nothing' );
+hcwa_assert_same( hcwa_theme_text_key( 'OLYMPUS DIGITAL CAMERA' ), hcwa_theme_text_key( ' olympus   digital camera ' ), 'text key ignores case and spacing' );
+hcwa_assert_same( 'lop-hoc', hcwa_theme_file_name_key( 'lop-hoc-2-scaled' ), 'file name key drops the endings WordPress adds' );
+hcwa_assert_same( 'lop-hoc', hcwa_theme_file_name_key( 'lop-hoc-e1730000000000' ), 'file name key drops the edit stamp' );
+
+$hcwa_attachment_tpl = $hcwa_read( 'attachment.php' );
+hcwa_assert_contains( 'hcwa_theme_attachment_heading( (int) get_the_ID() )', $hcwa_attachment_tpl, 'attachment page heading never prints the file name' );
+hcwa_assert_false( str_contains( $hcwa_attachment_tpl, 'get_the_title() )' ), 'attachment page no longer prints its raw title' );
+hcwa_assert_contains( "hcwa_theme_attachment_text( \$hcwa_att, 'alt' )", $hcwa_read( 'single-hcwa_center.php' ), 'center gallery labels use alt text staff wrote' );
+
+// Browser title of an attachment page.
+hcwa_assert_same( array( 'title' => 'Tin tức' ), hcwa_theme_attachment_document_title( array( 'title' => 'Tin tức' ) ), 'other pages keep their browser title' );
+$GLOBALS['hcwa_test']['is']['is_attachment'] = true;
+$hcwa_parts = hcwa_theme_attachment_document_title( array( 'title' => 'nguyen-thi-lan-lop-5', 'site' => 'HCWA' ) );
+hcwa_assert_same( hcwa_theme_attachment_heading( (int) get_queried_object_id() ), $hcwa_parts['title'], 'attachment page browser title is the page heading' );
+hcwa_assert_same( 'HCWA', $hcwa_parts['site'], 'site name kept' );
+unset( $GLOBALS['hcwa_test']['is']['is_attachment'] );
+hcwa_assert_true( has_filter( 'document_title_parts' ), 'browser title filter registered' );
+
+// Search never lists attachments.
+$hcwa_searchable = array( 'post', 'page', 'attachment', 'hcwa_center', 'hcwa_program', 'hcwa_report' );
+$hcwa_content    = array( 'post', 'page', 'hcwa_center', 'hcwa_program', 'hcwa_report' );
+hcwa_assert_same( $hcwa_content, hcwa_theme_search_post_types( '', $hcwa_searchable ), 'search: every searchable type except attachments' );
+hcwa_assert_same( $hcwa_content, hcwa_theme_search_post_types( 'any', $hcwa_searchable ), "search: 'any' without attachments" );
+hcwa_assert_same( $hcwa_content, hcwa_theme_search_post_types( 'attachment', $hcwa_searchable ), 'search: ?post_type=attachment lists content instead' );
+hcwa_assert_same( array( 'hcwa_report' ), hcwa_theme_search_post_types( array( 'hcwa_report', 'attachment' ), $hcwa_searchable ), 'search: types asked for kept, attachments dropped' );
+hcwa_assert_same( array( 'post' ), hcwa_theme_search_post_types( '', array( 'attachment' ) ), 'search: never an empty list (WordPress would read it as any)' );
+hcwa_assert_contains( "hcwa_theme_search_post_types( \$query->get( 'post_type' )", $hcwa_read( 'inc/setup.php' ), 'the main search query uses it' );
+
+// ---------- Description Yoast lacks: the page's own, draft-safe ----------
+hcwa_test_post( array( 'ID' => 570, 'post_type' => 'hcwa_center', 'post_excerpt' => 'Excerpt' ), array( 'hcwa_summary' => 'Lớp học và bữa ăn cho trẻ em <strong>Tre Xanh</strong>.' ) );
+hcwa_test_post( array( 'ID' => 571, 'post_type' => 'hcwa_program', 'post_excerpt' => 'Hand-written excerpt.' ) );
+hcwa_test_post( array( 'ID' => 572, 'post_type' => 'hcwa_report' ), array( 'hcwa_summary' => '[DRAFT: tóm tắt báo cáo]' ) );
+hcwa_test_post( array( 'ID' => 573, 'post_type' => 'hcwa_program' ), array( 'hcwa_summary' => str_repeat( 'Dự án hỗ trợ học tập. ', 20 ) ) );
+
+hcwa_assert_same( '', hcwa_theme_page_description(), 'not a single page or term: no description' );
+hcwa_assert_same( 'Yoast text', hcwa_theme_seo_description_fallback( 'Yoast text' ), "Yoast's own description wins" );
+hcwa_assert_same( '', hcwa_theme_seo_description_fallback( '' ), 'nothing of our own: Yoast keeps its empty value' );
+$GLOBALS['hcwa_test']['is']['is_singular'] = true;
+$GLOBALS['hcwa_test']['queried']           = get_post( 570 );
+hcwa_assert_same( 'Lớp học và bữa ăn cho trẻ em Tre Xanh.', hcwa_theme_seo_description_fallback( '' ), 'center without a Yoast description: its summary' );
+hcwa_assert_same( 'Lớp học và bữa ăn cho trẻ em Tre Xanh.', hcwa_theme_seo_description_fallback( '  ' ), 'blank Yoast description counts as empty' );
+hcwa_assert_same( 'Written in Yoast', hcwa_theme_seo_description_fallback( 'Written in Yoast' ), 'center with a Yoast description keeps it' );
+$GLOBALS['hcwa_test']['queried'] = get_post( 571 );
+hcwa_assert_same( 'Hand-written excerpt.', hcwa_theme_page_description(), 'no summary: the hand-written excerpt' );
+$GLOBALS['hcwa_test']['queried'] = get_post( 572 );
+hcwa_assert_same( '[DRAFT: tóm tắt báo cáo]', hcwa_theme_page_description(), 'staging: draft summary shown for review' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_theme_seo_description_fallback( '' ), 'production: draft summary never fills in' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+$GLOBALS['hcwa_test']['queried'] = get_post( 573 );
+hcwa_assert_true( mb_strlen( hcwa_theme_page_description() ) <= 161 && str_ends_with( hcwa_theme_page_description(), '…' ), 'long summary cut to 160 characters' );
+$GLOBALS['hcwa_test']['queried'] = get_post( 560 );
+hcwa_assert_same( '', hcwa_theme_page_description(), 'photo page: a caption read from the file is no description' );
+$GLOBALS['hcwa_test']['queried'] = get_post( 563 );
+hcwa_assert_same( 'Volunteers read with a group of children.', hcwa_theme_page_description(), 'photo page: the caption staff wrote' );
+unset( $GLOBALS['hcwa_test']['is']['is_singular'], $GLOBALS['hcwa_test']['queried'] );
+
+foreach ( array( 'wpseo_metadesc', 'wpseo_opengraph_desc', 'wpseo_twitter_description' ) as $hcwa_hook ) {
+	$hcwa_hooked = array_filter( $GLOBALS['hcwa_test']['hooks'][ $hcwa_hook ] ?? array(), static fn( array $entry ): bool => 'hcwa_theme_seo_description_fallback' === $entry[0] );
+	hcwa_assert_true( (bool) $hcwa_hooked, "$hcwa_hook falls back to the page's own description" );
+	hcwa_assert_true( (int) ( array_values( $hcwa_hooked )[0][1] ?? 0 ) > 99, "$hcwa_hook: after hcwa-core drops draft SEO text (priority 99)" );
+}
+hcwa_assert_false( hcwa_theme_seo_plugin_active(), 'no SEO plugin in the tests: the theme prints the meta description itself' );
+
+// ---------- Little Rose: no location, no invitation to visit ----------
+$GLOBALS['hcwa_test']['post_meta'][9101] = array( 'hcwa_no_identifiable_children' => '1', 'hcwa_location' => 'Phường X, TP. Hồ Chí Minh' );
+$GLOBALS['hcwa_test']['post_meta'][9102] = array( 'hcwa_location' => 'Phường Y, TP. Hồ Chí Minh' );
+hcwa_assert_true( hcwa_theme_center_is_protected( 9101 ), 'a center flagged no-identifiable is protected' );
+hcwa_assert_false( hcwa_theme_center_is_protected( 9102 ), 'an ordinary center is not protected' );
+$hcwa_center_tpl = $hcwa_read( 'single-hcwa_center.php' );
+hcwa_assert_contains( "\$hcwa_protected ? '' : (string) get_post_meta( \$hcwa_id, 'hcwa_location'", $hcwa_center_tpl, 'protected centers print no location' );
+hcwa_assert_contains( "\$hcwa_protected\n\t\t\t\t? hcwa_theme_t( 'supportTitle'", $hcwa_center_tpl, 'protected centers do not invite visits' );
+

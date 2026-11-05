@@ -24,6 +24,13 @@ for gates no page view shows:
   - /wp-json/wp/v2/media answers 401 to a visitor, in any letter case
   - a center URL under the English base with the Vietnamese slug answers one 301 to the
     Vietnamese permalink on the host being tested
+  - the SEO plugin's head stays out of public REST: /wp-json/wp/v2/posts carries no
+    yoast_head or yoast_head_json, and /wp-json/yoast/v1/get_head never answers 200
+    (401 with Yoast, 404 without); post-sitemap.xml lists no <image:loc>
+  - the seed's Little Rose photo fixture (approved, but an identifiable child in a Little
+    Rose context): its attachment page answers 404 with no Location header, and the
+    Little Rose center page never names its file, so neither the page nor an SEO
+    plugin's og:image, twitter:image or JSON-LD prints it
 Full-page screenshots go to qa/wp/<date>/ with a report.json. Exit code 1 when any
 check fails.
 
@@ -160,6 +167,14 @@ def load_targets(manifest: Path | None) -> tuple[list[dict], list[dict]]:
             urls.append({"id": key, "kind": page.group(1), "lang": lang, "path": path,
                          "translation": other, "figures": figures})
     return urls, DEFAULT_NOT_FOUND
+
+
+def load_fixtures(manifest: Path | None) -> dict:
+    """The seed's test objects (wp-seed.php hcwa_seed_little_rose_photo()), or {}."""
+    if not manifest:
+        return {}
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    return data.get("fixtures") or {}
 
 
 def make_router(origin: str):
@@ -299,15 +314,34 @@ def check(target: dict, base: str, status: int | None, redirects: list[str], fin
     return fails
 
 
-def gate_probes(urls: list[dict]) -> list[dict]:
+def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
     """HTTP-only checks built from the seed's URL list: embeds off, the media REST route
     closed to visitors (core routes REST case-insensitively, so an upper-case variant
-    too), and a center URL that reuses the Vietnamese slug under the English base sent to
-    the Vietnamese permalink in one 301 (hcwa-core's pll_check_canonical_url filter)."""
+    too), a center URL that reuses the Vietnamese slug under the English base sent to
+    the Vietnamese permalink in one 301 (hcwa-core's pll_check_canonical_url filter), the
+    SEO plugin's head and image sitemap kept from visitors (hcwa-core seo.php; they pass
+    without the plugin too), and the seed's refused Little Rose photo.
+
+    A probe's "status" is one code, a list of allowed codes, or None for any; "no_location"
+    fails on any Location header; "body_absent" lists text the response body must not
+    contain."""
+    fixtures = fixtures or {}
     probes = [
         {"id": "gate:rest-media", "path": "/wp-json/wp/v2/media", "status": 401},
         {"id": "gate:rest-media-case", "path": "/wp-json/wp/v2/MEDIA", "status": 401},
+        {"id": "gate:rest-seo-head", "path": "/wp-json/wp/v2/posts?_fields=id,yoast_head,yoast_head_json",
+         "status": 200, "body_absent": ["yoast_head"]},
+        {"id": "gate:seo-get-head", "path": "/wp-json/yoast/v1/get_head?url=%2F", "status": [401, 404]},
+        {"id": "gate:image-sitemap", "path": "/post-sitemap.xml", "status": None, "body_absent": ["<image:loc"]},
     ]
+    photo = int(fixtures.get("refused_photo") or 0)
+    if photo > 0:
+        probes.append({"id": "gate:refused-attachment-page", "path": f"/?attachment_id={photo}", "status": 404,
+                       "no_location": True})
+        name = str(fixtures.get("refused_photo_file") or "")
+        page = str(fixtures.get("refused_photo_page") or "")
+        if name and page:
+            probes.append({"id": "gate:refused-photo-on-page", "path": page, "status": 200, "body_absent": [name]})
     vi_centers = [u for u in urls if u.get("kind") == "center" and u.get("lang") == "vi" and u.get("path")]
     if vi_centers:
         probes.append({"id": "gate:embed", "path": vi_centers[0]["path"].rstrip("/") + "/embed/", "status": 404})
@@ -321,11 +355,20 @@ def gate_probes(urls: list[dict]) -> list[dict]:
     return probes
 
 
-def check_probe(probe: dict, base: str, status: int | None, location: str) -> list[str]:
-    """Failures for one HTTP probe. location is the raw Location header ('' if none)."""
+def check_probe(probe: dict, base: str, status: int | None, location: str, body: str = "") -> list[str]:
+    """Failures for one HTTP probe. location is the raw Location header ('' if none), body
+    the response body (only read for probes with "body_absent")."""
     fails = []
-    if status != probe["status"]:
-        fails.append(f"{probe['id']}: HTTP {status}, expected {probe['status']}")
+    want_status = probe["status"]
+    allowed = want_status if isinstance(want_status, list) else [want_status]
+    if want_status is not None and status not in allowed:
+        expected = " or ".join(str(code) for code in allowed)
+        fails.append(f"{probe['id']}: HTTP {status}, expected {expected}")
+    if probe.get("no_location") and location:
+        fails.append(f"{probe['id']}: redirects to {location}, expected no redirect")
+    for text in probe.get("body_absent", []):
+        if text and text in body:
+            fails.append(f"{probe['id']}: the response contains {text!r}")
     want = probe.get("location")
     if want is not None and status == probe["status"]:
         got = urlsplit(location or "")
@@ -341,29 +384,33 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def fetch_status(url: str) -> tuple[int | None, str]:
-    """Status and Location of one GET, redirects not followed. Loopback addresses skip any
-    proxy set in the environment."""
+def fetch_status(url: str, read_body: bool = False) -> tuple[int | None, str, str]:
+    """Status, Location and (when asked, first 2 MB) body of one GET, redirects not
+    followed. Loopback addresses skip any proxy set in the environment."""
     handlers: list = [_NoRedirect()]
     if urlsplit(url).hostname in ("127.0.0.1", "localhost", "::1"):
         handlers.append(urllib.request.ProxyHandler({}))
     opener = urllib.request.build_opener(*handlers)
     req = urllib.request.Request(url, headers={"User-Agent": "hcwa-smoke", "Accept": "*/*"})
+
+    def body_of(resp) -> str:
+        return resp.read(2_000_000).decode("utf-8", "replace") if read_body else ""
+
     try:
         with opener.open(req, timeout=30) as resp:
-            return resp.status, resp.headers.get("Location", "") or ""
+            return resp.status, resp.headers.get("Location", "") or "", body_of(resp)
     except urllib.error.HTTPError as exc:
-        return exc.code, exc.headers.get("Location", "") or ""
+        return exc.code, exc.headers.get("Location", "") or "", body_of(exc)
     except (urllib.error.URLError, OSError) as exc:
         print(f"       - could not reach {url}: {exc}", flush=True)
-        return None, ""
+        return None, "", ""
 
 
 def run_probes(base: str, probes: list[dict]) -> list[dict]:
     results = []
     for probe in probes:
-        status, location = fetch_status(base + probe["path"])
-        fails = check_probe(probe, base, status, location)
+        status, location, body = fetch_status(base + probe["path"], bool(probe.get("body_absent")))
+        fails = check_probe(probe, base, status, location, body)
         results.append({"id": probe["id"], "lang": "-", "path": probe["path"], "viewport": "http",
                         "status": status, "location": location, "fails": fails})
         print(f"{'ok  ' if not fails else 'FAIL'} http    {probe['path']}", flush=True)
@@ -450,7 +497,8 @@ def main() -> int:
 
     urls, not_found = load_targets(args.manifest)
     targets = urls + [dict(nf, id="not-found", kind="404", expect=404) for nf in not_found]
-    probes = gate_probes(urls) if args.manifest else []  # Without a manifest there is no WordPress.
+    # Without a manifest there is no WordPress.
+    probes = gate_probes(urls, load_fixtures(args.manifest)) if args.manifest else []
     if args.only:
         targets = [t for t in targets if any(o in str(t.get("id", "")) or o in t["path"] for o in args.only)]
         probes = [p for p in probes if any(o in p["id"] or o in p["path"] for o in args.only)]

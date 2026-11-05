@@ -5,8 +5,9 @@
  * goes through hcwa_image() in its context (the parent, or a no-identifiable context when a
  * protected center or post uses it: hcwa_theme_attachment_no_identifiable()). A refused
  * image never gets here: inc/setup.php turns its page into a 404 that says nothing about
- * the file, since titles and captions of child photos often carry names. Attachment pages
- * are noindex (inc/setup.php).
+ * the file, since titles and captions of child photos often carry names. Heading and caption
+ * are only text staff wrote, never the file name or text read from the file
+ * (hcwa_theme_attachment_text()). Attachment pages are noindex (inc/setup.php).
  *
  * @package hcwa-2026
  */
@@ -33,7 +34,8 @@ while ( have_posts() ) :
 	}
 
 	$hcwa_parent = wp_get_post_parent_id( get_the_ID() );
-	$hcwa_title  = hcwa_theme_clean_title( wp_strip_all_tags( get_the_title() ) );
+	// Never the file name or text read from the file (hcwa_theme_attachment_text()).
+	$hcwa_title  = hcwa_theme_attachment_heading( (int) get_the_ID() );
 	$hcwa_trail  = array();
 	if ( $hcwa_parent ) {
 		$hcwa_trail[] = array( wp_strip_all_tags( get_the_title( $hcwa_parent ) ), get_permalink( $hcwa_parent ) );
@@ -48,8 +50,8 @@ while ( have_posts() ) :
 			'title' => $hcwa_title,
 		)
 	);
-	// Captions skip the publish guard: no draft text on the live site.
-	$hcwa_caption = has_excerpt() ? hcwa_theme_public_text( wp_strip_all_tags( get_the_excerpt() ) ) : '';
+	// Only a caption staff wrote, never one read from the file; no draft text on the live site.
+	$hcwa_caption = hcwa_theme_attachment_text( (int) get_the_ID(), 'caption' );
 	?>
 	<div class="section section--tight">
 		<?php if ( '' !== $hcwa_image ) : ?>

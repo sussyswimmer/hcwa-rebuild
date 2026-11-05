@@ -113,6 +113,20 @@ function hcwa_theme_accent( int $post_id ): string {
 }
 
 /**
+ * Whether a center must not say where it is or invite visits: Little Rose, or any center
+ * flagged "No identifiable children" (a shelter for girls who survived or are at risk of
+ * sexual abuse). Read across translations through hcwa-core when it is active.
+ *
+ * @param int $post_id Center ID.
+ */
+function hcwa_theme_center_is_protected( int $post_id ): bool {
+	if ( function_exists( 'hcwa_meta_flag_any' ) ) {
+		return hcwa_meta_flag_any( $post_id, 'hcwa_no_identifiable_children' );
+	}
+	return in_array( get_post_meta( $post_id, 'hcwa_no_identifiable_children', true ), array( true, 1, '1', 'true' ), true );
+}
+
+/**
  * One-item-per-line meta as a clean list. Pure parsing in hcwa_theme_split_lines().
  *
  * @param int    $post_id Post ID.
@@ -205,6 +219,95 @@ function hcwa_theme_prime_attachments( array $posts, array $keys = array( '_thum
 }
 
 /**
+ * An attachment's title, caption or alt text as the theme may print it, or '' when nobody
+ * wrote it. At upload WordPress fills these in by itself: the title from the file name, and
+ * title, caption and alt from text a camera, phone app or photographer put in the file
+ * (IPTC, EXIF, XMP: wp-admin/includes/media.php:313-320 and 392-407, image.php:886-997).
+ * Nobody reviewed that text; it can hold a child's name and school (CLAUDE.md) or just
+ * "OLYMPUS DIGITAL CAMERA". WordPress keeps what it read in the attachment metadata
+ * ('image_meta', image.php:258-261), so text still equal to it, or a title still equal to
+ * the file name, counts as unwritten. Like other text that skips the publish guard, draft
+ * text is dropped on the live site. hcwa-core's hcwa_attachment_text() applies the same
+ * rule when the plugin is active (it also gates the alt and caption WordPress prints).
+ * Pure apart from post and meta reads (tested).
+ *
+ * @param int    $attachment_id Attachment ID.
+ * @param string $field         'title', 'caption' or 'alt'.
+ */
+function hcwa_theme_attachment_text( int $attachment_id, string $field ): string {
+	if ( function_exists( 'hcwa_attachment_text' ) ) {
+		return hcwa_attachment_text( $attachment_id, $field );
+	}
+	$post = $attachment_id > 0 ? get_post( $attachment_id ) : null;
+	if ( ! $post instanceof WP_Post || 'attachment' !== $post->post_type ) {
+		return '';
+	}
+	$texts = array(
+		'title'   => (string) $post->post_title,
+		'caption' => (string) $post->post_excerpt,
+		'alt'     => (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ),
+	);
+	$text = trim( wp_strip_all_tags( $texts[ $field ] ?? '' ) );
+	if ( '' === $text ) {
+		return '';
+	}
+
+	$meta      = wp_get_attachment_metadata( $attachment_id );
+	$meta      = is_array( $meta ) ? $meta : array();
+	$from_file = is_array( $meta['image_meta'] ?? null ) ? trim( (string) ( $meta['image_meta'][ $field ] ?? '' ) ) : '';
+	if ( '' !== $from_file && hcwa_theme_text_key( $from_file ) === hcwa_theme_text_key( $text ) ) {
+		return '';
+	}
+	if ( 'title' === $field ) {
+		$files = array( (string) get_post_meta( $attachment_id, '_wp_attached_file', true ), (string) ( $meta['original_image'] ?? '' ) );
+		foreach ( $files as $file ) {
+			$name = (string) preg_replace( '/\.[^.]*$/', '', wp_basename( $file ) );
+			if ( '' !== $name && hcwa_theme_file_name_key( $name ) === hcwa_theme_file_name_key( $text ) ) {
+				return '';
+			}
+		}
+	}
+	return hcwa_theme_public_text( $text );
+}
+
+/**
+ * Comparison key for attachment text: its slug, so case, spacing, accents and HTML entities
+ * do not matter. Pure helper (tested).
+ *
+ * @param string $text Text.
+ */
+function hcwa_theme_text_key( string $text ): string {
+	$key = sanitize_title( $text );
+	return '' !== $key ? $key : trim( $text );
+}
+
+/**
+ * Comparison key for a file name and a title made from one: the slug without the endings
+ * WordPress adds to stored files (-1, -2 … from wp_unique_filename(), -scaled for big
+ * images, -rotated, -e{timestamp} after an edit). Pure helper (tested).
+ *
+ * @param string $name File name without extension, or a title.
+ */
+function hcwa_theme_file_name_key( string $name ): string {
+	return (string) preg_replace( '/(?:-(?:scaled|rotated|e?\d+))+$/', '', hcwa_theme_text_key( $name ) );
+}
+
+/**
+ * Heading of an attachment page (H1, breadcrumb, browser title): the title staff wrote
+ * (hcwa_theme_attachment_text()), else "Ảnh" / "Photo", or "Tệp đính kèm" / "Attachment"
+ * for other files. Never the file name or text read from the file.
+ *
+ * @param int $attachment_id Attachment ID.
+ */
+function hcwa_theme_attachment_heading( int $attachment_id ): string {
+	$title = hcwa_theme_clean_title( hcwa_theme_attachment_text( $attachment_id, 'title' ) );
+	if ( '' !== $title ) {
+		return $title;
+	}
+	return wp_attachment_is_image( $attachment_id ) ? hcwa_theme_t( 'photo' ) : hcwa_theme_t( 'attachedFile' );
+}
+
+/**
  * Normalizes an ID list. Pure helper (tested).
  *
  * @param mixed $value Array, comma-separated string or single number.
@@ -235,11 +338,16 @@ function hcwa_theme_year_range( int $start, int $end ): string {
 }
 
 /**
- * Category slugs per logical key, VI and EN (contract: seeded categories).
+ * Category slugs per logical key, EN and VI (contract: seeded categories). hcwa-core's
+ * hcwa_category_slugs() when the plugin is active, so chips, card labels and `wp hcwa
+ * coverage` read one map; the same four sections otherwise.
  *
  * @return array<string, string[]>
  */
 function hcwa_theme_category_slugs(): array {
+	if ( function_exists( 'hcwa_category_slugs' ) ) {
+		return hcwa_category_slugs();
+	}
 	return array(
 		'news'          => array( 'news', 'tin-tuc' ),
 		'stories'       => array( 'stories', 'cau-chuyen' ),
@@ -266,6 +374,9 @@ function hcwa_theme_category_key( WP_Term $term ): string {
 				}
 			}
 		}
+	}
+	if ( function_exists( 'hcwa_category_key' ) ) {
+		return hcwa_category_key( $slugs ); // Also maps legacy story categories to 'stories'.
 	}
 	foreach ( hcwa_theme_category_slugs() as $key => $known ) {
 		if ( array_intersect( $slugs, $known ) ) {
@@ -396,11 +507,17 @@ function hcwa_theme_category_label( string $key, ?WP_Term $term = null ): string
 }
 
 /**
- * Whether a post is in the stories category (adds the "names changed" note).
+ * Whether a post is a story (adds the "names changed" note). With hcwa-core this is
+ * hcwa_post_is_story(), the rule its photo gate uses: the seeded and the legacy story
+ * categories (our-stories, chuyen-cua-chung-toi), in any language version of the post, so
+ * the note and the gate always agree.
  *
  * @param WP_Post $post Post.
  */
 function hcwa_theme_is_story( WP_Post $post ): bool {
+	if ( function_exists( 'hcwa_post_is_story' ) ) {
+		return hcwa_post_is_story( $post );
+	}
 	foreach ( get_the_category( $post->ID ) as $term ) {
 		if ( 'stories' === hcwa_theme_category_key( $term ) ) {
 			return true;

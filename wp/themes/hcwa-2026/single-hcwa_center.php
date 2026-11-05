@@ -16,17 +16,18 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	$hcwa_post     = get_post();
-	$hcwa_id       = $hcwa_post->ID;
-	$hcwa_name     = hcwa_theme_clean_title( wp_strip_all_tags( get_the_title() ) );
-	$hcwa_accent   = hcwa_theme_accent( $hcwa_id );
-	$hcwa_since    = (int) get_post_meta( $hcwa_id, 'hcwa_since_year', true );
-	$hcwa_location = (string) get_post_meta( $hcwa_id, 'hcwa_location', true );
-	$hcwa_summary  = (string) get_post_meta( $hcwa_id, 'hcwa_summary', true );
-	$hcwa_who      = (string) get_post_meta( $hcwa_id, 'hcwa_who_we_serve', true );
-	$hcwa_what     = hcwa_theme_meta_lines( $hcwa_id, 'hcwa_what_we_do' );
-	$hcwa_help     = (string) get_post_meta( $hcwa_id, 'hcwa_help_text', true );
-	$hcwa_tag      = (string) get_post_meta( $hcwa_id, 'hcwa_news_tag', true );
+	$hcwa_post      = get_post();
+	$hcwa_id        = $hcwa_post->ID;
+	$hcwa_name      = hcwa_theme_clean_title( wp_strip_all_tags( get_the_title() ) );
+	$hcwa_accent    = hcwa_theme_accent( $hcwa_id );
+	$hcwa_since     = (int) get_post_meta( $hcwa_id, 'hcwa_since_year', true );
+	$hcwa_protected = hcwa_theme_center_is_protected( $hcwa_id );
+	$hcwa_location  = $hcwa_protected ? '' : (string) get_post_meta( $hcwa_id, 'hcwa_location', true );
+	$hcwa_summary   = (string) get_post_meta( $hcwa_id, 'hcwa_summary', true );
+	$hcwa_who       = (string) get_post_meta( $hcwa_id, 'hcwa_who_we_serve', true );
+	$hcwa_what      = hcwa_theme_meta_lines( $hcwa_id, 'hcwa_what_we_do' );
+	$hcwa_help      = (string) get_post_meta( $hcwa_id, 'hcwa_help_text', true );
+	$hcwa_tag       = (string) get_post_meta( $hcwa_id, 'hcwa_news_tag', true );
 
 	// Contact details only when HCWA approved them for the web.
 	$hcwa_contact_ok    = (bool) get_post_meta( $hcwa_id, 'hcwa_contact_approved', true );
@@ -205,7 +206,7 @@ while ( have_posts() ) :
 			$hcwa_gallery[] = array(
 				'img'  => $hcwa_img,
 				'full' => (string) wp_get_attachment_image_url( $hcwa_att, 'hcwa-1600' ),
-				'alt'  => (string) get_post_meta( $hcwa_att, '_wp_attachment_image_alt', true ),
+				'alt'  => hcwa_theme_attachment_text( $hcwa_att, 'alt' ),
 			);
 		}
 	}
@@ -290,7 +291,10 @@ while ( have_posts() ) :
 		'template-parts/cta-band',
 		null,
 		array(
-			'title'   => hcwa_theme_t( 'visitTitle', array( 'name' => $hcwa_name ) ),
+			// A protected shelter is reached through the HCWA office, never by visiting.
+			'title'   => $hcwa_protected
+				? hcwa_theme_t( 'supportTitle', array( 'name' => $hcwa_name ) )
+				: hcwa_theme_t( 'visitTitle', array( 'name' => $hcwa_name ) ),
 			'actions' => array( array( hcwa_theme_url( 'contact' ), hcwa_theme_t( 'contactUs' ), 'on-blue' ) ),
 			'contact' => $hcwa_contact_lines,
 		)

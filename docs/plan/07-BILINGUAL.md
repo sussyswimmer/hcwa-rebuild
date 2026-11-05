@@ -16,6 +16,10 @@ project page → contact/support without landing on Vietnamese-only content.
 - Synchronization: sync featured image, page parent, taxonomies and custom fields that
   aren't text (years, status, verified flag, PDF file) between translations, so staff
   only enter them once.
+  Built (Phase 2): Polylang's own "Custom fields" sync stays off; `hcwa-core` copies
+  only the non-text fields listed in `wp/CONTRACT.md` through `pll_copy_post_metas`, so
+  text never leaks between languages and safety flags are never wiped when a
+  translation is linked.
 - `hreflang`: Polylang outputs `vi`, `en` and `x-default` (= VI). Check it's present on
   every template, including archives and CPT singles.
 - `<html lang>` correct on every page; any inline foreign-language phrase gets its own

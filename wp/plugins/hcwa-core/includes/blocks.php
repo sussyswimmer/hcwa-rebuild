@@ -1108,33 +1108,24 @@ function hcwa_blocks_partner_item( array $p, string $lang ): string {
  * ---------------------------------------------------------------------- */
 
 /**
- * Seeded post categories: logical key => slugs in both languages (contract Names).
+ * Seeded post categories: logical key => slugs in both languages (contract Names). The map
+ * lives in core (hcwa_category_slugs()), shared with the theme and `wp hcwa coverage`.
  *
  * @return array<string, string[]>
  */
 function hcwa_blocks_category_slugs(): array {
-	return array(
-		'news'          => array( 'news', 'tin-tuc' ),
-		'stories'       => array( 'stories', 'cau-chuyen' ),
-		'events'        => array( 'events', 'su-kien' ),
-		'announcements' => array( 'announcements', 'thong-bao' ),
-	);
+	return hcwa_category_slugs();
 }
 
 /**
  * Logical key for a category from its slugs (any language, with or without a -vi/-en
- * suffix), or '' for a category that is not one of the seeded four.
+ * suffix): a seeded section, 'stories' for a legacy story category, or '' for any other
+ * category (hcwa_category_key()).
  *
  * @param string[] $slugs Slugs of one category and its translations.
  */
 function hcwa_blocks_category_key( array $slugs ): string {
-	$slugs = array_map( static fn( $s ) => hcwa_blocks_area_key( (string) $s ), $slugs );
-	foreach ( hcwa_blocks_category_slugs() as $key => $known ) {
-		if ( array_intersect( $slugs, $known ) ) {
-			return $key;
-		}
-	}
-	return '';
+	return hcwa_category_key( $slugs );
 }
 
 /**

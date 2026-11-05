@@ -3,8 +3,9 @@
  * Production refuses to publish draft text (contract gating rule 4).
  *
  * On the live site, saving a post as published or scheduled while its title, content,
- * excerpt or one of our text fields still contains a draft marker ([DRAFT: …] or a
- * placeholder token such as [N], [year], [năm]) puts it back to draft and explains why.
+ * excerpt, one of our text fields or a Yoast SEO text still contains a draft marker
+ * ([DRAFT: …] or a placeholder token such as [N], [year], [năm]) puts it back to draft and
+ * explains why.
  * Covers the classic editor, quick edit, REST (block editor), the block editor's
  * separate meta box save and scheduled posts published by cron. Staging is not affected.
  * `wp hcwa draft-scan` lists offenders (run it after any database push to production).
@@ -165,7 +166,8 @@ add_filter( 'wp_insert_post_data', 'hcwa_publish_guard_data', 99, 2 );
 
 /**
  * wp_after_insert_post (fires after REST meta and after meta box saves): also checks our
- * registered text fields, reverts to draft if needed and records the reason.
+ * registered text fields and Yoast's SEO texts (hcwa_publish_guard_texts()), reverts to
+ * draft if needed and records the reason.
  *
  * Title, content and excerpt are checked here again: scheduled posts are published by
  * cron through wp_publish_post(), which sets the status with $wpdb and never runs
@@ -191,17 +193,7 @@ function hcwa_publish_guard_after( $post_id, $post, $update = true ): void {
 	$live = in_array( $post->post_status, array( 'publish', 'future' ), true );
 
 	if ( $live ) {
-		$texts = array(
-			__( 'Title', 'hcwa' )   => (string) $post->post_title,
-			__( 'Content', 'hcwa' ) => (string) $post->post_content,
-			__( 'Excerpt', 'hcwa' ) => (string) $post->post_excerpt,
-		);
-		foreach ( get_registered_meta_keys( 'post', $post->post_type ) as $key => $args ) {
-			if ( 0 === strpos( $key, 'hcwa_' ) && 'string' === ( $args['type'] ?? '' ) ) {
-				$texts[ (string) ( $args['description'] ?? $key ) ] = (string) get_post_meta( $post->ID, $key, true );
-			}
-		}
-		$found = array_merge( $found, hcwa_draft_fields( $texts ) );
+		$found = array_merge( $found, hcwa_draft_fields( hcwa_publish_guard_texts( $post ) ) );
 
 		if ( $found ) {
 			$running = true;
@@ -223,6 +215,35 @@ function hcwa_publish_guard_after( $post_id, $post, $update = true ): void {
 	}
 }
 add_action( 'wp_after_insert_post', 'hcwa_publish_guard_after', 20, 3 );
+
+/**
+ * The texts of a post the guard checks, by the label editors see: title, content, excerpt,
+ * our registered text fields and, with Yoast SEO active, its per-post SEO and social texts
+ * (printed in <title>, the meta description and share previews; seo.php also keeps them
+ * off the live site).
+ *
+ * @param WP_Post   $post Post.
+ * @param bool|null $seo  Whether Yoast SEO is active; defaults to defined( 'WPSEO_VERSION' ).
+ * @return array<string, string> Label => text.
+ */
+function hcwa_publish_guard_texts( WP_Post $post, ?bool $seo = null ): array {
+	$texts = array(
+		__( 'Title', 'hcwa' )   => (string) $post->post_title,
+		__( 'Content', 'hcwa' ) => (string) $post->post_content,
+		__( 'Excerpt', 'hcwa' ) => (string) $post->post_excerpt,
+	);
+	foreach ( get_registered_meta_keys( 'post', $post->post_type ) as $key => $args ) {
+		if ( 0 === strpos( $key, 'hcwa_' ) && 'string' === ( $args['type'] ?? '' ) ) {
+			$texts[ (string) ( $args['description'] ?? $key ) ] = (string) get_post_meta( $post->ID, $key, true );
+		}
+	}
+	if ( $seo ?? defined( 'WPSEO_VERSION' ) ) {
+		foreach ( hcwa_seo_text_meta_keys() as $key => $label ) {
+			$texts[ $label ] = (string) get_post_meta( $post->ID, $key, true );
+		}
+	}
+	return $texts;
+}
 
 /**
  * The explanation shown to editors.

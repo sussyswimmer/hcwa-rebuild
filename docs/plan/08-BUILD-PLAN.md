@@ -66,6 +66,13 @@ inner pages to judge the system. Static, fast to change.
 
 ## Phase 2: WordPress theme + content model (local)
 
+Status 5 Nov 2026: 2.1 decided (hybrid; see `03-STRATEGY-AND-DECISIONS.md`); 2.3 to 2.6
+built in `wp/` and reviewed twice (75 confirmed findings fixed or recorded as decisions);
+2.2 waits on HCWA access; 2.7 waits on Q9 and the form plugin; 2.8 and every "done when"
+that needs a browser wait on running WordPress, which needs Maxwell's permission in the
+build environment (`scripts/wp-local.sh`, `wp/README.md`). Open questions and what is
+still unverified: `wp/CONTRACT.md` Status.
+
 | # | Task | Done when |
 |---|---|---|
 | 2.1 | Spike (half a day): in `wp-env`, install Polylang free and test (a) a block theme with translated header/footer template parts and (b) the hybrid approach (PHP header/footer + block patterns). Pick one, write the reason in `03-STRATEGY-AND-DECISIONS.md`. | Decision recorded |
@@ -90,6 +97,9 @@ inner pages to judge the system. Static, fast to change.
 | 3.5 | Translations: complete EN/VI pairs; `wp hcwa coverage` = 0 for pages and CPTs. | Coverage clean |
 | 3.6 | Media: fill approval fields; replace unapproved images; alt text VI + EN. | No unapproved image renders |
 | 3.7 | HCWA content review, page by page, both languages. Track in a shared checklist. | HCWA signs off each page |
+| 3.8 | Little Rose legacy content: `wp hcwa protect-little-rose` dry run, HCWA reviews the list, then `--apply`. Decide how HCWA approves the text of legacy story and Little Rose posts (open question in `wp/CONTRACT.md`). | HCWA signed off the list; `wp hcwa coverage` shows no Little Rose rows |
+| 3.9 | Photo metadata: `wp hcwa media-scrub --dry-run` on the imported library (GPS/EXIF, untouched originals), then the real run. Review Media Library file names, which are public in every image URL, and rename any that name a child. | Dry run reports nothing; a test upload keeps no GPS in any served file |
+| 3.10 | Move legacy story posts into the Stories category so they get the photo gate and the "names changed" line. | No story post outside the category (spot check with HCWA) |
 
 ---
 

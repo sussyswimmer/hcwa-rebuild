@@ -49,13 +49,15 @@ wp/
     includes/strings.php              string dictionary + Polylang registration
     includes/post-types.php           CPTs + hcwa_focus_area taxonomy
     includes/meta.php                 register_post_meta + meta boxes
-    includes/media-approval.php       attachment approval fields + hcwa_image()
+    includes/media-approval.php       attachment approval fields + hcwa_image(), attachment text
+    includes/media-privacy.php        camera metadata (GPS) removed from uploads, neutral file names
+    includes/seo.php                  the SEO plugin (Yoast) under rules 2 and 4; inert without it
     includes/localized-urls.php       per-language bases (see above)
     includes/polylang.php             translatable types, meta sync, language links
     includes/settings.php             Settings → HCWA (announcement, contact, donation, page map)
     includes/impact.php               hcwa_get_impact_figures() with the verified gate
     includes/publish-guard.php        production refuses to publish [DRAFT text
-    includes/cli.php                  wp hcwa coverage | draft-scan
+    includes/cli.php                  wp hcwa coverage | draft-scan | protect-little-rose | media-scrub
     assets/editor-images.js           editor warning for images the live site will leave out
     languages/                        admin strings, Vietnamese (.l10n.php)
     includes/blocks.php               BLOCKS agent
@@ -83,7 +85,10 @@ name below and list it under "needs" in your report.
 - Taxonomy: `hcwa_focus_area` on centers, programs and posts. Terms (slugs, VI terms get
   `-vi` only if Polylang needs distinct slugs): education, protection, family, policy.
 - Post categories (seeded): news, stories, events, announcements (VI: tin-tuc,
-  cau-chuyen, su-kien, thong-bao).
+  cau-chuyen, su-kien, thong-bao). The map lives in core, `hcwa_category_slugs()`; the
+  theme's chips and labels, the blocks' card labels and `wp hcwa coverage` read it. The live
+  site's story categories `our-stories` / `chuyen-cua-chung-toi` count as stories
+  (`hcwa_story_category_slugs()`) until Phase 3 moves their posts.
 - Blocks: `hcwa/impact-strip`, `hcwa/center-grid`, `hcwa/program-list`,
   `hcwa/report-list`, `hcwa/partner-wall`, `hcwa/news-latest`, `hcwa/donation-methods`,
   `hcwa/language-notice`, `hcwa/announcement-bar`. Category "HCWA".
@@ -143,8 +148,12 @@ language. "protective" = never copied, and true when any translation has it
   `hcwa_location`, `hcwa_help_text`, `hcwa_contact_name`; sync: `hcwa_since_year` (int),
   `hcwa_accent` (green-bamboo | little-rose | cau-han | blue), `hcwa_logo_id`,
   `hcwa_gallery_ids` (int[]), `hcwa_contact_approved` (bool), `hcwa_phone`, `hcwa_email`,
-  `hcwa_news_tag` (term slug, the VI tag); protective: `hcwa_no_identifiable_children`
-  (bool, true for Little Rose).
+  `hcwa_news_tag` (term slug, the VI tag; a slug of any language version resolves to the
+  tag's whole Polylang translation group, but `wp hcwa coverage` asks for the VI slug);
+  protective: `hcwa_no_identifiable_children` (bool, true for Little Rose).
+- post: protective: `hcwa_no_identifiable_children` (bool; editors only, read-only for
+  others; set in the "Child safeguarding" box or by `wp hcwa protect-little-rose --apply`
+  on every language version): the post is a Little Rose context whatever its tags.
 - program: `hcwa_summary`, `hcwa_goals`, `hcwa_activities` (one per line); sync:
   `hcwa_status` (active | completed | planned), `hcwa_start_year`, `hcwa_end_year`,
   `hcwa_partner_ids` (int[]), `hcwa_center_id`, `hcwa_news_tag`.
@@ -227,6 +236,19 @@ hcwa_meta_flag_any( int $post_id, string $key ): bool // protective flag set on 
 hcwa_center_media_ids( int $center_id ): array        // featured image, logo, gallery
 hcwa_attachment_no_identifiable( int $attachment_id ): bool  // a photo's own context (rule 2)
 hcwa_attachment_page_refused( int $attachment_id ): bool     // its attachment page must 404
+
+// Added in review round 2:
+hcwa_category_slugs(): array               // news | stories | events | announcements => [en, vi]
+hcwa_category_key( array $slugs ): string  // section of a category (+ translations); legacy stories too
+hcwa_story_category_slugs(): array         // seeded and legacy story categories (filterable)
+hcwa_post_is_story( WP_Post $post ): bool  // any language version in a story category
+hcwa_protected_tag_slugs(): array          // always-protected Little Rose tags (filterable)
+hcwa_tag_group_ids( array $slugs ): array  // tag IDs with these slugs and their translations
+hcwa_no_identifiable_news_tags( bool $refresh = false ): array  // protected tag term IDs
+hcwa_little_rose_review_pending(): bool    // production, before protect-little-rose --apply
+hcwa_attachment_text( int $attachment_id, string $field ): string  // '' unless staff wrote it
+hcwa_attachment_files( int $attachment_id, ?array $metadata = null ): array  // every file on disk
+hcwa_image_bytes_have_gps( string $data ): bool  // used by the seed's upload check
 ```
 
 `scripts/wp-static-check.py` compares every signature in this block with the code.
@@ -263,26 +285,60 @@ editable in Polylang.
    "Verified" means the tick plus a "verified by" name and a valid date. Non-production
    shows a strip from 1 figure, with a note that the live site needs 2.
 2. Images in center, program and story contexts render only if `hcwa_approved_for_web`.
-   Little Rose context (`hcwa_no_identifiable_children`, on the center in any language,
-   its programs, and news carrying its news tag in any language version) also refuses
-   `hcwa_identifiable_child`. Refusals leave no broken markup and are logged for staff
-   only (users with `edit_posts`, and WP-CLI), at most one option write per request.
-   Templates and blocks use `hcwa_image()`. Photos placed in post content are gated when
-   `hcwa_content_images_gated()` is true (pages, centers, programs, reports, story posts
-   and Little Rose news): core/image blocks and pattern image slots
-   (`render_block_core/image`), cover backgrounds (`render_block_core/cover`), media-text
-   featured images, classic HTML (`wp_content_img_tag`), classic `[gallery]`
-   (`post_gallery`), and images inserted by URL, which are refused unless the URL resolves
-   to an approved upload. A refused image takes its link and caption with it. Other news
-   posts keep their inline photos (open question for HCWA, see Status). Featured images
-   printed through `get_the_post_thumbnail()` (core blocks included) are gated everywhere
-   outside wp-admin (`post_thumbnail_html`); partner logos follow rule 5 instead. A
-   photo's attachment page is a 404 when the gate refuses it in its own context
-   (`hcwa_attachment_page_refused()`, in the plugin and the theme). Embeds and the oEmbed
-   endpoint are off. `/wp/v2/media`, `/wp/v2/hcwa_impact` and `/wp/v2/hcwa_partner` need
-   `edit_posts` in any letter case (`rest_request_before_callbacks`). The block editor
-   warns about images the live site will leave out. Only editors and administrators can
-   tick the approval flags (`edit_others_posts`).
+   Little Rose context (`hcwa_no_identifiable_children`: on the center in any language,
+   its programs, a post that carries the flag itself, and news carrying the center's or
+   one of its programs' news tag in any language version, where a tag counts with its
+   whole Polylang translation group, plus the always-protected tags in
+   `hcwa_protected_tag_slugs()`) also refuses `hcwa_identifiable_child`. Refusals leave no
+   broken markup and are logged for staff only (users with `edit_posts`, and WP-CLI), at
+   most one option write per request.
+   - **Where it applies.** Templates and blocks use `hcwa_image()`. Photos placed in post
+     content are gated when `hcwa_content_images_gated()` is true: pages, centers,
+     programs, reports, story posts (`hcwa_post_is_story()`: the seeded and the legacy
+     story categories, any language version) and Little Rose news; on production also
+     every news post until `wp hcwa protect-little-rose --apply` has run
+     (`hcwa_little_rose_review_pending()`). Gated: core/image blocks and pattern image
+     slots (`render_block_core/image`), cover backgrounds (`render_block_core/cover`),
+     media-text featured images, classic HTML (`wp_content_img_tag`), classic `[gallery]`
+     (`post_gallery`), and images inserted by URL, which are refused unless the URL
+     resolves to an approved upload. A refused image takes its link and caption with it.
+     Other news posts keep their inline photos (open question for HCWA, see Status).
+     Featured images are gated everywhere outside wp-admin (`post_thumbnail_html`, and
+     `post_thumbnail_id` counts a refused one as 0 on the front end, so core blocks and
+     `has_post_thumbnail()` agree); partner logos follow rule 5 instead.
+   - **Attachment pages.** A photo's attachment page is a 404 when the gate refuses it in
+     its own context (`hcwa_attachment_page_refused()`), decided on the `wp` action
+     (priority 5, plugin and theme) before any `template_redirect` callback can redirect
+     it to the file. Embeds and the oEmbed endpoint are off.
+   - **REST.** `/wp/v2/media`, `/wp/v2/hcwa_impact`, `/wp/v2/hcwa_partner` and
+     `/yoast/v1/get_head` need `edit_posts` in any letter case
+     (`rest_request_before_callbacks`); visitors get no `yoast_head` / `yoast_head_json`
+     fields.
+   - **SEO plugin** (`includes/seo.php`, Yoast; inert without it): og:image,
+     twitter:image and schema images pass `hcwa_image_allowed()` in the post's context
+     (archives: approved and no identifiable child); the fallback share image is Yoast's
+     default image, or `hcwa_seo_fallback_image_id` per language, only when approved.
+     Image sitemaps are off and attachments get no sitemap; headless REST endpoints stay
+     off. The Organization node never carries `foundingDate`, `numberOfEmployees` or
+     `description`, drops draft text on production, and takes its address and `sameAs`
+     links from Settings → HCWA.
+   - **Upload privacy** (`includes/media-privacy.php`): camera metadata (EXIF, XMP, IPTC,
+     GPS) is removed losslessly on upload and again from every file once sizes are made;
+     a HEIC, AVIF, GIF or TIFF upload with a location is refused; `wp hcwa media-scrub`
+     cleans existing media. Image uploads are stored as `hcwa-{Ymd}-{random}.{ext}`, take
+     that as title and page slug unless the uploader typed a title, and contribute no
+     title, caption or alt from the file. Client-side media processing is off (it names
+     every size after the local file).
+   - **Attachment text.** A title, caption or alt is printed only when staff wrote it
+     (`hcwa_attachment_text()`: not the file name, not text WordPress read from the file,
+     no draft text on production): front-end alt (`wp_get_attachment_image_attributes`)
+     and caption (`wp_get_attachment_caption`) filters, and the theme through
+     `hcwa_theme_attachment_text()`. Attachment pages are headed
+     `hcwa_theme_attachment_heading()` ("Ảnh" / "Photo" without a written title); site
+     search never lists attachments.
+   - **Editors.** The block editor warns about images the live site will leave out. Only
+     editors and administrators can tick the approval flags (`edit_others_posts`); the
+     "Approved for web" help asks them to check title, caption and alt first.
 3. Donation details render only from finance-confirmed settings. Otherwise: production
    renders nothing (plus an admin notice); non-production renders the labelled
    placeholder panel from the prototype.
@@ -290,7 +346,12 @@ editable in Polylang.
    admin notice explains why), scheduled posts included. `wp hcwa draft-scan` lists every
    offender; run it after any database push to production. Settings → HCWA texts never
    pass the guard, so `hcwa_setting_l()` and the theme's bridge print nothing for a value
-   with a draft marker on production.
+   with a draft marker on production. With Yoast active the guard and draft-scan also read
+   its eight per-post texts (`hcwa_seo_text_meta_keys()`), draft-scan reads the
+   `wpseo_titles` and `wpseo_social` options, production prints no Yoast title,
+   description or social text with a draft marker, and a new translation does not copy
+   the other language's SEO texts. An empty Yoast description falls back to the page's
+   own description (`hcwa_theme_seo_description_fallback()`), never the tagline.
 5. Partner logos need `hcwa_logo_permission` on production: `hcwa_partner_logo_allowed()`
    is the only gate, used by `hcwa/partner-wall` and the program page alike. Logos and the
    VietQR image are not child photos, so they use `wp_get_attachment_image()`, not the
@@ -370,7 +431,7 @@ python3 -I scripts/wp-static-check.py
 Never download or execute WordPress, WP-CLI, Composer packages or other external code.
 Never `git commit` or push; the orchestrator commits.
 
-## Status (integration, 5 Nov 2026; review round the same day)
+## Status (integration, 5 Nov 2026; two review rounds the same day)
 
 ### Built
 
@@ -440,7 +501,7 @@ What each part changed:
   written once per request on shutdown, staff and WP-CLI only; editor warning for images
   the live site will drop (`assets/editor-images.js`); content images primed before
   `do_blocks`. Integration pass: the attachment page of a refused photo is a 404 in the
-  plugin too (`hcwa_refuse_attachment_page`, `template_redirect` priority 5), and the
+  plugin too (`hcwa_refuse_attachment_page`; round 2 moved it to the `wp` action), and the
   theme now asks core for the photo's context; translated term archives keep their
   hreflang and switch link while empty (`pll_hide_archive_translation_url`); when Polylang
   synchronizes, `hcwa_pll_copy_post_metas()` drops public keys other than ours; `wp hcwa
@@ -490,7 +551,9 @@ Deliberate decisions in this round:
   file and sizes, original JPEG kept as `original_image`, JPEG kept when the server
   cannot write WebP. WordPress prints a plain `<img>`, so 05-DESIGN's "JPEG fallback" is
   not served; every current browser reads WebP. AVIF is not used (no `<picture>`).
-  Existing media stays JPEG until `wp media regenerate` in Phase 3. Maxwell to confirm.
+  Existing media stays JPEG; `wp media regenerate` would convert it, but is not needed
+  for privacy (round 2: `wp hcwa media-scrub` cleans files in place, and a regenerate
+  keeps the recorded file text, `hcwa_keep_image_meta_text()`). Maxwell to confirm.
 - A `forceLang` saved by the earlier editor control still prints until the post gets a
   published translation; no pattern or seed sets it, so staff would remove and re-insert
   such a block.
@@ -516,6 +579,131 @@ scripts/wp-static-check.py` reports 0 errors and 7 warnings: the five shared-sou
 groups above and the unregistered bookkeeping keys `_hcwa_publish_blocked` and
 `_hcwa_seed_id`. The new manifest check was shown to fire on a scratch copy with an
 edited block.json.
+
+### Review round 2 (5 Nov 2026)
+
+A second review by reading (WordPress, Polylang and Yoast still not run) looked at what
+the SEO plugin, uploads and legacy content do around the gates. The part owners fixed
+their findings; the integration pass then ran every check, did the cross-part items and
+updated this file. Contract-level changes, all written into the sections above:
+
+- **Rule 2** now covers the SEO plugin's output (og:image, twitter:image, schema images,
+  image sitemaps off, no attachment sitemap, REST head fields and `/yoast/v1/get_head`
+  closed, the Organization node), camera metadata in every file WordPress keeps, neutral
+  file names and titles for uploads, attachment text nobody wrote, legacy story
+  categories, posts flagged "No identifiable children" themselves, Little Rose tags by
+  translation group and the always-protected tags, the news tags of a protected center's
+  programs, and every news post on production until `protect-little-rose --apply` has
+  run. Refused attachment pages become a 404 on the `wp` action (plugin and theme).
+- **Rule 4** covers Yoast's per-post texts and options.
+- **Meta keys**: `hcwa_no_identifiable_children` on `post` (protective, editors only).
+  `hcwa_news_tag` may name any language's slug; coverage still asks for the VI one.
+- **Option**: `hcwa_little_rose_review` (written by `wp hcwa protect-little-rose --apply`).
+- **CLI**: `wp hcwa protect-little-rose [--apply] [--ids=]` and `wp hcwa media-scrub
+  [--dry-run] [--ids=]`; `wp hcwa coverage` gains blocking "little rose" rows and
+  warning rows for categories with posts outside the four sections.
+- **Functions** (listed above): `hcwa_category_slugs()`, `hcwa_category_key()`,
+  `hcwa_story_category_slugs()`, `hcwa_post_is_story()`, `hcwa_protected_tag_slugs()`,
+  `hcwa_tag_group_ids()`, `hcwa_little_rose_review_pending()`, `hcwa_attachment_text()`,
+  `hcwa_attachment_files()`, `hcwa_image_bytes_have_gps()`.
+  `hcwa_no_identifiable_news_tags()` now returns term IDs, not slugs.
+- **Names**: the category map moved into core (`hcwa_category_slugs()`); the theme and the
+  blocks read it. Legacy story categories count as stories for card labels too.
+
+What each part changed:
+
+- **hcwa-core**: `includes/seo.php` (Yoast gating, draft SEO text dropped on production,
+  SEO texts not copied into a new translation, head fields out of public REST);
+  `includes/media-privacy.php` (lossless JPEG / PNG / WebP clean-up on upload and after
+  sizes are made, refusal of other formats carrying a location, deletion of an untouched
+  original that a client-side finalize replaced); `post_thumbnail_id` backstop; the
+  attachment 404 on `wp`; WebP mapping treats the REST identity probe as unset; Little
+  Rose protection by translation group, aliases, program tags and the post flag;
+  `hcwa_post_is_story()`; the publish guard and draft-scan read Yoast's texts;
+  `protect-little-rose`, `media-scrub` and the new coverage rows; Vietnamese strings for
+  the new admin labels. Integration pass: Organization schema filter; neutral upload names
+  and titles, no text from a newly uploaded file, client-side media processing off;
+  `hcwa_attachment_text()` with front-end alt and caption filters and the extended
+  "Approved for web" help (VI and EN); `hcwa_keep_image_meta_text()`; the core category
+  map with `hcwa_category_key()`, used by the blocks; coverage rows for categories outside
+  the four sections.
+- **hcwa-2026**: page descriptions as Yoast's fallback (`hcwa_theme_page_description()`,
+  `hcwa_theme_seo_description_fallback()`); attachment text only when staff wrote it
+  (`hcwa_theme_attachment_text()`), attachment pages headed "Ảnh" / "Photo" without a
+  written title (two new strings, `photo` and `attachedFile`); no attachments in site
+  search. Integration pass: the attachment 404 moved to `wp`; `hcwa_theme_is_story()`,
+  `hcwa_theme_category_slugs()`, `hcwa_theme_category_key()` and
+  `hcwa_theme_attachment_text()` use core when it is active, so the "names changed" note
+  and the photo gate agree on legacy story posts; the Yoast description fallback runs at
+  priority 100, after core drops draft text.
+- **Dev runtime**: no code change from its own review (the SEO plugin is a decision).
+  Integration pass: the seed uploads a synthetic flat-colour photo with a GPS position
+  as the Vietnamese Little Rose center's featured image (approved, identifiable child),
+  stops if any kept file still has a location and warns about a non-neutral name; the
+  manifest lists it under `fixtures`; `wp-smoke.py` adds HTTP probes for its attachment
+  page (404, no `Location`), its file name on the Little Rose page (absent), the REST
+  head fields, `/yoast/v1/get_head` (401 or 404) and image sitemaps; `wp/README.md`
+  explains the live site's Little Rose tag slugs and the new checks.
+
+Deliberate decisions in this round:
+
+- Image uploads get neutral names (`hcwa-{Ymd}-{random}.{ext}`) and titles, and
+  client-side media processing is off, because the browser would name every size after
+  the local file. Report PDFs keep their names. Existing media keeps its names (Phase 3
+  review). Maxwell to confirm.
+- Text WordPress read from a newly uploaded file never becomes its title, caption or alt;
+  for older media it is kept as a record and hidden when printed. The theme falls back to
+  "Ảnh" / "Photo"; an image without written alt text gets `alt=""`.
+- The Organization schema never prints a founding date, staff count or description until
+  HCWA verifies them (`content/verified/`), whatever Yoast's settings hold.
+- Image sitemaps are off: they would list photos that are never rendered.
+- `wp hcwa coverage` blocks on Little Rose rows and lists categories outside the four
+  sections as warnings (the posts still work where they are).
+
+Left for owners outside `wp/` and `scripts/wp-*` (round 2):
+
+- `docs/plan/03-STRATEGY-AND-DECISIONS`: record the SEO plugin decision (Yoast kept at the
+  live site's version, or another), then add it to rule 2's list and the unverified list
+  below. Rank Math or SEOPress would need the same filters through their own hooks.
+- `docs/plan/08-BUILD-PLAN` Phase 3, before 3.6: run `wp hcwa protect-little-rose` (dry
+  run, review the list with HCWA against 01-AUDIT:183-191, then `--apply`, with `--ids`
+  for posts the scan misses); run `wp hcwa media-scrub --dry-run`, then the real run on a
+  copy and on production, and review the attachments it reports as carrying a location;
+  review Media Library file names used on public pages; move legacy story posts into
+  stories / cau-chuyen and redirect `/category/our-stories/` and
+  `/category/chuyen-cua-chung-toi/` after the safeguarding review; the safeguarding review
+  of legacy post text (decision below).
+- `docs/plan/09-QA-CHECKLIST`, Content and safety (blockers): no `GPS*` keys from
+  `exif_read_data` on the main file, `original_image` and every size of a GPS test upload
+  (the seed checks this); `wp hcwa coverage` shows no "little rose" rows; `wp hcwa
+  media-scrub --dry-run` reports nothing. Launch: Yoast media pages stay off, headless
+  REST endpoints off, Yoast's default social image is marked "Approved for web" (otherwise
+  no share image is printed), and Yoast's Site representation fields (founding date,
+  number of employees, legal name, description, alternate name) are empty or verified by
+  HCWA. Next to :53: the SEO plugin decides how the Organization JSON-LD is made.
+- `docs/plan/05-DESIGN` "Formats" and image naming: align with the decisions above.
+
+Checks after this round: `php -l` on 123 PHP files under `wp/` and `scripts/` and
+`node --check` on 15 JS files are clean; `bash -n scripts/wp-local.sh` and `py_compile`
+of `wp-smoke.py` pass; `php wp/tests/run.php` reports 2675 passed, 0 failed (2594 after
+the part fixes, before the integration pass);
+`python3 -I scripts/wp-static-check.py` reports 0 errors and the same 7 warnings as round
+1. The new coverage row was run against the test stubs with a WP-CLI stand-in, and the
+seed's GPS fixture builder was checked with `exif_read_data` and the strip function.
+
+### After round 2 (orchestrator)
+
+- The critic's medium gap "Little Rose location and 'visit' prompt" is closed in the
+  theme: `hcwa_theme_center_is_protected()` (template-tags.php) reads
+  `hcwa_no_identifiable_children` across translations, and a protected center's page
+  prints no location and ends with "Want to support {name}?" (`supportTitle`) instead
+  of "Want to visit {name}?". Fails closed on the flag. Tests: theme-gates-test.php.
+  `php wp/tests/run.php` 2684 passed; static check 0 errors, 7 warnings.
+- Medium gaps from the round 1 critic not taken into round 2, still open: video, audio
+  and file links are not gated (rule 2 covers images); the Little Rose context model
+  cannot mark pages, reports or untagged posts; uploads stay at public URLs whatever the
+  page gate does (consent withdrawal means deleting the file); legacy payment details in
+  the kept install's old pages; legacy comments; background images from block supports.
 
 ### Unverified until WordPress runs
 
@@ -547,7 +735,22 @@ Nothing here has run inside WordPress, WP-CLI or a browser. In particular:
   widths were measured on prototype screenshots, not rendered); the Donate page rows at
   390 and 1440 px; no layout shift from the top bars.
 - The seed and smoke test end to end (`wp-local.sh setup|seed|start|smoke`, including the
-  HTTP gates), then `wp hcwa coverage` and `wp hcwa draft-scan`.
+  HTTP gates and the photo-gate fixture), then `wp hcwa coverage`, `wp hcwa draft-scan`,
+  `wp hcwa protect-little-rose` and `wp hcwa media-scrub --dry-run`.
+- Round 2 hooks: the `wp` action 404 before Yoast's attachment redirect; the
+  `post_thumbnail_id` backstop in core blocks; the upload prefilters, the neutral title
+  and slug (`wp_insert_attachment_data`), `wp_read_image_metadata` for new uploads only,
+  client-side media processing off (the sideload routes then do not exist); the lossless
+  strip on real phone photos (orientation kept, GD and Imagick sizes);
+  `wp_get_attachment_image_attributes` and `wp_get_attachment_caption` on the front end.
+- Yoast is not in `.wp-local/ref`, so every Yoast hook and field is from its public
+  filters and Polylang's integration, not its source: `wpseo_frontend_presentation`
+  (`model`, `open_graph_images`, `twitter_image`), `wpseo_opengraph_image`,
+  `wpseo_twitter_image`, `wpseo_schema_graph`, `wpseo_schema_organization`,
+  `wpseo_xml_sitemap_include_images`, `wpseo_sitemap_exclude_post_type`, `yoast_head` /
+  `yoast_head_json`, `/yoast/v1/get_head`, `enable_headless_rest_endpoints`,
+  `og_default_image_id`, the description filters the theme's fallback uses. Check them
+  against HCWA's Yoast version.
 
 ### Open questions for HCWA (collected from the part reports)
 
@@ -584,3 +787,12 @@ Nothing here has run inside WordPress, WP-CLI or a browser. In particular:
 - Donation details: entered in Settings → HCWA with "confirmed by" and date, or imported
   from `content/verified/` once it exists?
 - Forms (task 2.7): Q9 and the form plugin.
+- SEO plugin (round 2): keep Yoast at the live site's version (the proposal), and with
+  permission add its pinned, hash-checked zip to `scripts/wp-local.sh` like Polylang, so
+  the smoke probes check what it prints. Decision for Maxwell.
+- Legacy post text (round 2): residents' names in imported posts publish unchanged, and the
+  "names changed" note prints on legacy story posts whether or not names were changed.
+  Options: (A) a per-post "text reviewed by HCWA" flag that production requires on story
+  and Little Rose posts, or (B) a reviewed list in `content/verified/`. `protect-little-rose`
+  and the post flag cover photos only. Decision for Maxwell and HCWA; code unchanged.
+- Neutral upload names and client-side media processing off (round 2): Maxwell to confirm.

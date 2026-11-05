@@ -106,7 +106,7 @@ function hcwa_seed_require_code(): void {
 			WP_CLI::error( "Polylang is not active ($function() is missing): wp plugin activate polylang" );
 		}
 	}
-	foreach ( array( 'hcwa_t_in', 'hcwa_page_paths', 'hcwa_page_path', 'hcwa_page_keys' ) as $function ) {
+	foreach ( array( 'hcwa_t_in', 'hcwa_page_paths', 'hcwa_page_path', 'hcwa_page_keys', 'hcwa_attachment_files', 'hcwa_image_bytes_have_gps' ) as $function ) {
 		if ( ! function_exists( $function ) ) {
 			WP_CLI::error( "hcwa-core is not active ($function() is missing): wp plugin activate hcwa-core" );
 		}
@@ -568,6 +568,7 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 	$pages      = hcwa_seed_pages();
 	$centers    = hcwa_seed_centers( $data['work'], $focus );
 	hcwa_seed_news_tags( $data['work'], $centers );
+	$fixtures   = array( 'refused_photo' => hcwa_seed_little_rose_photo( $centers ) );
 	$partners   = hcwa_seed_partners( $data['work'] );
 	$programs   = hcwa_seed_programs( $data['work'], $focus, $centers, $partners );
 	$scopes     = hcwa_seed_impact( $data['impact'], $centers, $programs );
@@ -581,7 +582,7 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 	flush_rewrite_rules( false );
 
 	if ( '' !== $manifest ) {
-		hcwa_seed_write_manifest( $manifest, $pages, $centers, $programs, $posts, $categories, $scopes );
+		hcwa_seed_write_manifest( $manifest, $pages, $centers, $programs, $posts, $categories, $scopes, $fixtures );
 	}
 
 	WP_CLI::success(
@@ -1247,6 +1248,131 @@ function hcwa_seed_news_tags( array $work, array $centers ): array {
 }
 
 /**
+ * A synthetic test photo (one flat colour, no person in it) uploaded the way staff upload
+ * (media_handle_sideload(), so it passes hcwa-core's upload filters), for checks that need
+ * a real WordPress:
+ *
+ * - the file carries a GPS position, and afterwards no file WordPress kept (the original,
+ *   the converted main file, every size) may still have one (media-privacy.php);
+ * - it is stored as hcwa-{date}-{random} and titled that way, not after the upload name;
+ * - it is attached to the Vietnamese Little Rose center and is its featured image, marked
+ *   "Approved for web" and "Identifiable child": the gate refuses it only because of the
+ *   Little Rose context, so the center page must not print it (nor an SEO plugin's
+ *   og:image or schema) and its attachment page must answer 404 (wp-smoke.py probes).
+ *
+ * A problem with the location stops the seed; a name problem is a warning. Returns the
+ * attachment ID, or 0 when there is no Little Rose center or GD is missing.
+ *
+ * @param array $centers hcwa_seed_centers() result.
+ */
+function hcwa_seed_little_rose_photo( array $centers ): int {
+	$center = (int) ( $centers['little-rose']['vi'] ?? 0 );
+	if ( $center <= 0 ) {
+		WP_CLI::warning( 'No Little Rose center, so no photo-gate fixture (the refused-photo probes are skipped).' );
+		return 0;
+	}
+	$seed_id = 'media:little-rose-photo';
+
+	global $wpdb;
+	$id = (int) $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
+			WHERE m.meta_key = '_hcwa_seed_id' AND m.meta_value = %s AND p.post_type = 'attachment' ORDER BY p.ID LIMIT 1",
+			$seed_id
+		)
+	);
+
+	if ( 0 === $id ) {
+		if ( ! function_exists( 'imagecreatetruecolor' ) || ! function_exists( 'imagejpeg' ) ) {
+			WP_CLI::warning( 'PHP GD is missing, so no photo-gate fixture (the refused-photo probes are skipped).' );
+			return 0;
+		}
+		$jpeg = hcwa_seed_gps_jpeg();
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$tmp = wp_tempnam( 'hcwa-seed.jpg' );
+		file_put_contents( $tmp, $jpeg ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		$id = media_handle_sideload(
+			array(
+				'name'     => 'little-rose-seed-photo.jpg',
+				'tmp_name' => $tmp,
+			),
+			$center,
+			null,
+			array( 'post_content' => 'Seed fixture: one flat colour, no person. It checks the upload clean-up and the Little Rose photo gate on local instances.' )
+		);
+		if ( is_file( $tmp ) ) {
+			wp_delete_file( $tmp );
+		}
+		if ( is_wp_error( $id ) ) {
+			WP_CLI::error( 'The photo-gate fixture could not be uploaded: ' . $id->get_error_message() );
+		}
+		$id = (int) $id;
+		if ( function_exists( 'pll_set_post_language' ) && ! pll_get_post_language( $id ) ) {
+			pll_set_post_language( $id, 'vi' );
+		}
+	}
+
+	hcwa_seed_meta(
+		$id,
+		array(
+			'_hcwa_seed_id'           => $seed_id,
+			'hcwa_approved_for_web'   => true,
+			'hcwa_identifiable_child' => true,
+		)
+	);
+	if ( (int) get_post_thumbnail_id( $center ) !== $id ) {
+		set_post_thumbnail( $center, $id );
+	}
+
+	// The upload clean-up: no location left in any file, a neutral name and title.
+	$located = array();
+	foreach ( hcwa_attachment_files( $id ) as $key => $path ) {
+		$bytes = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		$exif  = function_exists( 'exif_read_data' ) && preg_match( '/\.jpe?g$/i', $path ) ? @exif_read_data( $path ) : array(); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		$gps   = array_filter( array_keys( is_array( $exif ) ? $exif : array() ), static fn( $k ) => 0 === strpos( (string) $k, 'GPS' ) );
+		if ( hcwa_image_bytes_have_gps( $bytes ) || $gps ) {
+			$located[] = $key . ' (' . wp_basename( $path ) . ')';
+		}
+	}
+	if ( $located ) {
+		WP_CLI::error( 'The photo-gate fixture still carries a location in: ' . implode( ', ', $located ) . '. The upload clean-up (hcwa-core media-privacy.php) did not run.' );
+	}
+	$file = wp_basename( (string) get_attached_file( $id ) );
+	if ( 0 !== strpos( $file, 'hcwa-' ) || 0 !== strpos( (string) get_the_title( $id ), 'hcwa-' ) ) {
+		WP_CLI::warning( sprintf( 'The photo-gate fixture is stored as "%s" and titled "%s": uploads should get a neutral hcwa-… name and title.', $file, get_the_title( $id ) ) );
+	}
+
+	WP_CLI::log( sprintf( 'Photo-gate fixture: attachment %d (%s), Little Rose featured image, no location in %d file(s).', $id, $file, count( hcwa_attachment_files( $id ) ) ) );
+	return $id;
+}
+
+/**
+ * A 1200 × 800 JPEG of one flat colour carrying a GPS position the way a phone writes it:
+ * an EXIF block with a GPS IFD (latitude reference N) and XMP with exif:GPSLatitude.
+ */
+function hcwa_seed_gps_jpeg(): string {
+	$image = imagecreatetruecolor( 1200, 800 );
+	imagefill( $image, 0, 0, (int) imagecolorallocate( $image, 47, 107, 79 ) );
+	ob_start();
+	imagejpeg( $image, null, 80 );
+	$jpeg = (string) ob_get_clean();
+	imagedestroy( $image );
+
+	$tiff    = "II*\0" . pack( 'V', 8 ) . pack( 'v', 2 )
+		. pack( 'vvVv', 0x0112, 3, 1, 1 ) . "\0\0"   // Orientation 1.
+		. pack( 'vvVV', 0x8825, 4, 1, 38 )           // GPS IFD at offset 38.
+		. pack( 'V', 0 )
+		. pack( 'v', 1 ) . pack( 'vvV', 1, 2, 2 ) . "N\0\0\0" . pack( 'V', 0 ); // GPSLatitudeRef N.
+	$segment = static fn( int $marker, string $body ): string => "\xFF" . chr( $marker ) . pack( 'n', strlen( $body ) + 2 ) . $body;
+	$xmp     = "http://ns.adobe.com/xap/1.0/\0<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:exif=\"http://ns.adobe.com/exif/1.0/\" exif:GPSLatitude=\"10,46.5N\" exif:GPSLongitude=\"106,41.9E\"/></rdf:RDF></x:xmpmeta>";
+
+	$app0_end = 'JFIF' === substr( $jpeg, 6, 4 ) ? 4 + unpack( 'n', substr( $jpeg, 4, 2 ) )[1] : 2;
+	return substr( $jpeg, 0, $app0_end ) . $segment( 0xE1, "Exif\0\0" . $tiff ) . $segment( 0xE1, $xmp ) . substr( $jpeg, $app0_end );
+}
+
+/**
  * Funders named in work.json programs (from the current site), as admin-only partner
  * records: not shown on the home page and without logo permission until HCWA says so.
  *
@@ -1743,8 +1869,9 @@ function hcwa_seed_settings( array $site, array $pages ): void {
  * @param array  $posts      Post IDs.
  * @param array  $categories Category IDs.
  * @param array  $scopes     Seeded impact figures by scope.
+ * @param array  $fixtures   Seeded test objects: 'refused_photo' => attachment ID.
  */
-function hcwa_seed_write_manifest( string $file, array $pages, array $centers, array $programs, array $posts, array $categories, array $scopes ): void {
+function hcwa_seed_write_manifest( string $file, array $pages, array $centers, array $programs, array $posts, array $categories, array $scopes, array $fixtures = array() ): void {
 	$urls = array();
 	$add  = static function ( string $id, string $kind, array $pair, callable $link, bool $figures = false, array $expected = array() ) use ( &$urls ) {
 		$paths = array();
@@ -1800,6 +1927,12 @@ function hcwa_seed_write_manifest( string $file, array $pages, array $centers, a
 		'home'        => (string) get_option( 'home' ),
 		'environment' => wp_get_environment_type(),
 		'urls'        => $urls,
+		// Seeded test objects the smoke test probes (hcwa_seed_little_rose_photo()).
+		'fixtures'    => array(
+			'refused_photo'      => (int) ( $fixtures['refused_photo'] ?? 0 ),
+			'refused_photo_file' => ! empty( $fixtures['refused_photo'] ) ? (string) pathinfo( (string) get_attached_file( (int) $fixtures['refused_photo'] ), PATHINFO_FILENAME ) : '',
+			'refused_photo_page' => ! empty( $fixtures['refused_photo'] ) ? hcwa_seed_path( (string) get_permalink( (int) $centers['little-rose']['vi'] ) ) : '',
+		),
 		// Paths that must answer 404, in each language.
 		'not_found'   => array(
 			array(

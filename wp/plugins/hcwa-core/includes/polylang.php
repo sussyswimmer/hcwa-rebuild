@@ -64,7 +64,10 @@ add_filter( 'pll_get_taxonomies', 'hcwa_pll_taxonomies', 10, 2 );
  * Keys from wpml-config.xml are added after this filter (priority 20,
  * modules/wpml/wpml-config.php:133) and are not affected. Copying into a new translation
  * ($sync false) keeps other plugins' keys as Polylang chose them, except `footnotes`,
- * whose text belongs to the source language's content.
+ * whose text belongs to the source language's content. Yoast SEO's texts cannot be
+ * dropped here: Polylang adds them in its own filter, hooked later on pll_init at the same
+ * priority (polylang src/integrations/wpseo/load.php:12-19, wpseo.php:432-435), so
+ * hcwa_pll_drop_seo_text() (seo.php) removes them at priority 15.
  *
  * @param string[] $keys Meta keys Polylang will copy.
  * @param bool     $sync True when synchronizing, false when creating a translation.

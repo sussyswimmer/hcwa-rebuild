@@ -61,6 +61,7 @@ function hcwa_theme_strings(): array {
 		'helpCenter'       => array( 'vi' => 'Cách giúp {name}', 'en' => 'How to help {name}' ),
 		'donateTo'         => array( 'vi' => 'Ủng hộ {name}', 'en' => 'Donate to {name}' ),
 		'visitTitle'       => array( 'vi' => 'Muốn đến thăm {name}?', 'en' => 'Want to visit {name}?' ),
+		'supportTitle'     => array( 'vi' => 'Muốn hỗ trợ {name}?', 'en' => 'Want to support {name}?' ),
 		'unitLogo'         => array( 'vi' => 'Logo {name}', 'en' => '{name} logo' ),
 
 		// Program page.
@@ -92,6 +93,10 @@ function hcwa_theme_strings(): array {
 		'type_center'      => array( 'vi' => 'Cơ sở', 'en' => 'Center' ),
 		'type_program'     => array( 'vi' => 'Dự án', 'en' => 'Project' ),
 		'type_report'      => array( 'vi' => 'Báo cáo', 'en' => 'Report' ),
+
+		// Attachment pages: heading when staff gave the file no title of their own.
+		'photo'            => array( 'vi' => 'Ảnh', 'en' => 'Photo' ),
+		'attachedFile'     => array( 'vi' => 'Tệp đính kèm', 'en' => 'Attachment' ),
 	);
 	return $strings;
 }

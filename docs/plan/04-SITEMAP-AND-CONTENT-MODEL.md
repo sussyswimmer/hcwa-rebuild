@@ -124,7 +124,7 @@ center/program/story templates refuse to output an image where `approved_for_web
 | `/gbws/` | `/en/our-work/centers/green-bamboo/` |
 | `/charity-classes/` | `/en/our-work/programs/charity-class/` |
 | `/lrws/` | `/en/our-work/centers/little-rose/` |
-| `/chp-2/` | `/en/our-work/centers/cau-han/` |
+| `/chp-2/` | `/en/our-work/centers/cau-han-project/` (Polylang free cannot reuse the VI slug `cau-han`; HCWA can pick another EN slug) |
 | `/dva/`, `/dva-child-abuse-prevention-project/` | `/en/our-work/programs/thrive-together/` |
 | `/our-news/` | `/en/news/` |
 | `/support-us/` | `/en/get-involved/donate/` |
@@ -139,6 +139,7 @@ center/program/story templates refuse to output an image where `approved_for_web
 | `/tin-moi-2/` | `/tin-tuc/` |
 | `/ve-chung-toi/`, `/lien-he/` | unchanged |
 | English news posts `/{slug}/` | `/en/{slug}/` |
+| Old category archives `/category/{slug}/`, `/en/category/{slug}/` (in `scripts/urls-live.csv`) | the new `/tin-tuc/{slug}/` and `/en/news/{slug}/` |
 | Vietnamese news posts `/{slug}/` | unchanged |
 
 The root `/` changing from English to Vietnamese is the one tricky case: visitors whose
