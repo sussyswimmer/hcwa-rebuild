@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bông gió hero proof</title>
+<!-- Proof render for docs/design/concepts/open.md, not production code.
+     Run from the repo root: python3 -m http.server 8000, then open
+     http://localhost:8000/docs/design/concepts/open/proof-hero.html?t=0.08
+     ?t=0..1 moves the sun along the day; &calm=0 turns the calm zone off; &bare=1 hides the HTML. -->
+<style>
+@font-face{font-family:"Archivo HCWA";src:url(archivo-w78-600-700.woff2) format("woff2");font-weight:600 700}
+@font-face{font-family:"Be Vietnam Pro";src:url(/prototype/public/fonts/be-vietnam-pro-400.woff2) format("woff2");font-weight:400}
+@font-face{font-family:"Be Vietnam Pro";src:url(/prototype/public/fonts/be-vietnam-pro-500.woff2) format("woff2");font-weight:500}
+@font-face{font-family:"Be Vietnam Pro";src:url(/prototype/public/fonts/be-vietnam-pro-600.woff2) format("woff2");font-weight:600}
+:root{
+  --voi:#EEE6D8; --voi-shade:#DDD3C4; --muc:#1D2131; --muc-2:#474C5E;
+  --nang-400:#FFC233; --xanh-700:#313188; --xanh-900:#20205A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--voi-shade);color:var(--muc);font-family:"Be Vietnam Pro",system-ui,sans-serif}
+canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+.hdr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:28px;padding:18px clamp(16px,3.3vw,48px);z-index:3;font-size:15px}
+.logo{display:flex;gap:10px;align-items:center;font-weight:600;line-height:1.25;font-size:14px}
+.logo i{width:38px;height:38px;border-radius:50%;background:var(--xanh-700);display:block}
+.nav{display:flex;gap:26px;margin-left:auto}
+.lang{font-weight:500;white-space:nowrap}.hdr-donate{min-height:40px;padding:0 18px}.menu{display:none;font:inherit;font-weight:600;min-height:44px;padding:0 4px;background:none;border:0;color:var(--muc)}.lang b{text-decoration:underline;text-underline-offset:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:999px;font-weight:600;font-size:16px;text-decoration:none}
+.btn-sun{background:var(--nang-400);color:var(--muc)}
+.btn-ghost{border:1.5px solid var(--muc);color:var(--muc)}
+.hero{position:relative;z-index:2;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 clamp(16px,3.3vw,48px) clamp(40px,9vh,96px)}
+h1{font-family:"Archivo HCWA",sans-serif;font-weight:640;font-size:clamp(2.75rem,1.2rem + 5.9vw,6.75rem);line-height:1.15;letter-spacing:-0.005em;margin:0 0 .32em;max-inline-size:12.6em;text-wrap:balance}
+.intro{font-size:clamp(1.0625rem,1rem + .35vw,1.25rem);line-height:1.65;max-inline-size:36ch;margin:0 0 28px;color:var(--muc)}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+@media (max-width:700px){.nav{display:none}.hdr{gap:14px}.logo span{display:none}.lang{margin-left:auto}.menu{display:block}.ctas .btn{width:100%}.hero{padding-bottom:28px}} .hero{container-type:inline-size} @media (max-width:599px){h1{font-size:clamp(1.875rem,11.4cqi,2.75rem)}}
+</style>
+<script type="importmap">{"imports":{"three":"/prototype/node_modules/three/build/three.module.js"}}</script>
+</head>
+<body>
+<header class="hdr">
+  <div class="logo"><i></i><span>Hội Bảo trợ Trẻ em<br>TP. Hồ Chí Minh</span></div>
+  <nav class="nav"><span>Về chúng tôi</span><span>Hoạt động</span><span>Tác động &amp; Báo cáo</span><span>Tin tức</span><span>Chung tay</span></nav>
+  <span class="lang"><b>VI</b> / EN</span>
+  <a class="btn btn-sun hdr-donate">Ủng hộ</a>
+  <button class="menu" type="button">Menu</button>
+</header>
+<main class="hero">
+  <h1>Cùng trẻ em xây&nbsp;dựng tương&nbsp;lai an&nbsp;toàn và tươi&nbsp;sáng hơn.</h1>
+  <p class="intro">Hội hỗ trợ trẻ em, thanh thiếu niên và gia đình qua giáo dục, bảo vệ trẻ em và các chương trình dựa vào cộng đồng.</p>
+  <div class="ctas"><a class="btn btn-sun">Khám phá hoạt động</a><a class="btn btn-ghost">Chung tay</a></div>
+</main>
+<script type="module">
+import * as THREE from 'three';
+const q = new URLSearchParams(location.search);
+const T = parseFloat(q.get('t') ?? '0.08');      // day progress 0 = 7:30, 1 = 17:30
+const W = document.documentElement.clientWidth, H = document.documentElement.clientHeight, portrait = H > W;
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.22;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(portrait ? 62 : 46, W / H, 0.05, 60);
+// child eye height: 1.10 m
+if (portrait) { cam.position.set(-1.1, 1.10, 3.0); cam.lookAt(2.0, 2.15, -3.2); }
+else { cam.position.set(-1.5, 1.10, 3.3); cam.lookAt(0.5, 1.78, -4); }
+
+// ---- room + screen constants (metres) ----
+const SCREEN_X = 2.6, BLOCK = 0.3, DEPTH = 0.1, Z0 = -4.0, Z1 = 1.4, Y0 = 0.9, Y1 = 3.3;
+const ROOM = {min:new THREE.Vector3(-6, 0, -4), max:new THREE.Vector3(SCREEN_X, 3.3, 4)};
+
+// sun path: azimuth and elevation from progress (morning low from the right-front)
+const az = THREE.MathUtils.lerp(32, -18, T) * Math.PI / 180;    // + = toward camera side
+const el = THREE.MathUtils.lerp(17, 34, Math.sin(Math.PI * Math.min(T, 1))) * Math.PI / 180;
+const L = new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize(); // toward the sun
+const sunCol = new THREE.Color('#FFD9A0');
+
+// GLSL shared: analytic bông gió mask
+const MASK = /* glsl */`
+uniform vec3 uL; uniform float uSX, uB, uD, uZ0, uZ1, uY0, uY1;
+float holeSDF(vec2 p){
+  // p in block-local metres, centre 0. Quatrefoil (four overlapping circles) + four corner pips
+  float r = 0.056;
+  float d = min(min(length(p - vec2(r,0.)), length(p + vec2(r,0.))), min(length(p - vec2(0.,r)), length(p + vec2(0.,r)))) - r;
+  vec2 a = abs(p) - vec2(0.112);
+  d = min(d, length(a) - 0.021);
+  return d;
+}
+float apert(vec3 P, float x){
+  float t = (x - P.x) / uL.x;
+  vec3 Q = P + uL * t;
+  if (Q.z < uZ0 || Q.z > uZ1 || Q.y < uY0 || Q.y > uY1) return 0.0;
+  vec2 c = vec2(mod(Q.z - uZ0, uB), mod(Q.y - uY0, uB)) - 0.5 * uB;
+  float w = 0.0025 + 0.0093 * max(t, 0.0) * 0.6;   // sun penumbra grows with distance
+  return smoothstep(w, -w, holeSDF(c));
+}
+float sunMask(vec3 P){
+  if (P.x > uSX - 0.001) return 0.0;
+  return apert(P, uSX) * apert(P, uSX + uD);   // both faces of the 10 cm block clip the beam
+}`;
+const maskU = {uL:{value:L}, uSX:{value:SCREEN_X}, uB:{value:BLOCK}, uD:{value:DEPTH}, uZ0:{value:Z0}, uZ1:{value:Z1}, uY0:{value:Y0}, uY1:{value:Y1}};
+
+// cheap value noise for lime wash and terrazzo
+const NOISE = /* glsl */`
+float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+  return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
+float fbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * vn(p); p *= 2.03; a *= .5; } return s; }
+vec2 h22(vec2 p){ return fract(sin(vec2(dot(p, vec2(127.1,311.7)), dot(p, vec2(269.5,183.3)))) * 43758.5453); }`;
+
+function roomMaterial(kind){
+  return new THREE.ShaderMaterial({
+    uniforms: {...maskU, uSun:{value:sunCol.clone().multiplyScalar(2.1)}, uCalm:{value:new THREE.Vector4(0,0,0,0)}, uKind:{value:kind}},
+    vertexShader: `varying vec3 vP; varying vec3 vN; void main(){ vec4 w = modelMatrix * vec4(position,1.); vP = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `
+      #include <common>
+      varying vec3 vP; varying vec3 vN; uniform vec3 uSun; uniform int uKind; uniform vec4 uCalm;
+      float calm(){ vec2 p = gl_FragCoord.xy; vec2 d = max(max(uCalm.xy - p, p - uCalm.zw), 0.); return mix(1.0, 0.16, 1.0 - smoothstep(0., 64., length(d))); }
+      ${MASK}
+      ${NOISE}
+      void main(){
+        vec3 alb;
+        if (uKind == 1) { // terrazzo (đá mài): cream cement with stone chips
+          vec2 p = vP.xz * 64.0; vec2 i = floor(p); float chip = 0.0; vec3 cc = vec3(0.);
+          for (int y=-1; y<=1; y++) for (int x=-1; x<=1; x++) { vec2 g = vec2(x,y); vec2 o = h22(i+g); float d = length(g + o - fract(p)); float s = 0.18 + 0.22*h21(i+g+3.1);
+            if (d < s) { chip = 1.0; float k = h21(i+g+7.7); cc = k < .45 ? vec3(.80,.74,.66) : k < .75 ? vec3(.55,.52,.50) : k < .92 ? vec3(.86,.62,.42) : vec3(.42,.47,.58); } }
+          alb = mix(vec3(.87,.83,.77), cc, chip * 0.45);
+          alb *= 0.94 + 0.08 * fbm(vP.xz * 1.3);
+        } else { // vôi (lime wash): warm, mottled, faint brush direction
+          float m = fbm(vP.xy * vec2(1.6, 2.4) + vP.z) * 0.6 + fbm(vP.zy * 3.0) * 0.4;
+          alb = mix(vec3(.905,.865,.795), vec3(.945,.915,.855), m);
+          if (uKind == 2) alb *= vec3(.97,.97,.99); // ceiling
+        }
+        alb = pow(alb, vec3(2.2));
+        vec3 N = normalize(vN);
+        float ndl = max(dot(N, uL), 0.0);
+        float cz = uCalm.z > 0. ? calm() : 1.0; float m = sunMask(vP) * cz;
+        // sky fill through the screen (cool, HCWA-blue leaning) + warm floor bounce
+        vec3 sky = vec3(.86,.84,.90) * (0.70 + 0.20 * clamp(N.x, 0., 1.)) ;
+        vec3 bounce = vec3(.70,.56,.42) * 0.30 * clamp(-N.y*0.5+0.5, 0., 1.) * smoothstep(3.2, 0.0, vP.y);
+        float ao = smoothstep(0.0, 0.55, vP.y) * 0.25 + 0.75;                  // floor-wall contact
+        ao *= 1.0 - 0.18 * smoothstep(1.2, 0.0, abs(vP.x + 6.0)) - 0.18 * smoothstep(1.0, 0.0, abs(vP.z + 4.0)) * step(0.5, abs(N.y));
+        vec3 col = alb * (sky + bounce) * ao + alb * uSun * ndl * m;
+        if (uKind == 1) col += uSun * ndl * m * 0.03; // polished floor: faint specular lift
+        col = mix(col, vec3(0.80, 0.74, 0.66), (1.0 - cz) / 0.84 * 0.62); // calm zone: lift to shaded lime wash
+        gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`
+  });
+}
+// room surfaces
+const back = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 3.3), roomMaterial(0)); back.position.set(-1.7, 1.65, -4); scene.add(back);
+const left = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.3), roomMaterial(0)); left.rotation.y = Math.PI/2; left.position.set(-6, 1.65, 0); scene.add(left);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 8), roomMaterial(1)); floor.rotation.x = -Math.PI/2; floor.position.set(-1.7, 0, 0); scene.add(floor);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 8), roomMaterial(2)); ceil.rotation.x = Math.PI/2; ceil.position.set(-1.7, 3.3, 0); scene.add(ceil);
+// parapet under the screen and solid wall beyond it (inner faces)
+const para = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 0.9), roomMaterial(0)); para.rotation.y = -Math.PI/2; para.position.set(SCREEN_X, 0.45, (Z0+Z1)/2); scene.add(para);
+const rwall = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.3), roomMaterial(0)); rwall.rotation.y = -Math.PI/2; rwall.position.set(SCREEN_X, 1.65, Z1 + 1.3); scene.add(rwall);
+
+// ---- the bông gió block: Shape with holes -> ExtrudeGeometry, instanced ----
+function blockGeometry(){
+  const h = BLOCK/2 - 0.002;              // 4 mm mortar joint
+  const s = new THREE.Shape(); s.moveTo(-h,-h); s.lineTo(h,-h); s.lineTo(h,h); s.lineTo(-h,h); s.closePath();
+  const r = 0.056, N = 72, quat = new THREE.Path();
+  for (let i = 0; i < N; i++) { const th = -i / N * Math.PI * 2; // clockwise for holes
+    const R = 2 * r * Math.max(Math.cos(th), Math.cos(th - Math.PI/2), Math.cos(th - Math.PI), Math.cos(th + Math.PI/2));
+    i ? quat.lineTo(R*Math.cos(th), R*Math.sin(th)) : quat.moveTo(R*Math.cos(th), R*Math.sin(th)); }
+  quat.closePath(); s.holes.push(quat);
+  for (const [cx, cy] of [[1,1],[-1,1],[-1,-1],[1,-1]]) { const p = new THREE.Path(); p.absarc(cx*0.112, cy*0.112, 0.021, 0, Math.PI*2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, {depth: DEPTH, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 1, curveSegments: 10});
+  g.rotateY(Math.PI/2);   // extrude along +x (room side at x=0, street side at x=DEPTH)
+  return g;
+}
+const bg = blockGeometry();
+const cols = Math.round((Z1 - Z0) / BLOCK), rows = Math.round((Y1 - Y0) / BLOCK);
+const blocks = new THREE.InstancedMesh(bg, new THREE.MeshStandardMaterial({color:'#d7cdbd', roughness:0.93}), cols * rows);
+const m4 = new THREE.Matrix4(); let k = 0;
+for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) { m4.makeTranslation(SCREEN_X, Y0 + (r + .5) * BLOCK, Z0 + (c + .5) * BLOCK); blocks.setMatrixAt(k++, m4); }
+scene.add(blocks);
+console.log('block tris', bg.index ? bg.index.count/3 : bg.attributes.position.count/3, 'instances', cols*rows);
+const sun = new THREE.DirectionalLight(sunCol, 2.2); sun.position.copy(L).multiplyScalar(10); scene.add(sun);
+scene.add(new THREE.HemisphereLight('#e6e4f0', '#d9c19c', 1.75));
+// the street beyond: overexposed morning sky and a soft tree mass
+const sky = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.ShaderMaterial({
+  uniforms:{}, toneMapped:false,
+  vertexShader:`varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
+  fragmentShader:`varying vec2 vU; ${NOISE} void main(){ vec3 c = mix(vec3(1.0,.97,.90), vec3(.93,.95,.98), vU.y);
+    float tree = smoothstep(.55, .62, fbm(vU * vec2(9., 5.)) + (0.62 - vU.y) * 0.9); c = mix(c, vec3(.74,.80,.66), tree * .55); gl_FragColor = vec4(c * 1.08, 1.); }`
+}));
+sky.rotation.y = -Math.PI/2; sky.position.set(9, 4, -1); scene.add(sky);
+
+// ---- light shafts: analytic raymarch, full-screen, additive ----
+const shaftMat = new THREE.ShaderMaterial({
+  uniforms:{...maskU, uInvP:{value:new THREE.Matrix4()}, uInvV:{value:new THREE.Matrix4()}, uCam:{value:new THREE.Vector3()}, uMin:{value:ROOM.min}, uMax:{value:ROOM.max}, uSun:{value:sunCol}, uCalm:{value:new THREE.Vector4(0,0,0,0)}},
+  transparent:true, blending:THREE.AdditiveBlending, depthTest:false, depthWrite:false,
+  vertexShader:`varying vec2 vU; void main(){ vU = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+  fragmentShader:`
+    #include <common>
+    varying vec2 vU; uniform mat4 uInvP, uInvV; uniform vec3 uCam, uMin, uMax, uSun; uniform vec4 uCalm;
+    ${MASK}
+    ${NOISE}
+    void main(){
+      vec4 ndc = vec4(vU * 2. - 1., 1., 1.); vec4 vp = uInvP * ndc; vp /= vp.w;
+      vec3 rd = normalize((uInvV * vec4(vp.xyz, 0.)).xyz), ro = uCam;
+      vec3 t1 = (uMin - ro) / rd, t2 = (uMax - ro) / rd; vec3 tf = max(t1, t2); float tExit = min(min(tf.x, tf.y), tf.z);
+      const int STEPS = 40; float dt = tExit / float(STEPS); float j = h21(gl_FragCoord.xy) * dt; float acc = 0.;
+      for (int i = 0; i < STEPS; i++) { vec3 p = ro + rd * (j + dt * float(i)); float dens = 0.55 + 0.45 * fbm(p.xz * 1.7 + p.y); acc += sunMask(p) * dens * dt; }
+      float g = 0.45, mu = dot(rd, uL); float hg = (1. - g*g) / pow(1. + g*g - 2.*g*mu, 1.5) / 12.566;
+      vec3 col = uSun * acc * (0.020 + 0.30 * hg);
+      vec2 cp = gl_FragCoord.xy; vec2 cd = max(max(uCalm.xy - cp, cp - uCalm.zw), 0.); col *= uCalm.z > 0. ? mix(1.0, 0.12, 1.0 - smoothstep(0., 64., length(cd))) : 1.0;
+      gl_FragColor = vec4(col, 1.);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`
+});
+const shaft = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shaftMat); shaft.frustumCulled = false; shaft.renderOrder = 10;
+const post = new THREE.Scene(); post.add(shaft); const postCam = new THREE.Camera();
+
+// ---- dust motes: lit only inside a beam ----
+const NM = portrait ? 220 : 420, mp = new Float32Array(NM * 3);
+for (let i = 0; i < NM; i++) { mp[i*3] = THREE.MathUtils.lerp(-3.5, 2.5, Math.random()); mp[i*3+1] = Math.random() * 3.2; mp[i*3+2] = THREE.MathUtils.lerp(-3.9, 2.0, Math.random()); }
+const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.BufferAttribute(mp, 3));
+const motes = new THREE.Points(mg, new THREE.ShaderMaterial({
+  uniforms:{...maskU}, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false,
+  vertexShader:`${MASK} varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.); vA = sunMask(position); gl_PointSize = 2.6 * (3.0 / -mv.z) + 0.8; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader:`varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vec3(1., .93, .80) * vA * smoothstep(.5, .1, d) * .9, 1.); }`
+}));
+scene.add(motes);
+
+cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+const calmQ = q.get('calm') !== '0';
+if (calmQ) { const a = document.querySelector('.intro').getBoundingClientRect(), b = document.querySelector('.ctas').getBoundingClientRect();
+  const x0 = Math.min(a.left, b.left) - 8, x1 = Math.max(a.right, b.right) + 8, yTop = a.top - 8, yBot = b.bottom + 8;
+  const v = new THREE.Vector4(x0, H - yBot, x1, H - yTop);
+  scene.traverse(o => { if (o.material && o.material.uniforms && o.material.uniforms.uCalm) o.material.uniforms.uCalm.value = v; });
+  shaftMat.uniforms.uCalm.value = v; }
+shaftMat.uniforms.uInvP.value.copy(cam.projectionMatrixInverse);
+shaftMat.uniforms.uInvV.value.copy(cam.matrixWorld);
+shaftMat.uniforms.uCam.value.copy(cam.position);
+renderer.autoClear = false;
+renderer.clear(); renderer.render(scene, cam); renderer.render(post, postCam);
+const info = renderer.info.render; console.log('draw calls', info.calls, 'triangles', info.triangles);
+document.title = 'done';
+if (q.get('bare')) { document.querySelector('.hero').style.visibility='hidden'; document.querySelector('.hdr').style.visibility='hidden'; }
+</script>
+</body>
+</html>
