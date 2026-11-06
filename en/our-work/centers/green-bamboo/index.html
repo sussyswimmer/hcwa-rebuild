@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
 <title>Green Bamboo Social Protection Center | HCWA</title>
 <meta name="description" content="Disadvantaged children and families, supported in their community">
 <meta name="robots" content="noindex, nofollow">
@@ -12,26 +13,26 @@
 <meta property="og:title" content="Green Bamboo Social Protection Center | HCWA">
 <meta property="og:description" content="Disadvantaged children and families, supported in their community">
 <meta property="og:locale" content="en_GB">
+<link rel="preload" href="/hcwa-rebuild/fonts/archivo-w78-600-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/hcwa-rebuild/fonts/be-vietnam-pro-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/hcwa-rebuild/fonts/fraunces-vf.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/hcwa-rebuild/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/hcwa-rebuild/img/apple-touch-icon.png">
-<script type="application/json" id="i18n">{"copy":"Copy","copied":"Copied","copyFailed":"Couldn't copy. Select the text and copy it yourself.","f_sending":"Sending…","f_send":"Send","e_summary":"Fix these before sending:","close":"Close"}</script>
-  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-Dy96cYvB.js"></script>
-  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-0yZ_mDgO.css">
+<script type="application/json" id="i18n">{"copy":"Copy","copied":"Copied","copyFailed":"Couldn't copy. Select the text and copy it yourself.","f_sending":"Sending…","f_send":"Send","e_summary":"Fix these before sending:","close":"Close","motionPause":"Pause motion","motionPlay":"Play motion","draftHide":"Hide draft outlines","draftShow":"Show draft outlines"}</script>
+  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-T3tTNade.js"></script>
+  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-BHLq4LFv.css">
 </head>
 <body class="">
 <a class="skip-link" href="#main">Skip to main content</a>
-<div class="proto-note"><div class="container"><p><span class="proto-note__full">Prototype for HCWA review. A dashed outline marks draft text or figures waiting for HCWA approval.</span><span class="proto-note__short">Prototype. Dashed outline: waiting for HCWA approval.</span></p></div></div>
+<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">Prototype for HCWA review. A dashed outline marks draft text or figures waiting for HCWA approval.</span><span class="proto-note__short">Prototype for HCWA review.</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>Hide draft outlines</button></div></div>
 
 <div class="header-slot">
-  <header class="site-header">
+  <header class="site-header" data-header>
     <div class="container site-header__bar">
-      <a class="logo" href="/hcwa-rebuild/en/">
-    <img src="/hcwa-rebuild/img/hcwa-logo.png" width="97" height="128" alt="Ho Chi Minh City Child Welfare Association">
+      <a class="logo" href="/hcwa-rebuild/en/" data-text-safe>
+    <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="97" height="128" alt="Ho Chi Minh City Child Welfare Association"></picture>
     <span class="logo__name" aria-hidden="true"><span>HCMC Child Welfare</span><span>Association</span></span>
   </a>
-      <nav class="nav" aria-label="Main menu">
+      <nav class="nav" aria-label="Main menu" data-text-safe>
   <ul class="nav__list">
     <li class="nav__item has-sub">
         <a class="nav__link" href="/hcwa-rebuild/en/about/">About Us</a>
@@ -57,14 +58,15 @@
       </li>
   </ul>
 </nav>
-      <div class="site-header__tools">
+      <div class="site-header__tools" data-text-safe>
         <div class="lang-switch lang-switch--header" role="group" aria-label="Language"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div>
-        <a class="btn btn--primary" href="/hcwa-rebuild/en/get-involved/donate/" data-donate>Donate</a>
-        <button class="icon-btn menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg><span class="sr-only">Menu</span></button>
+        <a class="btn btn--primary btn--header" href="/hcwa-rebuild/en/get-involved/donate/" data-donate>Donate</a>
+        <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>Menu</button>
       </div>
     </div>
   </header>
 </div>
+
 <main id="main" tabindex="-1">
 
 <header class="page-header" style="--unit:var(--color-unit-green-bamboo)" data-unit>
@@ -186,7 +188,7 @@
 <section class="cta-band" aria-labelledby="cta-title">
   <div class="container cta-band__inner">
     <h2 id="cta-title">Want to visit Green Bamboo?</h2>
-    <div class="cta-band__actions"><a class="btn btn--on-blue" href="/hcwa-rebuild/en/contact/">Contact us</a></div>
+    <div class="cta-band__actions"><a class="btn btn--on-dusk" href="/hcwa-rebuild/en/contact/">Contact us</a></div>
     <p class="cta-band__note" data-draft>[Only contact details HCWA has approved.]</p>
   </div>
 </section>
@@ -194,7 +196,7 @@
 <footer class="site-footer">
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy">
+        <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
         <p class="foot-brand__name">Ho Chi Minh City Child Welfare Association</p>
         <p data-draft>A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.</p>
         <p class="foot-brand__reg" data-draft>[DRAFT: legal status / decision number]</p>
@@ -213,10 +215,15 @@
         <li><a href="/hcwa-rebuild/en/about/partners/">Partners &amp; sponsors</a></li>
       </ul></div></details>
     </div>
-    <div class="container site-footer__bottom">
-      <p>© 2026 HCWA</p>
-      <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
-      <div class="lang-switch" role="group" aria-label="Language"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div>
+    <div class="site-footer__bar">
+      <div class="container site-footer__bottom">
+        <p>© 2026 HCWA</p>
+        <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
+        <div class="lang-switch" role="group" aria-label="Language"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div>
+        <button class="pause-toggle pause-toggle--dusk" type="button" aria-pressed="false" data-motion-toggle>
+  <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg><span class="pause-toggle__label">Pause motion</span>
+</button>
+      </div>
     </div>
   </footer>
 <dialog class="sheet" id="menu-sheet" aria-labelledby="menu-title">

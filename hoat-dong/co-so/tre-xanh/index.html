@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
 <title>Cơ sở Bảo trợ Xã hội Tre Xanh | Hội Bảo trợ Trẻ em TP.HCM</title>
 <meta name="description" content="Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng">
 <meta name="robots" content="noindex, nofollow">
@@ -12,17 +13,17 @@
 <meta property="og:title" content="Cơ sở Bảo trợ Xã hội Tre Xanh | Hội Bảo trợ Trẻ em TP.HCM">
 <meta property="og:description" content="Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng">
 <meta property="og:locale" content="vi_VN">
+<link rel="preload" href="/hcwa-rebuild/fonts/archivo-w78-600-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/hcwa-rebuild/fonts/be-vietnam-pro-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/hcwa-rebuild/fonts/fraunces-vf.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/hcwa-rebuild/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/hcwa-rebuild/img/apple-touch-icon.png">
-<script type="application/json" id="i18n">{"copy":"Sao chép","copied":"Đã sao chép","copyFailed":"Không sao chép được. Hãy chọn và sao chép thủ công.","f_sending":"Đang gửi…","f_send":"Gửi","e_summary":"Vui lòng sửa các mục sau trước khi gửi:","close":"Đóng"}</script>
-  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-Dy96cYvB.js"></script>
-  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-0yZ_mDgO.css">
+<script type="application/json" id="i18n">{"copy":"Sao chép","copied":"Đã sao chép","copyFailed":"Không sao chép được. Hãy chọn và sao chép thủ công.","f_sending":"Đang gửi…","f_send":"Gửi","e_summary":"Vui lòng sửa các mục sau trước khi gửi:","close":"Đóng","motionPause":"Tạm dừng chuyển động","motionPlay":"Bật lại chuyển động","draftHide":"Ẩn khung nháp","draftShow":"Hiện khung nháp"}</script>
+  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-T3tTNade.js"></script>
+  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-BHLq4LFv.css">
 </head>
 <body class="">
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
-<div class="proto-note"><div class="container"><p><span class="proto-note__full">Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.</span><span class="proto-note__short">Bản mẫu. Khung nét đứt: nội dung chờ HCWA duyệt.</span></p></div></div>
+<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.</span><span class="proto-note__short">Bản mẫu chờ HCWA duyệt.</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>Ẩn khung nháp</button></div></div>
 <div class="en-bar" lang="en" data-en-bar hidden>
         <div class="container en-bar__inner">
           <a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" hreflang="en">View this page in English<svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
@@ -30,13 +31,13 @@
         </div>
       </div>
 <div class="header-slot">
-  <header class="site-header">
+  <header class="site-header" data-header>
     <div class="container site-header__bar">
-      <a class="logo" href="/hcwa-rebuild/">
-    <img src="/hcwa-rebuild/img/hcwa-logo.png" width="97" height="128" alt="Hội Bảo trợ Trẻ em TP. Hồ Chí Minh">
+      <a class="logo" href="/hcwa-rebuild/" data-text-safe>
+    <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="97" height="128" alt="Hội Bảo trợ Trẻ em TP. Hồ Chí Minh"></picture>
     <span class="logo__name" aria-hidden="true"><span>Hội Bảo trợ Trẻ em</span><span>TP. Hồ Chí Minh</span></span>
   </a>
-      <nav class="nav" aria-label="Menu chính">
+      <nav class="nav" aria-label="Menu chính" data-text-safe>
   <ul class="nav__list">
     <li class="nav__item has-sub">
         <a class="nav__link" href="/hcwa-rebuild/ve-chung-toi/">Về chúng tôi</a>
@@ -62,14 +63,15 @@
       </li>
   </ul>
 </nav>
-      <div class="site-header__tools">
+      <div class="site-header__tools" data-text-safe>
         <div class="lang-switch lang-switch--header" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
-        <a class="btn btn--primary" href="/hcwa-rebuild/chung-tay/ung-ho/" data-donate>Ủng hộ</a>
-        <button class="icon-btn menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg><span class="sr-only">Menu</span></button>
+        <a class="btn btn--primary btn--header" href="/hcwa-rebuild/chung-tay/ung-ho/" data-donate>Ủng hộ</a>
+        <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>Menu</button>
       </div>
     </div>
   </header>
 </div>
+
 <main id="main" tabindex="-1">
 
 <header class="page-header" style="--unit:var(--color-unit-green-bamboo)" data-unit>
@@ -191,7 +193,7 @@
 <section class="cta-band" aria-labelledby="cta-title">
   <div class="container cta-band__inner">
     <h2 id="cta-title">Muốn đến thăm Tre Xanh?</h2>
-    <div class="cta-band__actions"><a class="btn btn--on-blue" href="/hcwa-rebuild/lien-he/">Liên hệ với chúng tôi</a></div>
+    <div class="cta-band__actions"><a class="btn btn--on-dusk" href="/hcwa-rebuild/lien-he/">Liên hệ với chúng tôi</a></div>
     <p class="cta-band__note" data-draft>[Chỉ hiển thị thông tin liên hệ HCWA đã duyệt.]</p>
   </div>
 </section>
@@ -199,7 +201,7 @@
 <footer class="site-footer">
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy">
+        <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
         <p class="foot-brand__name">Hội Bảo trợ Trẻ em TP. Hồ Chí Minh</p>
         <p data-draft>Tổ chức xã hội tự nguyện, phi lợi nhuận, chăm sóc, bảo vệ và giáo dục trẻ em có hoàn cảnh khó khăn tại TP. Hồ Chí Minh.</p>
         <p class="foot-brand__reg" data-draft>[DRAFT: tư cách pháp lý / số quyết định thành lập]</p>
@@ -218,10 +220,15 @@
         <li><a href="/hcwa-rebuild/ve-chung-toi/doi-tac/">Đối tác &amp; nhà tài trợ</a></li>
       </ul></div></details>
     </div>
-    <div class="container site-footer__bottom">
-      <p>© 2026 HCWA</p>
-      <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
-      <div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+    <div class="site-footer__bar">
+      <div class="container site-footer__bottom">
+        <p>© 2026 HCWA</p>
+        <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
+        <div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/our-work/centers/green-bamboo/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+        <button class="pause-toggle pause-toggle--dusk" type="button" aria-pressed="false" data-motion-toggle>
+  <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg><span class="pause-toggle__label">Tạm dừng chuyển động</span>
+</button>
+      </div>
     </div>
   </footer>
 <dialog class="sheet" id="menu-sheet" aria-labelledby="menu-title">
