@@ -36,18 +36,29 @@ and donation details before anything goes live.
   diacritic readability). Body line-height 1.6 or more.
 - Keep the current WordPress install, its posts and its URLs. We rebuild the theme and
   page layouts, not the CMS. Every old URL that changes gets a 301 redirect.
-- Clarity over effects. No 3D, no scroll-jacking, no parallax, no animated counters on
-  impact numbers. Motion rules are in `docs/plan/05-DESIGN.md`.
+- An experience, built responsibly (Maxwell's direction, 6 Nov 2026, replacing "clarity
+  over effects"): 3D, scroll storytelling, parallax and rich motion are wanted. Limits that
+  stay: native scroll speed (animations follow the scroll, never hijack it); every page is
+  complete and readable with `prefers-reduced-motion`, without WebGL and without JS; all
+  text is HTML, never only in a canvas; impact numbers never count up (they appear as
+  they are); mobile LCP < 2.5s on a mid-range Android, 3D loads after the text. Motion
+  and 3D rules are in `docs/plan/05-DESIGN.md`.
 
 ## Skills to use
 
-- `frontend-design` and `god-site-skill:design-taste-frontend` for visual decisions
-  (with dials set to variance 4, motion 2, density 4: this is a trust-first site)
+- `god-site-skill:god-site-skill` as the conductor; `god-site-skill:gpt-taste`,
+  `god-site-skill:anti-ui-slop`, `frontend-design` and `god-site-skill:design-taste-frontend`
+  for visual decisions (dials: variance 8, motion 8, density 4)
+- `god-site-skill:3d-web-experience`, `god-site-skill:scroll-experience`,
+  `god-site-skill:ui-motion`, `god-site-skill:emil-design-eng` and
+  `god-site-skill:aurora-ui` for the 3D, scroll and motion layer (plus the `threejs-*`
+  and `gsap-framer-scroll-animation` skills they point to)
 - `god-site-skill:tastegate` to render and check every page at 390px and 1440px
 - `god-site-skill:design-token-contrast` on the palette before building components
 - `god-site-skill:frontend-seo` and `god-site-skill:frontend-lighthouse` before launch
 - `anti-slop` for any English copy you draft (HCWA will still approve the final wording)
-- Do NOT use the 3D, shader, cinematic or scroll-story skills from god-site-skill here
+- Fonts must cover every Vietnamese letter (check with `scripts/build-fonts.py`); a
+  skill's font shortlist does not override that
 
 ## Writing placeholder copy
 
