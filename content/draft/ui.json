@@ -409,7 +409,43 @@
     "en": "Search"
   },
   "prototypeNoteShort": {
-    "vi": "Bản mẫu. Khung nét đứt: nội dung chờ HCWA duyệt.",
-    "en": "Prototype. Dashed outline: waiting for HCWA approval."
+    "vi": "Bản mẫu chờ HCWA duyệt.",
+    "en": "Prototype for HCWA review."
+  },
+  "motionPause": {
+    "vi": "Tạm dừng chuyển động",
+    "en": "Pause motion"
+  },
+  "motionPlay": {
+    "vi": "Bật lại chuyển động",
+    "en": "Play motion"
+  },
+  "skipCenters": {
+    "vi": "Bỏ qua phần giới thiệu các cơ sở",
+    "en": "Skip the centers tour"
+  },
+  "skipShutters": {
+    "vi": "Bỏ qua, đến phần Bạn có thể giúp như thế nào",
+    "en": "Skip to how you can help"
+  },
+  "centersRail": {
+    "vi": "Các cơ sở",
+    "en": "Centers"
+  },
+  "aboutShelter": {
+    "vi": "Tìm hiểu về mái ấm",
+    "en": "About the shelter"
+  },
+  "draftHide": {
+    "vi": "Ẩn khung nháp",
+    "en": "Hide draft outlines"
+  },
+  "draftShow": {
+    "vi": "Hiện khung nháp",
+    "en": "Show draft outlines"
+  },
+  "partnersPending": {
+    "vi": "[Chờ ít nhất 4 logo đối tác đã được duyệt]",
+    "en": "[Waiting for at least 4 approved partner logos]"
   }
 }
