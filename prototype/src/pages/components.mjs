@@ -1,6 +1,8 @@
 import { html, raw } from "../lib/html.mjs";
 import { button, textLink, placeholder, figure, pendingChip, centerCard, programRow, storyCard, reportRow, breadcrumb, langNotice, field, statusPill, newsItem, icon } from "../partials/components.mjs";
 import { pageHeader } from "./work.mjs";
+import { readFileSync } from "node:fs";
+import { parse } from "../../scripts/tokens-to-js.mjs";
 
 // Every component from 05-DESIGN with its states, for HCWA and the agency (08 task 1.3).
 export function components(c) {
@@ -9,11 +11,8 @@ export function components(c) {
   const block = (id, title, inner) => html`<section class="kit" aria-labelledby="kit-${id}"><h2 id="kit-${id}" class="h3">${title}</h2>${inner}</section>`;
   const testLine = "Hội Bảo trợ Trẻ em Thành phố Hồ Chí Minh: những đứa trẻ ở Quận 7 được học, được bảo vệ.";
   const sizes = [["h1", "--fs-h1"], ["h2", "--fs-h2"], ["h3", "--fs-h3"], ["h4", "--fs-h4"], ["lead", "--fs-lg", T("đoạn dẫn", "lead")], ["body", "--fs-base", T("nội dung", "body")], ["meta", "--fs-meta", T("chú thích", "meta")]];
-  const swatches = [
-    ["paper", "#FBF8F3"], ["surface", "#FFFFFF"], ["sunken", "#F3EEE6"], ["ink", "#1C2333"], ["ink-2", "#4A5265"], ["ink-3", "#5F6679"],
-    ["blue-900", "#23236A"], ["blue-700", "#313188"], ["blue-100", "#ECECF7"], ["sun-400", "#FFC42E"], ["sun-100", "#FFF4D6"],
-    ["unit-green-bamboo", "#008E3A"], ["unit-little-rose", "#DC4C98"], ["unit-cau-han", "#417CBD"], ["ok", "#2C7A4C"], ["warn", "#8A5A00"], ["error", "#B42318"],
-  ];
+  // Read from tokens.css at build time, so the table can never drift from the tokens (world-* are shader-only).
+  const swatches = Object.entries(parse(readFileSync(new URL("../styles/tokens.css", import.meta.url), "utf8")).colors).filter(([n]) => !n.startsWith("world-"));
   const sample = { verified: true, value: 12345, suffix: "+", label: { vi: "ví dụ định dạng số, không phải số liệu thật", en: "number format example, not real data" }, year: null };
   const body = html`
 ${pageHeader(c, { trail: [[T("Thành phần giao diện", "Components")]], title: T("Thành phần giao diện", "Components"), intro: T("Mọi thành phần và trạng thái dùng trong bản mẫu.", "Every component and state used in the prototype.") })}
@@ -44,8 +43,8 @@ ${block("buttons", T("Nút", "Buttons"), html`
     ${textLink("#", c.t("readMore"))}
   </div>
   <div class="kit-row kit-row--blue">
-    ${button({ label: c.t("contactUs"), kind: "on-blue" })}
-    ${button({ label: T("Khi được chọn", "Focus"), kind: "on-blue", cls: "is-focus" })}
+    ${button({ label: c.t("contactUs"), kind: "on-dusk" })}
+    ${button({ label: T("Khi được chọn", "Focus"), kind: "on-dusk", cls: "is-focus" })}
   </div>`)}
 
 ${block("figures", T("Số liệu tác động", "Impact figures"), html`

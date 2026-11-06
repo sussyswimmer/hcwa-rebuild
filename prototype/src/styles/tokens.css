@@ -1,67 +1,108 @@
-/* HCWA design tokens (05-DESIGN). Brand blue and unit accents are sampled from the
-   current logos (task 1.1); provisional until the agency delivers A1/B6.
-   Contrast ratios are measured by design-token-contrast; see qa/contrast-pairs.json. */
+/* HCWA design tokens: the single source (05-DESIGN D1, D2, D3, D5.1).
+   scripts/tokens-to-js.mjs mirrors colors, easings and durations into src/motion/tokens.js and
+   src/world/tokens.js. No hex value appears anywhere else in CSS, JS or GLSL.
+   Contrast pairs: qa/contrast-pairs.json (design-token-contrast). */
 :root {
-  /* neutrals: warm paper, never pure white page / pure black text */
-  --color-paper: #FBF8F3;
-  --color-surface: #FFFFFF;
-  --color-sunken: #F3EEE6;
-  --color-line: #E4DDD2;          /* dividers only: decorative, no contrast duty */
-  --color-input-border: #857C70;  /* form fields and controls need 3:1 */
-  --color-ink: #1C2333;
-  --color-ink-2: #4A5265;
-  --color-ink-3: #5F6679;         /* was #6B7285: failed 4.5:1 on sunken */
+  /* tokens:start */
+  /* The house in sun: lime wash (vôi) */
+  --color-lime-50:  #F7F2E9;  /* sunlit plaster: cards, panels, solid header, fields, secondary button fill */
+  --color-lime-100: #EFE7DA;  /* page background, sunlit sections */
+  --color-lime-300: #CDBFAB;  /* mortar line: dividers only (decorative, 1.47:1) */
 
-  /* brand: sampled from the HCWA logo (#313188) */
-  --color-blue-900: #23236A;
-  --color-blue-700: #313188;
-  --color-blue-100: #ECECF7;
-  --color-on-blue: #FFFFFF;
+  /* The house in shade: bóng mát, cool, leaning to the logo blue */
+  --color-shade-100: #E3E1EC; /* shaded sections (news, alternate inner sections) */
+  --color-shade-300: #C3C0D8; /* slat gaps and shade bands in SVG art: decorative, never behind text */
+  --color-border:    #7A6F5E; /* field and control borders */
 
-  /* action: carried over from the current site's yellow buttons */
-  --color-sun-400: #FFC42E;
-  --color-sun-500: #F2B312;
-  --color-sun-100: #FFF4D6;
+  /* Ink */
+  --color-ink-900: #1D2131;   /* text */
+  --color-ink-700: #434859;   /* secondary text */
+  --color-ink-500: #5A5F70;   /* meta, dates: 14 px and up */
 
-  /* unit accents: sampled from each unit logo. Bands and dots only, never text */
+  /* Sun: HCWA yellow is the light */
+  --color-sun-400: #FFC42E;   /* primary button fill and Donate only */
+  --color-sun-500: #F2B312;   /* primary hover */
+  --color-sun-200: #FFE6AE;   /* light patches in CSS and SVG, reading highlight */
+  --color-sun-100: #FFF3D3;   /* help section, the flight wash, statement halo */
+  --color-gold-700: #8A5A12;  /* small accents on sun-100 / lime-50; draft outline */
+
+  /* Shade and dusk: the logo blue */
+  --color-blue-700: #313188;  /* links, focus, secondary border, shutter paint, logo */
+  --color-blue-900: #20205A;  /* dusk: contact band, footer */
+  --color-blue-950: #16163F;  /* footer bottom bar */
+  --color-on-dusk:   #FFFFFF;
+  --color-on-dusk-2: #C8CAEB; /* secondary text on dusk */
+
+  /* Units: doors, bands, dots, emblem art. Never text. Only on lime-50, lime-100, sun-100 */
   --color-unit-green-bamboo: #008E3A;
-  --color-unit-little-rose: #DC4C98;
-  --color-unit-cau-han: #417CBD;
+  --color-unit-little-rose:  #DC4C98;
+  --color-unit-cau-han:      #417CBD;
 
-  /* status */
-  --color-ok: #2C7A4C;             /* was #2F7D4F: 4.38:1 on ok-100 */
-  --color-ok-100: #E6F2EA;
-  --color-warn: #8A5A00;
+  /* Status */
+  --color-ok: #256B43;  --color-ok-100: #E2EFE6;
+  --color-warn: #8A5A00;      /* "pending" chip text on sun-100 */
   --color-error: #B42318;
-  --color-focus: #313188;          /* 3px outline + 2px offset */
-  --color-focus-on-blue: #FFC42E;  /* focus ring on blue bands and the footer */
+  --color-focus: #313188;  --color-focus-on-dark: #FFC42E;
 
-  /* type */
-  --font-display: "Fraunces", "Iowan Old Style", "Georgia", serif;
-  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
-  --fs-meta: 0.875rem;
-  --fs-sm: 0.9375rem;
-  --fs-base: 1.0625rem;
-  --fs-lg: 1.25rem;
-  --fs-h4: 1.375rem;
-  --fs-h3: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
-  --fs-h2: clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem);
-  --fs-h1: clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem);
-  --fs-stat: clamp(2.5rem, 2rem + 2vw, 3.5rem);
-  --lh-body: 1.65;
-  --lh-heading: 1.2;
-
-  /* space, radius, elevation */
-  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
-  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px;
-  --section-y: clamp(64px, 8vw, 112px);
-  --container: 1200px;
-  --gutter: clamp(16px, 4vw, 32px);
-  --r-sm: 6px; --r-md: 12px; --r-lg: 20px; --r-pill: 999px;
-  --shadow-1: 0 1px 2px rgba(28, 35, 51, .06), 0 4px 12px rgba(28, 35, 51, .06);
-
-  /* motion */
-  --ease: cubic-bezier(.215, .61, .355, 1);
-  --t-press: 150ms;
-  --t-open: 240ms;
+  /* World: shader targets, exported to JS. Never used as CSS backgrounds. */
+  --color-world-sky:         #FFF7E6; /* street light seen through the holes */
+  --color-world-wall-shade:  #C7CBD2; /* lime wash in the cool shade: the logo's blue-grey, almost no chroma */
+  --color-world-wall-sun:    #FFE6AE; /* a sun patch on the wall */
+  --color-world-ceiling:     #D5D9DF;
+  --color-world-floor-shade: #A5A9B1; /* terrazzo in shade */
+  --color-world-screen-face: #3D4370; /* backlit block face: the logo-blue silhouette (holes 8.8:1 against it). Never behind text */
+  --color-world-wash:        #FFF3D3; /* the light flood: equals sun-100 */
+  /* tokens:end */
 }
+
+/* World-only colors named in 05-DESIGN D6.3 and D6.4 (the sun clock per set, worn door wood).
+   Shader targets for src/world/ through the generated tokens.js; never CSS. */
+:root {
+  --color-world-sun-room:       #FFD9A0; /* room at rest, t 0.08 */
+  --color-world-sun-passage:    #FFE4B8; /* room → passage, t 0.20 */
+  --color-world-sun-corridor-a: #FFE9C8; /* corridor, t 0.25 */
+  --color-world-sun-corridor-b: #FFF2DE; /* corridor, t 0.45 */
+  --color-world-sun-shutters-a: #FFD08A; /* shutters, t 0.85 */
+  --color-world-sun-shutters-b: #FFB866; /* shutters, t 0.95 */
+  --color-world-wood:           #8A6A48; /* worn door edges */
+  --color-world-face-sand:      #D7CDBD; /* the proof's warm sand-cement block face: an A/B for Maxwell only (poster &face=sand) */
+}
+
+:root {
+  /* Type (D2). Archivo instanced to wdth 78, wght 600-700; Be Vietnam Pro 400/500/600. */
+  --font-display: "Archivo HCWA", "Archivo HCWA Fallback", "Arial Narrow", sans-serif;
+  --font-body: "Be Vietnam Pro", "Be Vietnam Pro Fallback", system-ui, sans-serif;
+  --fs-display: clamp(2.5rem, 0.6rem + 6.5vw, 7rem);
+  --fs-h1: clamp(2.25rem, 1.3rem + 3.6vw, 4.5rem);
+  --fs-h2: clamp(2rem, 1.35rem + 2.6vw, 3.75rem);
+  --fs-h3: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  --fs-h4: 1.25rem;
+  --fs-statement: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+  --fs-stat: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+  --fs-lg: 1.25rem; --fs-base: 1.0625rem; --fs-sm: 0.9375rem; --fs-meta: 0.875rem;
+  --wght-h1: 640; --wght-h2: 620; --wght-h3: 600;
+  --lh-h1: 1.15; --lh-h2: 1.18; --lh-h3: 1.25;
+  --lh-body: 1.65; --lh-lead: 1.6;   /* running text never below 1.6 */
+  --track-display: -0.005em;
+
+  /* Space, radius, elevation, layout (D3) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 176px;
+  --section-y: clamp(96px, 10vw, 176px);
+  --container: 1320px;  --gutter: clamp(16px, 4vw, 48px);
+  --r-sm: 4px;  --r-md: 8px;  --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgb(32 32 90 / .06), 0 8px 24px rgb(32 32 90 / .08);
+  --edge-block: 56px;
+  --header-h: 60px; --header-h-wide: 80px; --header-h-compact: 64px;
+
+  /* Motion (D5.1) */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-sun:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-hover:  cubic-bezier(0.215, 0.61, 0.355, 1);
+  --d-press: 120ms; --d-hover: 180ms; --d-ui: 240ms; --d-sheet: 320ms;
+  --d-reveal: 520ms; --d-flood: 900ms; --d-sun-in: 1200ms; --d-sun: 1800ms; --d-handoff: 400ms;
+  --stagger: 60ms;
+}
+@media (max-width: 599px) { :root { --edge-block: 40px; } }

@@ -1,200 +1,105 @@
 import "./styles/tokens.css";
-import "./styles/site.css";
+import "./styles/base.css";
+import "./styles/layout.css";
+import "./styles/components.css";
+import "./styles/light.css";
+import "./styles/motion.css";
+import "./styles/world.css";
+import { bus } from "./bus.js";
+import { store } from "./ui/dom.js";
+import { initHeader } from "./ui/header.js";
+import { initMenuSheet } from "./ui/menu-sheet.js";
+import { initFooter } from "./ui/footer.js";
+import { initEnBar } from "./ui/en-bar.js";
+import { initFilters } from "./ui/filters.js";
+import { initLightbox } from "./ui/lightbox.js";
+import { initCopy } from "./ui/copy.js";
+import { initForms } from "./ui/forms.js";
+import { initPauseToggle } from "./ui/pause-toggle.js";
+import { initStills } from "./ui/stills.js";
+import { initDraftToggle } from "./ui/draft-toggle.js";
+import { initSunIn } from "./motion/sun-in.js";
+import { initReveals } from "./motion/reveals.js";
 
-const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
-const i18n = JSON.parse($("#i18n")?.textContent ?? "{}");
-const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const store = {
-  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode: dismissal lasts this page only */ } },
+// Loading order (05-DESIGN D6.9): head-inline.js has set data-tier / data-motion / sun-pending;
+// this module (deferred) boots the sun-in and the UI, then the motion layer, then the world.
+const root = document.documentElement;
+const tier = Number(root.dataset.tier ?? 0);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+const motionOn = () => root.dataset.motion !== "off" && !reduced.matches;
+
+// What the first screen needs runs now; the rest waits for the first frame, so it never sits between
+// the stylesheet and first paint.
+initStills();
+initSunIn();
+initPauseToggle();
+initHeader();
+initEnBar(); // before paint: the pointer bar changes the hero's height
+const initRest = () => {
+  initMenuSheet();
+  initFooter();
+  initFilters();
+  initLightbox();
+  initCopy();
+  initForms();
+  initReveals();
+  initDraftToggle();
+};
+requestAnimationFrame(() => setTimeout(initRest));
+
+// Fonts are in the HTTP cache from here on: later pages skip waiting for them before the sun-in.
+document.fonts?.ready.then(() => { root.classList.add("wf"); store.set("hcwa:wf", "1", "sessionStorage"); });
+
+// GSAP, ScrollTrigger and Lenis: a separate chunk, only when something may move.
+let motion = null;
+const startMotion = () => {
+  motion ??= import("./motion/index.js").then((m) => m.startMotion({ tier }));
 };
 
-// Header shrinks to 64px after 120px of scroll (06-PAGES), driven by a sentinel, not a scroll listener.
-{
-  const header = $(".site-header");
-  const sentinel = Object.assign(document.createElement("div"), { ariaHidden: "true" });
-  sentinel.style.cssText = "position:absolute;top:120px;height:1px;width:1px";
-  document.body.prepend(sentinel);
-  new IntersectionObserver(([e]) => header.classList.toggle("is-compact", !e.isIntersecting)).observe(sentinel);
-}
-
-// Desktop submenus: toggle buttons, Escape and outside click close them.
-{
-  const toggles = $$(".nav__toggle");
-  const close = (except) => toggles.forEach((t) => { if (t !== except) { t.setAttribute("aria-expanded", "false"); $("#" + t.getAttribute("aria-controls")).hidden = true; } });
-  toggles.forEach((t) => t.addEventListener("click", () => {
-    const open = t.getAttribute("aria-expanded") !== "true";
-    close(t);
-    t.setAttribute("aria-expanded", String(open));
-    $("#" + t.getAttribute("aria-controls")).hidden = !open;
-  }));
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    const open = toggles.find((t) => t.getAttribute("aria-expanded") === "true");
-    if (open) { close(); open.focus(); }
-  });
-  document.addEventListener("click", (e) => { if (!e.target.closest(".nav__item")) close(); });
-  $(".nav")?.addEventListener("focusout", (e) => { if (!e.relatedTarget?.closest(".nav")) close(); });
-}
-
-// Mobile menu: a modal <dialog> gives focus trapping and Escape for free.
-{
-  const sheet = $("#menu-sheet");
-  const opener = $("[data-open-sheet]");
-  opener?.addEventListener("click", () => sheet.showModal());
-  $("[data-close-sheet]")?.addEventListener("click", () => sheet.close());
-  let followedLink = false;
-  sheet?.addEventListener("click", (e) => {
-    followedLink = Boolean(e.target.closest("a"));
-    if (e.target === sheet || followedLink) sheet.close();
-  });
-  // After a link, focus belongs to where the link went (same-page anchors), not the menu button.
-  sheet?.addEventListener("close", () => { if (!followedLink) opener?.focus(); followedLink = false; });
-}
-
-// Footer columns are accordions on mobile and plain columns on desktop.
-{
-  const desktop = matchMedia("(min-width: 1024px)");
-  const sync = () => $$(".foot-col").forEach((d) => { d.open = desktop.matches; });
-  sync();
-  desktop.addEventListener("change", sync);
-  $$(".foot-col summary").forEach((s) => s.addEventListener("click", (e) => { if (desktop.matches) e.preventDefault(); }));
-}
-
-// "View this page in English" for English browsers on VI pages; no automatic redirect (07-BILINGUAL).
-{
-  const bar = $("[data-en-bar]");
-  if (bar && navigator.language?.toLowerCase().startsWith("en") && !store.get("hcwa-en-bar")) bar.hidden = false;
-  $("[data-dismiss-en-bar]")?.addEventListener("click", () => { bar.hidden = true; store.set("hcwa-en-bar", "1"); });
-  $("[data-dismiss-announce]")?.addEventListener("click", (e) => { e.target.closest("[data-announce]").hidden = true; });
-}
-
-// One gentle fade-up per section, only for sections still below the fold.
-if (!reduced && "IntersectionObserver" in window) {
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.remove("reveal-pending"); io.unobserve(e.target); }
-  }), { rootMargin: "0px 0px -10% 0px" });
-  $$("[data-reveal]").forEach((el) => {
-    if (el.getBoundingClientRect().top > innerHeight) { el.classList.add("reveal-pending"); io.observe(el); }
-  });
-}
-
-// Our Work filter: chips are plain ?area= links; this hides what doesn't match.
-{
-  const area = new URLSearchParams(location.search).get("area");
-  const groups = $$("[data-filter-group]");
-  if (area && groups.length) {
-    $$(".filters .chip").forEach((chip) => (chip.dataset.area === area ? chip.setAttribute("aria-current", "true") : chip.removeAttribute("aria-current")));
-    let shown = 0;
-    groups.forEach((g) => {
-      const items = $$("[data-areas]", g);
-      items.forEach((it) => { const hit = it.dataset.areas.split(" ").includes(area); it.hidden = !hit; shown += hit; });
-      g.hidden = !items.some((it) => !it.hidden);
-    });
-    $("[data-filter-empty]").hidden = shown > 0;
-  }
-}
-
-// Gallery lightbox: <dialog>, arrow keys, Escape, focus returns to the thumbnail.
-{
-  const box = $("[data-lightbox]");
-  const items = $$("[data-gallery] .gallery__item");
-  if (box && items.length) {
-    let i = 0, from = null;
-    const show = (n) => {
-      i = (n + items.length) % items.length;
-      const ph = items[i].firstElementChild.cloneNode(true);
-      $("[data-lightbox-stage]", box).replaceChildren(ph);
-      $("[data-lightbox-count]", box).textContent = `${i + 1} / ${items.length}`;
-    };
-    items.forEach((b, n) => b.addEventListener("click", () => { from = b; show(n); box.showModal(); }));
-    $("[data-lightbox-prev]", box).addEventListener("click", () => show(i - 1));
-    $("[data-lightbox-next]", box).addEventListener("click", () => show(i + 1));
-    $("[data-lightbox-close]", box).addEventListener("click", () => box.close());
-    box.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") show(i - 1); if (e.key === "ArrowRight") show(i + 1); });
-    box.addEventListener("close", () => from?.focus());
-  }
-}
-
-// Copy buttons announce the result in a live region.
-{
-  let live = $("[data-live]");
-  if (!live) { live = Object.assign(document.createElement("p"), { className: "sr-only" }); live.setAttribute("aria-live", "polite"); document.body.append(live); }
-  // Clear first so a repeated "Copied" is announced again.
-  const announce = (msg) => { live.textContent = ""; setTimeout(() => { live.textContent = msg; }, 50); };
-  $$("[data-copy]").forEach((btn) => btn.addEventListener("click", async () => {
-    const label = $("span", btn);
-    try {
-      await navigator.clipboard.writeText(btn.dataset.copy);
-      label.textContent = i18n.copied;
-      announce(i18n.copied);
-    } catch {
-      announce(i18n.copyFailed);
-    }
-    setTimeout(() => { label.textContent = i18n.copy; }, 2000);
-  }));
-}
-
-// Donate links from a center page carry ?center=<id>; preselect it in "Tell us you donated".
-{
-  const pick = $("#d-center");
-  const center = new URLSearchParams(location.search).get("center");
-  if (pick && center && [...pick.options].some((o) => o.value === center)) pick.value = center;
-}
-
-// Forms: inline errors in the page language, error summary on submit, then success.
-$$("[data-form]").forEach((form) => {
-  const summary = $("[data-summary]", form);
-  const success = $("[data-success]", form);
-  const submit = $('button[type="submit"]', form);
-  const check = (input) => {
-    const box = input.closest("[data-field]");
-    const err = $(".field__error", box);
-    const bad = !input.checkValidity();
-    box.classList.toggle("is-invalid", bad);
-    if (bad) input.setAttribute("aria-invalid", "true");
-    else input.removeAttribute("aria-invalid");
-    err.hidden = !bad;
-    $("span", err).textContent = bad ? err.dataset.error : "";
-    return !bad;
+// The world (three.js) after load + idle, on Tier 1-2 with motion on, never otherwise (PLAN section 1).
+// world/index.js exports startWorld({ canvas, stage, tier, bus }) → { setPaused, dispose }; it probes the
+// GPU before three.js loads, adds html.world-live once its first frame matches the poster, and leaves
+// the poster alone if it fails.
+let world = null;
+let worldRequested = false;
+const startWorld = () => {
+  const canvas = document.querySelector(".world-canvas");
+  if (worldRequested || !canvas || tier < 1 || !motionOn()) return;
+  worldRequested = true;
+  const go = () => {
+    // Paused (or the OS asked for less motion) while waiting for load + idle: nothing loads now;
+    // resuming calls startWorld again.
+    if (!motionOn()) return void (worldRequested = false);
+    return import("./world/index.js")
+      .then(({ startWorld: start }) => start({ canvas, stage: document.querySelector(".hero__stage"), tier, bus }))
+      .then((w) => {
+        world = w;
+        if (bus.state.paused) world?.setPaused(true);
+      })
+      .catch((err) => console.warn("world unavailable, keeping the stills", err));
   };
-  const inputs = $$("input, select, textarea", form).filter((el) => el.closest("[data-field]"));
-  // Re-check while typing, not on blur: clearing an error on blur shifts the layout under the
-  // pointer mid-click, so the next control (e.g. the consent box) misses the click.
-  inputs.forEach((el) => ["input", "change"].forEach((ev) => el.addEventListener(ev, () => { if (el.closest(".is-invalid")) check(el); })));
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    success.hidden = true;
-    const bad = inputs.filter((el) => !check(el));
-    if (bad.length) {
-      summary.innerHTML = "";
-      const p = Object.assign(document.createElement("p"), { textContent: i18n.e_summary });
-      const ul = document.createElement("ul");
-      bad.forEach((el) => {
-        const a = Object.assign(document.createElement("a"), { href: "#" + el.id, textContent: $(`#${el.id}-error span`, form)?.textContent ?? "" });
-        a.addEventListener("click", (ev) => { ev.preventDefault(); el.focus(); });
-        const li = document.createElement("li");
-        li.append(a);
-        ul.append(li);
-      });
-      summary.append(p, ul);
-      summary.hidden = false;
-      summary.focus();
-      return;
-    }
-    summary.hidden = true;
-    // Prototype: there is no backend. Show the sending state, then the success message.
-    submit.disabled = true;
-    submit.setAttribute("aria-busy", "true");
-    submit.textContent = i18n.f_sending;
-    setTimeout(() => {
-      form.reset();
-      submit.disabled = false;
-      submit.removeAttribute("aria-busy");
-      submit.textContent = i18n.f_send;
-      success.hidden = false;
-      success.focus();
-    }, 600);
-  });
+  const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 2000 }) : setTimeout(go, 200));
+  if (document.readyState === "complete") idle();
+  else addEventListener("load", idle, { once: true });
+};
+
+if (motionOn()) {
+  startMotion();
+  startWorld();
+}
+bus.addEventListener("pause", (e) => {
+  world?.setPaused(e.detail.paused);
+  // Turning motion back on during this visit brings the layers in that were never loaded.
+  if (!e.detail.paused && motionOn()) { startMotion(); startWorld(); }
+});
+// The OS asking for less motion mid-visit (05-DESIGN D5.6): everything that moves stops and the stills
+// come back, as on a reduced-motion load. Not stored as the visitor's own choice (hcwa:motion).
+reduced.addEventListener?.("change", (e) => {
+  if (!e.matches) return;
+  root.dataset.motion = "off";
+  root.setAttribute("data-reduced", "");
+  bus.state.paused = true;
+  bus.dispatchEvent(new CustomEvent("pause", { detail: { paused: true, system: true } }));
+  world?.dispose();
+  world = null;
 });

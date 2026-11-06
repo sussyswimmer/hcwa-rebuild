@@ -1,0 +1,14 @@
+/* Reveals and the motion switches (05-DESIGN D5.4, D5.6). Content is visible by default:
+   JS adds .reveal-pending only when motion is allowed, so no JS, reduced motion and pause show everything. */
+[data-reveal] { transition: opacity var(--d-reveal) var(--ease-out), translate var(--d-reveal) var(--ease-out); }
+.reveal-pending { opacity: 0; translate: 0 12px; }
+
+/* Paused (data-motion="off") and reduced motion: nothing moves by itself. Hover color changes stay. */
+html[data-motion="off"] [data-reveal], html[data-motion="off"] .sheet[open], html[data-motion="off"] .sheet::backdrop { transition: none; animation: none; }
+html[data-motion="off"] .reveal-pending { opacity: 1; translate: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], .site-header, .logo img, .nav__sub, .nav__toggle .icon, .sheet summary .icon, .foot-col summary .icon, .more summary .icon, .accordion summary .icon, .method summary .icon, .btn, .center-card, .text-link .icon, .program-row__arrow { transition: none; }
+  .reveal-pending { opacity: 1; translate: none; }
+  .sheet[open], .sheet::backdrop { animation: none; }
+  .spinner { animation-duration: 2.4s; }
+}

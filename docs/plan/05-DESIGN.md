@@ -122,11 +122,11 @@ shaders. `theme.json` slugs in `wp/themes/hcwa-2026` use the same names without 
 
   /* World: shader targets, exported to JS. Never used as CSS backgrounds. */
   --color-world-sky:         #FFF7E6; /* street light seen through the holes */
-  --color-world-wall-shade:  #CBC8DC; /* lime wash in the cool shade */
+  --color-world-wall-shade:  #C7CBD2; /* lime wash in the cool shade: the logo's blue-grey, almost no chroma */
   --color-world-wall-sun:    #FFE6AE; /* a sun patch on the wall */
-  --color-world-ceiling:     #D9D6E6;
-  --color-world-floor-shade: #A9A6BC; /* terrazzo in shade */
-  --color-world-screen-face: #5B5896; /* backlit block face: the logo-blue silhouette. Never behind text */
+  --color-world-ceiling:     #D5D9DF;
+  --color-world-floor-shade: #A5A9B1; /* terrazzo in shade */
+  --color-world-screen-face: #3D4370; /* backlit block face: the logo-blue silhouette (holes 8.8:1 against it). Never behind text */
   --color-world-wash:        #FFF3D3; /* the light flood: equals sun-100 */
   /* tokens:end */
 }
@@ -157,9 +157,9 @@ The pair list is `qa/contrast-pairs.json`. Re-run after P0.1:
 | white | blue-700 · blue-900 · blue-950 | 10.91 · 14.83 · 17.20 | dusk text |
 | on-dusk-2 | blue-900 · blue-950 | 9.26 · 10.73 | footer secondary |
 | sun-400 | blue-900 · blue-950 | 9.32 · 10.80 | footer link hover |
-| ink-900 | world-wall-shade · world-wall-sun · world-ceiling · world-sky · world-wash | 9.77 · 13.07 · 11.19 · 14.99 · 14.47 | shader targets behind hero text |
+| ink-900 | world-wall-shade · world-wall-sun · world-ceiling · world-sky · world-wash | 9.82 · 13.07 · 11.28 · 14.99 · 14.47 | shader targets behind hero text |
 | ink-700 | world-wash | 8.23 | statement reading start state |
-| ink-900 (large) | world-floor-shade | 6.75 | H1 only, if the solver lets it touch the floor |
+| ink-900 (large) | world-floor-shade | 6.78 | H1 only, if the solver lets it touch the floor |
 | border (3:1) | lime-50 · lime-100 · shade-100 | 4.42 · 4.01 · 3.81 | field borders |
 | focus (3:1) | lime-50 · lime-100 · shade-100 · sun-100 | 9.78 · 8.89 · 8.44 · 9.87 | focus ring |
 | focus-on-dark (3:1) | blue-900 · blue-950 · blue-700 | 9.32 · 10.80 · 6.85 | focus ring on dusk |
@@ -172,13 +172,14 @@ The pair list is `qa/contrast-pairs.json`. Re-run after P0.1:
 |---|---|---|
 | sun-400 fill on lime-50 / lime-100 / shade-100 | 1.43 / 1.30 / 1.23 | Accepted exception (as in Phase 1): the button is identified by its 10.04:1 label. |
 | unit-little-rose on shade-100 | 2.94 | Unit colors never sit on shade-100 or darker: center cards are lime-50 panels. |
-| ink-900 on world-screen-face | 2.50 | Text never overlaps the screen silhouette; the framing solver (6.6) enforces it. |
+| ink-900 on world-screen-face | 1.70 | Text never overlaps the screen silhouette; the framing solver (6.6) enforces it. |
 | lime-300, shade-300 on their sections | 1.47, 1.37 | Decorative only: dividers, slat gaps. |
 
 **Text over the live world** cannot be proven on tokens. `prototype/scripts/light-contrast.mjs`
 renders the world with the HTML hidden at 390×844 and 1440×900, for every sun state a
-visitor can produce (each set's sun keyframes sampled every 0.05, pointer extremes ±2.5°
-azimuth / ±1.2° elevation, the cloud dip at 0.82, the S3 flood peak), reads the DOM rects of
+visitor can produce (each set's sun keyframes sampled every 0.05, pointer extremes ±6°
+azimuth / ±3° elevation with the camera's parallax, the cloud dip at 0.82, the canopy's 0.42
+low, the S3 flood peak), reads the DOM rects of
 every `[data-text-safe]` element and compares its text color with the darkest 1% of
 pixels behind it. Gates (internal targets above WCAG): display text (H1, H2 over the world)
 ≥ 4.5:1, body text (intro, nav, statement, inner-header intro) ≥ 7:1. CI fails below. If the
@@ -359,7 +360,9 @@ as they are and never count up.
   `lenis.on("scroll", ScrollTrigger.update)`. Touch scrolling is fully native. No `snap`
   anywhere, no `normalizeScroll`. Not started under reduced motion or pause.
 - **Stages are CSS sticky.** The canvas is `position: fixed` behind the page while a world
-  section is in view; text panels inside world sections use `position: sticky`. ScrollTrigger
+  section is in view; text panels inside world sections use `position: sticky`. (Until the
+  passage exists, day 4, the canvas is `position: absolute` and scrolls with the hero like the
+  stills, so the room never lags the text by a frame.) ScrollTrigger
   only reads progress (`ignoreMobileResize: true`). No ScrollTrigger pins.
 - Everything is created inside `gsap.matchMedia()` contexts keyed on reduced motion, the
   `data-motion` attribute and width, so cleanup is automatic.
@@ -372,19 +375,26 @@ as they are and never count up.
 
 | Track | From → to | Start | Duration | Easing |
 |---|---|---|---|---|
-| Light layer opacity | 0 → 1 | 250 | 1200 | `--ease-sun` |
-| Light layer position | `translate(2%, -7%)` → 0 (the sun lifting moves patches down the wall) | 250 | 1800 | `--ease-in-out` |
-| Soft diagonal mask sweep | `mask-position` 100% → 0% | 250 | 1400 | `--ease-sun` |
+| Light layers opacity | 0 → 1 | 80 | 1000 | `cubic-bezier(0.25, 0.1, 0.25, 1)` |
+| Room light position | `translate(3%, -14%) scale(1.16)` → 0 from the top-right corner (the sun lifting moves patches down the wall, about 150 px at 1440; the screen's light holds still) | 80 | 2200 | `cubic-bezier(0.33, 1, 0.68, 1)` (still travelling at full strength) |
+| Soft diagonal mask sweep | `mask-position` 100% → 0% | 80 | 1500 | `cubic-bezier(0.33, 1, 0.68, 1)` |
 
-Total 2.05 s. If the light layer has not decoded within 2.5 s it appears at rest without
+Total 2.28 s. The light comes as two layers baked to composite exactly to the lit still
+(`encode-posters.py`): the room's, which drifts, and the screen's, which does not, so the
+lattice never shows twice and no runtime mask cuts them. If the light layer has not decoded within 2.5 s it appears at rest without
 animation; if the hero is already out of view, no animation.
 
 **S1 on home, WebGL handoff.** When the world module has compiled (`compileAsync`) and the
 CSS sun-in has ended, the canvas renders the same rest state (same framing function as the
 posters) and fades in over 400 ms `--ease-out`; the posters are then hidden. After that:
-fine pointers move the sun ±2.5° azimuth and ±1.2° elevation (spring ω 6 rad/s); touch
-screens get scroll-velocity motes and a passing cloud every 14–22 s (intensity 1 → 0.82 over
-1600 ms, back over 2400 ms, `--ease-in-out`).
+every visitor sees the tamarind canopy beyond the screen move the light (patches and beams
+dim to 42% and recover as leaves cross them, about 2.5 s a patch; the leaves sway in the holes
+too) and dust motes in the beams; fine pointers move the sun ±6° azimuth and ±3° elevation and
+turn the camera 0.8° / 0.4° with a 5 cm truck (parallax: the screen's edge slides against the
+back wall), all on one spring (ω 6 rad/s), scaled down per layout until every extreme keeps the
+text clear; touch screens get scroll-velocity motes and a passing cloud 3.5–5 s after the
+handoff, then every 14–22 s (intensity 1 → 0.82 over 1600 ms, back over 2400 ms,
+`--ease-in-out`). Scrolling the hero out moves the sun clock 0.08 → 0.14.
 
 **S2 Xuyên tường → Hành lang (home).** One fixed canvas, one camera path, three sections
 in a row with no opaque sheet between them: hero (`100svh`), passage (`180svh`, `150svh`
@@ -451,8 +461,11 @@ and Safari 18.2+ animate; Firefox swaps pages instantly.
 
 ### 5.6 Pause, reduced motion
 
-- **Tạm dừng chuyển động / Pause motion** (WCAG 2.2.2): a 44 × 44 toggle in the hero
-  (bottom right) and the footer, `aria-pressed`, labelled in the page language. It stops
+- **Tạm dừng chuyển động / Pause motion** (WCAG 2.2.2): a 44 px tall toggle in the hero (a
+  text button beside the intro's last line on desktop, under the buttons below 1024 px, in
+  the text flow and in Tab order) and the footer, `aria-pressed`, labelled in the page
+  language; its name and pause icon never change, pressed shows as a sun-100 fill and a 2 px
+  ink-900 border. It stops
   everything that moves by itself (motes, cloud, pointer sun, S1 if running, light-layer
   drift, the render loop when nothing changes) and turns off View Transitions and Lenis. The
   choice is stored (`localStorage` key `hcwa:motion`, inside try/catch) and read by the
@@ -474,7 +487,7 @@ and Safari 18.2+ animate; Firefox swaps pages instantly.
 | Bento tile | Block art's light layer shifts 6 px as if the sun moved, 280 ms; drifts with `view()` while scrolling; tile lifts 2 px. |
 | Program row | Lam stripes slide in behind the row 0 → 100%, 520 ms `--ease-out`, then stay; arrow 3 px. |
 | Louver row (ways to help) | Top line 1 → 3 px sun-400; a light bar runs under the title 0 → 100%, 520 ms. Text always visible. |
-| Header | Transparent over the hero with a 120 px scrim (`world-ceiling` 85% → 0). After 80 px: lime-50 at 94% + 1 px lime-300 line, 80 → 64 px, 240 ms. Never hides. |
+| Header | Transparent over the hero with a 120 px scrim (`world-ceiling` 85% → 0). After 80 px: opaque lime-50 + 1 px lime-300 line, 80 → 64 px, 240 ms. Never hides. |
 | Dropdown | opacity + `translateY(4px)` + `scale(0.98 → 1)`, 180 ms; 0 ms on re-hover within 400 ms. |
 | Menu sheet (`<dialog>`) | From the right, 320 ms `--ease-drawer`; scrim ink-900 0 → 40%; close 200 ms. Focus trapped, Esc closes. |
 | Accordion | `grid-template-rows: 0fr → 1fr` + opacity, 240 ms; chevron 180°. |
@@ -518,7 +531,7 @@ x = 100 (24+ m along −z, length `3 + 6.5 × N + 2`); shutters origin x = 200. 
 | Shot | Camera | Look at | FOV (vertical) |
 |---|---|---|---|
 | K0 hero, landscape | (−1.5, 1.10, 3.3) | (0.5, 1.78, −4) | 46° |
-| K0 hero, portrait | (−1.1, 1.10, 3.0) | (2.0, 2.15, −3.2) | 62° |
+| K0 hero, portrait | (0.83, 1.10, −2.93) | (1.68, 0.91, −3.43) | 49.6° (the back-right corner: below eye height the screen cannot share a 390 px width with the H1 anywhere else in the room; searched over every position) |
 | K1 hero out | (0.2, 1.10, 0.6) | hero block centre | 42° |
 | K2 at the hole | 0.35 m from the hero block | its centre | 42° |
 | K3/K4 corridor entry | (98.9 → 99.8, 1.10, +1.5) | down the corridor, 35° yaw toward the doors | 52° (64° portrait) |
@@ -528,7 +541,7 @@ x = 100 (24+ m along −z, length `3 + 6.5 × N + 2`); shutters origin x = 200. 
 
 | Object | Build | Tier 1 | Tier 2 |
 |---|---|---|---|
-| Hoa thị block | `THREE.Shape` 0.30 m square, holes = quatrefoil (union of four r = 0.056 m circles, 40 samples) + four corner pips (r = 0.021 m), `ExtrudeGeometry` depth 0.10, 4 mm bevel; street-side cap removed | whole screen = one plane, fragment SDF + `discard`, thickness faked by the second aperture test (2 triangles) | `InstancedMesh`, about 300 tris per block, corridor in 4 bays of 140 for culling |
+| Hoa thị block | `THREE.Shape` 0.30 m square, holes = quatrefoil (union of four r = 0.056 m circles, 40 samples) + four corner pips (r = 0.021 m), `ExtrudeGeometry` depth 0.06 (a Saigon cast-cement block; 10 cm thinned every patch to a sliver at the room's sun), 4 mm bevel; street-side cap removed | whole screen = one plane, fragment SDF + `discard`, thickness faked by the second aperture test (2 triangles) | `InstancedMesh`, about 300 tris per block, corridor in 4 bays of 140 for culling |
 | Hero block (passage) | same SDF, 72-sample quatrefoil, bevel 2 segments, cast-texture noise | one mesh, about 1.3k tris (both tiers) | same |
 | Block set (SDF + SVG) | `holeSDF` variants in `glsl/blocks.js`; `scripts/blocks-svg.mjs` writes matching SVG paths from the same numbers | Hoa thị, Mắt cáo, Vòng tròn, Bậc thang (focus-area icons) + Đốt tre, Vòm cầu (unit emblems) | same |
 | Room / corridor shell | `PlaneGeometry` quads, one `ShaderMaterial` with the aperture chunk; analytic AO at floor and corners | same | same |
@@ -554,8 +567,8 @@ is keyframed per set (no single lerp), from the formula
 
 | Set | t | Azimuth / elevation | Sun color | Signature surface |
 |---|---|---|---|---|
-| Room at rest (as proven in `open/hero-*.png`) | 0.08 | 28° / 21° | `#FFD9A0` | back wall, floor |
-| Room → passage | 0.08 → 0.20 | 28° → 24° / 21° → 24° | `#FFD9A0` → `#FFE4B8` | screen holes |
+| Room at rest | 0.08 | 40° / 24° | `#FFD9A0` | back wall (54°); floor stretch accepted (66°): a sun high enough to crisp the floor drops every patch below the text |
+| Room → passage (the hero scrolling out reaches 0.14) | 0.08 → 0.20 | 40° → 36° / 24° → 26° | `#FFD9A0` → `#FFE4B8` | screen holes |
 | Corridor | 0.25 → 0.45 | 8° → −8° / 24° → 28° | `#FFE9C8` → `#FFF2DE` | door wall and leaves (light nearly head-on) |
 | Shutters | 0.85 → 0.95 | −11° → −16° / 25° → 20° | `#FFD08A` → `#FFB866` | floor stripes |
 
@@ -595,8 +608,12 @@ box): on load and resize it reads the `.hero__stage` box and every `[data-text-s
 floor's front edge touches a text rect, while the hero block stays inside the stage box.
 The poster renderer calls the same function per aspect bucket, so stills and live frames
 match. A dev overlay (`?debug=frame`) draws the safe zones. Patch intensity inside text rects
-is capped at 40% with a 24 px feather (a cap, not a lift: no haze). Buttons are opaque, so
-they never depend on the world behind them.
+is capped per kind of text, with a 24 px feather (a cap, not a lift: no haze): display text
+(the H1) is not capped, because light raises ink-900's contrast (13.1:1 on a patch against
+9.8:1 on the shade) and the concept puts the patches across it; body text (intro, nav) is
+capped at 40%, because a pattern behind 17-20 px text hurts reading; header text is not
+capped, its bar carries the 85% scrim. Buttons are opaque, so they never depend on the
+world behind them.
 
 ### 6.7 Budgets, tiers, gates
 
@@ -605,7 +622,7 @@ Target device: Samsung Galaxy A15 / A25 or Redmi Note 13 class (Mali-G57/G68, Ad
 
 | Budget | Tier 1 (phones, tablets, low-memory laptops) | Tier 2 (fine pointer, ≥ 8 GB or unknown, ≥ 6 cores, no software GPU) |
 |---|---|---|
-| DPR cap | 1.25 (1.0 above 1.6 M canvas pixels) | 1.75 |
+| DPR cap | 1.25 (1.0 above 1.6 M canvas pixels), no MSAA (the SDF screen is smooth without it) | 1.75, at most 3 M pixels; 4x MSAA only under 1 M pixels, otherwise supersampled at DPR ≥ 1.5 |
 | Draw calls / frame | ≤ 14 | ≤ 32 |
 | Triangles | ≤ 8k | ≤ 60k |
 | Shafts | ¼ res, 16 steps, baked density (only if the device gate passes) | ½ res, 24 steps |
@@ -619,8 +636,13 @@ Target device: Samsung Galaxy A15 / A25 or Redmi Note 13 class (Mali-G57/G68, Ad
 `failIfMajorPerformanceCaveat` context.
 
 **Live gates** (90 frames after S1, `EXT_disjoint_timer_query_webgl2` when present, else
-rAF deltas): Tier 2 p75 > 22 ms → Tier 1. Tier 1 p75 > 22 ms → shafts off, DPR 1.0. Still
-> 33 ms → stop the live world, show stills + CSS sun layer, `sessionStorage hcwa:tier = 0`.
+rAF deltas). rAF deltas cannot see GPU time under vsync, so they gate on missed frames: Tier
+2 p75 > 22 ms → Tier 1. Tier 1 p75 > 22 ms → shafts off, DPR 1.0. Still > 33 ms → stop. A
+timer query gates on the budgets: Tier 2 > 10 ms, Tier 1 > 14 ms, lite > 22 ms. Stopping
+the live world shows the stills + CSS sun layer and sets `sessionStorage hcwa:tier = 0`; a GPU
+that fails the probe (no WebGL2, caveat context, software renderer) is remembered for this
+browser (`localStorage hcwa:gpu0`, keyed by user agent) and its probe context is never
+released by `WEBGL_lose_context` (a synchronous round trip that blocked a phone for 1.3 s).
 **Week-1 device gate:** if Tier 1 misses 12 ms GPU on the real phone after cutting shafts,
 mobile ships the corridor and shutters as stills with cards; the hero and the passage keep
 their live 3D.

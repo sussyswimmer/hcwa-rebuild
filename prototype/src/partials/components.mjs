@@ -1,5 +1,6 @@
 import { html, raw } from "../lib/html.mjs";
 import { visibleFigures } from "../lib/content.mjs";
+import { viKeep } from "../lib/vikeep.mjs";
 
 // Lucide outline paths (ISC), drawn on a 24px grid at 1.5px stroke (05-DESIGN icons).
 const PATHS = {
@@ -18,6 +19,7 @@ const PATHS = {
   prev: '<path d="m15 18-6-6 6-6"/>',
   next: '<path d="m9 18 6-6-6-6"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  pause: '<rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/>',
 };
 export const icon = (name, cls = "icon") =>
   raw(`<svg class="${cls}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${PATHS[name]}</svg>`);
@@ -146,7 +148,16 @@ export const field = (c, { id, label, type = "text", required = false, help, err
 };
 
 export const sectionHead = (c, { id, title, intro, link, draftIntro }) => html`<div class="section-head">
-  <h2 id="${id}">${title}</h2>
+  <h2 id="${id}">${viKeep(title)}</h2>
   ${intro ? html`<p class="section-head__intro"${draftIntro ? raw(" data-draft") : ""}>${intro}</p>` : ""}
   ${link ?? ""}
 </div>`;
+
+// WCAG 2.2.2 pause (05-DESIGN D5.6): one pattern, a toggle. Its name and the pause icon never change
+// ("Pause motion" stays true while pressed); aria-pressed carries the state, shown as a sun-100 fill and
+// an ink-900 border. Hidden without JS and when the OS already reduces motion. In the hero it is a
+// text button in the flow under the text; textSafe makes the framing solver keep the screen off it
+// ("display": its 14 px label targets WCAG AA over the floor, never the silhouette).
+export const pauseToggle = (c, cls = "", { textSafe } = {}) => html`<button class="pause-toggle${cls ? " " + cls : ""}" type="button" aria-pressed="false" data-motion-toggle${textSafe ? raw(` data-text-safe="${textSafe}"`) : ""}>
+  ${icon("pause")}<span class="pause-toggle__label">${c.t("motionPause")}</span>
+</button>`;

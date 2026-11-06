@@ -8,6 +8,7 @@ import { ctx } from "./lib/ctx.mjs";
 import { pageRoutes } from "./routes.mjs";
 import { layout } from "./partials/layout.mjs";
 import { pages } from "./pages/index.mjs";
+import { missingPosters, BUCKETS, WIDTHS, FORMATS } from "./lib/posters.mjs";
 
 // What must never reach production HTML.
 export const BLOCKERS = [
@@ -55,8 +56,12 @@ export function renderAll(outDir, prod) {
   // Pages from an earlier render that no longer exist (the folder itself stays, so Vite's watcher keeps working).
   for (const f of stale) rmSync(f);
   // Vite's HTML entry: pulls in the client script and styles that live outside the root.
-  const entry = relative(outDir, fileURLToPath(new URL("./main.js", import.meta.url))).replaceAll("\\", "/");
-  writeFileSync(join(outDir, "main.js"), `import "${entry.startsWith(".") ? entry : "./" + entry}";\n`);
+  // Draft outlines and the prototype note only exist on staging (05-DESIGN D7), so PROD never imports them.
+  const rel = (file) => {
+    const r = relative(outDir, fileURLToPath(new URL(file, import.meta.url))).replaceAll("\\", "/");
+    return r.startsWith(".") ? r : "./" + r;
+  };
+  writeFileSync(join(outDir, "main.js"), `${prod ? "" : `import "${rel("./styles/draft.css")}";\n`}import "${rel("./main.js")}";\n`);
   if (problems.length) {
     const unique = [...new Set(problems)];
     throw new Error(`PROD build blocked: ${unique.length} problem(s)\n  ` + unique.join("\n  "));
@@ -69,6 +74,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const files = renderAll(out, process.env.PROD === "1");
     console.log(`rendered ${files.length} pages → ${out}`);
+    // The stills come from the world's poster renderer; until they exist the lit header shows its shade fill.
+    const missing = missingPosters("hero").length;
+    const all = BUCKETS.length * WIDTHS.length * Object.values(FORMATS).reduce((n, exts) => n + exts.length, 0);
+    if (missing) console.warn(`posters: ${missing} of ${all} hero stills not rendered yet (npm run posters); the hero holds without them`);
   } catch (e) {
     console.error(e.message);
     process.exit(1);

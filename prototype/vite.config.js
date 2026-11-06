@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { defineConfig } from "vite";
 
@@ -16,7 +16,7 @@ const htmlFiles = (dir) =>
 const rerender = {
   name: "hcwa-render",
   configureServer(server) {
-    const watched = [resolve(here, "src/pages"), resolve(here, "src/partials"), resolve(here, "src/lib"), resolve(here, "src/routes.mjs"), resolve(here, "../content")];
+    const watched = [resolve(here, "src/pages"), resolve(here, "src/partials"), resolve(here, "src/lib"), resolve(here, "src/routes.mjs"), resolve(here, "src/head-inline.js"), resolve(here, "src/world/buckets.js"), resolve(here, "../content")];
     server.watcher.add(watched);
     server.watcher.on("change", (file) => {
       if (!watched.some((w) => file.startsWith(w))) return;
@@ -49,16 +49,30 @@ const rebase = {
   },
 };
 
+// The page must build and work without the world (it lands separately): a missing src/world/index.js
+// resolves to a stub that rejects, so main.js keeps the stills and the build still passes.
+const worldFallback = {
+  name: "hcwa-world-fallback",
+  resolveId(id, importer) {
+    if (id === "./world/index.js" && importer?.endsWith("/src/main.js") && !existsSync(resolve(here, "src/world/index.js"))) return "\0hcwa-world-stub";
+  },
+  load(id) {
+    if (id === "\0hcwa-world-stub") return 'export const startWorld = () => Promise.reject(new Error("src/world/index.js is not built yet"));';
+  },
+};
+
 export default defineConfig(() => {
   render(); // throws (and fails the build) when PROD=1 finds drafts
   return {
     root: site,
     publicDir: resolve(here, "public"),
     appType: "mpa",
-    plugins: [rerender, rebase],
+    plugins: [rerender, rebase, worldFallback],
     build: {
       outDir: resolve(here, "dist"),
       emptyOutDir: true,
+      // The world chunk (three.js + world code, ~157 KB gzip) is a lazy import after load + idle (D6.7).
+      chunkSizeWarningLimit: 700,
       rolldownOptions: { input: htmlFiles(site) },
     },
     server: { fs: { allow: [here] } },

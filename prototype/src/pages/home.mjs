@@ -1,36 +1,34 @@
 import { html } from "../lib/html.mjs";
-import { button, textLink, placeholder, figureStrip, centerCard, programRow, storyCard, newsItem, sectionHead, icon } from "../partials/components.mjs";
+import { button, textLink, placeholder, figureStrip, centerCard, programRow, storyCard, newsItem, sectionHead, icon, pauseToggle } from "../partials/components.mjs";
+import { heroMedia, heroStage } from "../partials/world.mjs";
+import { keepHyphens, viKeep } from "../lib/vikeep.mjs";
 
-// 06-PAGES homepage: hero → impact → what we do → centers → programs → news → help → partners → contact.
+// PLAN section 3. This run rebuilds H0-H2 (shell, header, hero S1 Nắng vào); the sections below the
+// hero are the Phase 1 ones on the new tokens until the home rebuild (passage, corridor, sheets).
 export function home(c) {
   const { site, work, news, involve } = c.content;
   const hero = site.hero;
   const programs = [...work.programs].sort((a, b) => (a.status === "active" ? -1 : 1) - (b.status === "active" ? -1 : 1)).slice(0, 4);
 
   const body = html`
-<section class="hero" aria-labelledby="hero-title">
-  <div class="container hero__grid">
-    <div class="hero__text">
-      <p class="hero__eyebrow"${c.d(hero.eyebrow)}>${c.tx(hero.eyebrow)}</p>
-      <h1 id="hero-title"${c.d(hero.title)}>${c.tx(hero.title)}</h1>
-      <p class="hero__intro"${c.d(hero.intro)}>${c.tx(hero.intro)}</p>
-      <div class="hero__actions">
-        ${button({ href: c.url("ourWork"), label: c.t("exploreWork") })}
-        ${button({ href: c.url("getInvolved"), label: c.t("getInvolved"), kind: "secondary" })}
-      </div>
+<section class="hero" id="hero" data-world="room" aria-labelledby="hero-title">
+  ${heroMedia()}
+  ${heroStage()}
+  <div class="container hero__inner">
+    <h1 class="hero__title" id="hero-title" data-text-safe><span${c.d(hero.title)}>${viKeep(c.tx(hero.title))}</span></h1>
+    <p class="hero__intro" data-text-safe><span${c.d(hero.intro)}>${keepHyphens(c.tx(hero.intro))}</span></p>
+    <div class="hero__actions" data-text-safe>
+      ${button({ href: c.url("ourWork"), label: c.t("exploreWork") })}
+      ${button({ href: c.url("getInvolved"), label: c.t("getInvolved"), kind: "secondary" })}
     </div>
-    ${placeholder(c, hero.image, "hero__media")}
+    ${pauseToggle(c, "hero__pause", { textSafe: "display" })}
   </div>
-  ${(() => {
-    const strip = figureStrip(c, "organization", { min: 2, cls: "figures--strip" });
-    return strip ? html`<div class="container impact-strip">${strip}${textLink(c.url("impact"), c.t("seeImpact"))}</div>` : "";
-  })()}
 </section>
 
-<section class="section" aria-labelledby="what-title" data-reveal>
+<section class="section section--sun" aria-labelledby="what-title" data-reveal>
   <div class="container split">
     <div class="split__lead">
-      <h2 id="what-title">${c.tx(site.whatWeDo.title)}</h2>
+      <h2 id="what-title">${viKeep(c.tx(site.whatWeDo.title))}</h2>
       <p${c.d(site.whatWeDo.summary)}>${c.tx(site.whatWeDo.summary)}</p>
     </div>
     <ul class="focus-list">
@@ -47,6 +45,12 @@ export function home(c) {
   </div>
 </section>
 
+${(() => {
+  // Impact leaves the hero (05-DESIGN D11.2); it joins the Our work sheet in the home rebuild.
+  const strip = figureStrip(c, "organization", { min: 2, cls: "figures--strip" });
+  return strip ? html`<section class="section section--tight" aria-label="${c.t("impact")}" data-reveal><div class="container impact-strip">${strip}${textLink(c.url("impact"), c.t("seeImpact"))}</div></section>` : "";
+})()}
+
 <section class="section section--sunken" aria-labelledby="centers-title" data-reveal>
   <div class="container">
     ${sectionHead(c, { id: "centers-title", title: c.t("centers"), intro: c.tx(site.centersIntro), draftIntro: true, link: textLink(c.url("ourWork") + (c.lang === "vi" ? "#co-so" : "#centers"), c.t("seeAll")) })}
@@ -61,7 +65,7 @@ export function home(c) {
   </div>
 </section>
 
-<section class="section section--line" aria-labelledby="latest-title" data-reveal>
+<section class="section section--shade" aria-labelledby="latest-title" data-reveal>
   <div class="container">
     ${sectionHead(c, { id: "latest-title", title: c.t("latest"), link: textLink(c.url("news"), c.t("allNews")) })}
     <div class="latest">
@@ -71,7 +75,7 @@ export function home(c) {
   </div>
 </section>
 
-<section class="section section--sunken" aria-labelledby="help-title" data-reveal>
+<section class="section section--help" aria-labelledby="help-title" data-reveal>
   <div class="container">
     ${sectionHead(c, { id: "help-title", title: c.tx(site.helpTitle) })}
     <ul class="ways">
@@ -99,7 +103,7 @@ export function home(c) {
 <section class="cta-band" aria-labelledby="contact-title">
   <div class="container cta-band__inner">
     <h2 id="contact-title">${c.tx(site.contactBand.title)}</h2>
-    <div class="cta-band__actions">${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-blue" })}</div>
+    <div class="cta-band__actions">${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk" })}</div>
     <ul class="cta-band__contact" data-draft>
       <li>${icon("phone")}<a href="tel:${site.phone.tel}">${site.phone.display}</a></li>
       <li>${icon("mail")}<a href="mailto:${site.email.general}">${site.email.general}</a></li>
@@ -111,5 +115,8 @@ export function home(c) {
     title: c.tx(site.orgName),
     description: c.tx(site.hero.intro),
     body,
+    bodyClass: "page-home",
+    lit: true,
+    world: true,
   };
 }

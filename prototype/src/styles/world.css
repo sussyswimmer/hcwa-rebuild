@@ -1,0 +1,17 @@
+/* The world canvas and its stills (05-DESIGN D6, PLAN H0). src/world/ draws; the page owns layout. */
+
+/* Behind every sheet (z-index -1 paints above the root background, under in-flow sections) and hidden
+   until the world has drawn the posters' rest frame and added html.world-live. Until the passage and the
+   corridor share it (day 4), the canvas scrolls with the hero like the stills do: the room moves with its
+   text at native speed on the compositor, never a frame late, and the framing solver's guarantee holds at
+   every scroll position. live.js stretches it to the hero's bottom edge when that sits below 100lvh. */
+.world-canvas { position: absolute; inset: 0 auto auto 0; z-index: -1; display: block; width: 100%; height: 100lvh; pointer-events: none; visibility: hidden; }
+html.world-live .world-canvas { visibility: visible; }
+
+/* Handoff at rest: the canvas is already opaque underneath, so fading the stills out is a true
+   crossfade (no dip). If the world drops world-live (context lost), the stills come back. */
+.hero__media { transition: opacity var(--d-handoff) var(--ease-out); }
+html.world-live .hero__media { opacity: 0; }
+
+/* World sections carry no sheet: the canvas shows through them. */
+[data-world] { background: transparent; }

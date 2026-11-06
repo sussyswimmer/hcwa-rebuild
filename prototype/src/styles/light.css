@@ -1,0 +1,40 @@
+/* The HTML side of the light (05-DESIGN D4, D5.3 S1 Nắng vào). A lit header is three stills from the
+   world: a shaded base, the room's light and the screen's light (scripts/encode-posters.py bakes the
+   two light layers so that together they are exactly the lit frame). The light rests visible: no JS,
+   reduced motion, pause and an already-played session see it as it is. */
+/* Behind the text inside its isolated header (the hero is isolation: isolate). */
+.lit { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: var(--color-shade-100); }
+.lit__base, .lit__light, .lit__screen { position: absolute; inset: 0; display: block; }
+/* Anchored to the bottom, the edge the hero text sits on (frame.js frameOrigin): a shorter screen crops
+   the ceiling and never slides the lattice down into the H1. */
+.lit img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; }
+
+/* head-inline.js sets sun-pending before first paint when the sun-in will play; motion/sun-in.js adds
+   sun-in once both light layers have decoded. If neither script runs, the light still arrives at rest. */
+html.sun-pending :is(.lit__light, .lit__screen) { opacity: 0; animation: sun-safety 1ms 3s forwards; }
+@keyframes sun-safety { to { opacity: 1; } }
+
+/* 80 ms after decode: opacity 0 → 1 (1000 ms), a soft diagonal mask sweeps in from the top right
+   (1500 ms), and the room's light slides down the wall as the sun lifts (2200 ms, ease-out, so it is
+   still travelling at full strength). The screen's light only fades and sweeps: the holes hold still. */
+html.sun-in :is(.lit__light, .lit__screen) {
+  mask-image: linear-gradient(to bottom left, black 45%, transparent 55%);
+  mask-size: 300% 300%; mask-repeat: no-repeat; mask-position: 100% 0%;
+  animation:
+    sun-fade 1000ms cubic-bezier(0.25, 0.1, 0.25, 1) 80ms both,
+    sun-sweep 1500ms cubic-bezier(0.33, 1, 0.68, 1) 80ms both;
+}
+html.sun-in .lit__light img {
+  transform-origin: 100% 0;
+  animation: sun-drift 2200ms cubic-bezier(0.33, 1, 0.68, 1) 80ms both;
+}
+@keyframes sun-fade { from { opacity: 0; } to { opacity: 1; } }
+/* From the top-right corner, 16% larger: the left edge sits at −13% and the bottom at 102% at the
+   start and both reach exactly 0 / 100% at rest, so the drift never uncovers an edge (a hard line
+   through the floor). About 150 px of travel down the wall at 1440. */
+@keyframes sun-drift { from { translate: 3% -14%; scale: 1.16; } to { translate: 0 0; scale: 1; } }
+@keyframes sun-sweep { from { mask-position: 0% 100%; } to { mask-position: 100% 0%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html.sun-pending :is(.lit__light, .lit__screen), html.sun-in :is(.lit__light, .lit__screen), html.sun-in .lit__light img { opacity: 1; animation: none; mask-image: none; }
+}

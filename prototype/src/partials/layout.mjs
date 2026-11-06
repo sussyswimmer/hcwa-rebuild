@@ -1,6 +1,8 @@
 import { html, raw } from "../lib/html.mjs";
 import { routes } from "../routes.mjs";
-import { icon, button } from "./components.mjs";
+import { icon, button, pauseToggle } from "./components.mjs";
+import { worldCanvas } from "./world.mjs";
+import { headInline } from "../lib/head-inline.mjs";
 
 // Absolute hreflang URLs need the deployed origin; Netlify sets URL during builds.
 const BASE = (process.env.SITE_URL ?? process.env.URL ?? "").replace(/\/$/, "");
@@ -36,7 +38,7 @@ const langSwitch = (c, cls = "") => {
   return html`<div class="lang-switch${cls ? " " + cls : ""}" role="group" aria-label="${c.t("language")}">${link("vi", "Tiếng Việt")}<span aria-hidden="true">/</span>${link("en", "English")}</div>`;
 };
 
-const desktopNav = (c) => html`<nav class="nav" aria-label="${c.t("mainNav")}">
+const desktopNav = (c) => html`<nav class="nav" aria-label="${c.t("mainNav")}" data-text-safe>
   <ul class="nav__list">
     ${nav(c).map(
       (item, i) => html`<li class="nav__item${item.children ? " has-sub" : ""}">
@@ -77,21 +79,23 @@ const mobileMenu = (c) => html`<dialog class="sheet" id="menu-sheet" aria-labell
 
 const logo = (c) => {
   const s = c.content.site;
-  return html`<a class="logo" href="${c.url("home")}">
-    <img src="/img/hcwa-logo.png" width="97" height="128" alt="${c.tx(s.orgName)}">
+  return html`<a class="logo" href="${c.url("home")}" data-text-safe>
+    <picture><source type="image/webp" srcset="/img/hcwa-logo.webp"><img src="/img/hcwa-logo.png" width="97" height="128" alt="${c.tx(s.orgName)}"></picture>
     <span class="logo__name" aria-hidden="true">${s.logoLines[c.lang].map((l) => html`<span>${l}</span>`)}</span>
   </a>`;
 };
 
-const header = (c) => html`<div class="header-slot">
-  <header class="site-header">
+// 05-DESIGN D7 header: transparent with a scrim over the home hero, solid lime-50 elsewhere and
+// after 80 px of scroll. Never hides. At 390: mark, VI / EN, Ủng hộ and a "Menu" text button.
+const header = (c, over) => html`<div class="header-slot${over ? " header-slot--over" : ""}">
+  <header class="site-header${over ? " site-header--over" : ""}" data-header>
     <div class="container site-header__bar">
       ${logo(c)}
       ${desktopNav(c)}
-      <div class="site-header__tools">
+      <div class="site-header__tools" data-text-safe>
         ${langSwitch(c, "lang-switch--header")}
-        ${button({ href: c.url("donate"), label: c.t("donate"), attrs: 'data-donate' })}
-        <button class="icon-btn menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>${icon("menu")}<span class="sr-only">${c.t("menu")}</span></button>
+        ${button({ href: c.url("donate"), label: c.t("donate"), attrs: "data-donate", cls: "btn--header" })}
+        <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>${c.t("menu")}</button>
       </div>
     </div>
   </header>
@@ -104,7 +108,7 @@ const footer = (c) => {
   return html`<footer class="site-footer">
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <img src="/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy">
+        <picture><source type="image/webp" srcset="/img/hcwa-logo.webp"><img src="/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
         <p class="foot-brand__name">${c.tx(s.orgName)}</p>
         <p${c.d(s.description)}>${c.tx(s.description)}</p>
         <p class="foot-brand__reg"${c.d(s.registration)}>${c.tx(s.registration)}</p>
@@ -123,10 +127,13 @@ const footer = (c) => {
         <li><a href="${c.url("partners")}">${c.t("partners")}</a></li>
       </ul>`)}
     </div>
-    <div class="container site-footer__bottom">
-      <p>© ${new Date().getFullYear()} HCWA</p>
-      <p class="foot-social"><a href="${s.facebook}">Facebook</a></p>
-      ${langSwitch(c)}
+    <div class="site-footer__bar">
+      <div class="container site-footer__bottom">
+        <p>© ${new Date().getFullYear()} HCWA</p>
+        <p class="foot-social"><a href="${s.facebook}">Facebook</a></p>
+        ${langSwitch(c)}
+        ${pauseToggle(c, "pause-toggle--dusk")}
+      </div>
     </div>
   </footer>`;
 };
@@ -142,23 +149,27 @@ const enBar = (c) =>
       </div>`
     : "";
 
-const prototypeNote = (c) => (c.prod ? "" : html`<div class="proto-note"><div class="container"><p><span class="proto-note__full">${c.t("prototypeNote")}</span><span class="proto-note__short">${c.t("prototypeNoteShort")}</span></p></div></div>`);
+// Staging only. The reviewer toggle hides the dashed draft outlines for this session (05-DESIGN D7).
+const prototypeNote = (c) => (c.prod ? "" : html`<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">${c.t("prototypeNote")}</span><span class="proto-note__short">${c.t("prototypeNoteShort")}</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>${c.t("draftHide")}</button></div></div>`);
 
 // Strings the client script needs, in the page language.
 const clientStrings = (c) =>
   raw(`<script type="application/json" id="i18n">${JSON.stringify(
-    Object.fromEntries(["copy", "copied", "copyFailed", "f_sending", "f_send", "e_summary", "close"].map((k) => [k, c.t(k)])),
+    Object.fromEntries(["copy", "copied", "copyFailed", "f_sending", "f_send", "e_summary", "close", "motionPause", "motionPlay", "draftHide", "draftShow"].map((k) => [k, c.t(k)])),
   ).replace(/</g, "\\u003c")}</script>`);
 
-export function layout(c, { title, description, body, bodyClass = "" }) {
+// lit: the page opens on a lit header (base still + light layer), so the head script may set sun-pending.
+// world: the page carries the fixed world canvas (home); its header starts transparent over the hero.
+export function layout(c, { title, description, body, bodyClass = "", lit = false, world = false }) {
   const r = routes[c.routeKey];
   const site = c.tx(c.content.site.shortName);
   const fullTitle = c.routeKey === "home" ? `${c.tx(c.content.site.orgName)} (HCWA)` : `${title} | ${site}`;
   return html`<!doctype html>
-<html lang="${c.lang}">
+<html lang="${c.lang}"${lit ? raw(" data-lit") : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${headInline(c.prod)}
 <title>${fullTitle}</title>
 <meta name="description" content="${description}">
 ${c.prod ? "" : raw('<meta name="robots" content="noindex, nofollow">')}
@@ -168,8 +179,8 @@ ${c.prod ? "" : raw('<meta name="robots" content="noindex, nofollow">')}
 <meta property="og:title" content="${fullTitle}">
 <meta property="og:description" content="${description}">
 <meta property="og:locale" content="${c.lang === "vi" ? "vi_VN" : "en_GB"}">
+<link rel="preload" href="/fonts/archivo-w78-600-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/be-vietnam-pro-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/fraunces-vf.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <script type="module" src="/main.js"></script>
@@ -179,7 +190,8 @@ ${clientStrings(c)}
 <a class="skip-link" href="#main">${c.t("skip")}</a>
 ${prototypeNote(c)}
 ${enBar(c)}
-${header(c)}
+${header(c, world)}
+${world ? worldCanvas() : ""}
 <main id="main" tabindex="-1">
 ${body}
 </main>

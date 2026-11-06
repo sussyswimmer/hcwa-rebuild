@@ -1,0 +1,84 @@
+/* Container, sections (sun / shade), page layouts (05-DESIGN D3, D1 color rules). */
+
+.container { width: min(100% - 2 * var(--gutter), var(--container)); margin-inline: auto; }
+
+/* Sections alternate sun (lime-100, warm) and shade (shade-100, cool): the page's temperature.
+   Every section that is not a world stage is an opaque sheet over the fixed canvas. */
+.section { padding-block: var(--section-y); background: var(--color-lime-100); }
+.section--tight { padding-block: clamp(48px, 6vw, 88px); }
+.section--sun { background: var(--color-lime-100); }
+.section--sunken, .section--shade { background: var(--color-shade-100); }
+.section--help { background: var(--color-sun-100); }
+
+.section-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px 32px; margin-bottom: clamp(32px, 4vw, 56px); }
+.section-head h2 { max-inline-size: 18em; }
+.section-head__intro { grid-column: 1; max-width: 60ch; color: var(--color-ink-700); }
+.section-head > .text-link { grid-column: 2; grid-row: 1; }
+@media (max-width: 599px) { .section-head { grid-template-columns: 1fr; } .section-head > .text-link { grid-column: 1; grid-row: auto; } }
+
+.split { display: grid; gap: 40px; }
+.split__lead { display: grid; gap: 20px; align-content: start; }
+.split__lead p { color: var(--color-ink-700); font-size: var(--fs-lg); line-height: var(--lh-lead); }
+@media (min-width: 1024px) { .split { grid-template-columns: 5fr 7fr; gap: 80px; } }
+
+/* ---------- header slot ---------- */
+/* The slot keeps the header's height in the flow; the bar compacts inside it, so content never jumps.
+   On the home page the slot gives its height back, so the hero runs under the transparent header. */
+.header-slot { position: sticky; top: 0; z-index: 50; height: var(--header-h); pointer-events: none; }
+.header-slot--over { margin-bottom: calc(-1 * var(--header-h)); }
+@media (min-width: 1024px) {
+  .header-slot { height: var(--header-h-wide); }
+  .header-slot--over { margin-bottom: calc(-1 * var(--header-h-wide)); }
+}
+
+/* ---------- hero (PLAN H2): 100svh, min 620 px, text bottom-left, the screen on the right ---------- */
+/* Staging bars above the header (prototype note, EN pointer) come out of the first screen, not the hero's text. */
+body:has(> .en-bar:not([hidden])) { --bars-h: 48px; }
+body:has(> .proto-note) { --bars-h: 36px; }
+body:has(> .proto-note):has(> .en-bar:not([hidden])) { --bars-h: 84px; }
+@media (max-width: 599px) { body:has(> .proto-note) { --bars-h: 44px; } body:has(> .proto-note):has(> .en-bar:not([hidden])) { --bars-h: 92px; } }
+.hero {
+  position: relative; isolation: isolate;
+  min-height: max(620px, calc(100svh - var(--bars-h, 0px)));
+  display: grid; align-content: end;
+  padding-block: calc(var(--header-h) + 24px) clamp(28px, 9vh, 96px);
+}
+.hero__inner { container-type: inline-size; display: grid; justify-items: start; }
+/* The box frame.js fits the screen silhouette into: right 40% at full height (portrait: the top band
+   under the header, the full width, so the screen can sit in the upper-right third). */
+.hero__stage { position: absolute; inset: 0 0 0 auto; width: 40%; pointer-events: none; }
+@media (max-width: 599px) { .hero__stage { inset: var(--header-h) 0 auto 0; width: auto; height: 46%; } }
+
+/* ---------- inner page header and article layout ---------- */
+.page-header { position: relative; padding-block: 16px clamp(40px, 5vw, 72px); background: var(--color-lime-50); border-bottom: 1px solid var(--color-lime-300); }
+.page-header[data-unit]::before { content: ""; position: absolute; inset: 0 0 auto; height: 6px; background: var(--unit); }
+.page-header h1 { margin-top: 12px; max-inline-size: 16em; }
+.page-header__vi { margin-top: 8px; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.page-header__intro { margin-top: 16px; max-width: 60ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+.page-header__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 24px; }
+.page-header__meta p { display: flex; flex-wrap: wrap; gap: 8px 20px; font-weight: 500; color: var(--color-ink-700); }
+.cover { margin-top: 32px; }
+@media (max-width: 767px) { .cover__media { aspect-ratio: 4 / 3; } }
+.article-grid { display: grid; gap: 32px; padding-block: 56px 8px; }
+@media (min-width: 1024px) { .article-grid { grid-template-columns: 340px 1fr; gap: 72px; } .article-grid--wide { grid-template-columns: 1fr 340px; } }
+.prose { display: grid; gap: 16px; align-content: start; max-width: 68ch; }
+.prose h2 { margin-bottom: 4px; font-size: var(--fs-h3); }
+.two-col { display: grid; gap: 32px; margin-top: 16px; }
+@media (min-width: 768px) { .two-col { grid-template-columns: 1fr 1fr; } }
+.two-col h2 { margin-bottom: 12px; font-size: var(--fs-h3); }
+
+.donate-grid { display: grid; gap: 40px; }
+@media (min-width: 1024px) { .donate-grid { grid-template-columns: 1fr 380px; gap: 64px; } }
+.contact-grid { display: grid; gap: 48px; }
+@media (min-width: 1024px) { .contact-grid { grid-template-columns: 1fr 400px; gap: 64px; } }
+.not-found__grid { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 900px) { .not-found__grid { grid-template-columns: 3fr 2fr; gap: 64px; } }
+.not-found__grid > div { display: grid; gap: 20px; align-content: start; }
+.not-found__art { max-width: 360px; }
+
+.kit-wrap { display: grid; gap: 56px; padding-block: 48px; }
+.kit > h2 { margin-bottom: 20px; }
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 16px; }
+.kit-row--blue { padding: 24px; background: var(--color-blue-900); border-radius: var(--r-md); }
+.kit-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; }
+.kit-note { margin-top: 12px; font-size: var(--fs-sm); color: var(--color-ink-700); }

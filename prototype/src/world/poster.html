@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>poster</title>
+<!-- Poster entry for scripts/render-posters.mjs (05-DESIGN D6.10): the world at a shot, no HTML
+     text. Served from prototype/ by that script. ?bucket=portrait|tablet|landscape|wide
+     &w=<pixel width> &layer=base|lit &t=<sun clock> &debug=frame. -->
+<style>
+  html, body { margin: 0; background: black; overflow: hidden; }
+  canvas { display: block; }
+</style>
+<script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js" } }</script>
+</head>
+<body>
+<canvas id="world" aria-hidden="true"></canvas>
+<script type="module" src="./poster.js"></script>
+</body>
+</html>

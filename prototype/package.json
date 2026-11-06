@@ -4,11 +4,21 @@
   "type": "module",
   "description": "HCWA Phase 1 clickable prototype (static, VI at /, EN at /en/)",
   "scripts": {
+    "tokens": "node scripts/tokens-to-js.mjs",
+    "posters": "node scripts/render-posters.mjs",
+    "predev": "npm run tokens",
     "dev": "vite",
+    "prebuild": "npm run tokens",
     "build": "vite build",
+    "prebuild:pages": "npm run tokens",
     "build:pages": "vite build --base=/hcwa-rebuild/",
     "preview": "vite preview",
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test \"test/*.test.mjs\"",
+    "check:page": "node scripts/check-page.cjs http://localhost:4173",
+    "check:hero": "node scripts/check-hero.cjs http://localhost:4173 ../qa/m1",
+    "lcp": "node scripts/lcp.cjs 3 /",
+    "check:sun": "node scripts/check-sun-crisp.mjs",
+    "check:sunin": "node scripts/check-sunin.cjs http://localhost:4173 ../qa/m1/sunin"
   },
   "devDependencies": {
     "vite": "8.3.5"

@@ -159,7 +159,7 @@ ${pageHeader(c, {
 </section>
 ${ctaBand(c, {
   title: T("Muốn đến thăm Tre Xanh?", "Want to visit Green Bamboo?"),
-  actions: button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-blue" }),
+  actions: button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk" }),
   extra: html`<p class="cta-band__note" data-draft>${T("[Chỉ hiển thị thông tin liên hệ HCWA đã duyệt.]", "[Only contact details HCWA has approved.]")}</p>`,
 })}`;
   return { title: c.tx(gb.name), description: c.tx(gb.serves), body };
@@ -240,7 +240,7 @@ ${pageHeader(c, {
 </section>
 ${ctaBand(c, {
   title: T("Đồng hành cùng những dự án như thế này", "Support work like this"),
-  actions: html`${button({ href: c.url("donate"), label: c.t("donate"), kind: "primary" })}${button({ href: c.url("partner"), label: T("Hợp tác trong một dự án", "Partner on a program"), kind: "on-blue" })}`,
+  actions: html`${button({ href: c.url("donate"), label: c.t("donate"), kind: "primary" })}${button({ href: c.url("partner"), label: T("Hợp tác trong một dự án", "Partner on a program"), kind: "on-dusk" })}`,
 })}`;
   return { title: c.tx(p.name), description: c.tx(p.summary), body };
 }
