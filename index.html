@@ -3,7 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
+<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (!off && tier > 0) cls.push("stages"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
+<script>(function pageReveal() {
+  addEventListener("pagereveal", function (e) {
+    var type = null;
+    try { type = sessionStorage.getItem("hcwa:vt"); sessionStorage.removeItem("hcwa:vt"); } catch (x) { /* storage blocked: no type */ }
+    var vt = e.viewTransition;
+    if (!vt) return;
+    if (document.documentElement.getAttribute("data-motion") === "off") { vt.skipTransition(); return; }
+    var a = window.navigation && navigation.activation;
+    if (type === "lang") vt.types.add("lang");
+    else if (a && a.navigationType === "traverse" && a.from && a.entry && a.entry.index < a.from.index) vt.types.add("back");
+  });
+})();</script>
 <title>Hội Bảo trợ Trẻ em TP. Hồ Chí Minh (HCWA)</title>
 <meta name="description" content="Hội hỗ trợ trẻ em, thanh thiếu niên và gia đình qua giáo dục, bảo vệ trẻ em và các chương trình dựa vào cộng đồng.">
 <meta name="robots" content="noindex, nofollow">
@@ -18,8 +30,8 @@
 <link rel="icon" href="/hcwa-rebuild/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/hcwa-rebuild/img/apple-touch-icon.png">
 <script type="application/json" id="i18n">{"copy":"Sao chép","copied":"Đã sao chép","copyFailed":"Không sao chép được. Hãy chọn và sao chép thủ công.","f_sending":"Đang gửi…","f_send":"Gửi","e_summary":"Vui lòng sửa các mục sau trước khi gửi:","close":"Đóng","motionPause":"Tạm dừng chuyển động","motionPlay":"Bật lại chuyển động","draftHide":"Ẩn khung nháp","draftShow":"Hiện khung nháp"}</script>
-  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-T3tTNade.js"></script>
-  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-BHLq4LFv.css">
+  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-D3IHIZBm.js"></script>
+  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-ClVHVQ4p.css">
 </head>
 <body class="page-home">
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
@@ -64,7 +76,7 @@
   </ul>
 </nav>
       <div class="site-header__tools" data-text-safe>
-        <div class="lang-switch lang-switch--header" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+        <div class="lang-switch lang-switch--header" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
         <a class="btn btn--primary btn--header" href="/hcwa-rebuild/chung-tay/ung-ho/" data-donate>Ủng hộ</a>
         <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>Menu</button>
       </div>
@@ -94,223 +106,300 @@
   </div>
 </section>
 
-<section class="section section--sun" aria-labelledby="what-title" data-reveal>
-  <div class="container split">
-    <div class="split__lead">
-      <h2 id="what-title">Chúng tôi làm gì</h2>
-      <p data-draft>Hội chăm sóc, bảo vệ và giáo dục trẻ em có nguy cơ phải lao động sớm, bị xâm hại, bỏ học hoặc bị ảnh hưởng bởi HIV/AIDS. Chúng tôi làm việc cùng gia đình, cộng đồng, chính quyền và các tổ chức đối tác.</p>
+<section class="passage" id="passage" data-world="passage" data-stage aria-labelledby="what-title">
+  <div class="passage__frame">
+    <div class="passage__halo" aria-hidden="true"></div>
+    <div class="container passage__text">
+      <h2 class="passage__title" id="what-title">Chúng tôi làm gì</h2>
+      <p class="statement" data-draft style="--n:45"><span class="sr-only">Hội chăm sóc, bảo vệ và giáo dục trẻ em có nguy cơ phải lao động sớm, bị xâm hại, bỏ học hoặc bị ảnh hưởng bởi HIV/AIDS. Chúng tôi làm việc cùng gia đình, cộng đồng, chính quyền và các tổ chức đối tác.</span><span class="statement__words" aria-hidden="true"><span class="w" style="--w:0">Hội </span><span class="w" style="--w:1">chăm </span><span class="w" style="--w:2">sóc, </span><span class="w" style="--w:3">bảo </span><span class="w" style="--w:4">vệ </span><span class="w" style="--w:5">và </span><span class="w" style="--w:6">giáo </span><span class="w" style="--w:7">dục </span><span class="w" style="--w:8">trẻ </span><span class="w" style="--w:9">em </span><span class="w" style="--w:10">có </span><span class="w" style="--w:11">nguy </span><span class="w" style="--w:12">cơ </span><span class="w" style="--w:13">phải </span><span class="w" style="--w:14">lao </span><span class="w" style="--w:15">động </span><span class="w" style="--w:16">sớm, </span><span class="w" style="--w:17">bị </span><span class="w" style="--w:18">xâm </span><span class="w" style="--w:19">hại, </span><span class="w" style="--w:20">bỏ </span><span class="w" style="--w:21">học </span><span class="w" style="--w:22">hoặc </span><span class="w" style="--w:23">bị </span><span class="w" style="--w:24">ảnh </span><span class="w" style="--w:25">hưởng </span><span class="w" style="--w:26">bởi </span><span class="w" style="--w:27">HIV/AIDS. </span><span class="w" style="--w:28">Chúng </span><span class="w" style="--w:29">tôi </span><span class="w" style="--w:30">làm </span><span class="w" style="--w:31">việc </span><span class="w" style="--w:32">cùng </span><span class="w" style="--w:33">gia </span><span class="w" style="--w:34">đình, </span><span class="w" style="--w:35">cộng </span><span class="w" style="--w:36">đồng, </span><span class="w" style="--w:37">chính </span><span class="w" style="--w:38">quyền </span><span class="w" style="--w:39">và </span><span class="w" style="--w:40">các </span><span class="w" style="--w:41">tổ </span><span class="w" style="--w:42">chức </span><span class="w" style="--w:43">đối </span><span class="w" style="--w:44">tác.</span></span></p>
     </div>
-    <ul class="focus-list">
-      <li class="focus-item">
-          <span class="ph ph--icon" role="img" aria-label="A6 · Giáo dục"><span class="ph__code">A6</span></span>
-          <div>
-            <h3><a href="/hcwa-rebuild/hoat-dong/?area=education">Giáo dục</a></h3>
-            <p data-draft>Lớp học miễn phí, học bổng và kỹ năng sống cho trẻ chưa thể đến trường.</p>
-          </div>
-        </li><li class="focus-item">
-          <span class="ph ph--icon" role="img" aria-label="A6 · Bảo vệ trẻ em"><span class="ph__code">A6</span></span>
-          <div>
-            <h3><a href="/hcwa-rebuild/hoat-dong/?area=protection">Bảo vệ trẻ em</a></h3>
-            <p data-draft>Nơi ở an toàn, tư vấn và hỗ trợ cho trẻ có nguy cơ bị xâm hại hoặc bóc lột.</p>
-          </div>
-        </li><li class="focus-item">
-          <span class="ph ph--icon" role="img" aria-label="A6 · Hỗ trợ gia đình và cộng đồng"><span class="ph__code">A6</span></span>
-          <div>
-            <h3><a href="/hcwa-rebuild/hoat-dong/?area=family">Hỗ trợ gia đình và cộng đồng</a></h3>
-            <p data-draft>Tư vấn gia đình, chăm sóc sức khỏe và kết nối dịch vụ xã hội ngay tại cộng đồng.</p>
-          </div>
-        </li><li class="focus-item">
-          <span class="ph ph--icon" role="img" aria-label="A6 · Vận động chính sách"><span class="ph__code">A6</span></span>
-          <div>
-            <h3><a href="/hcwa-rebuild/hoat-dong/?area=policy">Vận động chính sách</a></h3>
-            <p data-draft>Làm việc cùng chính quyền và đối tác để chính sách cho trẻ em tốt hơn.</p>
-          </div>
-        </li>
-    </ul>
   </div>
+  <div class="passage__exit" aria-hidden="true"><picture class="passage__still"><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/passage-corridor-desk-still-960.avif 960w, /hcwa-rebuild/posters/passage-corridor-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/passage-corridor-desk-still-960.webp 960w, /hcwa-rebuild/posters/passage-corridor-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/passage-corridor-desk-still-960.jpg 960w, /hcwa-rebuild/posters/passage-corridor-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/passage-corridor-mobile-still-480.avif 480w, /hcwa-rebuild/posters/passage-corridor-mobile-still-800.avif 800w" sizes="100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/passage-corridor-mobile-still-480.webp 480w, /hcwa-rebuild/posters/passage-corridor-mobile-still-800.webp 800w" sizes="100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/passage-corridor-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/passage-corridor-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/passage-corridor-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div>
 </section>
 
-<section class="section section--tight" aria-label="Tác động &amp; Báo cáo" data-reveal><div class="container impact-strip"><div class="figures figures--strip"><div class="figure" data-draft>
-  <p class="figure__value">[N]</p>
-  <p class="figure__label">trẻ em và thanh thiếu niên được hỗ trợ từ năm [năm]</p>
-  <span class="chip-pending" data-pending>Đang xác minh</span>
-</div><div class="figure" data-draft>
-  <p class="figure__value">[N]</p>
-  <p class="figure__label">cơ sở tại TP. Hồ Chí Minh</p>
-  <span class="chip-pending" data-pending>Đang xác minh</span>
-</div><div class="figure" data-draft>
-  <p class="figure__value">[N]</p>
-  <p class="figure__label">trẻ em được hỗ trợ trong năm [năm]</p>
-  <span class="chip-pending" data-pending>Đang xác minh</span>
-</div><div class="figure" data-draft>
-  <p class="figure__value">[N]</p>
-  <p class="figure__label">đối tác đồng hành trong năm [năm]</p>
-  <span class="chip-pending" data-pending>Đang xác minh</span>
-</div></div><a class="text-link" href="/hcwa-rebuild/tac-dong/"><span>Xem tác động và báo cáo</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></section>
-
-<section class="section section--sunken" aria-labelledby="centers-title" data-reveal>
-  <div class="container">
-    <div class="section-head">
-  <h2 id="centers-title">Cơ sở trực thuộc</h2>
-  <p class="section-head__intro" data-draft>Nơi trẻ em được học, được chữa lành và lớn lên, mỗi ngày.</p>
-  <a class="text-link" href="/hcwa-rebuild/hoat-dong/#co-so"><span>Xem tất cả</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-</div>
-    <div class="center-grid"><article class="center-card" style="--unit:var(--color-unit-green-bamboo)">
-  <div class="ph" role="img" aria-label="B1 · Ảnh bìa Tre Xanh · 4:3" style="--ratio:4/3"><span class="ph__code">B1</span><span class="ph__label">Ảnh bìa Tre Xanh · 4:3</span></div>
-  <div class="center-card__body">
-    <h3 class="center-card__name"><a href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/">Cơ sở Bảo trợ Xã hội Tre Xanh</a></h3>
-    <p class="center-card__since" data-draft>Từ năm [năm]</p>
-    <p class="center-card__serves" data-draft>Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng</p>
-    <span class="text-link" aria-hidden="true"><span>Xem cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+<section class="bays-section" id="centers" data-world="corridor" data-stage style="--n:3" aria-labelledby="centers-title">
+  <a class="bays__skip" href="#work">Bỏ qua phần giới thiệu các cơ sở</a>
+  <div class="bays__track" data-stage-track>
+    <div class="bays__frame">
+      <div class="bays__glass" aria-hidden="true"></div>
+      <div class="container bays__panel">
+        <div class="bays__head">
+          <h2 id="centers-title">Cơ sở trực thuộc</h2>
+          <p class="bays__intro" data-draft>Nơi trẻ em được học, được chữa lành và lớn lên, mỗi ngày.</p>
+        </div>
+        <nav class="bays__rail" aria-label="Các cơ sở">
+  <ol><li><a href="#center-green-bamboo" data-to="0" style="--unit:var(--color-unit-green-bamboo)"><svg class="rail__transom" viewBox="0 0 900 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="900" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM-70 -125H-34V-68H-70ZM-70 -52H-34V52H-70ZM-70 68H-34V125H-70ZM34 -125H70V-68H34ZM34 -52H70V52H34ZM34 68H70V125H34Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 150)" d="M-150 -150H150V150H-150ZM-70 -125H-34V-68H-70ZM-70 -52H-34V52H-70ZM-70 68H-34V125H-70ZM34 -125H70V-68H34ZM34 -52H70V52H34ZM34 68H70V125H34Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(750 150)" d="M-150 -150H150V150H-150ZM-70 -125H-34V-68H-70ZM-70 -52H-34V52H-70ZM-70 68H-34V125H-70ZM34 -125H70V-68H34ZM34 -52H70V52H34ZM34 68H70V125H34Z"/><path class="block-art__joint" d="M300 0V300M600 0V300"/></svg><span>Tre Xanh</span></a></li><li><a href="#center-little-rose" data-to="1" style="--unit:var(--color-unit-little-rose)"><svg class="rail__transom" viewBox="0 0 900 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="900" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 150)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(750 150)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__joint" d="M300 0V300M600 0V300"/></svg><span>Hoa Hồng Nhỏ</span></a></li><li><a href="#center-cau-han" data-to="2" style="--unit:var(--color-unit-cau-han)"><svg class="rail__transom" viewBox="0 0 900 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="900" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM-102 70A102 102 0 0 1 102 70L78 70A78 78 0 0 0 -78 70ZM-100 87H100V113H-100Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 150)" d="M-150 -150H150V150H-150ZM-102 70A102 102 0 0 1 102 70L78 70A78 78 0 0 0 -78 70ZM-100 87H100V113H-100Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(750 150)" d="M-150 -150H150V150H-150ZM-102 70A102 102 0 0 1 102 70L78 70A78 78 0 0 0 -78 70ZM-100 87H100V113H-100Z"/><path class="block-art__joint" d="M300 0V300M600 0V300"/></svg><span>Cầu Hàn</span></a></li></ol>
+</nav>
+        <ol class="bays"><li class="bay" id="center-green-bamboo" data-beat data-unit="green-bamboo" data-door="open" data-emblem="dotTre" style="--unit:var(--color-unit-green-bamboo);--spill:var(--color-unit-green-bamboo);--i:0">
+  <div class="bay__view" aria-hidden="true"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-green-bamboo-desk-still-960.avif 960w, /hcwa-rebuild/posters/bay-green-bamboo-desk-still-1600.avif 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-green-bamboo-desk-still-960.webp 960w, /hcwa-rebuild/posters/bay-green-bamboo-desk-still-1600.webp 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-green-bamboo-desk-still-960.jpg 960w, /hcwa-rebuild/posters/bay-green-bamboo-desk-still-1600.jpg 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/bay-green-bamboo-mobile-still-480.avif 480w, /hcwa-rebuild/posters/bay-green-bamboo-mobile-still-800.avif 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/bay-green-bamboo-mobile-still-480.webp 480w, /hcwa-rebuild/posters/bay-green-bamboo-mobile-still-800.webp 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/bay-green-bamboo-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/bay-green-bamboo-mobile-still-800.jpg 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/bay-green-bamboo-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div>
+  <div class="bay__text">
+    <h3 class="bay__name">Cơ sở Bảo trợ Xã hội Tre Xanh</h3>
+    <p class="bay__since" data-draft>Từ năm [năm]</p>
+    <p class="bay__serves" data-draft>Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng</p>
+    <p class="bay__where" data-draft>[phường], TP. Hồ Chí Minh</p>
+    
+    <p class="bay__links"><a class="text-link" href="/hcwa-rebuild/hoat-dong/co-so/tre-xanh/"><span>Xem cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
   </div>
-</article><article class="center-card" style="--unit:var(--color-unit-little-rose)">
-  <div class="ph ph--art" role="img" aria-label="B2 · Tranh minh họa Hoa Hồng Nhỏ · 4:3" style="--ratio:4/3"><span class="ph__code">B2</span><span class="ph__label">Tranh minh họa Hoa Hồng Nhỏ · 4:3</span></div>
-  <div class="center-card__body">
-    <h3 class="center-card__name"><a href="/hcwa-rebuild/hoat-dong/co-so/hoa-hong-nho/">Mái ấm Hoa Hồng Nhỏ</a></h3>
-    <p class="center-card__since" data-draft>Từ năm [năm]</p>
-    <p class="center-card__serves" data-draft>Trẻ em gái [độ tuổi] đã trải qua hoặc có nguy cơ bị xâm hại tình dục</p>
-    <span class="text-link" aria-hidden="true"><span>Xem cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+</li><li class="bay" id="center-little-rose" data-beat data-unit="little-rose" data-door="closed" data-emblem="hoaThi" style="--unit:var(--color-unit-little-rose);--spill:var(--color-sun-100);--i:1">
+  <div class="bay__view" aria-hidden="true"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-little-rose-desk-still-960.avif 960w, /hcwa-rebuild/posters/bay-little-rose-desk-still-1600.avif 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-little-rose-desk-still-960.webp 960w, /hcwa-rebuild/posters/bay-little-rose-desk-still-1600.webp 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-little-rose-desk-still-960.jpg 960w, /hcwa-rebuild/posters/bay-little-rose-desk-still-1600.jpg 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/bay-little-rose-mobile-still-480.avif 480w, /hcwa-rebuild/posters/bay-little-rose-mobile-still-800.avif 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/bay-little-rose-mobile-still-480.webp 480w, /hcwa-rebuild/posters/bay-little-rose-mobile-still-800.webp 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/bay-little-rose-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/bay-little-rose-mobile-still-800.jpg 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/bay-little-rose-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div>
+  <div class="bay__text">
+    <h3 class="bay__name">Mái ấm Hoa Hồng Nhỏ</h3>
+    <p class="bay__since" data-draft>Từ năm [năm]</p>
+    <p class="bay__serves" data-draft>Trẻ em gái [độ tuổi] đã trải qua hoặc có nguy cơ bị xâm hại tình dục</p>
+    
+    <p class="bay__note" data-draft>Để bảo vệ sự riêng tư và an toàn của các em, chúng tôi không đăng hình ảnh, tên hay địa chỉ của mái ấm.</p>
+    <p class="bay__links"><a class="text-link" href="/hcwa-rebuild/hoat-dong/co-so/hoa-hong-nho/"><span>Tìm hiểu về mái ấm</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a><a class="text-link" href="/hcwa-rebuild/chung-tay/hien-vat/#tiem-banh"><span>Tiệm bánh Hoa Hồng Nhỏ</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
   </div>
-</article><article class="center-card" style="--unit:var(--color-unit-cau-han)">
-  <div class="ph" role="img" aria-label="B1 · Ảnh bìa Cầu Hàn · 4:3" style="--ratio:4/3"><span class="ph__code">B1</span><span class="ph__label">Ảnh bìa Cầu Hàn · 4:3</span></div>
-  <div class="center-card__body">
-    <h3 class="center-card__name"><a href="/hcwa-rebuild/hoat-dong/co-so/cau-han/">Dự án Cầu Hàn</a></h3>
-    <p class="center-card__since" data-draft>Từ năm [năm]</p>
-    <p class="center-card__serves" data-draft>Trẻ em và gia đình bị ảnh hưởng bởi HIV/AIDS, gia đình di cư và trẻ đã nghỉ học</p>
-    <span class="text-link" aria-hidden="true"><span>Xem cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+</li><li class="bay" id="center-cau-han" data-beat data-unit="cau-han" data-door="open" data-emblem="vomCau" style="--unit:var(--color-unit-cau-han);--spill:var(--color-unit-cau-han);--i:2">
+  <div class="bay__view" aria-hidden="true"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-cau-han-desk-still-960.avif 960w, /hcwa-rebuild/posters/bay-cau-han-desk-still-1600.avif 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-cau-han-desk-still-960.webp 960w, /hcwa-rebuild/posters/bay-cau-han-desk-still-1600.webp 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/bay-cau-han-desk-still-960.jpg 960w, /hcwa-rebuild/posters/bay-cau-han-desk-still-1600.jpg 1600w" sizes="(min-width: 1024px) 76vw, 100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/bay-cau-han-mobile-still-480.avif 480w, /hcwa-rebuild/posters/bay-cau-han-mobile-still-800.avif 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/bay-cau-han-mobile-still-480.webp 480w, /hcwa-rebuild/posters/bay-cau-han-mobile-still-800.webp 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/bay-cau-han-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/bay-cau-han-mobile-still-800.jpg 800w" sizes="(min-width: 1024px) 76vw, 100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/bay-cau-han-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div>
+  <div class="bay__text">
+    <h3 class="bay__name">Dự án Cầu Hàn</h3>
+    <p class="bay__since" data-draft>Từ năm [năm]</p>
+    <p class="bay__serves" data-draft>Trẻ em và gia đình bị ảnh hưởng bởi HIV/AIDS, gia đình di cư và trẻ đã nghỉ học</p>
+    
+    
+    <p class="bay__links"><a class="text-link" href="/hcwa-rebuild/hoat-dong/co-so/cau-han/"><span>Xem cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
   </div>
-</article></div>
+</li></ol>
+      </div>
+    </div>
   </div>
+  <p class="container bays__all"><a class="text-link" href="/hcwa-rebuild/hoat-dong/#co-so"><span>Tất cả hoạt động</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
 </section>
 
-<section class="section" aria-labelledby="programs-title" data-reveal>
+<section class="wall wall--sun wall--edge work" id="work" aria-labelledby="focus-title">
+  <span class="sun-layer sun-layer--work" aria-hidden="true"></span>
   <div class="container">
-    <div class="section-head">
-  <h2 id="programs-title">Dự án &amp; chương trình</h2>
-  
-  <a class="text-link" href="/hcwa-rebuild/hoat-dong/#du-an"><span>Tất cả dự án</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-</div>
-    <ul class="program-list"><li class="program-row" data-areas="education family" data-status="active">
-  <div class="program-row__meta"><span class="status status--active">Đang hoạt động</span><span class="program-row__years" data-draft>[năm bắt đầu]–[năm kết thúc]</span></div>
-  <div class="program-row__main">
-    <h3 class="program-row__name"><a href="/hcwa-rebuild/hoat-dong/du-an/cung-vuon-len/">Chương trình Cùng Vươn Lên</a></h3>
-    <p data-draft>Dự án do CapitaLand Việt Nam tài trợ, giúp trẻ em có hoàn cảnh khó khăn được tiếp cận liên tục với giáo dục, chăm sóc sức khỏe và phát triển kỹ năng.</p>
-    <p class="program-row__partners">CapitaLand Vietnam</p>
+    <h2 class="wall__title" id="focus-title" data-reveal data-draft>Lĩnh vực hoạt động</h2>
+    <ul class="bento" data-reveal="stagger"><li class="tile tile--education">
+    <span class="tile__light" aria-hidden="true"></span>
+    <svg class="tile__screen" viewBox="0 0 600 600" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="600" height="600"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 150)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 450)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 450)" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-art__joint" d="M300 0V600M0 300H600"/></svg>
+    <div class="tile__body">
+      <h3 class="tile__name"><a href="/hcwa-rebuild/hoat-dong/?area=education#f-education">Giáo dục</a></h3>
+      <p class="tile__text" data-draft>Lớp học miễn phí, học bổng và kỹ năng sống cho trẻ chưa thể đến trường.</p>
+    </div>
+    <svg class="icon tile__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li><li class="tile tile--protection">
+    <span class="tile__light" aria-hidden="true"></span>
+    <svg class="tile__screen" viewBox="0 0 900 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="900" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM-130 -81L-124 -75L-130 -69ZM-130 -6L-124 0L-130 6ZM-130 69L-124 75L-130 81ZM-81 -130L-69 -130L-75 -124ZM-101 -75L-75 -101L-49 -75L-75 -49ZM-101 0L-75 -26L-49 0L-75 26ZM-101 75L-75 49L-49 75L-75 101ZM-81 130L-75 124L-69 130ZM-6 -130L6 -130L0 -124ZM-26 -75L0 -101L26 -75L0 -49ZM-26 0L0 -26L26 0L0 26ZM-26 75L0 49L26 75L0 101ZM-6 130L0 124L6 130ZM69 -130L81 -130L75 -124ZM49 -75L75 -101L101 -75L75 -49ZM49 0L75 -26L101 0L75 26ZM49 75L75 49L101 75L75 101ZM69 130L75 124L81 130ZM130 -69L124 -75L130 -81ZM130 6L124 0L130 -6ZM130 81L124 75L130 69Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(450 150)" d="M-150 -150H150V150H-150ZM-130 -81L-124 -75L-130 -69ZM-130 -6L-124 0L-130 6ZM-130 69L-124 75L-130 81ZM-81 -130L-69 -130L-75 -124ZM-101 -75L-75 -101L-49 -75L-75 -49ZM-101 0L-75 -26L-49 0L-75 26ZM-101 75L-75 49L-49 75L-75 101ZM-81 130L-75 124L-69 130ZM-6 -130L6 -130L0 -124ZM-26 -75L0 -101L26 -75L0 -49ZM-26 0L0 -26L26 0L0 26ZM-26 75L0 49L26 75L0 101ZM-6 130L0 124L6 130ZM69 -130L81 -130L75 -124ZM49 -75L75 -101L101 -75L75 -49ZM49 0L75 -26L101 0L75 26ZM49 75L75 49L101 75L75 101ZM69 130L75 124L81 130ZM130 -69L124 -75L130 -81ZM130 6L124 0L130 -6ZM130 81L124 75L130 69Z"/><path class="block-art__face" fill-rule="evenodd" transform="translate(750 150)" d="M-150 -150H150V150H-150ZM-130 -81L-124 -75L-130 -69ZM-130 -6L-124 0L-130 6ZM-130 69L-124 75L-130 81ZM-81 -130L-69 -130L-75 -124ZM-101 -75L-75 -101L-49 -75L-75 -49ZM-101 0L-75 -26L-49 0L-75 26ZM-101 75L-75 49L-49 75L-75 101ZM-81 130L-75 124L-69 130ZM-6 -130L6 -130L0 -124ZM-26 -75L0 -101L26 -75L0 -49ZM-26 0L0 -26L26 0L0 26ZM-26 75L0 49L26 75L0 101ZM-6 130L0 124L6 130ZM69 -130L81 -130L75 -124ZM49 -75L75 -101L101 -75L75 -49ZM49 0L75 -26L101 0L75 26ZM49 75L75 49L101 75L75 101ZM69 130L75 124L81 130ZM130 -69L124 -75L130 -81ZM130 6L124 0L130 -6ZM130 81L124 75L130 69Z"/><path class="block-art__joint" d="M300 0V300M600 0V300"/></svg>
+    <div class="tile__body">
+      <h3 class="tile__name"><a href="/hcwa-rebuild/hoat-dong/?area=protection#f-protection">Bảo vệ trẻ em</a></h3>
+      <p class="tile__text" data-draft>Nơi ở an toàn, tư vấn và hỗ trợ cho trẻ có nguy cơ bị xâm hại hoặc bóc lột.</p>
+    </div>
+    <svg class="icon tile__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li><li class="tile tile--family">
+    <span class="tile__light" aria-hidden="true"></span>
+    <svg class="tile__screen" viewBox="0 0 300 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="300" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM34 150A116 116 0 0 1 150 34L150 56A94 94 0 0 0 56 150ZM-34 150A116 116 0 0 0 -150 34L-150 56A94 94 0 0 1 -56 150ZM34 -150A116 116 0 0 0 150 -34L150 -56A94 94 0 0 1 56 -150ZM-34 -150A116 116 0 0 1 -150 -34L-150 -56A94 94 0 0 0 -56 -150Z"/></svg>
+    <div class="tile__body">
+      <h3 class="tile__name"><a href="/hcwa-rebuild/hoat-dong/?area=family#f-family">Hỗ trợ gia đình và cộng đồng</a></h3>
+      <p class="tile__text" data-draft>Tư vấn gia đình, chăm sóc sức khỏe và kết nối dịch vụ xã hội ngay tại cộng đồng.</p>
+    </div>
+    <svg class="icon tile__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li><li class="tile tile--policy">
+    <span class="tile__light" aria-hidden="true"></span>
+    <svg class="tile__screen" viewBox="0 0 300 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><rect class="block-art__sky" width="300" height="300"/><path class="block-art__face" fill-rule="evenodd" transform="translate(150 150)" d="M-150 -150H150V150H-150ZM-125 91H-75V109H-125ZM-75 41H-25V59H-75ZM-25 -9H25V9H-25ZM25 -59H75V-41H25ZM75 -109H125V-91H75Z"/></svg>
+    <div class="tile__body">
+      <h3 class="tile__name"><a href="/hcwa-rebuild/hoat-dong/?area=policy#f-policy">Vận động chính sách</a></h3>
+      <p class="tile__text" data-draft>Làm việc cùng chính quyền và đối tác để chính sách cho trẻ em tốt hơn.</p>
+    </div>
+    <svg class="icon tile__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li></ul>
+    <div class="plaques" role="group" aria-label="Tác động &amp; Báo cáo">
+    <ul class="plaques__row"><li class="plaque" data-draft>
+      <p class="plaque__value num">[N]</p>
+      <p class="plaque__label">trẻ em và thanh thiếu niên được hỗ trợ từ năm [năm]</p>
+      <span class="chip-pending" data-pending>Đang xác minh</span>
+    </li><li class="plaque" data-draft>
+      <p class="plaque__value num">[N]</p>
+      <p class="plaque__label">cơ sở tại TP. Hồ Chí Minh</p>
+      <span class="chip-pending" data-pending>Đang xác minh</span>
+    </li><li class="plaque" data-draft>
+      <p class="plaque__value num">[N]</p>
+      <p class="plaque__label">trẻ em được hỗ trợ trong năm [năm]</p>
+      <span class="chip-pending" data-pending>Đang xác minh</span>
+    </li><li class="plaque" data-draft>
+      <p class="plaque__value num">[N]</p>
+      <p class="plaque__label">đối tác đồng hành trong năm [năm]</p>
+      <span class="chip-pending" data-pending>Đang xác minh</span>
+    </li></ul>
+    <a class="plaques__link text-link" href="/hcwa-rebuild/tac-dong/"><span>Xem tác động và báo cáo</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+  </div>
+  </div>
+  <section class="programs" aria-labelledby="programs-title">
+    <div class="container">
+      <div class="programs__head" data-reveal>
+        <span class="lam" aria-hidden="true"></span>
+        <h2 class="wall__title" id="programs-title">Dự án &amp; chương trình</h2>
+      </div>
+      <ul class="program-list program-list--home" data-reveal="stagger">
+        <li class="program-row" data-areas="education family" data-status="active">
+  <div class="program-row__head">
+    <p class="program-row__meta"><span class="status status--active">Đang hoạt động</span><span class="program-row__years" data-draft>[năm bắt đầu]–[năm kết thúc]</span></p>
+    <h3 class="program-row__name"><a href="/hcwa-rebuild/hoat-dong/du-an/cung-vuon-len/">Chương trình Cùng Vươn Lên</a></h3>
+  </div>
+  <div class="program-row__body">
+    <p class="program-row__summary" data-draft>Dự án do CapitaLand Việt Nam tài trợ, giúp trẻ em có hoàn cảnh khó khăn được tiếp cận liên tục với giáo dục, chăm sóc sức khỏe và phát triển kỹ năng.</p>
+    <dl class="program-row__facts">
+      <div><dt>Tài trợ</dt><dd>CapitaLand Vietnam</dd></div>
+      <div><dt>Thực hiện tại</dt><dd><ul class="door-chips"><li class="door-chip" style="--unit:var(--color-unit-green-bamboo)"><span class="door-chip__door" aria-hidden="true"></span>Tre Xanh</li><li class="door-chip" style="--unit:var(--color-unit-little-rose)"><span class="door-chip__door" aria-hidden="true"></span>Hoa Hồng Nhỏ</li><li class="door-chip" style="--unit:var(--color-unit-cau-han)"><span class="door-chip__door" aria-hidden="true"></span>Cầu Hàn</li></ul></dd></div>
+    </dl>
   </div>
   <svg class="icon program-row__arrow" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
 </li><li class="program-row" data-areas="education" data-status="active">
-  <div class="program-row__meta"><span class="status status--active">Đang hoạt động</span><span class="program-row__years" data-draft>từ [năm]</span></div>
-  <div class="program-row__main">
+  <div class="program-row__head">
+    <p class="program-row__meta"><span class="status status--active">Đang hoạt động</span><span class="program-row__years" data-draft>từ [năm]</span></p>
     <h3 class="program-row__name"><a href="/hcwa-rebuild/hoat-dong/du-an/lop-hoc-tinh-thuong/">Lớp học tình thương</a></h3>
-    <p data-draft>Lớp học miễn phí các môn cơ bản cho trẻ không thể vào hoặc theo học trường công, tổ chức tại Cầu Hàn và Tre Xanh.</p>
-    
+  </div>
+  <div class="program-row__body">
+    <p class="program-row__summary" data-draft>Lớp học miễn phí các môn cơ bản cho trẻ không thể vào hoặc theo học trường công, tổ chức tại Cầu Hàn và Tre Xanh.</p>
+    <dl class="program-row__facts">
+      
+      <div><dt>Thực hiện tại</dt><dd><ul class="door-chips"><li class="door-chip" style="--unit:var(--color-unit-cau-han)"><span class="door-chip__door" aria-hidden="true"></span>Cầu Hàn</li><li class="door-chip" style="--unit:var(--color-unit-green-bamboo)"><span class="door-chip__door" aria-hidden="true"></span>Tre Xanh</li></ul></dd></div>
+    </dl>
   </div>
   <svg class="icon program-row__arrow" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
 </li><li class="program-row" data-areas="policy protection" data-status="completed">
-  <div class="program-row__meta"><span class="status status--completed">Đã hoàn thành</span><span class="program-row__years" data-draft>[năm bắt đầu]–[năm kết thúc]</span></div>
-  <div class="program-row__main">
-    <h3 class="program-row__name"><a href="/hcwa-rebuild/hoat-dong/du-an/quyen-tre-em-khuyet-tat/">Dự án thí điểm thúc đẩy quyền trẻ em khuyết tật</a></h3>
-    <p data-draft>Dự án thí điểm giúp trẻ em khuyết tật và người chăm sóc tiếp cận chính sách và được lắng nghe. Dự án đã kết thúc với hội nghị tổng kết.</p>
+  <div class="program-row__head">
+    <p class="program-row__meta"><span class="status status--completed">Đã hoàn thành</span><span class="program-row__years" data-draft>[năm bắt đầu]–[năm kết thúc]</span></p>
+    <h3 class="program-row__name"><a href="/hcwa-rebuild/hoat-dong/du-an/quyen-tre-em-khuyet-tat/">Dự án thí điểm thúc đẩy quyền trẻ em khuyết tật</a></h3>
+  </div>
+  <div class="program-row__body">
+    <p class="program-row__summary" data-draft>Dự án thí điểm giúp trẻ em khuyết tật và người chăm sóc tiếp cận chính sách và được lắng nghe. Dự án đã kết thúc với hội nghị tổng kết.</p>
     
   </div>
   <svg class="icon program-row__arrow" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-</li></ul>
-  </div>
+</li>
+        <li class="program-more"><a class="program-more__link" href="/hcwa-rebuild/hoat-dong/#du-an"><span>Tất cả dự án</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+      </ul>
+    </div>
+  </section>
 </section>
 
-<section class="section section--shade" aria-labelledby="latest-title" data-reveal>
-  <div class="container">
-    <div class="section-head">
-  <h2 id="latest-title">Tin mới từ Hội</h2>
-  
-  <a class="text-link" href="/hcwa-rebuild/tin-tuc/"><span>Tất cả tin tức</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-</div>
-    <div class="latest">
-      <article class="story-card story-card--featured" data-draft>
-  <div class="ph" role="img" aria-label="C2 · Ảnh câu chuyện · 3:2" style="--ratio:3/2"><span class="ph__code">C2</span><span class="ph__label">Ảnh câu chuyện · 3:2</span></div>
-  <p class="label">Câu chuyện</p>
-  <h3 class="story-card__title"><a href="/hcwa-rebuild/tin-tuc/">[Tên câu chuyện]</a></h3>
-  <p class="story-card__excerpt">[Hai dòng tóm tắt câu chuyện, kể từ góc nhìn của trẻ hoặc gia đình, đã được HCWA duyệt.]</p>
-  <p class="story-card__note">Tên nhân vật đã được thay đổi để bảo vệ trẻ.</p>
+<section class="wall wall--shade news" id="news" aria-labelledby="latest-title">
+  <div class="container news__grid">
+    <article class="feature" data-story-placeholder data-draft>
+  <div class="feature__wall"><picture class="feature__still"><source type="image/avif" srcset="/hcwa-rebuild/posters/story-story-still-480.avif 480w, /hcwa-rebuild/posters/story-story-still-800.avif 800w" sizes="(min-width: 1024px) 55vw, 100vw" width="800" height="533"><source type="image/webp" srcset="/hcwa-rebuild/posters/story-story-still-480.webp 480w, /hcwa-rebuild/posters/story-story-still-800.webp 800w" sizes="(min-width: 1024px) 55vw, 100vw" width="800" height="533"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/story-story-still-480.jpg 480w, /hcwa-rebuild/posters/story-story-still-800.jpg 800w" sizes="(min-width: 1024px) 55vw, 100vw" width="800" height="533"><img src="/hcwa-rebuild/posters/story-story-still-800.jpg" alt="" width="800" height="533" loading="lazy" decoding="async" data-layer="still"></picture></div>
+  <div class="feature__text">
+    <p class="feature__cat">Câu chuyện</p>
+    <h3 class="feature__title"><a href="/hcwa-rebuild/tin-tuc/">[Tên câu chuyện]</a></h3>
+    <p class="feature__excerpt">[Hai dòng tóm tắt câu chuyện, kể từ góc nhìn của trẻ hoặc gia đình, đã được HCWA duyệt.]</p>
+    <p class="feature__note">Tên nhân vật đã được thay đổi để bảo vệ trẻ.</p>
+  </div>
 </article>
-      <ul class="news-list"><li class="news-item">
-  <p class="news-item__meta"><span class="label">Sự kiện</span><time datetime="2026-05-25">25/05/2026</time></p>
-  <h3 class="news-item__title"><a href="https://hcwa.org.vn/dai-dien-hoi-bao-tro-tre-em-tp-ho-chi-minh-tham-du-hoi-nghi-philanthropy-asia-summit-tai-singapore/">Đại diện Hội Bảo trợ Trẻ em TP. Hồ Chí Minh tham dự Hội nghị Philanthropy Asia Summit tại Singapore</a></h3>
-</li><li class="news-item">
-  <p class="news-item__meta"><span class="label">Tin tức</span><time datetime="2026-05-25">25/05/2026</time></p>
-  <h3 class="news-item__title"><a href="https://hcwa.org.vn/hoi-nghi-tong-ket-du-an-thi-diem-thuc-day-quyen-tre-em-khuyet-tat-tai-tp-ho-chi-minh/">Hội nghị tổng kết dự án thí điểm thúc đẩy quyền trẻ em khuyết tật tại TP. Hồ Chí Minh</a></h3>
-</li><li class="news-item">
-  <p class="news-item__meta"><span class="label">Tin tức</span><time datetime="2026-03-07">07/03/2026</time></p>
-  <h3 class="news-item__title"><a href="https://hcwa.org.vn/tang-cuong-co-hoi-tiep-can-chinh-sach-cho-tre-em-khuyet-tat/">Tăng cường cơ hội tiếp cận chính sách cho trẻ em khuyết tật</a></h3>
-</li></ul>
+    <div class="news__list" data-reveal>
+      <h2 class="wall__title" id="latest-title">Tin mới từ Hội</h2>
+      <ol class="dated-list"><li class="dated">
+  <time class="dated__date" datetime="2026-05-25"><span class="dated__dm">25/05</span><span class="sr-only">/</span><span class="dated__y">2026</span></time>
+  <div class="dated__body">
+    <p class="dated__cat">Sự kiện</p>
+    <h3 class="dated__title"><a href="https://hcwa.org.vn/dai-dien-hoi-bao-tro-tre-em-tp-ho-chi-minh-tham-du-hoi-nghi-philanthropy-asia-summit-tai-singapore/">Đại diện Hội Bảo trợ Trẻ em TP. Hồ Chí Minh tham dự Hội nghị Philanthropy Asia Summit tại Singapore<span class="sr-only"> (mở bài viết trên hcwa.org.vn)</span></a><svg class="icon dated__ext" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></h3>
+  </div>
+</li><li class="dated">
+  <time class="dated__date" datetime="2026-05-25"><span class="dated__dm">25/05</span><span class="sr-only">/</span><span class="dated__y">2026</span></time>
+  <div class="dated__body">
+    <p class="dated__cat">Tin tức</p>
+    <h3 class="dated__title"><a href="https://hcwa.org.vn/hoi-nghi-tong-ket-du-an-thi-diem-thuc-day-quyen-tre-em-khuyet-tat-tai-tp-ho-chi-minh/">Hội nghị tổng kết dự án thí điểm thúc đẩy quyền trẻ em khuyết tật tại TP. Hồ Chí Minh<span class="sr-only"> (mở bài viết trên hcwa.org.vn)</span></a><svg class="icon dated__ext" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></h3>
+  </div>
+</li><li class="dated">
+  <time class="dated__date" datetime="2026-03-07"><span class="dated__dm">07/03</span><span class="sr-only">/</span><span class="dated__y">2026</span></time>
+  <div class="dated__body">
+    <p class="dated__cat">Tin tức</p>
+    <h3 class="dated__title"><a href="https://hcwa.org.vn/tang-cuong-co-hoi-tiep-can-chinh-sach-cho-tre-em-khuyet-tat/">Tăng cường cơ hội tiếp cận chính sách cho trẻ em khuyết tật<span class="sr-only"> (mở bài viết trên hcwa.org.vn)</span></a><svg class="icon dated__ext" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></h3>
+  </div>
+</li></ol>
+      <a class="news__all text-link" href="/hcwa-rebuild/tin-tuc/"><span>Tất cả tin tức</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
     </div>
   </div>
 </section>
 
-<section class="section section--help" aria-labelledby="help-title" data-reveal>
-  <div class="container">
-    <div class="section-head">
-  <h2 id="help-title">Bạn có thể giúp như thế nào</h2>
-  
-  
-</div>
-    <ul class="ways">
-      <li class="way">
-          <div class="ph ph--art way__art" role="img" aria-label="A7 · Ủng hộ · 1:1" style="--ratio:1/1"><span class="ph__code">A7</span><span class="ph__label">Ủng hộ · 1:1</span></div>
-          <h3><a href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a></h3>
-          <p data-draft>Đóng góp một lần hoặc hằng tháng cho học bổng, bữa ăn và chăm sóc sức khỏe của trẻ.</p>
-        </li><li class="way">
-          <div class="ph ph--art way__art" role="img" aria-label="A7 · Tình nguyện · 1:1" style="--ratio:1/1"><span class="ph__code">A7</span><span class="ph__label">Tình nguyện · 1:1</span></div>
-          <h3><a href="/hcwa-rebuild/chung-tay/tinh-nguyen/">Tình nguyện</a></h3>
-          <p data-draft>Cùng tổ chức hoạt động với trẻ, hoặc hỗ trợ truyền thông, gây quỹ và quan hệ nhà tài trợ.</p>
-        </li><li class="way">
-          <div class="ph ph--art way__art" role="img" aria-label="A7 · Hợp tác · 1:1" style="--ratio:1/1"><span class="ph__code">A7</span><span class="ph__label">Hợp tác · 1:1</span></div>
-          <h3><a href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/">Hợp tác</a></h3>
-          <p data-draft>Doanh nghiệp, trường học và tổ chức có thể tài trợ chương trình, cử nhân viên tình nguyện hoặc cùng tổ chức sự kiện.</p>
-        </li><li class="way">
-          <div class="ph ph--art way__art" role="img" aria-label="A7 · Hiện vật và Tiệm bánh Hoa Hồng Nhỏ · 1:1" style="--ratio:1/1"><span class="ph__code">A7</span><span class="ph__label">Hiện vật và Tiệm bánh Hoa Hồng Nhỏ · 1:1</span></div>
-          <h3><a href="/hcwa-rebuild/chung-tay/hien-vat/">Hiện vật và Tiệm bánh Hoa Hồng Nhỏ</a></h3>
-          <p data-draft>Tặng đồ dùng học tập, nhu yếu phẩm, hoặc đặt bánh từ Tiệm bánh Hoa Hồng Nhỏ.</p>
-        </li>
-    </ul>
+<section class="shutters" id="shutters" data-world="shutters" data-stage>
+  <a class="shutters__skip" href="#help">Bỏ qua, đến phần Bạn có thể giúp như thế nào</a>
+  <div class="shutters__track" data-stage-track>
+    <div class="shutters__frame" aria-hidden="true">
+      <template class="shutters__beats"><div class="shutters__view shutters__view--closed"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-closed-desk-still-960.avif 960w, /hcwa-rebuild/posters/shutters-closed-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-closed-desk-still-960.webp 960w, /hcwa-rebuild/posters/shutters-closed-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-closed-desk-still-960.jpg 960w, /hcwa-rebuild/posters/shutters-closed-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/shutters-closed-mobile-still-480.avif 480w, /hcwa-rebuild/posters/shutters-closed-mobile-still-800.avif 800w" sizes="100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/shutters-closed-mobile-still-480.webp 480w, /hcwa-rebuild/posters/shutters-closed-mobile-still-800.webp 800w" sizes="100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/shutters-closed-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/shutters-closed-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/shutters-closed-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div><div class="shutters__view shutters__view--louvers"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-louvers-desk-still-960.avif 960w, /hcwa-rebuild/posters/shutters-louvers-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-louvers-desk-still-960.webp 960w, /hcwa-rebuild/posters/shutters-louvers-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-louvers-desk-still-960.jpg 960w, /hcwa-rebuild/posters/shutters-louvers-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/shutters-louvers-mobile-still-480.avif 480w, /hcwa-rebuild/posters/shutters-louvers-mobile-still-800.avif 800w" sizes="100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/shutters-louvers-mobile-still-480.webp 480w, /hcwa-rebuild/posters/shutters-louvers-mobile-still-800.webp 800w" sizes="100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/shutters-louvers-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/shutters-louvers-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/shutters-louvers-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div></template>
+      <div class="shutters__view shutters__view--open"><picture class=""><source type="image/avif" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-open-desk-still-960.avif 960w, /hcwa-rebuild/posters/shutters-open-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="1000"><source type="image/webp" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-open-desk-still-960.webp 960w, /hcwa-rebuild/posters/shutters-open-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="1000"><source type="image/jpeg" media="(min-aspect-ratio: 1/1)" srcset="/hcwa-rebuild/posters/shutters-open-desk-still-960.jpg 960w, /hcwa-rebuild/posters/shutters-open-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="1000"><source type="image/avif" srcset="/hcwa-rebuild/posters/shutters-open-mobile-still-480.avif 480w, /hcwa-rebuild/posters/shutters-open-mobile-still-800.avif 800w" sizes="100vw" width="800" height="1067"><source type="image/webp" srcset="/hcwa-rebuild/posters/shutters-open-mobile-still-480.webp 480w, /hcwa-rebuild/posters/shutters-open-mobile-still-800.webp 800w" sizes="100vw" width="800" height="1067"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/shutters-open-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/shutters-open-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="1067"><img src="/hcwa-rebuild/posters/shutters-open-mobile-still-800.jpg" alt="" width="800" height="1067" loading="lazy" decoding="async" data-layer="still"></picture></div>
+      <div class="shutters__flood"></div>
+    </div>
+    <div class="shutters__sill" aria-hidden="true"></div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="partners-title" data-reveal>
+<section class="wall wall--light help" id="help" aria-labelledby="help-title">
+  <span class="sun-layer sun-layer--help" aria-hidden="true"></span>
   <div class="container">
-    <div class="section-head">
-  <h2 id="partners-title">Cảm ơn các đối tác đã đồng hành</h2>
-  
-  
-</div>
-    <ul class="logo-wall" aria-label="Logo đối tác">
-      <li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li><li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li><li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li><li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li><li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li><li><span class="ph ph--logo" role="img" aria-label="C5 · Logo đối tác"><span class="ph__code">C5</span></span></li>
-    </ul>
-    <p class="logo-wall__links"><a class="text-link" href="/hcwa-rebuild/ve-chung-toi/doi-tac/"><span>Đối tác &amp; nhà tài trợ</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a> <a class="text-link" href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/"><span>Trở thành đối tác</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
+    <h2 class="help__title" id="help-title" data-reveal>Bạn có thể giúp như thế nào</h2>
+  </div>
+  <ul class="louvers" data-reveal="stagger"><li class="louver louver--donate" data-way="donate">
+    <span class="louver__face" aria-hidden="true"></span>
+    <h3 class="louver__title"><span class="louver__label">Ủng hộ</span></h3>
+    <div class="louver__body">
+      <p class="louver__text" data-draft>Đóng góp một lần hoặc hằng tháng cho học bổng, bữa ăn và chăm sóc sức khỏe của trẻ.</p>
+      <a class="btn btn--primary louver__btn" href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a>
+    </div>
+    
+  </li><li class="louver" data-way="volunteer">
+    <span class="louver__face" aria-hidden="true"></span>
+    <h3 class="louver__title"><a href="/hcwa-rebuild/chung-tay/tinh-nguyen/"><span class="louver__label">Tình nguyện</span></a></h3>
+    <div class="louver__body">
+      <p class="louver__text" data-draft>Cùng tổ chức hoạt động với trẻ, hoặc hỗ trợ truyền thông, gây quỹ và quan hệ nhà tài trợ.</p>
+      
+    </div>
+    <svg class="icon louver__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li><li class="louver" data-way="partner">
+    <span class="louver__face" aria-hidden="true"></span>
+    <h3 class="louver__title"><a href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/"><span class="louver__label">Hợp tác</span></a></h3>
+    <div class="louver__body">
+      <p class="louver__text" data-draft>Doanh nghiệp, trường học và tổ chức có thể tài trợ chương trình, cử nhân viên tình nguyện hoặc cùng tổ chức sự kiện.</p>
+      
+    </div>
+    <svg class="icon louver__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li><li class="louver" data-way="in-kind">
+    <span class="louver__face" aria-hidden="true"></span>
+    <h3 class="louver__title"><a href="/hcwa-rebuild/chung-tay/hien-vat/"><span class="louver__label">Hiện vật và Tiệm bánh Hoa Hồng Nhỏ</span></a></h3>
+    <div class="louver__body">
+      <p class="louver__text" data-draft>Tặng đồ dùng học tập, nhu yếu phẩm, hoặc đặt bánh từ Tiệm bánh Hoa Hồng Nhỏ.</p>
+      <a class="text-link louver__extra" href="/hcwa-rebuild/chung-tay/hien-vat/#tiem-banh"><span>Tiệm bánh Hoa Hồng Nhỏ</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+    </div>
+    <svg class="icon louver__go" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </li></ul>
+</section>
+
+<section class="wall wall--light partners" id="partners" aria-labelledby="partners-title" data-partners="0" data-partners-pending>
+  <div class="container partners__inner" data-reveal>
+    <h2 class="partners__title" id="partners-title">Cảm ơn các đối tác đã đồng hành</h2>
+    <p class="partners__pending" data-draft>[Chờ ít nhất 4 logo đối tác đã được duyệt]</p>
+    <p class="partners__links">
+    <a class="text-link" href="/hcwa-rebuild/ve-chung-toi/doi-tac/"><span>Đối tác &amp; nhà tài trợ</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+    <a class="text-link" href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/"><span>Trở thành đối tác</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+  </p>
   </div>
 </section>
 
-<section class="cta-band" aria-labelledby="contact-title">
-  <div class="container cta-band__inner">
-    <h2 id="contact-title">Bạn có câu hỏi hoặc muốn đến thăm?</h2>
-    <div class="cta-band__actions"><a class="btn btn--on-dusk" href="/hcwa-rebuild/lien-he/">Liên hệ với chúng tôi</a></div>
-    <ul class="cta-band__contact" data-draft>
-      <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:+842838401406">+84 28 3840 1406</a></li>
-      <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><a href="mailto:hcwa.vn@gmail.com">hcwa.vn@gmail.com</a></li>
-    </ul>
+<section class="dusk" id="contact" aria-labelledby="contact-title">
+  <div class="container dusk__inner">
+    <h2 class="dusk__title" id="contact-title">Bạn có câu hỏi hoặc muốn đến thăm?</h2>
+    <dl class="dusk__lines" data-draft>
+      <div><dt>Điện thoại</dt><dd><a href="tel:+842838401406">+84 28 3840 1406</a></dd></div>
+      <div><dt>Email</dt><dd><a href="mailto:hcwa.vn@gmail.com">hcwa.vn@gmail.com</a></dd></div>
+    </dl>
+    <a class="btn btn--on-dusk dusk__btn" href="/hcwa-rebuild/lien-he/">Liên hệ với chúng tôi</a>
   </div>
 </section>
 </main>
 <footer class="site-footer">
+    <div class="site-footer__still" aria-hidden="true"><picture class="site-footer__dusk"><source type="image/avif" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.avif 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="533"><source type="image/webp" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.webp 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="533"><source type="image/jpeg" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.jpg 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="533"><source type="image/avif" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.avif 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.avif 800w" sizes="100vw" width="800" height="600"><source type="image/webp" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.webp 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.webp 800w" sizes="100vw" width="800" height="600"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="600"><img src="/hcwa-rebuild/posters/dusk-mobile-still-800.jpg" alt="" width="800" height="600" loading="lazy" decoding="async" data-layer="still"></picture></div>
+    <div class="footer-edge" aria-hidden="true"></div>
+    <div class="container site-footer__sign">
+      <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
+      <p class="site-footer__name">Hội Bảo trợ Trẻ em TP. Hồ Chí Minh</p>
+    </div>
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
-        <p class="foot-brand__name">Hội Bảo trợ Trẻ em TP. Hồ Chí Minh</p>
         <p data-draft>Tổ chức xã hội tự nguyện, phi lợi nhuận, chăm sóc, bảo vệ và giáo dục trẻ em có hoàn cảnh khó khăn tại TP. Hồ Chí Minh.</p>
         <p class="foot-brand__reg" data-draft>[DRAFT: tư cách pháp lý / số quyết định thành lập]</p>
       </div>
       <details class="foot-col" open><summary><h2>Liên hệ</h2><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><div class="foot-col__body"><ul class="foot-contact" data-draft>
-        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>85/65 Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP. Hồ Chí Minh</span></li>
+        <li class="foot-contact__address"><svg class="foot-contact__sun" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>85/65 Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP. Hồ Chí Minh</span></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:+842838401406">+84 28 3840 1406</a></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><a href="mailto:hcwa.vn@gmail.com">hcwa.vn@gmail.com</a></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><a href="https://www.google.com/maps/search/?api=1&amp;query=85%2F65+Ph%E1%BA%A1m+Vi%E1%BA%BFt+Ch%C3%A1nh%2C+TP.+H%E1%BB%93+Ch%C3%AD+Minh">Mở bản đồ</a></li>
@@ -326,8 +415,8 @@
     <div class="site-footer__bar">
       <div class="container site-footer__bottom">
         <p>© 2026 HCWA</p>
-        <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
-        <div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+        <p class="foot-social">Theo dõi Hội: <a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
+        <div class="lang-switch" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
         <button class="pause-toggle pause-toggle--dusk" type="button" aria-pressed="false" data-motion-toggle>
   <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg><span class="pause-toggle__label">Tạm dừng chuyển động</span>
 </button>
@@ -350,7 +439,7 @@
               <li><a href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a></li><li><a href="/hcwa-rebuild/chung-tay/tinh-nguyen/">Tình nguyện</a></li><li><a href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/">Đối tác / Hợp tác</a></li><li><a href="/hcwa-rebuild/chung-tay/hien-vat/">Hiện vật</a></li><li><a href="/hcwa-rebuild/chung-tay/hien-vat/#tiem-banh">Tiệm bánh Hoa Hồng Nhỏ</a></li></ul></details></li><li><a class="sheet__link" href="/hcwa-rebuild/lien-he/">Liên hệ</a></li>
     </ul>
   </nav>
-  <div class="sheet__foot"><a class="btn btn--primary" href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a><div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div></div>
+  <div class="sheet__foot"><a class="btn btn--primary" href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a><div class="lang-switch" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div></div>
 </dialog>
 </body>
 </html>

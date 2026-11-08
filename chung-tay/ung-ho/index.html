@@ -3,7 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
+<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (!off && tier > 0) cls.push("stages"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
+<script>(function pageReveal() {
+  addEventListener("pagereveal", function (e) {
+    var type = null;
+    try { type = sessionStorage.getItem("hcwa:vt"); sessionStorage.removeItem("hcwa:vt"); } catch (x) { /* storage blocked: no type */ }
+    var vt = e.viewTransition;
+    if (!vt) return;
+    if (document.documentElement.getAttribute("data-motion") === "off") { vt.skipTransition(); return; }
+    var a = window.navigation && navigation.activation;
+    if (type === "lang") vt.types.add("lang");
+    else if (a && a.navigationType === "traverse" && a.from && a.entry && a.entry.index < a.from.index) vt.types.add("back");
+  });
+})();</script>
 <title>Ủng hộ | Hội Bảo trợ Trẻ em TP.HCM</title>
 <meta name="description" content="Dù lớn hay nhỏ, mỗi khoản ủng hộ đều có ý nghĩa.">
 <meta name="robots" content="noindex, nofollow">
@@ -18,10 +30,10 @@
 <link rel="icon" href="/hcwa-rebuild/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/hcwa-rebuild/img/apple-touch-icon.png">
 <script type="application/json" id="i18n">{"copy":"Sao chép","copied":"Đã sao chép","copyFailed":"Không sao chép được. Hãy chọn và sao chép thủ công.","f_sending":"Đang gửi…","f_send":"Gửi","e_summary":"Vui lòng sửa các mục sau trước khi gửi:","close":"Đóng","motionPause":"Tạm dừng chuyển động","motionPlay":"Bật lại chuyển động","draftHide":"Ẩn khung nháp","draftShow":"Hiện khung nháp"}</script>
-  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-T3tTNade.js"></script>
-  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-BHLq4LFv.css">
+  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-D3IHIZBm.js"></script>
+  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-ClVHVQ4p.css">
 </head>
-<body class="">
+<body class="page-donate">
 <a class="skip-link" href="#main">Bỏ qua, đến nội dung chính</a>
 <div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.</span><span class="proto-note__short">Bản mẫu chờ HCWA duyệt.</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>Ẩn khung nháp</button></div></div>
 <div class="en-bar" lang="en" data-en-bar hidden>
@@ -64,7 +76,7 @@
   </ul>
 </nav>
       <div class="site-header__tools" data-text-safe>
-        <div class="lang-switch lang-switch--header" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+        <div class="lang-switch lang-switch--header" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
         <a class="btn btn--primary btn--header" href="/hcwa-rebuild/chung-tay/ung-ho/" data-donate>Ủng hộ</a>
         <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>Menu</button>
       </div>
@@ -74,81 +86,101 @@
 
 <main id="main" tabindex="-1">
 
-<header class="page-header">
-  <div class="container">
+<header class="sun-head">
+  <span class="sun-layer sun-layer--donate" aria-hidden="true"></span>
+  <div class="container sun-head__inner">
     <nav class="breadcrumb" aria-label="Đường dẫn">
   <ol>
     <li><a href="/hcwa-rebuild/">Trang chủ</a></li>
     <li><a href="/hcwa-rebuild/chung-tay/">Chung tay</a></li><li><span aria-current="page">Ủng hộ</span></li>
   </ol>
 </nav>
-    <h1>Ủng hộ</h1>
-    
-    <p class="page-header__intro" data-draft>Dù lớn hay nhỏ, mỗi khoản ủng hộ đều có ý nghĩa.</p>
-    
+    <h1 class="sun-head__title">Ủng hộ</h1>
+    <div class="sun-head__side">
+      <p class="sun-head__intro" data-draft>Dù lớn hay nhỏ, mỗi khoản ủng hộ đều có ý nghĩa.</p>
+      <a class="btn btn--primary sun-head__go" href="#trong-nuoc">Chuyển khoản trong nước</a>
+      <ul class="sun-head__jump">
+        <li><a class="text-link" href="#tu-nuoc-ngoai"><span>Ủng hộ từ nước ngoài</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+        <li><a class="text-link" href="#bao-cho-hoi"><span>Báo cho Hội biết bạn đã ủng hộ</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+      </ul>
+    </div>
   </div>
 </header>
-<section class="section section--tight" aria-labelledby="gift-title">
-  <div class="container">
-    <h2 id="gift-title" class="h3">Khoản ủng hộ của bạn giúp được gì</h2>
-    <ul class="gift-list" data-draft>
-      <li><span class="gift-list__amount" data-pending>[số tiền]</span><span>giúp một em có học bổng để đến trường</span></li><li><span class="gift-list__amount" data-pending>[số tiền]</span><span>chi trả tư vấn, dinh dưỡng và chăm sóc sức khỏe cho một gia đình bị ảnh hưởng bởi HIV/AIDS</span></li><li><span class="gift-list__amount" data-pending>[số tiền]</span><span>giúp một em theo học Lớp học tình thương trong một năm</span></li>
-    </ul>
-  </div>
-</section>
-<section class="section section--tight" aria-labelledby="methods-title">
-  <div class="container donate-grid">
-    <div>
-      <h2 id="methods-title">Cách ủng hộ</h2>
-      <div class="methods">
-        <details class="method" id="trong-nuoc" open><summary><span>Chuyển khoản trong nước</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><div class="method__body">
-          <div class="pay">
-            <dl class="pay-details"><div class="pay-details__row">
-      <dt>Ngân hàng</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <span></span>
-    </div><div class="pay-details__row">
-      <dt>Số tài khoản</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="Sao chép: Số tài khoản"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Sao chép</span></button>
-    </div><div class="pay-details__row">
-      <dt>Chủ tài khoản</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <span></span>
-    </div><div class="pay-details__row">
-      <dt>Nội dung chuyển khoản</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span><span class="pay-details__hint">UNGHO + số điện thoại của bạn, để Hội đối chiếu và gửi biên nhận</span></dd>
-      <button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="Sao chép: Nội dung chuyển khoản"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Sao chép</span></button>
-    </div></dl>
-            <div class="ph pay__qr" role="img" aria-label="C6 · Mã VietQR · 1:1" style="--ratio:1/1"><span class="ph__code">C6</span><span class="ph__label">Mã VietQR · 1:1</span></div>
-          </div></div></details>
-        <details class="method" id="quoc-te"><summary><span>Ủng hộ từ nước ngoài</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><div class="method__body">
-          <dl class="pay-details"><div class="pay-details__row">
-      <dt>Ngân hàng</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <span></span>
-    </div><div class="pay-details__row">
-      <dt>Mã SWIFT</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="Sao chép: Mã SWIFT"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Sao chép</span></button>
-    </div><div class="pay-details__row">
-      <dt>Số tài khoản (USD/EUR)</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="Sao chép: Số tài khoản (USD/EUR)"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Sao chép</span></button>
-    </div><div class="pay-details__row">
-      <dt>Chủ tài khoản</dt>
-      <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
-      <span></span>
-    </div></dl>
-          <p class="method__alt">Hoặc ủng hộ qua PayPal: <button class="btn btn--secondary btn--small" type="button" disabled data-donation-placeholder>PayPal</button></p></div></details>
-        <details class="method" id="theo-co-so"><summary><span>Ủng hộ cho một cơ sở</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><div class="method__body">
-          <p data-draft>[HCWA quyết định có hiển thị tài khoản riêng của từng cơ sở, ví dụ Mái ấm Hoa Hồng Nhỏ, hay không.]</p></div></details>
+<div class="day day--donate">
+  <section class="gifts container" aria-labelledby="gift-title">
+    <h2 class="gifts__title" id="gift-title">Khoản ủng hộ của bạn giúp được gì</h2>
+    <ul class="gifts__list" data-reveal="stagger"><li class="gift" data-draft>
+      <span class="gift__amount" data-pending>[số tiền]</span>
+      <span class="gift__text">giúp một em có học bổng để đến trường</span>
+    </li><li class="gift" data-draft>
+      <span class="gift__amount" data-pending>[số tiền]</span>
+      <span class="gift__text">chi trả tư vấn, dinh dưỡng và chăm sóc sức khỏe cho một gia đình bị ảnh hưởng bởi HIV/AIDS</span>
+    </li><li class="gift" data-draft>
+      <span class="gift__amount" data-pending>[số tiền]</span>
+      <span class="gift__text">giúp một em theo học Lớp học tình thương trong một năm</span>
+    </li></ul>
+  </section>
+  <div class="give-grid container">
+    <section class="slip" aria-labelledby="how-title" data-tabs>
+      <h2 class="slip__head" id="how-title">Cách ủng hộ</h2>
+      <div class="tabs" role="tablist" aria-label="Chọn nơi bạn chuyển khoản" hidden>
+        <button class="tabs__tab" type="button" role="tab" id="tab-trong-nuoc" aria-controls="trong-nuoc" aria-selected="true">Trong nước</button><button class="tabs__tab" type="button" role="tab" id="tab-tu-nuoc-ngoai" aria-controls="tu-nuoc-ngoai" aria-selected="false" tabindex="-1">Từ nước ngoài</button>
       </div>
-    </div>
-    <aside class="tell-us" aria-labelledby="tell-title">
-      <h2 id="tell-title" class="h3">Báo cho Hội biết bạn đã ủng hộ</h2>
-      <p>Để Hội cảm ơn và gửi biên nhận cho bạn.</p>
-      <form class="form" data-form novalidate>
+      <div class="slip__panels">
+        <section class="slip__panel" id="trong-nuoc" aria-labelledby="trong-nuoc-title" data-tab-panel>
+          <h3 class="slip__title" id="trong-nuoc-title">Chuyển khoản trong nước</h3>
+          <div class="slip__body"><dl class="slip__rows"><div class="slip__row">
+    <dt>Ngân hàng</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    
+  </div><div class="slip__row">
+    <dt>Số tài khoản</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    <button class="copy-btn" type="button" data-copy="" disabled aria-label="Sao chép: Số tài khoản" aria-describedby="pay-note"><svg class="icon copy-btn__copy" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg class="icon copy-btn__done" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span>Sao chép</span></button>
+  </div><div class="slip__row">
+    <dt>Chủ tài khoản</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    
+  </div><div class="slip__row">
+    <dt>Nội dung chuyển khoản</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span><span class="slip__hint">UNGHO + số điện thoại của bạn, để Hội đối chiếu và gửi biên nhận</span></dd>
+    <button class="copy-btn" type="button" data-copy="" disabled aria-label="Sao chép: Nội dung chuyển khoản" aria-describedby="pay-note"><svg class="icon copy-btn__copy" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg class="icon copy-btn__done" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span>Sao chép</span></button>
+  </div></dl><div class="slip__qr" role="img" aria-label="Mã VietQR: Chờ HCWA xác nhận" data-donation-placeholder>
+    <span class="slip__qr-name">Mã VietQR</span><span class="pending-value">Chờ HCWA xác nhận</span>
+  </div></div>
+        </section>
+        <section class="slip__panel" id="tu-nuoc-ngoai" aria-labelledby="tu-nuoc-ngoai-title" data-tab-panel>
+          <h3 class="slip__title" id="tu-nuoc-ngoai-title">Ủng hộ từ nước ngoài</h3>
+          <div class="slip__body"><dl class="slip__rows"><div class="slip__row">
+    <dt>Ngân hàng</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    
+  </div><div class="slip__row">
+    <dt>Mã SWIFT</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    <button class="copy-btn" type="button" data-copy="" disabled aria-label="Sao chép: Mã SWIFT" aria-describedby="pay-note"><svg class="icon copy-btn__copy" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg class="icon copy-btn__done" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span>Sao chép</span></button>
+  </div><div class="slip__row">
+    <dt>Số tài khoản (USD/EUR)</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    <button class="copy-btn" type="button" data-copy="" disabled aria-label="Sao chép: Số tài khoản (USD/EUR)" aria-describedby="pay-note"><svg class="icon copy-btn__copy" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg class="icon copy-btn__done" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><span>Sao chép</span></button>
+  </div><div class="slip__row">
+    <dt>Chủ tài khoản</dt>
+    <dd><span class="pending-value" data-donation-placeholder>Chờ HCWA xác nhận</span></dd>
+    
+  </div></dl></div>
+          <p class="slip__alt">Hoặc ủng hộ qua PayPal <button class="btn btn--secondary btn--small" type="button" disabled aria-describedby="pay-note" data-donation-placeholder>PayPal</button></p>
+        </section>
+      </div>
+      <p class="slip__note" id="pay-note" data-draft><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Số tài khoản, tên chủ tài khoản và mã QR chỉ hiện ở đây sau khi bộ phận tài chính của Hội xác nhận bằng văn bản.</span></p>
+      <div class="slip__center">
+        <h3 class="slip__center-title">Ủng hộ cho một cơ sở</h3>
+        <p data-draft>[HCWA quyết định có hiển thị tài khoản riêng của từng cơ sở, ví dụ Mái ấm Hoa Hồng Nhỏ, hay không.]</p>
+      </div>
+    </section>
+    <section class="tell" id="bao-cho-hoi" aria-labelledby="tell-title">
+      <h2 class="tell__title" id="tell-title">Báo cho Hội biết bạn đã ủng hộ</h2>
+      <p class="tell__lead" data-draft>Để Hội cảm ơn và gửi biên nhận cho bạn.</p>
+      <form class="form" data-form novalidate aria-labelledby="tell-title">
         <div class="form__summary" data-summary tabindex="-1" role="alert" hidden></div>
         <div class="field" data-field>
     <label for="d-name">Họ và tên</label>
@@ -171,26 +203,59 @@
         <div class="field" data-field>
     <label for="d-center">Ủng hộ cho (không bắt buộc)</label>
     
-    <select id="d-center" name="d-center" aria-describedby="d-center-error"><option value="">Nơi cần nhất</option><option value="green-bamboo">Cơ sở Bảo trợ Xã hội Tre Xanh</option><option value="little-rose">Mái ấm Hoa Hồng Nhỏ</option><option value="cau-han">Dự án Cầu Hàn</option></select>
+    <span class="select"><select id="d-center" name="d-center" aria-describedby="d-center-error"><option value="">Nơi cần nhất</option><option value="green-bamboo">Cơ sở Bảo trợ Xã hội Tre Xanh</option><option value="little-rose">Mái ấm Hoa Hồng Nhỏ</option><option value="cau-han">Dự án Cầu Hàn</option></select></span>
     <p class="field__error" id="d-center-error" data-error="" hidden><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span></span></p>
   </div>
-        <button class="btn btn--primary" type="submit">Gửi</button>
-        <div class="form__success" data-success tabindex="-1" role="status" hidden><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg><div><p>Đã gửi. Cảm ơn bạn đã ủng hộ!</p><p class="form__note">Bản mẫu: chưa có gì được gửi đi.</p></div></div>
+        <div class="field field--check" data-field>
+    <input type="checkbox" id="d-consent" name="d-consent" required aria-describedby="d-consent-error">
+    <label for="d-consent"><span data-draft>Tôi đồng ý để HCWA dùng các thông tin này để trả lời tôi.</span> <a href="/hcwa-rebuild/ve-chung-toi/chinh-sach/#quyen-rieng-tu">Thông báo quyền riêng tư</a></label>
+    <p class="field__error" id="d-consent-error" data-error="Đánh dấu ô đồng ý để Hội có thể trả lời bạn." hidden><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span></span></p>
+  </div>
+        <button class="btn btn--primary form__send" type="submit">Gửi</button>
+        <div class="form__success" data-success tabindex="-1" role="status" hidden>
+    <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
+    <div class="form__success-text">
+      <p class="form__sent" data-draft>Đã gửi. Cảm ơn bạn đã ủng hộ!</p>
+      <p class="form__note">Bản mẫu: chưa có gì được gửi đi.</p>
+      <button class="text-link form__again" type="button" data-form-again><span>Gửi lời nhắn khác</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+    </div>
+  </div>
       </form>
-    </aside>
+    </section>
+  </div>
+  <nav class="trust container" aria-labelledby="trust-title">
+    <h2 class="trust__title" id="trust-title">Báo cáo &amp; chính sách</h2>
+    <ul class="trust__list">
+      <li><a class="text-link" href="/hcwa-rebuild/tac-dong/#bao-cao"><span>Báo cáo thường niên</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+      <li><a class="text-link" href="/hcwa-rebuild/ve-chung-toi/chinh-sach/#bao-ve-tre-em"><span>Chính sách bảo vệ trẻ em</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+      <li><a class="text-link" href="/hcwa-rebuild/ve-chung-toi/chinh-sach/#quyen-rieng-tu"><span>Thông báo quyền riêng tư</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></li>
+    </ul>
+  </nav>
+</div>
+<section class="dusk" aria-labelledby="donate-questions">
+  <div class="container dusk__inner">
+    <h2 class="dusk__title" id="donate-questions" data-draft>Bạn có câu hỏi về việc ủng hộ?</h2>
+    <dl class="dusk__lines" data-draft>
+      <div><dt>Điện thoại</dt><dd><a href="tel:+842838401406">+84 28 3840 1406</a></dd></div>
+      <div><dt>Email</dt><dd><a href="mailto:sponsorshiprelations@hcwa.org.vn">sponsorshiprelations@hcwa.org.vn</a></dd></div>
+    </dl><a class="btn btn--on-dusk dusk__btn" href="/hcwa-rebuild/lien-he/">Liên hệ với chúng tôi</a>
   </div>
 </section>
 </main>
 <footer class="site-footer">
+    <div class="site-footer__still" aria-hidden="true"><picture class="site-footer__dusk"><source type="image/avif" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.avif 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="533"><source type="image/webp" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.webp 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="533"><source type="image/jpeg" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.jpg 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="533"><source type="image/avif" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.avif 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.avif 800w" sizes="100vw" width="800" height="600"><source type="image/webp" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.webp 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.webp 800w" sizes="100vw" width="800" height="600"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="600"><img src="/hcwa-rebuild/posters/dusk-mobile-still-800.jpg" alt="" width="800" height="600" loading="lazy" decoding="async" data-layer="still"></picture></div>
+    <div class="footer-edge" aria-hidden="true"></div>
+    <div class="container site-footer__sign">
+      <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
+      <p class="site-footer__name">Hội Bảo trợ Trẻ em TP. Hồ Chí Minh</p>
+    </div>
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
-        <p class="foot-brand__name">Hội Bảo trợ Trẻ em TP. Hồ Chí Minh</p>
         <p data-draft>Tổ chức xã hội tự nguyện, phi lợi nhuận, chăm sóc, bảo vệ và giáo dục trẻ em có hoàn cảnh khó khăn tại TP. Hồ Chí Minh.</p>
         <p class="foot-brand__reg" data-draft>[DRAFT: tư cách pháp lý / số quyết định thành lập]</p>
       </div>
       <details class="foot-col" open><summary><h2>Liên hệ</h2><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><div class="foot-col__body"><ul class="foot-contact" data-draft>
-        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>85/65 Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP. Hồ Chí Minh</span></li>
+        <li class="foot-contact__address"><svg class="foot-contact__sun" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>85/65 Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP. Hồ Chí Minh</span></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:+842838401406">+84 28 3840 1406</a></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><a href="mailto:hcwa.vn@gmail.com">hcwa.vn@gmail.com</a></li>
         <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><a href="https://www.google.com/maps/search/?api=1&amp;query=85%2F65+Ph%E1%BA%A1m+Vi%E1%BA%BFt+Ch%C3%A1nh%2C+TP.+H%E1%BB%93+Ch%C3%AD+Minh">Mở bản đồ</a></li>
@@ -206,8 +271,8 @@
     <div class="site-footer__bar">
       <div class="container site-footer__bottom">
         <p>© 2026 HCWA</p>
-        <p class="foot-social"><a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
-        <div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
+        <p class="foot-social">Theo dõi Hội: <a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
+        <div class="lang-switch" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div>
         <button class="pause-toggle pause-toggle--dusk" type="button" aria-pressed="false" data-motion-toggle>
   <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg><span class="pause-toggle__label">Tạm dừng chuyển động</span>
 </button>
@@ -230,7 +295,7 @@
               <li><a href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a></li><li><a href="/hcwa-rebuild/chung-tay/tinh-nguyen/">Tình nguyện</a></li><li><a href="/hcwa-rebuild/chung-tay/doi-tac-doanh-nghiep/">Đối tác / Hợp tác</a></li><li><a href="/hcwa-rebuild/chung-tay/hien-vat/">Hiện vật</a></li><li><a href="/hcwa-rebuild/chung-tay/hien-vat/#tiem-banh">Tiệm bánh Hoa Hồng Nhỏ</a></li></ul></details></li><li><a class="sheet__link" href="/hcwa-rebuild/lien-he/">Liên hệ</a></li>
     </ul>
   </nav>
-  <div class="sheet__foot"><a class="btn btn--primary" href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a><div class="lang-switch" role="group" aria-label="Ngôn ngữ"><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div></div>
+  <div class="sheet__foot"><a class="btn btn--primary" href="/hcwa-rebuild/chung-tay/ung-ho/">Ủng hộ</a><div class="lang-switch" role="group" aria-label="Ngôn ngữ" data-lang-switch><a href="/hcwa-rebuild/chung-tay/ung-ho/" lang="vi" hreflang="vi" aria-current="true">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/get-involved/donate/" lang="en" hreflang="en">EN<span class="sr-only"> (English)</span></a></div></div>
 </dialog>
 </body>
 </html>
