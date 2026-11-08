@@ -5,21 +5,16 @@ import "./styles/components.css";
 import "./styles/light.css";
 import "./styles/motion.css";
 import "./styles/world.css";
+import "./styles/stages.css";
+import "./styles/pages.css";
 import { bus } from "./bus.js";
 import { store } from "./ui/dom.js";
 import { initHeader } from "./ui/header.js";
-import { initMenuSheet } from "./ui/menu-sheet.js";
-import { initFooter } from "./ui/footer.js";
 import { initEnBar } from "./ui/en-bar.js";
-import { initFilters } from "./ui/filters.js";
-import { initLightbox } from "./ui/lightbox.js";
-import { initCopy } from "./ui/copy.js";
-import { initForms } from "./ui/forms.js";
 import { initPauseToggle } from "./ui/pause-toggle.js";
 import { initStills } from "./ui/stills.js";
-import { initDraftToggle } from "./ui/draft-toggle.js";
 import { initSunIn } from "./motion/sun-in.js";
-import { initReveals } from "./motion/reveals.js";
+import { initUiRest } from "./ui/index.js";
 
 // Loading order (05-DESIGN D6.9): head-inline.js has set data-tier / data-motion / sun-pending;
 // this module (deferred) boots the sun-in and the UI, then the motion layer, then the world.
@@ -35,17 +30,7 @@ initSunIn();
 initPauseToggle();
 initHeader();
 initEnBar(); // before paint: the pointer bar changes the hero's height
-const initRest = () => {
-  initMenuSheet();
-  initFooter();
-  initFilters();
-  initLightbox();
-  initCopy();
-  initForms();
-  initReveals();
-  initDraftToggle();
-};
-requestAnimationFrame(() => setTimeout(initRest));
+requestAnimationFrame(() => setTimeout(initUiRest));
 
 // Fonts are in the HTTP cache from here on: later pages skip waiting for them before the sun-in.
 document.fonts?.ready.then(() => { root.classList.add("wf"); store.set("hcwa:wf", "1", "sessionStorage"); });
