@@ -237,7 +237,7 @@ async function extras(browser) {
         tier: h.dataset.tier, motion: h.dataset.motion, live: h.classList.contains("world-live"), cls: h.className,
         lines: tops.length, h1: h1r, intro: box(range.getBoundingClientRect()), header,
         actionsBottom: actions.bottom, vh: innerHeight, paused: window.hcwa?.state.paused ?? null,
-        pausePressed: document.querySelector(".hero__pause").getAttribute("aria-pressed"),
+        pausePressed: document.querySelector(".hero__pause").dataset.paused,
         font: getComputedStyle(h1).fontSize,
       };
     });

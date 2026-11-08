@@ -15,6 +15,7 @@ import { initPauseToggle } from "./ui/pause-toggle.js";
 import { initStills } from "./ui/stills.js";
 import { initSunIn } from "./motion/sun-in.js";
 import { initUiRest } from "./ui/index.js";
+import { initHeroPlate } from "./hero-plate.js";
 
 // Loading order (05-DESIGN D6.9): head-inline.js has set data-tier / data-motion / sun-pending;
 // this module (deferred) boots the sun-in and the UI, then the motion layer, then the world.
@@ -30,15 +31,18 @@ initSunIn();
 initPauseToggle();
 initHeader();
 initEnBar(); // before paint: the pointer bar changes the hero's height
+initHeroPlate();
 requestAnimationFrame(() => setTimeout(initUiRest));
 
 // Fonts are in the HTTP cache from here on: later pages skip waiting for them before the sun-in.
 document.fonts?.ready.then(() => { root.classList.add("wf"); store.set("hcwa:wf", "1", "sessionStorage"); });
 
-// GSAP, ScrollTrigger and Lenis: a separate chunk, only when something may move.
+// GSAP, ScrollTrigger and Lenis: a separate chunk, only on a page whose world or stages read the scroll
+// (the home). Inner pages move with CSS and the UI layer alone, and never pay for it.
 let motion = null;
+const scrolled = Boolean(document.querySelector("[data-world], [data-stage]"));
 const startMotion = () => {
-  motion ??= import("./motion/index.js").then((m) => m.startMotion({ tier }));
+  if (scrolled) motion ??= import("./motion/index.js").then((m) => m.startMotion({ tier }));
 };
 
 // The world (three.js) after load + idle, on Tier 1-2 with motion on, never otherwise (PLAN section 1).
@@ -72,6 +76,34 @@ if (motionOn()) {
   startMotion();
   startWorld();
 }
+// The stage layout (head-inline.js) is for a page whose world may fly. If the world gives up (no WebGL2,
+// a software GPU, the live gates) before the visitor has reached the passage, the page goes back to the
+// stacked band (nothing above it moves); once they are in it or past it the stage stays, with its stills.
+// The passage changes height below the fold as it unstages, and Chrome's layout-shift tracker scores that
+// move as if the statement had been on screen (CLS 0.42 on a phone). Hidden for the frame it moves in, it is
+// not a shift: it simply appears in its new place.
+const unstage = () => {
+  const passage = document.querySelector(".passage[data-stage]");
+  if (passage && passage.getBoundingClientRect().top <= 0) return;
+  root.classList.add("unstaging");
+  root.classList.remove("stages");
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("unstaging")));
+};
+// The stage's fallback stills (the bays' views, the flight's end) are display:none while the world may still
+// draw them, so they never download with the page (stages.css). They come in when the world gives up, or when
+// the visitor nears the corridor before the world is live.
+const worldOff = () => { root.classList.add("world-off"); unstage(); };
+if (bus.state.world === "off") worldOff();
+else bus.addEventListener("world-off", worldOff, { once: true });
+const corridor = root.classList.contains("stages") && document.querySelector("#centers");
+if (corridor && "IntersectionObserver" in window) {
+  const near = new IntersectionObserver((entries) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    if (!root.classList.contains("world-live")) root.classList.add("stills-near");
+    near.disconnect();
+  }, { rootMargin: "100% 0px" });
+  near.observe(corridor);
+}
 bus.addEventListener("pause", (e) => {
   world?.setPaused(e.detail.paused);
   // Turning motion back on during this visit brings the layers in that were never loaded.
@@ -83,6 +115,7 @@ reduced.addEventListener?.("change", (e) => {
   if (!e.matches) return;
   root.dataset.motion = "off";
   root.setAttribute("data-reduced", "");
+  root.classList.remove("stages");
   bus.state.paused = true;
   bus.dispatchEvent(new CustomEvent("pause", { detail: { paused: true, system: true } }));
   world?.dispose();

@@ -1,6 +1,7 @@
 import { html, raw } from "../lib/html.mjs";
-import { visibleFigures } from "../lib/content.mjs";
 import { viKeep } from "../lib/vikeep.mjs";
+import { holes } from "./blocks.mjs";
+import { still, hasStill } from "./still.mjs";
 
 // Lucide outline paths (ISC), drawn on a 24px grid at 1.5px stroke (05-DESIGN icons).
 const PATHS = {
@@ -20,6 +21,8 @@ const PATHS = {
   next: '<path d="m9 18 6-6-6-6"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   pause: '<rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/>',
+  play: '<path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z"/>',
+  file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
 };
 export const icon = (name, cls = "icon") =>
   raw(`<svg class="${cls}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${PATHS[name]}</svg>`);
@@ -33,85 +36,54 @@ export const button = ({ href, label, kind = "primary", attrs = "", cls = "" }) 
 export const textLink = (href, label, attrs = "") =>
   html`<a class="text-link" href="${href}"${raw(attrs ? " " + attrs : "")}><span>${label}</span>${icon("arrow")}</a>`;
 
-// Labeled image slot (08 task 1.7): asset code from 10-ASSET-REQUEST, no stock photos.
-export const placeholder = (c, img, extra = "") => {
-  const label = `${img.code} · ${c.tx(img.label)} · ${img.ratio}`;
-  const [w, h] = img.ratio.split(":");
-  return html`<div class="ph${img.illustration ? " ph--art" : ""}${extra ? " " + extra : ""}" role="img" aria-label="${label}" style="--ratio:${w}/${h}"><span class="ph__code">${img.code}</span><span class="ph__label">${c.tx(img.label)} · ${img.ratio}</span></div>`;
-};
-
 export const pendingChip = (c) => html`<span class="chip-pending" data-pending>${c.t("pending")}</span>`;
-
-// Impact figure: verified value, or a token + "Pending verification" chip (prototype only).
-export const figure = (c, f) => {
-  if (f.verified && typeof f.value !== "number") throw new Error(`Figure ${f.id} is verified but has no numeric value`);
-  return figureHtml(c, f);
-};
-const figureHtml = (c, f) => html`<div class="figure"${c.d(f.label)}>
-  <p class="figure__value">${f.verified ? c.number(f.value) + (f.suffix ?? "") : f.token}</p>
-  <p class="figure__label">${c.tx(f.label)}${f.year ? html` <span class="figure__year">(${f.year})</span>` : ""}</p>
-  ${f.verified ? "" : pendingChip(c)}
-</div>`;
-
-// Renders the strip only when at least `min` figures may show (06: homepage needs 2, else 1).
-export const figureStrip = (c, scope, { min = 1, cls = "" } = {}) => {
-  const figs = visibleFigures(c.content.impact.filter((f) => f.scope === scope), c.prod);
-  if (figs.length < min) return "";
-  return html`<div class="figures${cls ? " " + cls : ""}">${figs.map((f) => figure(c, f))}</div>`;
-};
-
-export const unitDot = (accent) => html`<span class="unit-dot" style="--unit:var(--color-unit-${accent})" aria-hidden="true"></span>`;
-
-export const centerCard = (c, center) => html`<article class="center-card" style="--unit:var(--color-unit-${center.accent})">
-  ${placeholder(c, center.image)}
-  <div class="center-card__body">
-    <h3 class="center-card__name"><a href="${c.tx(center.path)}">${c.tx(center.name)}</a></h3>
-    <p class="center-card__since" data-draft>${c.t("since")} ${c.tx(center.sinceToken)}</p>
-    <p class="center-card__serves"${c.d(center.serves)}>${c.tx(center.serves)}</p>
-    <span class="text-link" aria-hidden="true"><span>${c.t("visitCenter")}</span>${icon("arrow")}</span>
-  </div>
-</article>`;
 
 export const statusPill = (c, status) => html`<span class="status status--${status}">${c.t("status_" + status)}</span>`;
 
-export const programRow = (c, p) => html`<li class="program-row" data-areas="${p.areas.join(" ")}" data-status="${p.status}">
-  <div class="program-row__meta">${statusPill(c, p.status)}<span class="program-row__years" data-draft>${c.tx(p.years)}</span></div>
-  <div class="program-row__main">
-    <h3 class="program-row__name"><a href="${c.tx(p.path)}">${c.tx(p.name)}</a></h3>
-    <p${c.d(p.summary)}>${c.tx(p.summary)}</p>
-    ${p.partners.length ? html`<p class="program-row__partners">${p.partners.join(", ")}</p>` : ""}
+// Program row (D7): rows, never cards; places are doors, programs are light passing through. The centers it
+// runs at show as small door chips in their unit paint, names only (Little Rose: never a place or a link).
+export const programRow = (c, p) => {
+  const centers = p.centers.map((id) => c.content.work.centers.find((x) => x.id === id)).filter(Boolean);
+  return html`<li class="program-row" data-areas="${p.areas.join(" ")}" data-status="${p.status}">
+  <div class="program-row__head">
+    <p class="program-row__meta">${statusPill(c, p.status)}<span class="program-row__years" data-draft>${c.tx(p.years)}</span></p>
+    <h3 class="program-row__name"><a href="${c.tx(p.path)}">${viKeep(c.tx(p.name))}</a></h3>
+  </div>
+  <div class="program-row__body">
+    <p class="program-row__summary"${c.d(p.summary)}>${c.tx(p.summary)}</p>
+    ${p.partners.length || centers.length ? html`<dl class="program-row__facts">
+      ${p.partners.length ? html`<div><dt>${c.t("fundedBy")}</dt><dd>${p.partners.join(", ")}</dd></div>` : ""}
+      ${centers.length ? html`<div><dt>${c.t("runsAt")}</dt><dd><ul class="door-chips">${centers.map((x) => doorChip(c, x))}</ul></dd></div>` : ""}
+    </dl>` : ""}
   </div>
   ${icon("arrow", "icon program-row__arrow")}
 </li>`;
+};
 
-export const storyCard = (c, s, { featured = false } = {}) => html`<article class="story-card${featured ? " story-card--featured" : ""}"${s.draft ? raw(" data-draft") : ""}>
-  ${placeholder(c, s.image)}
-  <p class="label">${c.t("cat_" + s.category)}</p>
-  <h3 class="story-card__title"><a href="${c.url("news")}">${c.tx(s.title)}</a></h3>
-  <p class="story-card__excerpt">${c.tx(s.excerpt)}</p>
-  <p class="story-card__note">${c.t("namesChanged")}</p>
-</article>`;
+export const doorChip = (c, center) => html`<li class="door-chip" style="--unit:var(--color-unit-${center.accent})"><span class="door-chip__door" aria-hidden="true"></span>${c.tx(center.shortName)}</li>`;
 
-export const newsItem = (c, p) => html`<li class="news-item">
-  <p class="news-item__meta"><span class="label">${c.t("cat_" + p.category)}</span><time datetime="${p.published}">${c.date(p.published)}</time></p>
-  <h3 class="news-item__title"><a href="${c.tx(p.url)}">${c.tx(p.title)}</a></h3>
-</li>`;
-
-export const reportRow = (c, { title, year, type, docLang, size }) => html`<li class="report-row" data-draft>
-  ${placeholder(c, { code: "C3", label: { vi: "Bìa báo cáo", en: "Report cover" }, ratio: "3:4" }, "report-row__cover")}
-  <div>
-    <h3 class="report-row__title">${title}</h3>
-    <p class="report-row__meta">${year} · ${type}</p>
+// News list item with a big Archivo date (H6, typography-first). The date reads as one string for
+// assistive tech ("25/05/2026", "25 May 2026"); only the year drops to its own line.
+export const datedPost = (c, p) => {
+  const [, dm, sep, year] = c.date(p.published).match(/^(.*?)(\D)(\d{4})$/);
+  return html`<li class="dated">
+  <time class="dated__date" datetime="${p.published}"><span class="dated__dm">${dm}</span><span class="sr-only">${sep}</span><span class="dated__y">${year}</span></time>
+  <div class="dated__body">
+    <p class="dated__cat">${c.t("cat_" + p.category)}</p>
+    <h3 class="dated__title"><a href="${c.tx(p.url)}">${c.tx(p.title)}<span class="sr-only"> (${c.t("externalPost")})</span></a>${icon("external", "icon dated__ext")}</h3>
   </div>
-  <span class="badge">PDF · <span lang="${docLang === "English" ? "en" : "vi"}">${docLang}</span></span>
-  <span class="report-row__size">${size}</span>
 </li>`;
+};
 
-export const ctaBand = (c, { title, actions, extra = "", draft = false }) => html`<section class="cta-band" aria-labelledby="cta-title">
-  <div class="container cta-band__inner">
-    <h2 id="cta-title"${draft ? raw(" data-draft") : ""}>${title}</h2>
-    <div class="cta-band__actions">${actions}</div>
-    ${extra}
+// The day ends (05-DESIGN D0.5, H10): an evening sky from the page's last light into blue-900, the room's
+// screen at 18:00 rising out of it (the dusk still, once rendered), the band's title and actions on the
+// night. Pages that close on it carry the still here, so the footer starts at its parapet.
+export const duskStill = () => (hasStill("dusk") ? html`<div class="dusk__still" aria-hidden="true">${still("dusk", "dusk__img")}</div>` : "");
+export const duskBand = (c, { id, title, draft = false, body }) => html`<section class="dusk" aria-labelledby="${id}">
+  ${duskStill()}
+  <div class="container dusk__inner">
+    <h2 class="dusk__title" id="${id}"${draft ? raw(" data-draft") : ""}>${viKeep(title)}</h2>
+    ${body}
   </div>
 </section>`;
 
@@ -122,20 +94,12 @@ export const breadcrumb = (c, trail) => html`<nav class="breadcrumb" aria-label=
   </ol>
 </nav>`;
 
-export const langNotice = (c) => html`<aside class="lang-notice" lang="${c.lang}">
-  ${icon("info")}
-  <div>
-    <p>${c.t("langNotice")}</p>
-    <p class="lang-notice__links">${textLink("#", c.t("langNoticeRead"))} ${textLink(c.url("news"), c.t("langNoticeHub"))}</p>
-  </div>
-</aside>`;
-
 // Form field: label above, helper, error below, all tied with aria-describedby (05-DESIGN).
 export const field = (c, { id, label, type = "text", required = false, help, error, autocomplete, options, rows }) => {
   const describe = [help && `${id}-help`, `${id}-error`].filter(Boolean).join(" ");
   const common = raw(`id="${id}" name="${id}" aria-describedby="${describe}"${required ? " required" : ""}${autocomplete ? ` autocomplete="${autocomplete}"` : ""}`);
   const control = options
-    ? html`<select ${common}><option value="">${options.placeholder}</option>${options.items.map(([v, l]) => html`<option value="${v}">${l}</option>`)}</select>`
+    ? html`<span class="select"><select ${common}><option value="">${options.placeholder}</option>${options.items.map(([v, l]) => html`<option value="${v}">${l}</option>`)}</select></span>`
     : rows
       ? html`<textarea ${common} rows="${rows}"></textarea>`
       : html`<input type="${type}" ${common}>`;
@@ -147,17 +111,47 @@ export const field = (c, { id, label, type = "text", required = false, help, err
   </div>`;
 };
 
-export const sectionHead = (c, { id, title, intro, link, draftIntro }) => html`<div class="section-head">
-  <h2 id="${id}">${viKeep(title)}</h2>
-  ${intro ? html`<p class="section-head__intro"${draftIntro ? raw(" data-draft") : ""}>${intro}</p>` : ""}
-  ${link ?? ""}
-</div>`;
+// Radio choices as pills (contact topics): one fieldset, one error, required as a group. The first radio
+// carries the group id, so the error summary's link lands on it.
+export const choiceField = (c, { id, label, items, required = false, error, value }) => html`<fieldset class="field field--choices" data-field aria-describedby="${id}-error">
+    <legend>${label}</legend>
+    <div class="choices">${items.map(([v, l], i) => html`<label class="choice"><input type="radio" id="${i ? `${id}-${v}` : id}" name="${id}" value="${v}"${v === value ? raw(" checked") : ""}${required ? raw(" required") : ""}><span>${l}</span></label>`)}</div>
+    <p class="field__error" id="${id}-error" data-error="${error}" hidden>${icon("alert")}<span></span></p>
+  </fieldset>`;
 
-// WCAG 2.2.2 pause (05-DESIGN D5.6): one pattern, a toggle. Its name and the pause icon never change
-// ("Pause motion" stays true while pressed); aria-pressed carries the state, shown as a sun-100 fill and
-// an ink-900 border. Hidden without JS and when the OS already reduces motion. In the hero it is a
+// The consent line every form ends on (CLAUDE.md: the wording is HCWA's to approve, so it stays draft).
+export const consentField = (c, id = "consent") => html`<div class="field field--check" data-field>
+    <input type="checkbox" id="${id}" name="${id}" required aria-describedby="${id}-error">
+    <label for="${id}"><span data-draft>${c.t("f_consent")}</span> <a href="${c.url("privacy")}">${c.t("privacy")}</a></label>
+    <p class="field__error" id="${id}-error" data-error="${c.t("e_consent")}" hidden>${icon("alert")}<span></span></p>
+  </div>`;
+
+// A form's two closing states: sending (the button) and sent (this panel replaces the fields; the
+// prototype says plainly that nothing left the browser).
+export const formSent = (c, message, { draft = false } = {}) => html`<div class="form__success" data-success tabindex="-1" role="status" hidden>
+    ${icon("check")}
+    <div class="form__success-text">
+      <p class="form__sent"${draft ? raw(" data-draft") : ""}>${message}</p>
+      ${c.prod ? "" : html`<p class="form__note">${c.t("f_prototypeSent")}</p>`}
+      <button class="text-link form__again" type="button" data-form-again><span>${c.t("f_sendAnother")}</span>${icon("arrow")}</button>
+    </div>
+  </div>`;
+
+// Copy button (D5.7): disabled until HCWA finance confirms the value it would copy; describedBy points at
+// the line that says so. The accessible name starts with the visible label (WCAG 2.5.3).
+export const copyButton = (c, { value = "", label, describedBy, disabled = !value } = {}) =>
+  html`<button class="copy-btn" type="button" data-copy="${value}"${disabled ? raw(" disabled") : ""} aria-label="${c.t("copy")}: ${label}"${describedBy ? html` aria-describedby="${describedBy}"` : ""}>${icon("copy", "icon copy-btn__copy")}${icon("check", "icon copy-btn__done")}<span>${c.t("copy")}</span></button>`;
+
+// The last sun of the day: one Hoa thị quatrefoil in sun-400, from the block's own numbers (footer address,
+// the contact page's office).
+export const quatrefoil = (cls = "quatrefoil") => raw(`<svg class="${cls}" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="${holes("hoaThi").split("Z")[0]}Z"/></svg>`);
+
+// WCAG 2.2.2 pause (05-DESIGN D5.6): one pattern, a button whose label says what it will do. Playing:
+// "Tạm dừng chuyển động" with the pause icon; paused: "Bật lại chuyển động" with the play icon and a
+// sun-100 fill (ui/pause-toggle.js swaps them; no aria-pressed, the label carries the state). Hidden
+// without JS and when the OS already reduces motion. In the hero it is a
 // text button in the flow under the text; textSafe makes the framing solver keep the screen off it
 // ("display": its 14 px label targets WCAG AA over the floor, never the silhouette).
-export const pauseToggle = (c, cls = "", { textSafe } = {}) => html`<button class="pause-toggle${cls ? " " + cls : ""}" type="button" aria-pressed="false" data-motion-toggle${textSafe ? raw(` data-text-safe="${textSafe}"`) : ""}>
-  ${icon("pause")}<span class="pause-toggle__label">${c.t("motionPause")}</span>
+export const pauseToggle = (c, cls = "", { textSafe } = {}) => html`<button class="pause-toggle${cls ? " " + cls : ""}" type="button" data-paused="false" data-motion-toggle${textSafe ? raw(` data-text-safe="${textSafe}"`) : ""}>
+  ${icon("pause", "icon pause-toggle__pause")}${icon("play", "icon pause-toggle__play")}<span class="pause-toggle__label">${c.t("motionPause")}</span>
 </button>`;

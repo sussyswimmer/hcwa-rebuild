@@ -36,3 +36,23 @@ export function sunAt(set, t, out, nudge) {
 }
 
 export const makeSun = () => ({ dir: new Vector3(), color: new Color() });
+
+// Suns of the stills (05-DESIGN D6.10, PLAN section 4): one fixed sun per shot at its hour, from the same
+// formula. Each keeps its signature surface crisp: incidence ≤ 60° where the pattern lands (D6.4).
+// mirror: the sun on the −x side (the corridor's screen faces +x).
+export const STILL_SUNS = {
+  frontal: { az: -18, el: 42, color: "sunCorridorA" },   // the screen seen frontally (the 404): high enough to crisp the floor
+  ourWork: { az: 46, el: 24, color: "sunCorridorA" },    // 10:30 (t ≈ 0.30): raking through a side screen onto the back wall (incidence ≈ 50°)
+  door: { az: 6, el: 14, color: "sunCorridorA", mirror: true }, // morning, nearly head-on to the doors
+  hub: { az: 4, el: 15, color: "sunCorridorA", mirror: true },   // the gallery behind Our Work's doors (t ≈ 0.30): low enough that the screen behind the camera lands its holes at mid-height
+  gallery: { az: 50, el: 12, color: "sunCorridorA", mirror: true }, // Green Bamboo's gallery wall: low and raking from a screen in the side wall
+  louvers: { az: 50, el: 18, color: "sunCorridorA" },    // late morning through the lam: the stripes cross the back wall at mid-height (incidence 43°)
+  shutters: { az: -48, el: 16, color: "sunShuttersB" },  // 17:00, raking: the window's patch climbs the side wall
+  street: { az: -58, el: 20, color: "sunShuttersA" },    // 16:30, raking along the street face
+  story: { az: 40, el: 24, color: "sunRoom" },           // the hero room at rest
+};
+
+export function sunFixed({ az, el, mirror = false }, out = new Vector3()) {
+  const a = MathUtils.degToRad(az), e = MathUtils.degToRad(el);
+  return out.set(Math.cos(e) * Math.cos(a) * (mirror ? -1 : 1), Math.sin(e), Math.cos(e) * Math.sin(a)).normalize();
+}

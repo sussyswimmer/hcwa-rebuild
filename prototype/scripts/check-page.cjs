@@ -97,16 +97,18 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     const page = await ctx.newPage();
     await page.goto(base + "/", { waitUntil: "load" });
     await page.evaluate(() => { window.__pauses = []; window.hcwa.addEventListener("pause", (e) => window.__pauses.push(e.detail.paused)); });
+    const label = () => page.evaluate(() => document.querySelector(".hero__pause").textContent.trim());
+    ok((await label()) === "Tạm dừng chuyển động", "pause toggle named in Vietnamese on the VI page");
     await page.click(".hero__pause");
-    const s = await page.evaluate(() => ({ pressed: document.querySelector(".hero__pause").getAttribute("aria-pressed"), foot: document.querySelector(".site-footer [data-motion-toggle]").getAttribute("aria-pressed"), motion: document.documentElement.dataset.motion, stored: localStorage.getItem("hcwa:motion"), events: window.__pauses, sun: window.hcwa.state.sunIn, lenis: document.documentElement.classList.contains("lenis") }));
+    const s = await page.evaluate(() => ({ pressed: document.querySelector(".hero__pause").dataset.paused, foot: document.querySelector(".site-footer [data-motion-toggle]").dataset.paused, motion: document.documentElement.dataset.motion, stored: localStorage.getItem("hcwa:motion"), events: window.__pauses, sun: window.hcwa.state.sunIn, lenis: document.documentElement.classList.contains("lenis") }));
     ok(s.pressed === "true" && s.foot === "true" && s.motion === "off" && s.stored === "off" && s.events.join() === "true", `pause: pressed, stored, bus event (${JSON.stringify(s)})`);
     ok(s.sun === "done" && !s.lenis, "pause: sun-in finished at rest, Lenis gone");
-    const name = await page.evaluate(() => document.querySelector(".hero__pause").textContent.trim());
-    ok(name === "Tạm dừng chuyển động", "pause toggle named in Vietnamese on the VI page");
+    // The label says what the next press does.
+    ok((await label()) === "Bật lại chuyển động", "paused, the toggle offers to play again (Vietnamese)");
     requests.length = 0;
     await page.reload({ waitUntil: "load" });
     await page.waitForTimeout(2500);
-    const r = await page.evaluate(() => ({ motion: document.documentElement.dataset.motion, tier: document.documentElement.dataset.tier, pressed: document.querySelector(".hero__pause").getAttribute("aria-pressed") }));
+    const r = await page.evaluate(() => ({ motion: document.documentElement.dataset.motion, tier: document.documentElement.dataset.tier, pressed: document.querySelector(".hero__pause").dataset.paused }));
     ok(r.motion === "off" && r.tier === "0" && r.pressed === "true", `next load: paused, tier 0 (${JSON.stringify(r)})`);
     ok(!requests.some((u) => /motion-|world|three|\/live-/i.test(u)), "next load: motion and world chunks never requested");
     await page.click(".hero__pause");
@@ -121,7 +123,8 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     const { ctx } = await fresh();
     const page = await ctx.newPage();
     await page.goto(base + "/?tier=1", { waitUntil: "load" });
-    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"), null, { timeout: 5000 });
+    // Lenis is created at the first wheel event (pointer: fine), so nothing to wait for but the page.
+    await page.waitForFunction(() => window.hcwa?.state, null, { timeout: 5000 });
     await page.evaluate(() => { window.__v = []; window.__p = []; window.hcwa.addEventListener("velocity", (e) => window.__v.push(e.detail.value)); window.hcwa.addEventListener("progress", (e) => window.__p.push([e.detail.world, e.detail.progress])); });
     await page.mouse.move(700, 450);
     for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, 120); await page.waitForTimeout(40); }

@@ -447,5 +447,139 @@
   "partnersPending": {
     "vi": "[Chờ ít nhất 4 logo đối tác đã được duyệt]",
     "en": "[Waiting for at least 4 approved partner logos]"
+  },
+  "fundedBy": {
+    "vi": "Tài trợ",
+    "en": "Funded by"
+  },
+  "runsAt": {
+    "vi": "Thực hiện tại",
+    "en": "Runs at"
+  },
+  "externalPost": {
+    "vi": "mở bài viết trên hcwa.org.vn",
+    "en": "opens the post on hcwa.org.vn"
+  },
+  "glance": {
+    "vi": "Thông tin nhanh",
+    "en": "At a glance"
+  },
+  "whoWeServe": {
+    "vi": "Đối tượng",
+    "en": "Who we serve"
+  },
+  "whatWeDo": {
+    "vi": "Hoạt động",
+    "en": "What we do"
+  },
+  "readFullHistory": {
+    "vi": "Đọc toàn bộ lịch sử",
+    "en": "Read the full history"
+  },
+  "photos": {
+    "vi": "Hình ảnh hoạt động",
+    "en": "Photos"
+  },
+  "photoPending": {
+    "vi": "Chờ ảnh đã được HCWA duyệt",
+    "en": "Waiting for a photo HCWA has approved"
+  },
+  "openLarger": {
+    "vi": "phóng to",
+    "en": "open larger"
+  },
+  "prevPhoto": {
+    "vi": "Ảnh trước",
+    "en": "Previous photo"
+  },
+  "nextPhoto": {
+    "vi": "Ảnh sau",
+    "en": "Next photo"
+  },
+  "programsHere": {
+    "vi": "Dự án tại cơ sở",
+    "en": "Programs run here"
+  },
+  "relatedNews": {
+    "vi": "Tin liên quan",
+    "en": "Related news"
+  },
+  "results": {
+    "vi": "Kết quả",
+    "en": "Results"
+  },
+  "documents": {
+    "vi": "Tài liệu",
+    "en": "Documents"
+  },
+  "noDocuments": {
+    "vi": "Báo cáo của dự án sẽ được đăng tại đây khi HCWA công bố.",
+    "en": "Program reports will be posted here once HCWA publishes them.",
+    "draft": true
+  },
+  "goals": {
+    "vi": "Mục tiêu",
+    "en": "Goals"
+  },
+  "activities": {
+    "vi": "Hoạt động",
+    "en": "Activities"
+  },
+  "whereItRuns": {
+    "vi": "Nơi thực hiện",
+    "en": "Where it runs"
+  },
+  "summary": {
+    "vi": "Tóm tắt",
+    "en": "Summary"
+  },
+  "status": {
+    "vi": "Trạng thái",
+    "en": "Status"
+  },
+  "years": {
+    "vi": "Thời gian",
+    "en": "Years"
+  },
+  "f_sendAnother": {
+    "vi": "Gửi lời nhắn khác",
+    "en": "Send another message"
+  },
+  "nf_links": {
+    "vi": "Hoặc đi tới",
+    "en": "Or go to"
+  },
+  "today": {
+    "vi": "Hôm nay",
+    "en": "Today"
+  },
+  "galleryWaiting": {
+    "vi": "6 ảnh đã được HCWA duyệt sẽ treo ở đây",
+    "en": "6 HCWA-approved photos will hang here",
+    "draft": true
+  },
+  "filterShowing": {
+    "vi": "Đang hiện {centers}, {programs}",
+    "en": "Showing {centers}, {programs}"
+  },
+  "countCenter": {
+    "vi": "{n} cơ sở",
+    "en": "{n} center"
+  },
+  "countCenters": {
+    "vi": "{n} cơ sở",
+    "en": "{n} centers"
+  },
+  "countProgram": {
+    "vi": "{n} dự án",
+    "en": "{n} project"
+  },
+  "countPrograms": {
+    "vi": "{n} dự án",
+    "en": "{n} projects"
+  },
+  "enBarLabel": {
+    "vi": "Phiên bản tiếng Anh",
+    "en": "English version"
   }
 }

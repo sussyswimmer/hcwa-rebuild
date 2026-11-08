@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { str } from "./lib/html.mjs";
 import { ctx } from "./lib/ctx.mjs";
+import { content } from "./lib/content.mjs";
 import { pageRoutes } from "./routes.mjs";
 import { layout } from "./partials/layout.mjs";
 import { pages } from "./pages/index.mjs";
@@ -18,15 +19,34 @@ export const BLOCKERS = [
   [/data-donation-placeholder/, "donation placeholder"],
   // Any [token] in visible text ([N], [year], [ngày]…), even where a template forgot data-draft.
   [/>[^<]*\[[^\]<]{1,80}\][^<]*</, "bracket placeholder token in text"],
+  // PLAN section 6: the featured story waits for an approved story in content/verified/, the partner
+  // strip for four approved logos. Production leaves both out; these catch a leak.
+  [/data-story-placeholder/, "featured story placeholder"],
+  [/data-partners-pending/, "partners placeholder strip"],
 ];
+
+// HCWA safeguarding sign-off (05-DESIGN D6.8 and section 13, PLAN section 6): until world.json says
+// approved, no page may show the Little Rose door in any form (the corridor bay the live world builds its
+// door from, a door or bay still, a painted door), and traces may not be switched on.
+export const LITTLE_ROSE_DOOR = /data-unit="little-rose"[^>]*\sdata-door="|(?:door|bay)-little-rose-|hub-doors-wide/;
+export const littleRoseDoorLeak = (htmlText, world) => world?.littleRoseDoor?.approved !== true && LITTLE_ROSE_DOOR.test(htmlText);
+export const tracesBlocked = (world) => world?.traces?.enabled === true && world?.traces?.approved !== true;
+
+// A partners section needs at least four approved one-tone logos (05-DESIGN D7, PLAN H9).
+export const MIN_PARTNER_LOGOS = 4;
+export const partnersLeak = (htmlText, approved) => /\sdata-partners="/.test(htmlText) && approved < MIN_PARTNER_LOGOS;
+const approvedLogos = () => (content.site.partnerLogos ?? []).filter((l) => l.approved === true).length;
 
 // The renderer only cleans folders it created, so a mistyped path can't wipe real files.
 const MARKER = ".hcwa-render";
 const htmlFiles = (dir) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? htmlFiles(join(dir, e.name)) : e.name.endsWith(".html") ? [join(dir, e.name)] : []));
 
-export function findBlockers(htmlText) {
-  return BLOCKERS.filter(([re]) => re.test(htmlText)).map(([, why]) => why);
+export function findBlockers(htmlText, { approved = approvedLogos(), world = content.world } = {}) {
+  const found = BLOCKERS.filter(([re]) => re.test(htmlText)).map(([, why]) => why);
+  if (partnersLeak(htmlText, approved)) found.push(`partners section with ${approved} approved logo(s), fewer than ${MIN_PARTNER_LOGOS}`);
+  if (littleRoseDoorLeak(htmlText, world)) found.push("Little Rose door without HCWA safeguarding sign-off (world.json littleRoseDoor)");
+  return found;
 }
 
 export function renderAll(outDir, prod) {
@@ -36,7 +56,7 @@ export function renderAll(outDir, prod) {
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, MARKER), "rendered by prototype/src/render.mjs\n");
   const stale = new Set(htmlFiles(outDir));
-  const problems = [];
+  const problems = prod && tracesBlocked(content.world) ? ["content/draft/world.json: traces enabled without HCWA safeguarding approval"] : [];
   const files = [];
   for (const [key, route] of pageRoutes) {
     if (prod && route.prototypeOnly) continue;

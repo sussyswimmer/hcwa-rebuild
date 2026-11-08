@@ -16,7 +16,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-to
 /* The root background shows behind the fixed world canvas, which sits at z-index -1 under every sheet. */
 body { margin: 0; min-height: 100svh; background: var(--color-lime-100); color: var(--color-ink-900); font: 400 var(--fs-base) / var(--lh-body) var(--font-body); -webkit-font-smoothing: antialiased; }
 
-h1, h2, h3, h4, .h3, .h4, .display { margin: 0; color: var(--color-ink-900); font-family: var(--font-display); font-weight: var(--wght-h3); line-height: var(--lh-h3); letter-spacing: var(--track-display); text-wrap: balance; }
+/* overflow-wrap: a compound viKeep holds together with no-break spaces may still break inside itself when
+   it is wider than its column (200% text, a 320 px phone), instead of widening the column or being cut. */
+h1, h2, h3, h4, .h3, .h4, .display { margin: 0; color: var(--color-ink-900); font-family: var(--font-display); font-weight: var(--wght-h3); line-height: var(--lh-h3); letter-spacing: var(--track-display); text-wrap: balance; overflow-wrap: anywhere; }
 h1 { font-size: var(--fs-h1); font-weight: var(--wght-h1); line-height: var(--lh-h1); }
 h2 { font-size: var(--fs-h2); font-weight: var(--wght-h2); line-height: var(--lh-h2); }
 h3, .h3 { font-size: var(--fs-h3); }

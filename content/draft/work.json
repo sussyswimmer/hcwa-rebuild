@@ -1,5 +1,22 @@
 {
   "_note": "Centers vs programs follow the proposal in 04-SITEMAP (HCWA question Q3). Years are tokens: the current site gives conflicting founding years (Green Bamboo 1992 vs 1993; the Charity Class page says HCWA was founded June 1997).",
+  "focusTitle": {
+    "vi": "Lĩnh vực hoạt động",
+    "en": "Areas of work",
+    "draft": true
+  },
+  "hubIntro": {
+    "vi": "Hội vận hành các cơ sở lâu dài và triển khai các dự án có thời hạn cùng đối tác.",
+    "en": "HCWA runs long-term centers and carries out time-bound projects with partners.",
+    "draft": true
+  },
+  "littleRose": {
+    "privacyNote": {
+      "vi": "Để bảo vệ sự riêng tư và an toàn của các em, chúng tôi không đăng hình ảnh, tên hay địa chỉ của mái ấm.",
+      "en": "To protect the girls' privacy and safety, we never publish their photos, their names or the shelter's address.",
+      "draft": true
+    }
+  },
   "focusAreas": [
     {
       "id": "education",
@@ -68,6 +85,10 @@
         "vi": "Cơ sở Bảo trợ Xã hội Tre Xanh",
         "en": "Green Bamboo Social Protection Center"
       },
+      "shortName": {
+        "vi": "Tre Xanh",
+        "en": "Green Bamboo"
+      },
       "sinceToken": {
         "vi": "[năm]",
         "en": "[year]"
@@ -108,6 +129,10 @@
         "vi": "Mái ấm Hoa Hồng Nhỏ",
         "en": "Little Rose Warm Shelter"
       },
+      "shortName": {
+        "vi": "Hoa Hồng Nhỏ",
+        "en": "Little Rose"
+      },
       "sinceToken": {
         "vi": "[năm]",
         "en": "[year]"
@@ -143,6 +168,10 @@
       "name": {
         "vi": "Dự án Cầu Hàn",
         "en": "Cau Han Project"
+      },
+      "shortName": {
+        "vi": "Cầu Hàn",
+        "en": "Cau Han"
       },
       "sinceToken": {
         "vi": "[năm]",
@@ -267,5 +296,202 @@
       ],
       "centers": []
     }
-  ]
+  ],
+  "hub": {
+    "centersLead": {
+      "vi": "Cơ sở là nơi Hội vận hành lâu dài, ngày qua ngày.",
+      "en": "Centers are places HCWA runs for the long term, day after day.",
+      "draft": true
+    },
+    "programsLead": {
+      "vi": "Dự án và chương trình được tài trợ, có thời gian bắt đầu và kết thúc.",
+      "en": "Projects and programs are funded work with a start and an end.",
+      "draft": true
+    },
+    "ctaTitle": {
+      "vi": "Đồng hành cùng các cơ sở và dự án",
+      "en": "Stand with the centers and the projects",
+      "draft": true
+    }
+  },
+  "centerPages": {
+    "green-bamboo": {
+      "activities": [
+        {
+          "vi": "Lớp bồi dưỡng văn hóa và tiếng Anh",
+          "en": "Catch-up classes and English",
+          "draft": true
+        },
+        {
+          "vi": "Câu lạc bộ giáo dục và kỹ năng sống cho thanh thiếu niên",
+          "en": "Education and life-skills clubs for young people",
+          "draft": true
+        },
+        {
+          "vi": "Hội thảo cho phụ huynh và tư vấn gia đình",
+          "en": "Workshops for parents and family counseling",
+          "draft": true
+        },
+        {
+          "vi": "Hỗ trợ chăm sóc sức khỏe cho trẻ",
+          "en": "Help accessing healthcare",
+          "draft": true
+        }
+      ],
+      "storyTitle": {
+        "vi": "Câu chuyện của Tre Xanh",
+        "en": "Green Bamboo's story"
+      },
+      "story": [
+        {
+          "vi": "Tre Xanh bắt đầu là một câu lạc bộ, sau đó trở thành mái ấm cho trẻ trai không nơi nương tựa, giúp các em có chỗ ở, được học và học nghề.",
+          "en": "Green Bamboo began as a club and later became a shelter for homeless boys, giving them a home, schooling and vocational training.",
+          "draft": true
+        },
+        {
+          "vi": "Từ [tháng/năm], Tre Xanh chuyển sang mô hình cơ sở bảo trợ xã hội. Thay vì nuôi dạy tập trung, cơ sở hỗ trợ trẻ và gia đình ngay tại cộng đồng: lớp học, câu lạc bộ, tư vấn, chăm sóc sức khỏe và kết nối dịch vụ xã hội.",
+          "en": "In [month/year] Green Bamboo became a social protection center. Instead of residential care, it now supports children and families in their community: classes, clubs, counseling, healthcare and links to social services.",
+          "draft": true
+        }
+      ],
+      "history": {
+        "vi": "[Lịch sử đầy đủ do HCWA cung cấp, kèm các năm đã được xác minh.]",
+        "en": "[Full history supplied by HCWA, with verified years.]",
+        "draft": true
+      },
+      "figuresTitle": {
+        "vi": "Tre Xanh qua các con số",
+        "en": "Green Bamboo in numbers"
+      },
+      "contactPerson": {
+        "vi": "[Người liên hệ và số điện thoại đã được duyệt]",
+        "en": "[Approved contact person and phone]",
+        "draft": true
+      },
+      "helpTitle": {
+        "vi": "Cách giúp Tre Xanh",
+        "en": "How to help Green Bamboo"
+      },
+      "needs": [
+        {
+          "vi": "[Nhu cầu cụ thể thứ nhất, ví dụ học bổng]",
+          "en": "[First specific need, for example scholarships]",
+          "draft": true
+        },
+        {
+          "vi": "[Nhu cầu thứ hai, ví dụ đồ dùng học tập]",
+          "en": "[Second need, for example school supplies]",
+          "draft": true
+        },
+        {
+          "vi": "[Nhu cầu thứ ba, ví dụ giáo viên tình nguyện]",
+          "en": "[Third need, for example volunteer teachers]",
+          "draft": true
+        }
+      ],
+      "donate": {
+        "vi": "Ủng hộ Tre Xanh",
+        "en": "Donate to Green Bamboo"
+      },
+      "visitTitle": {
+        "vi": "Muốn đến thăm Tre Xanh?",
+        "en": "Want to visit Green Bamboo?"
+      },
+      "contactNote": {
+        "vi": "[Chỉ hiển thị thông tin liên hệ HCWA đã duyệt.]",
+        "en": "[Only contact details HCWA has approved.]",
+        "draft": true
+      },
+      "logoAlt": {
+        "vi": "Logo Cơ sở Bảo trợ Xã hội Tre Xanh",
+        "en": "Green Bamboo Social Protection Center logo"
+      }
+    }
+  },
+  "programPages": {
+    "thrive-together": {
+      "focus": {
+        "vi": "Chương trình đặc biệt hướng đến trẻ em di cư, trẻ thiếu giấy tờ pháp lý, trẻ khuyết tật, trẻ chịu ảnh hưởng bởi HIV/AIDS và trẻ sống trong môi trường thiếu an toàn.",
+        "en": "It focuses on migrant children, children without legal documents, children with disabilities, children affected by HIV/AIDS and children living in unsafe places.",
+        "draft": true
+      },
+      "goals": [
+        {
+          "vi": "Trẻ được tiếp cận liên tục với giáo dục",
+          "en": "Children keep steady access to education",
+          "draft": true
+        },
+        {
+          "vi": "Trẻ được chăm sóc sức khỏe thể chất và tinh thần",
+          "en": "Children get physical and mental healthcare",
+          "draft": true
+        },
+        {
+          "vi": "Trẻ phát triển kỹ năng phù hợp với độ tuổi",
+          "en": "Children build age-appropriate skills",
+          "draft": true
+        }
+      ],
+      "activities": [
+        {
+          "vi": "Củng cố và mở rộng hoạt động tại các cơ sở của Hội",
+          "en": "Strengthen and expand activities at HCWA's centers",
+          "draft": true
+        },
+        {
+          "vi": "Tập huấn cho phụ huynh, nhân viên và cộng tác viên",
+          "en": "Train parents, staff and community collaborators",
+          "draft": true
+        }
+      ],
+      "runsAtNote": {
+        "vi": "[Các cơ sở thực hiện chương trình, HCWA xác nhận]",
+        "en": "[Which centers run it, HCWA to confirm]",
+        "draft": true
+      },
+      "reports": [
+        {
+          "title": {
+            "vi": "[Tên báo cáo dự án]",
+            "en": "[Program report title]",
+            "draft": true
+          },
+          "year": {
+            "vi": "[năm]",
+            "en": "[year]",
+            "draft": true
+          },
+          "docLang": "vi",
+          "size": "[KB]"
+        },
+        {
+          "title": {
+            "vi": "[Tên báo cáo dự án]",
+            "en": "[Program report title]",
+            "draft": true
+          },
+          "year": {
+            "vi": "[năm]",
+            "en": "[year]",
+            "draft": true
+          },
+          "docLang": "en",
+          "size": "[KB]"
+        }
+      ],
+      "reportType": {
+        "vi": "Báo cáo dự án",
+        "en": "Program report"
+      },
+      "ctaTitle": {
+        "vi": "Đồng hành cùng những dự án như thế này",
+        "en": "Support work like this",
+        "draft": true
+      },
+      "partner": {
+        "vi": "Hợp tác trong một dự án",
+        "en": "Partner on a program"
+      }
+    }
+  }
 }

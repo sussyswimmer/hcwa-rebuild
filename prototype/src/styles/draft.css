@@ -3,7 +3,7 @@
 [data-draft] { outline: 1px dashed color-mix(in srgb, var(--color-gold-700) 55%, transparent); outline-offset: 2px; }
 /* Inline drafts (the hero's H1 and intro) hug each line instead of drawing one wireframe box. */
 span[data-draft] { box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.site-footer [data-draft], .cta-band [data-draft] { outline-color: color-mix(in srgb, var(--color-sun-400) 70%, transparent); }
+.site-footer [data-draft], .dusk [data-draft] { outline-color: color-mix(in srgb, var(--color-sun-400) 70%, transparent); }
 .chip-pending, .pending-value { display: inline-flex; align-items: center; padding: 1px 10px; border: 1px dashed var(--color-gold-700); border-radius: var(--r-pill); background: var(--color-sun-100); color: var(--color-warn); font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; }
 /* One line at a fixed height, so the hero below can subtract it from the first screen (layout.css --bars-h). */
 .proto-note { height: 36px; display: flex; align-items: center; background: var(--color-ink-900); color: var(--color-on-dusk); font-size: var(--fs-meta); }

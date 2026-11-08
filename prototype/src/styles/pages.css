@@ -1,1 +1,1122 @@
-/* Sheets below the corridor and every inner page (PLAN H5-H11, P1-P8). Owner: page stream. */
+/* Sheets below the corridor and every inner page (PLAN H5-H11, P1-P8). Owner: page stream.
+   The world does not stop where the canvas stops (05-DESIGN D4): sheets carry the same light in CSS,
+   cut their edges as rows of blocks where they meet the world, and alternate sun and shade. */
+
+/* ---------- sheets ---------- */
+.wall { --wall: var(--color-lime-100); position: relative; z-index: 1; overflow-x: clip; padding-block: var(--section-y); background: var(--wall); }
+.wall--sun { --wall: var(--color-lime-100); }
+.wall--shade { --wall: var(--color-shade-100); }
+.wall--light { --wall: var(--color-sun-100); }
+/* One day, no bands (D0.5): where the sun of the work sheet goes into the shade of the news, the change
+   runs over 28svh (18svh on phones), eased (smoothstep stops in oklab), so no line is ever drawn. */
+.wall { --seam: 28svh; }
+@media (max-width: 599px) { .wall { --seam: 18svh; } }
+.wall--sun + .wall--shade {
+  --from: var(--color-lime-100);
+  background: linear-gradient(in oklab to bottom, var(--from), color-mix(in oklab, var(--wall) 6%, var(--from)) calc(var(--seam) * 0.15), color-mix(in oklab, var(--wall) 28%, var(--from)) calc(var(--seam) * 0.35), color-mix(in oklab, var(--wall) 50%, var(--from)) calc(var(--seam) * 0.5), color-mix(in oklab, var(--wall) 72%, var(--from)) calc(var(--seam) * 0.65), color-mix(in oklab, var(--wall) 94%, var(--from)) calc(var(--seam) * 0.85), var(--wall) var(--seam));
+}
+.wall > .container, .wall > section { position: relative; z-index: 1; }
+.wall__title { inline-size: fit-content; font-size: var(--fs-h2); max-inline-size: 13em; }
+
+/* Bông gió edge: where a sheet comes out of the world its top is one row of Hoa thị blocks (face-hoa-thi.svg,
+   the shader's numbers) that thins out upward, so the world's light shows through the holes and the row
+   dissolves instead of cutting a line (D0.5). A sheet followed by a world section has no bottom row: that
+   section feathers out of the sheet's colour itself (the shutters' lead). */
+.wall--edge::before, [data-world] + .wall::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--edge-block); pointer-events: none;
+  background: var(--from, var(--wall));
+  mask: url("/svg/face-hoa-thi.svg") 50% 100% / var(--edge-block) var(--edge-block) repeat-x, linear-gradient(to top, black 20%, transparent);
+  mask-composite: intersect;
+}
+
+/* CSS sun layer: light through a block, cast on the plaster in the margins and behind display headings,
+   never behind running text. The pattern is the block's own holes (hole-*.svg), sheared by the sun angle.
+   It drifts with the scroll where scroll-driven animations exist, transform only. */
+.sun-layer { position: absolute; z-index: 0; pointer-events: none; overflow: hidden; mask-image: radial-gradient(closest-side, black 25%, transparent); }
+.sun-layer::before {
+  content: ""; position: absolute; inset: -25%; background: var(--color-sun-200); opacity: 0.45;
+  mask: var(--hole, url("/svg/hole-hoa-thi.svg")) 0 0 / var(--pitch, 112px) var(--pitch, 112px) repeat;
+  transform: rotate(-4deg) skewX(-20deg) scaleY(1.25);
+}
+@keyframes light-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"] :is(.sun-layer, .tile__light, .lit-wall__light, .lam)::before { animation: light-drift linear both; animation-timeline: view(); }
+}
+
+/* ---------- H5 our work sheet ---------- */
+.sun-layer--work { top: 0; right: -6vw; width: min(62vw, 860px); height: clamp(420px, 44vw, 640px); }
+
+/* The focus areas as one wall: 4 columns with Education 2 × 2, Protection 2 × 1, Family and Policy 1 × 1 =
+   8 of 8 cells; 2 columns = 6 of 6. No mortar lines and no outline (D0.5): each area is a pool of cool
+   shade under its block, feathered into the plaster, and the narrow sunlit valleys between the pools are
+   what separate them. */
+.bento { list-style: none; padding: 0; margin: clamp(40px, 5vw, 72px) 0 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(6px, 0.9vw, 14px); }
+@media (min-width: 600px) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; }
+  .tile--education, .tile--protection { grid-column: span 2; }
+}
+@media (min-width: 1024px) {
+  .bento { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(clamp(300px, 24vw, 360px), auto); }
+  .tile--education { grid-row: span 2; }
+}
+.tile--education { --hole: url("/svg/hole-hoa-thi.svg"); --pitch: 72px; --art: 58%; }
+.tile--protection { --hole: url("/svg/hole-mat-cao.svg"); --pitch: 56px; --art: 40%; }
+.tile--family { --hole: url("/svg/hole-vong-tron.svg"); --pitch: 56px; --art: 70%; }
+.tile--policy { --hole: url("/svg/hole-bac-thang.svg"); --pitch: 56px; --art: 70%; }
+
+/* Two rows: the block's light in the first, the words in the second, so the heading never meets the art. */
+.tile { --f: clamp(18px, 2.4vw, 36px); --pad: clamp(24px, 2.6vw, 40px); position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-rows: 1fr auto; row-gap: 16px; min-height: 300px; padding: var(--pad); padding-right: 64px; }
+/* A pool of shade under the block, no rectangle: an ellipse that reaches zero before every edge of the
+   tile (closest-side), so neighbouring pools never meet in a straight line. */
+.tile::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(closest-side at 60% 46%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent);
+}
+/* The block drawn in light, not ink (D7): its edges and holes as warm lines that read on plaster at both
+   sizes, the sun coming through the holes. It sits 6 px inside the tile's top-right corner and fades out
+   toward the top and the right before the tile's edge (and away from the corner below), so the tile never
+   cuts a line straight. */
+.tile__art { grid-row: 1; justify-self: end; align-self: start; position: relative; z-index: 0; display: block; width: var(--art); height: auto; margin: calc(-1 * var(--pad) + 6px) calc(-64px + 6px) 0 0;
+  mask-image: linear-gradient(to left, transparent, black 24%), linear-gradient(to bottom, transparent, black 24%), radial-gradient(farthest-corner at 100% 0, black 34%, transparent 80%);
+  mask-composite: intersect; }
+.block-light__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 35%, transparent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.block-light__core { stop-color: var(--color-sun-200); }
+.block-light__edge { stop-color: var(--color-sun-200); stop-opacity: 0.12; }
+.block-art__sky { fill: var(--color-sun-100); }
+.block-art__face { fill: var(--color-blue-700); }
+.block-art__joint { fill: none; stroke: var(--color-blue-900); stroke-width: 3; }
+/* The light that block throws: one slanted fall from the art toward the bottom-left, fading long before
+   the text. */
+.tile__light {
+  --fall: linear-gradient(205deg, black 12%, transparent 46%);
+  position: absolute; inset: 0; z-index: 0; transition: translate 280ms var(--ease-out);
+  mask: var(--fall), linear-gradient(to right, transparent, black var(--f), black calc(100% - var(--f)), transparent), linear-gradient(to bottom, transparent, black var(--f), black calc(100% - var(--f)), transparent);
+  mask-composite: intersect;
+}
+.tile__light::before {
+  content: ""; position: absolute; inset: -30%; background: var(--color-sun-200); opacity: 0.38;
+  mask: var(--hole) 0 0 / var(--pitch) var(--pitch) repeat;
+  transform: rotate(-4deg) skewX(-18deg) scaleY(1.2);
+}
+.tile__body { grid-row: 2; position: relative; z-index: 1; display: grid; gap: 10px; max-width: 36ch; }
+.tile__name { font-size: var(--fs-h3); }
+.tile--education .tile__name { font-size: clamp(2.5rem, 1.2rem + 3.6vw, 4.75rem); line-height: var(--lh-h1); }
+.tile--protection .tile__name { font-size: clamp(1.75rem, 1.1rem + 1.6vw, 2.75rem); }
+/* The whole tile is the link (::after); the name itself is a 44 px tall target too. */
+.tile__name a { display: inline-block; padding-block: 10px; margin-block: -10px; color: var(--color-ink-900); text-decoration: none; }
+.tile__name a::after { content: ""; position: absolute; inset: 0; z-index: 3; }
+.tile__text { color: var(--color-ink-700); }
+.tile--education .tile__text { font-size: var(--fs-lg); line-height: var(--lh-lead); }
+.tile__go { position: absolute; z-index: 2; right: clamp(20px, 2vw, 32px); bottom: clamp(24px, 2.6vw, 40px); color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+/* Hover: the sun moves 6 px and the light shifts with it (D5.7 bento tile). The wall itself never lifts:
+   the tiles share their mortar. */
+@media (hover: hover) {
+  .tile:hover .tile__light { translate: -6px 6px; }
+  .tile:hover .tile__name a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
+  .tile:hover .tile__go { translate: 3px 0; }
+}
+.tile:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+.tile a:focus-visible { outline: none; }
+/* Phones: one column, the block art 96 px beside the title (PLAN H5a), its holes lit so it reads at that
+   size; the light falls from it down to the right. */
+@media (max-width: 599px) {
+  .tile { --pad: 24px; min-height: 0; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: auto; align-items: start; gap: 16px; padding: 24px 16px 28px 8px; }
+  .tile::before { background: radial-gradient(closest-side at 40% 50%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent); }
+  .tile__name { padding-right: 32px; }
+  .tile__art { grid-row: 1; grid-column: 1; width: 96px; height: 96px; margin: 0; mask-image: radial-gradient(closest-side, black 70%, transparent); }
+  .tile__art .block-light__sun { fill: color-mix(in srgb, var(--color-sun-200) 70%, transparent); }
+  .tile__body { grid-row: 1; grid-column: 2; }
+  .tile__light { --fall: linear-gradient(155deg, black 10%, transparent 42%); }
+  .tile--education .tile__name, .tile--protection .tile__name { font-size: var(--fs-h3); }
+  .tile--education .tile__text { font-size: var(--fs-base); line-height: var(--lh-body); }
+  .tile__go { right: 16px; bottom: auto; top: 28px; }
+}
+
+/* Plaques (H5b): the organization figures on the wall's base course, one unboxed row, 64 px apart, each
+   label under its number. Never animated; staging only until two are verified. */
+.plaques { display: grid; gap: 16px 32px; margin-top: clamp(40px, 4.4vw, 64px); }
+.plaques__row { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 28px 64px; }
+.plaque { display: grid; gap: 8px; align-content: start; justify-items: start; max-width: 26ch; }
+.plaque__value { font: var(--wght-h1) var(--fs-stat) / 1 var(--font-display); color: var(--color-ink-900); }
+.plaque__label { max-width: 26ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.plaques__link { justify-self: end; }
+@media (max-width: 599px) { .plaques__link { justify-self: start; } }
+
+/* Programs (H5c): light passing through louvers. A field of lam stripes falls on the wall behind the
+   heading; the rows below take the stripes on hover. */
+.programs { padding-top: clamp(64px, 7vw, 112px); }
+.programs__head { position: relative; padding-block: clamp(32px, 4vw, 64px); }
+.programs__head .wall__title { position: relative; }
+/* Light through louvers falling on the wall: slanted, softened, with a penumbra on every side (an
+   elliptical mask, never a straight end), and never running out to the viewport's edge. */
+.lam { position: absolute; z-index: 0; inset: 0 0 0 auto; width: min(64%, 760px); pointer-events: none; mask-image: radial-gradient(ellipse 70% 60% at 30% 50%, black 35%, transparent 75%); }
+.lam::before { content: ""; position: absolute; inset: -12% 0; background: repeating-linear-gradient(-14deg, color-mix(in srgb, var(--color-sun-200) 70%, transparent) 0 9px, transparent 9px 22px); filter: blur(1.5px); opacity: 0.8; }
+@media (max-width: 599px) { .lam { width: 88%; } }
+.program-list--home { margin-top: 8px; }
+.program-more__link { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding-block: 28px; font: 600 var(--fs-h3) / 1.25 var(--font-display); letter-spacing: var(--track-display); color: var(--color-blue-700); text-decoration: none; }
+.program-more__link .icon { transition: translate var(--d-hover) var(--ease-out); }
+.program-more__link:hover span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.18em; }
+.program-more__link:hover .icon { translate: 3px 0; }
+
+/* ---------- H6 news: in the shade ---------- */
+/* The list (with the H2) comes first in the source; on desktop the featured story stands left of it. */
+.work { padding-bottom: 0; }
+.news { padding-block: clamp(56px, 6vw, 88px) clamp(56px, 6vw, 96px); }
+.news__grid { display: grid; gap: clamp(48px, 6vw, 72px); }
+@media (min-width: 1024px) {
+  .news__grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: "feature list"; align-items: start; }
+  .news__grid > .feature { grid-area: feature; }
+  .news__grid > .news__list { grid-area: list; }
+}
+.news--solo .news__grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "list"; }
+.news__list .wall__title { margin-bottom: clamp(28px, 3vw, 40px); }
+.news__all { margin-top: 20px; }
+@media (min-width: 1024px) { .news--solo .dated__title { font-size: var(--fs-lg); } }
+/* The featured story (staging only): a lit wall from the world, never a photo until HCWA approves one. */
+.feature { position: relative; display: grid; gap: 28px; align-content: start; }
+.feature__wall { position: relative; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--r-md); background: var(--color-shade-300); }
+.feature__still, .feature__still img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.feature__text { display: grid; gap: 12px; max-width: 58ch; }
+.feature__cat { font-size: var(--fs-meta); font-weight: 600; color: var(--color-blue-700); }
+.feature__title { font-size: clamp(1.75rem, 1rem + 2vw, 2.75rem); }
+.feature__title a { color: var(--color-ink-900); text-decoration: none; }
+.feature__title a::after { content: ""; position: absolute; inset: 0; }
+.feature:hover .feature__title a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
+.feature:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 6px; }
+.feature a:focus-visible { outline: none; }
+.feature__excerpt { color: var(--color-ink-700); }
+.feature__note { font-size: var(--fs-meta); color: var(--color-ink-500); }
+/* Lit wall: lime wash in the cool shade with the Hoa thị light across it (the hero's wall, in CSS). */
+.lit-wall { position: absolute; inset: 0; display: block; overflow: hidden; background: var(--color-shade-300); }
+.lit-wall__light { position: absolute; inset: 0; mask-image: linear-gradient(218deg, black 22%, transparent 78%); transition: translate 280ms var(--ease-out); }
+.lit-wall__light::before { content: ""; position: absolute; inset: -30%; background: var(--color-sun-200); mask: url("/svg/hole-hoa-thi.svg") 0 0 / 112px 112px repeat; transform: rotate(-4deg) skewX(-22deg) scaleY(1.25); }
+@media (hover: hover) { .feature:hover .lit-wall__light { translate: -6px 6px; } }
+
+/* ---------- H8 how you can help: four louver slats, big type, one sun button ---------- */
+/* On the stage layout it rises 30svh into the shutters stage through the stage's own margin-bottom
+   (stages.css), so nothing here pulls it up a second time. */
+.help { padding-bottom: clamp(64px, 7vw, 112px); }
+/* On the stage the help section arrives through the flood (its top at the screen's foot at p 0.76): its
+   heading starts right there, not a section's padding further down, and reveals on entry (reveals.js). */
+@media (min-height: 640px) { html.stages .shutters + .help { padding-top: clamp(24px, 2.2vw, 32px); } }
+.sun-layer--help { top: 0; left: -8vw; width: min(70vw, 900px); height: clamp(360px, 40vw, 560px); --pitch: 132px; }
+.help__title { font-size: clamp(2.75rem, 1rem + 5.6vw, 6.25rem); line-height: var(--lh-h1); max-inline-size: 9.5em; }
+.louvers { list-style: none; padding: 0; margin: clamp(48px, 6vw, 88px) 0 0; }
+.louver {
+  --inset: max(var(--gutter), (100% - var(--container)) / 2);
+  position: relative; isolation: isolate; display: grid; gap: 16px 48px; align-items: center;
+  padding: clamp(28px, 3.4vw, 52px) calc(var(--inset) + 48px) clamp(28px, 3.4vw, 52px) var(--inset);
+}
+/* From 1024 the rows alternate: the second and fourth carry their title on the right, the line and
+   the link on the left, so four slats never read as one repeated shape. */
+@media (min-width: 1024px) {
+  .louver { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .louver:nth-child(even) { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .louver:nth-child(even) .louver__title { grid-column: 2; grid-row: 1; justify-self: end; text-align: right; }
+  .louver:nth-child(even) .louver__body { grid-column: 1; grid-row: 1; }
+}
+/* The slat's lit upper face: sun that feathers in at the slat's top and fades down it, so the rows read
+   as louvers with no rule between them (D0.5). */
+.louver__face {
+  position: absolute; z-index: -1; inset: 0 0 auto; height: min(80%, 150px); pointer-events: none; transform-origin: top;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-sun-200) 55%, transparent) 30%, transparent 75%);
+  mask-image: linear-gradient(to right, transparent, black 36px calc(100% - 36px), transparent);
+}
+/* Hover: the face's top catches 3 px of full sun, feathered at both ends, and a bar of light runs under
+   the title (520 ms). */
+.louver::before { content: ""; position: absolute; inset: 2px 0 auto; height: 4px; background: var(--color-sun-400); mask-image: linear-gradient(to right, transparent, black 10% 90%, transparent); transform: scaleY(0); transform-origin: top; transition: transform var(--d-hover) var(--ease-out); }
+.louver__title { font-size: var(--fs-h2); max-inline-size: 12em; }
+.louver__label { position: relative; z-index: 0; display: inline-block; }
+.louver__label::after { content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0.1em; height: 0.3em; background: var(--color-sun-200); transform: scaleX(0); transform-origin: left; transition: transform var(--d-reveal) var(--ease-out); }
+.louver:focus-within::before { transform: scaleY(1); }
+.louver:focus-within .louver__label::after { transform: scaleX(1); }
+/* Hover only where there is one: a tap on a phone never leaves the slat lit. */
+@media (hover: hover) {
+  .louver:hover::before { transform: scaleY(1); }
+  .louver:hover .louver__label::after { transform: scaleX(1); }
+  .louver:hover .louver__go { translate: 3px -50%; }
+}
+.louver__title a { color: var(--color-ink-900); text-decoration: none; }
+/* The whole slat is the link (the in-kind slat's bakery link sits above it). */
+.louver__title a::after { content: ""; position: absolute; inset: 0; }
+.louver__body { display: grid; gap: 16px; justify-items: start; }
+.louver__text { max-width: 44ch; color: var(--color-ink-700); }
+.louver__extra { position: relative; z-index: 1; }
+.louver__go { position: absolute; right: var(--inset); top: 50%; translate: 0 -50%; color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+.louver:has(.louver__title a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+.louver__title a:focus-visible { outline: none; }
+.louver--donate .louver__title { font-size: clamp(2.5rem, 1.4rem + 3.6vw, 4.75rem); line-height: var(--lh-h1); }
+@media (max-width: 1023px) { .louver { padding-right: var(--inset); } .louver__go { top: clamp(32px, 3.4vw, 56px); translate: none; } .louver:not(.louver--donate) .louver__title { padding-right: 40px; } }
+@media (max-width: 1023px) and (hover: hover) { .louver:hover .louver__go { translate: 3px 0; } }
+.louver__btn { min-height: 56px; padding: 12px 40px; font-size: var(--fs-lg); }
+@media (max-width: 599px) { .louver__btn { width: 100%; } }
+
+/* ---------- H9 partners: staging shows where the logos will hang ---------- */
+.partners { padding-block: 0 clamp(56px, 6vw, 96px); }
+.partners__inner { display: grid; gap: 20px 48px; padding-top: clamp(40px, 5vw, 64px); }
+@media (min-width: 1024px) { .partners__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } .partners__links { grid-column: 2; } }
+.partners__title { font-size: var(--fs-h3); max-inline-size: 16em; }
+.partners__pending { display: grid; place-items: center; min-height: 112px; padding: 20px 28px; border: 1.5px dashed var(--color-gold-700); border-radius: var(--r-md); color: var(--color-warn); font-weight: 500; text-align: center; }
+.partners__links { display: flex; flex-wrap: wrap; gap: 4px 32px; }
+.partner-wall { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; align-items: center; }
+@media (min-width: 600px) { .partner-wall { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.partner-wall img { height: 48px; width: auto; opacity: 0.7; }
+
+/* Reduced motion and pause: the light holds still; hover colours stay. */
+@media (prefers-reduced-motion: reduce) {
+  .tile__light, .tile__go, .lit-wall__light, .louver::before, .louver__label::after, .louver__go, .program-row::before, .program-more__link .icon, .dated__ext { transition: none; }
+}
+html[data-motion="off"] :is(.tile__light, .lit-wall__light) { transition: none; }
+
+/* =====================================================================================================
+   Inner pages: Our Work hub, a center, a program (PLAN P1-P3). One stretch of the day per page (05-DESIGN
+   D0.5): the lit header fades into a single gradient that warms from the cool shade of its still to the
+   late sun, and the dusk band takes it from there. Sections have no fill of their own and no rules, and
+   no two sections in a row share a grid: each page reads as a sequence of different shapes.
+   ===================================================================================================== */
+
+/* One rhythm for the space between sections: the day's gradient does the separating, not empty bands. */
+.day { --sec: clamp(64px, 7vw, 112px); }
+/* Whatever subpixel the day and the dusk leave between them shows the day's own last light. */
+body:has(.day) { background: var(--color-sun-100); }
+
+/* ---------- lit header (partials/lit-header.mjs) ---------- */
+/* --pull: how far the first section of the page rises into the still's fading foot. */
+.lit-head, .lit-head + .day { --pull: calc(max(24svh, 180px) * 0.4); }
+.lit-head { --seam: max(24svh, 180px); position: relative; isolation: isolate; background: var(--color-shade-100); }
+.lit-head__media { position: absolute; inset: 0; z-index: -1; container-type: size; }
+/* No edge of the still is ever straight: it comes out of the plaster on the left and sinks into the page
+   at its foot (eased stops), the two masks intersected. --x0/--x1: where the left fade runs (per still,
+   so a subject with its own straight edge, the Our Work screen, emerges from the light instead of
+   standing on it); --from/--to: the foot, measured per still so the fade is over before the straight
+   line where wall meets floor. */
+.lit-head__media { --x0: 0%; --x1: 18%; --from: calc(100% - var(--seam)); --to: calc(100% - var(--seam) * 0.12); }
+.lit-head__media .lit {
+  mask-image:
+    linear-gradient(to right, transparent var(--x0), rgb(0 0 0 / 0.5) calc(var(--x0) + (var(--x1) - var(--x0)) * 0.5), black var(--x1)),
+    linear-gradient(to bottom, black var(--from), rgb(0 0 0 / 0.86) calc(var(--from) + (var(--to) - var(--from)) * 0.2), rgb(0 0 0 / 0.5) calc(var(--from) + (var(--to) - var(--from)) * 0.47), rgb(0 0 0 / 0.16) calc(var(--from) + (var(--to) - var(--from)) * 0.74), transparent var(--to));
+  mask-composite: intersect;
+}
+@media (min-width: 600px) {
+  .lit-head__media[data-still="header-our-work"] { --x0: 34%; --x1: 54%; --from: 58%; --to: 75%; }
+  .lit-head__media[data-still="header-green-bamboo"] { --from: 58%; --to: 81%; }
+  .lit-head__media[data-still="header-thrive-together"] { --x1: 30%; --from: 66%; --to: 94%; }
+  .lit-head__media[data-still="header-get-involved"] { --from: 62%; --to: 86%; }
+}
+@media (max-width: 599.98px) {
+  .lit-head__media { --x1: 8%; }
+  .lit-head__media[data-still="header-our-work"] { --from: 48%; --to: 80%; }
+  .lit-head__media[data-still="header-green-bamboo"] { --from: 50%; --to: 80%; }
+  .lit-head__media[data-still="header-get-involved"] { --from: 52%; --to: 80%; }
+  .lit-head__media[data-still="header-thrive-together"] { --from: 58%; --to: 88%; }
+}
+/* The unit's paint at the head of its page: 6 px of colour that thins out to the right and softens into the
+   still below it, a mark rather than a rule (D0.5). */
+.lit-head--unit::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 10px; background: linear-gradient(to bottom, var(--unit) 4px, transparent); mask-image: linear-gradient(to right, black 30%, transparent 92%); }
+.lit-head__text { display: grid; justify-items: start; align-content: center; gap: 0; min-width: 0; }
+.lit-head .breadcrumb ol, .lit-head .breadcrumb a { color: var(--color-ink-900); }
+.lit-head__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--color-ink-900); }
+.lit-head__meta .icon { width: 18px; height: 18px; margin-right: 6px; vertical-align: -3px; }
+.lit-head__logo { width: 56px; height: 56px; border-radius: var(--r-sm); }
+.lit-head__facts { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.lit-head__k { color: var(--color-ink-900); font-weight: 400; }
+.lit-head__title { margin-top: 14px; font-size: var(--fs-h1); max-inline-size: 12em; }
+.lit-head--display .lit-head__title { font-size: clamp(3rem, 1.2rem + 6.2vw, 7.25rem); line-height: var(--lh-h1); }
+.lit-head__main { display: block; }
+.lit-head__sub { display: block; margin-top: 0.5em; max-inline-size: 26em; font: 600 clamp(1.25rem, 0.95rem + 1.1vw, 2rem) / 1.25 var(--font-display); color: var(--color-ink-700); }
+.lit-head__intro { margin-top: 20px; max-width: 36ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+/* Small lines over the still take ink-900: the light can lift the wall behind them (light-contrast.mjs). */
+.lit-head__vi { margin-top: 10px; font-size: var(--fs-sm); color: var(--color-ink-900); }
+/* The page rises into the header's fading foot: the header gives back --pull, and the day's own gradient
+   starts below it (transparent above), so the first section's words sit on the fade, never under it. */
+.lit-head + .day { margin-top: calc(-1 * var(--pull)); background: linear-gradient(in oklab to bottom, var(--day)) 0 var(--pull) / 100% calc(100% - var(--pull)) no-repeat; }
+@media (min-width: 600px) {
+  /* 3:1 or taller (the still anchors right, so a taller box crops the plain wall on the left). The text
+     keeps inside HEADER_TEXT: the left 54% of the box, below the top 14%. */
+  .lit-head { display: grid; min-height: max(calc(100vw / 3), 500px); padding-block: clamp(24px, 3vw, 48px) calc(var(--seam) * 0.3 + var(--pull)); }
+  .lit-head--display { min-height: max(calc(100vw / 3), 560px); }
+  .lit-head__text > * { max-inline-size: min(100%, calc(54vw - max(var(--gutter), (100vw - var(--container)) / 2) - 16px)); }
+}
+/* Phones: the still in its own 16:10 box (the 4:3 crop, its ceiling and floor trimmed), the H1 rising
+   into its fade at 70% of its height instead of waiting below a band of fog. */
+@media (max-width: 599.98px) {
+  .lit-head, .lit-head + .day { --pull: 32px; }
+  .lit-head { --seam: 42%; padding-bottom: var(--pull); }
+  .lit-head__media { position: relative; z-index: 0; aspect-ratio: 16 / 10; }
+  .lit-head__media .lit img { object-position: 50% 50%; }
+  .lit-head__text { position: relative; z-index: 1; margin-top: -18.75%; padding-block: 0 8px; }
+  .lit-head__title { margin-top: 6px; }
+  /* One crumb on a phone (the parent): the trail never wraps to a second line when a weight swaps in. */
+  .lit-head .breadcrumb li:not(:nth-last-child(2)) { display: none; }
+  .lit-head .breadcrumb li:nth-last-child(2)::before { content: none; }
+}
+
+/* ---------- the day: one gradient per page, warming from the header's shade to the late sun ---------- */
+/* The decorative light layers bleed into the page margins; the clip keeps them from widening the page.
+   Text never reaches it: headings break inside a kept compound before they overflow (base.css) and
+   every track is minmax(0, …). */
+.day { position: relative; overflow-x: clip; padding-bottom: clamp(56px, 6vw, 96px); background: linear-gradient(in oklab to bottom, var(--day)); }
+.day--hub { --day: var(--color-shade-100) 0, var(--color-shade-100) 30%, var(--color-lime-100) 58%, var(--color-sun-100) 100%; }
+.day--center { --day: var(--color-shade-100) 0, var(--color-lime-100) 26%, var(--color-lime-100) 52%, var(--color-sun-100) 74%, var(--color-sun-100) 100%; }
+.day--program { --day: var(--color-shade-100) 0, var(--color-lime-100) 22%, var(--color-sun-100) 70%, var(--color-sun-100) 100%; }
+/* Every inner page closes on the dusk band (its sky starts at sun-100, where the day ends). */
+.dusk__actions { display: flex; flex-wrap: wrap; gap: 12px 16px; align-self: end; }
+.dusk__note { font-size: var(--fs-sm); color: var(--color-on-dusk-2); }
+.dusk__inner > .dusk__note { align-self: start; }
+
+.story__title, .hang__title, .here__title, .related__title, .aims__title, .where__title, .docs__title { font-size: var(--fs-h2); }
+
+/* ---------- P1 hub: filters ---------- */
+.filters { position: relative; z-index: 2; display: grid; gap: 12px; padding-top: clamp(4px, 1vw, 16px); }
+.filters__anchor { position: absolute; top: -24px; }
+.filters__label { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.filters__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+/* Phones: one row that scrolls inside itself (snapping chip to chip), feathered at its far end, so five
+   chips never stack into a column before the first door. The page itself never scrolls sideways. */
+@media (max-width: 599.98px) {
+  .filters { padding-inline: 0; width: 100%; }
+  .filters__label { padding-inline: var(--gutter); }
+  .filters__list { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); padding: 2px var(--gutter) 6px; scrollbar-width: none; mask-image: linear-gradient(to right, black 85%, transparent); }
+  .filters__list::-webkit-scrollbar { display: none; }
+  .filters__list > li { flex: none; scroll-snap-align: start; }
+  .filters__list .chip { min-height: 44px; white-space: nowrap; }
+}
+/* No JS: the chips land on #f-<area> and #f--<status>; :target filters the lists. ui/filters.js adds
+   .js-filters and takes over (hidden attributes, both filters at once). Area ids: work.json focusAreas. */
+.hub:not(.js-filters):has(#f-education:target) [data-areas]:not([data-areas~="education"]),
+.hub:not(.js-filters):has(#f-protection:target) [data-areas]:not([data-areas~="protection"]),
+.hub:not(.js-filters):has(#f-family:target) [data-areas]:not([data-areas~="family"]),
+.hub:not(.js-filters):has(#f-policy:target) [data-areas]:not([data-areas~="policy"]),
+.hub:not(.js-filters):has(#f--active:target) .program-row:not([data-status="active"]),
+.hub:not(.js-filters):has(#f--completed:target) .program-row:not([data-status="completed"]) { display: none; }
+.hub:not(.js-filters):has(#f-education:target) [data-show-for~="education"],
+.hub:not(.js-filters):has(#f-protection:target) [data-show-for~="protection"],
+.hub:not(.js-filters):has(#f-family:target) [data-show-for~="family"],
+.hub:not(.js-filters):has(#f-policy:target) [data-show-for~="policy"] { display: block !important; }
+.hub:not(.js-filters):has(#f-education:target) .chip[data-area="education"],
+.hub:not(.js-filters):has(#f-protection:target) .chip[data-area="protection"],
+.hub:not(.js-filters):has(#f-family:target) .chip[data-area="family"],
+.hub:not(.js-filters):has(#f-policy:target) .chip[data-area="policy"],
+.hub:not(.js-filters):not(:has(.filters__anchor[id^="f-"]:not([id^="f--"]):target)) .chip--all { background: var(--color-blue-700); box-shadow: none; color: var(--color-on-dusk); }
+.hub:not(.js-filters):has(#f-education:target) .chip[data-area="education"] .block-art__sky,
+.hub:not(.js-filters):has(#f-protection:target) .chip[data-area="protection"] .block-art__sky,
+.hub:not(.js-filters):has(#f-family:target) .chip[data-area="family"] .block-art__sky,
+.hub:not(.js-filters):has(#f-policy:target) .chip[data-area="policy"] .block-art__sky { fill: var(--color-sun-400); }
+.hub:not(.js-filters):has(#f--active:target) .seg__opt[data-status="active"],
+.hub:not(.js-filters):has(#f--completed:target) .seg__opt[data-status="completed"],
+.hub:not(.js-filters):not(:has(.filters__anchor[id^="f--"]:target)) .seg__opt[data-status=""] { background: var(--color-ink-900); color: var(--color-lime-50); }
+.filter-empty { padding-block: 24px; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* ---------- P1 hub: the centers as doors in one wall ---------- */
+/* The H2 stands on the wall itself at H1 size: the wall's faded top runs up under it. */
+.places { padding-top: var(--sec); }
+.places__title { position: relative; z-index: 2; font-size: var(--fs-h1); line-height: var(--lh-h1); max-inline-size: 10em; }
+.doorwall { position: relative; margin-top: calc(-0.2 * var(--fs-h1)); }
+.doors { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: clamp(40px, 8vw, 64px); }
+.door { position: relative; isolation: isolate; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+.door__still { position: relative; z-index: -1; aspect-ratio: 4 / 3; container-type: inline-size; transition: opacity 280ms var(--ease-out);
+  mask-image: linear-gradient(to bottom, transparent, black 10% 70%, transparent); }
+.door__img, .door__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Doorway spill: the unit's paint lit on the floor (at most 15% tint, D6.5), growing when the door is
+   chosen. Little Rose has none: plain daylight. */
+.door__spill { position: absolute; inset: 40% 30% 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--unit) 16%, transparent), transparent); opacity: 0.5; transition: opacity 280ms var(--ease-out), scale 280ms var(--ease-out); }
+.door[data-door="closed"] .door__spill { display: none; }
+/* No card: the name and its lines stand on the floor's fade, 48 px into the still on a phone. */
+.door__plate { position: relative; display: grid; justify-items: start; gap: 8px; margin-top: -48px; padding: 0 var(--gutter); }
+.door__name { font: 600 var(--fs-h3) / 1.25 var(--font-display); letter-spacing: var(--track-display); }
+.door__name a { color: var(--color-ink-900); text-decoration: none; }
+.door__name a::after { content: ""; position: absolute; inset: 0; z-index: 2; }
+.door__since { font-size: var(--fs-meta); font-weight: 500; color: var(--color-ink-700); }
+.door__serves { max-width: 34ch; color: var(--color-ink-700); }
+.door__where { display: flex; gap: 6px; align-items: flex-start; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.door__pin { width: 18px; height: 18px; margin-top: 3px; }
+.door__note { max-width: 40ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.door__go { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 4px; font-weight: 600; color: var(--color-blue-700); }
+.door__go span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.door__go .icon { width: 20px; height: 20px; transition: translate var(--d-hover) var(--ease-out); }
+.door__extra { position: relative; z-index: 3; margin-top: -8px; }
+.door:has(.door__name a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: -3px; border-radius: var(--r-md); }
+.door__name a:focus-visible { outline: none; }
+/* Choosing a door: its light grows, the corridor around it dims a little. */
+@media (hover: hover) {
+  .doors:has(.door:hover) .door:not(:hover) .door__still { opacity: 0.72; }
+  .door:hover .door__spill { opacity: 1; scale: 1.25; }
+  .door:hover .door__go span { text-decoration-thickness: 2px; }
+  .door:hover .door__go .icon { translate: 3px 0; }
+}
+/* From 600 px one wall: three doors side by side, each still overlapping its neighbours by 12% and
+   fading across the overlap (their alphas add up to about one, so the wall does not pale between
+   doors). Each door keeps its own column, so a filtered-out door leaves its place empty. The plate
+   stands on the floor under its door: 26% of the wall wide at 1440, centred under it. */
+@media (min-width: 600px) {
+  .doors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .door:nth-child(1) { grid-column: 1; } .door:nth-child(2) { grid-column: 2; } .door:nth-child(3) { grid-column: 3; }
+  .door__still { margin-inline: -12%;
+    mask-image: linear-gradient(to right, transparent, black 22% 78%, transparent), linear-gradient(to bottom, transparent, black 10% 70%, transparent);
+    mask-composite: intersect; }
+  /* The floor under the door is at 78% of the still: the plate starts at 82% (16.7% of the column up). */
+  .door__plate { justify-self: center; width: min(92%, 27rem); margin-top: -16.7%; padding: 0; }
+}
+@media (min-width: 1024px) { .door__plate { width: 78%; } }
+/* The panorama (one render of the whole wall, the three doors at 1/6, 1/2 and 5/6 of its width, so each
+   door stands over its own column): the picture spans the wall at its own ratio (the column is
+   minmax(0, 1fr) and the picture keeps to the top of the row, or the plates' height would widen it past
+   the page). The wall comes out of the plaster over its top 5% (the transoms start at 5%) and the floor
+   sinks into the page from the threshold line (81%) down; the plates start at 89%, on the floor in front
+   of each door and clear of the open leaves' feet (87.6%). */
+.doorwall__pano { display: none; }
+@media (min-width: 600px) {
+  /* At most 72svh tall, so on a wide screen the names at the thresholds still come with their doors;
+     where that leaves margins, the wall's sides fade into the plaster. */
+  .doorwall--pano { display: grid; grid-template-columns: minmax(0, 1fr); width: min(100%, 72svh * var(--ratio)); margin-inline: auto; container-type: inline-size; view-timeline: --wall; }
+  .doorwall--pano > * { grid-area: 1 / 1; }
+  .doorwall__pano { display: block; align-self: start; aspect-ratio: var(--ratio);
+    mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.5) 2.5%, black 5% 80%, rgb(0 0 0 / 0.86) 84%, rgb(0 0 0 / 0.5) 90%, rgb(0 0 0 / 0.16) 95%, transparent), linear-gradient(to right, transparent, black 4% 96%, transparent); mask-composite: intersect; }
+  .doorwall__img, .doorwall__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .doorwall--pano .doors { padding-top: calc(89cqw / var(--ratio)); }
+  .doorwall--pano .door__still { display: none; }
+  .doorwall--pano .door__plate { margin-top: 0; }
+  /* An open doorway's light carried on across the floor where the render's own spill fades out, between
+     the threshold and the name (sun-200, untinted, as the render's spill): it reaches out as the wall
+     scrolls in, and grows when the door is chosen. Little Rose's door is shut: no light comes out of it. */
+  .doorwall--pano .door[data-door="open"]::before, .doorwall--pano .door[data-door="open"]::after {
+    content: ""; position: absolute; z-index: -1; inset-inline: 14%; top: calc(-9cqw / var(--ratio)); height: calc(12cqw / var(--ratio)); pointer-events: none;
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--color-sun-200) 90%, transparent), color-mix(in oklab, var(--color-sun-200) 40%, transparent) 55%, transparent); }
+  .doorwall--pano .door[data-door="open"]::before { opacity: 0.75; }
+  .doorwall--pano .door[data-door="open"]::after { opacity: 0; scale: 0.8; transition: opacity 280ms var(--ease-out), scale 280ms var(--ease-out); }
+}
+@media (min-width: 600px) and (hover: hover) {
+  .doorwall--pano .door[data-door="open"]:hover::after { opacity: 0.8; scale: 1.15; }
+}
+/* Phones: each door is its own 4:5 render from the same spot, shown whole. */
+@media (max-width: 599.98px) {
+  .doorwall--pano .door__still { aspect-ratio: 4 / 5; }
+}
+.places__foot { display: grid; gap: 8px; padding-top: clamp(28px, 3vw, 48px); }
+.places__lead { max-width: 40ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* ---------- P1 hub: projects and programs, the heading held while the rows pass ---------- */
+.times { position: relative; display: grid; gap: 16px 64px; padding-top: calc(var(--sec) * 1.25); }
+.times__head { position: relative; display: grid; gap: 16px; align-content: start; justify-items: start; }
+.times__head > :not(.lam) { position: relative; }
+.times__head h2 { font-size: clamp(2.5rem, 1.3rem + 3vw, 4.5rem); line-height: var(--lh-h1); max-inline-size: 8em; }
+.times__lead { max-width: 30ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+@media (min-width: 1024px) {
+  .times { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); align-items: start; }
+  .times__head { position: sticky; top: 96px; }
+  /* Rows in the 8 columns: name and meta, then the summary and facts under them; the arrow beside. */
+  .times .program-row { grid-template-columns: minmax(0, 1fr) 32px; gap: 16px 32px; }
+  .times .program-row__body { grid-column: 1; }
+  .times .program-row__arrow { grid-column: 2; grid-row: 1; }
+}
+.lam--head { inset: -18% auto -6% -4vw; width: min(120%, 620px); }
+.seg { display: inline-flex; flex-wrap: wrap; justify-self: start; gap: 4px; padding: 4px; margin-top: 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--color-lime-50) 80%, transparent); }
+.seg__opt { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: var(--r-pill); color: var(--color-ink-900); font-size: var(--fs-sm); font-weight: 500; text-decoration: none; white-space: nowrap; transition: background-color var(--d-hover) var(--ease-hover), color var(--d-hover) var(--ease-hover), scale var(--d-press) var(--ease-out); }
+.seg__opt:hover { background: var(--color-lime-100); }
+.seg__opt:active { scale: 0.97; }
+.seg__opt[aria-current="true"] { background: var(--color-ink-900); color: var(--color-lime-50); }
+.seg__light { width: 10px; height: 10px; border-radius: 50%; }
+@media (max-width: 599px) { .seg { padding: 0; gap: 8px; background: none; } .seg__opt { background: color-mix(in srgb, var(--color-lime-50) 80%, transparent); } }
+.seg__light--active { background: var(--color-sun-400); box-shadow: 0 0 0 3px var(--color-sun-200); }
+.seg__light--completed { background: var(--color-shade-300); }
+.times__rows { min-width: 0; }
+/* In the held column the three options stack as a short list under the lead, never a pill row folded
+   in two: plain lines with their light, the chosen one in ink. */
+@media (min-width: 1024px) {
+  .times .seg { flex-direction: column; align-items: flex-start; gap: 6px; padding: 0; background: none; }
+  .times .seg__opt { min-height: 44px; padding: 0 16px 0 12px; }
+}
+
+/* ---------- P2 center: at a glance, a rail of facts beside who it serves ---------- */
+.plate { display: grid; gap: 24px 64px; padding-top: var(--sec); }
+.plate__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
+.plate__label { display: flex; align-items: center; gap: 12px; font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+/* A short paragraph, not a display line: the H1 carries the scale. */
+.plate__statement { margin-top: 10px; max-width: 30ch; font: 500 clamp(1.375rem, 1rem + 1vw, 1.75rem) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: pretty; }
+/* The center's one emblem mark, drawn as light: the Đốt tre block's edge in warm line, its slots lit
+   (blocks.mjs blockIcon), beside the "what we do" label only. */
+.plate__mark { flex: none; width: 26px; height: 26px; overflow: visible; }
+.plate__mark .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.plate__mark .block-icon__light { fill: var(--color-sun-400); }
+.does { list-style: none; padding: 0; display: grid; gap: 10px 48px; margin-top: 14px; }
+.does li { max-width: 34ch; font-size: var(--fs-lg); line-height: var(--lh-lead); }
+.plate__facts { display: flex; flex-wrap: wrap; gap: 18px 40px; margin: 0; }
+.plate__facts dt { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.plate__facts dd { margin: 2px 0 0; font: 600 1.1875rem / 1.6 var(--font-display); letter-spacing: var(--track-display); overflow-wrap: anywhere; }
+@media (min-width: 1024px) {
+  .plate { grid-template-columns: 280px minmax(0, 1fr); }
+  .plate__title, .plate__serves, .plate__does { grid-column: 2; }
+  /* The rail: the facts stacked down the left, in the cool of the header's shade still falling there. */
+  .plate__facts { grid-column: 1; grid-row: 1 / span 3; display: grid; align-content: start; gap: 28px; padding-top: 6px; }
+  .does { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- P2 center: story, its H2 hung in the margin, the figures under the text ---------- */
+.story { position: relative; display: grid; gap: 24px; padding-top: calc(var(--sec) * 1.25); }
+.story > :not(.sun-layer) { position: relative; z-index: 1; }
+.story__title { max-inline-size: 8em; }
+.story__text { display: grid; gap: 20px; align-content: start; max-width: 62ch; }
+.story__first { font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+.story__text > p:not(.story__first) { color: var(--color-ink-700); }
+@media (min-width: 1024px) {
+  .story { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: clamp(40px, 4vw, 64px); }
+  .story__title { grid-column: 1 / span 3; grid-row: 1 / span 2; align-self: start; font-size: clamp(2.25rem, 1.2rem + 2vw, 3.25rem); }
+  .story__text, .story .counts--nested { grid-column: 5 / span 7; }
+}
+.sun-layer--story { top: clamp(48px, 7vw, 120px); left: -10vw; width: min(40vw, 560px); height: clamp(320px, 34vw, 480px); --pitch: 96px; }
+/* The full history opens like a drawer: height and opacity, 240 ms (D5.7 accordion), where supported. */
+.more__body { padding-top: 4px; }
+@supports (interpolate-size: allow-keywords) {
+  .story__more { interpolate-size: allow-keywords; }
+  .story__more::details-content { block-size: 0; opacity: 0; overflow: clip; transition: block-size var(--d-ui) var(--ease-out), opacity var(--d-ui) var(--ease-out), content-visibility var(--d-ui) allow-discrete; }
+  .story__more[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+/* ---------- figures (staging only while unverified): numbers on the wall, never animated ---------- */
+/* One baseline row, no boxes: each number 64 px from the next, its label under it. */
+.counts { display: grid; gap: clamp(28px, 3vw, 40px); padding-top: calc(var(--sec) * 1.25); }
+.counts--nested { padding-top: 0; gap: 14px; }
+.counts__title { font-size: var(--fs-h2); max-inline-size: 14em; }
+.counts--nested .counts__title { font: 600 var(--fs-meta) / 1.6 var(--font-body); letter-spacing: 0; color: var(--color-ink-700); }
+.counts__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 32px 64px; }
+.count { display: grid; gap: 8px; justify-items: start; align-content: start; max-width: 24ch; }
+.count__value { font: var(--wght-h1) var(--fs-stat) / 1 var(--font-display); color: var(--color-ink-900); }
+.count__label { max-width: 24ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* ---------- P2 center: where the photos will hang, drawn in light on one lit wall ---------- */
+.hang { padding-top: calc(var(--sec) * 1.25); }
+.hang__title { margin-bottom: clamp(24px, 3vw, 40px); }
+.hang__wall { margin: 0; display: grid; gap: 14px; }
+.hang__lit { position: relative; display: block; aspect-ratio: 21 / 9; overflow: hidden; }
+@media (max-width: 599px) { .hang__lit { aspect-ratio: 16 / 10; margin-inline: calc(-1 * var(--gutter)); } }
+.hang__still, .hang__still img, .hang__lit > .lit-wall { display: block; width: 100%; height: 100%; }
+.hang__still img { object-fit: cover; }
+/* The wall comes out of the page on every side (no edge of the picture is ever a line) and its floor sinks
+   into it; the frames stand inside the feather. */
+.hang__still { mask-image:
+    linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.16) 3%, rgb(0 0 0 / 0.5) 6%, rgb(0 0 0 / 0.86) 9.5%, black 13% 74%, rgb(0 0 0 / 0.86) 79%, rgb(0 0 0 / 0.5) 87%, rgb(0 0 0 / 0.16) 94%, transparent),
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.16) 3%, rgb(0 0 0 / 0.5) 6.5%, rgb(0 0 0 / 0.86) 10%, black 14% 86%, rgb(0 0 0 / 0.86) 90%, rgb(0 0 0 / 0.5) 93.5%, rgb(0 0 0 / 0.16) 97%, transparent);
+  mask-composite: intersect; }
+/* The six frames to come, in the 8 + 4 + 4 hang (one 8 × 2, two 4 × 1 beside it, three 4 × 1 below), as
+   lines of light on the left wall: 1.5 px of sun-200, light held inside each. */
+.hang__frames { position: absolute; left: 5%; top: 9%; height: 78%; aspect-ratio: 3 / 2; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 5%; }
+.hang__frame { border: 1.5px solid color-mix(in srgb, var(--color-sun-200) 85%, transparent); background: radial-gradient(closest-side, color-mix(in srgb, var(--color-sun-100) 55%, transparent), color-mix(in srgb, var(--color-sun-100) 18%, transparent)); box-shadow: 0 0 18px color-mix(in srgb, var(--color-sun-100) 40%, transparent), inset 0 0 24px color-mix(in srgb, var(--color-sun-200) 45%, transparent); }
+.hang__frame--1 { grid-column: 1 / span 8; grid-row: 1 / span 2; }
+.hang__frame--2 { grid-column: 9 / span 4; grid-row: 1; }
+.hang__frame--3 { grid-column: 9 / span 4; grid-row: 2; }
+.hang__frame--4 { grid-column: 1 / span 4; grid-row: 3; }
+.hang__frame--5 { grid-column: 5 / span 4; grid-row: 3; }
+.hang__frame--6 { grid-column: 9 / span 4; grid-row: 3; }
+.hang__cap { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: var(--fs-meta); color: var(--color-ink-700); }
+.hang__code { font-weight: 600; color: var(--color-blue-700); }
+.hang__code::after { content: " ·"; color: var(--color-ink-500); }
+
+/* ---------- P2 center: programs run here, each one lit band across the page ---------- */
+/* Not the hub's program rows: the heading stands above, and each program is one band the width of the
+   page, its name in Archivo with the status and years on the same baseline, and under it the span as
+   a 6 px louver bar (the program page's timeband, in small) lit up to today. Active work is lit softly
+   at rest, completed work stands in the shade; the band's light rises under a pointer or the focus. */
+.here { padding-top: calc(var(--sec) * 1.25); }
+.here__title { margin-bottom: clamp(16px, 2vw, 28px); }
+.bands { list-style: none; padding: 0; display: grid; gap: 4px; }
+.band { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name meta" "bar bar" "text text"; align-items: baseline; gap: 16px 32px; padding-block: clamp(24px, 2.6vw, 40px); }
+.band::before { content: ""; position: absolute; z-index: -1; inset: 0 calc(-1 * min(var(--gutter), 24px)); pointer-events: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-sun-200) 45%, transparent) 30%, transparent 80%);
+  mask-image: linear-gradient(to right, transparent, black 8% 92%, transparent); opacity: 0.45; transition: opacity var(--d-ui) var(--ease-out); }
+.band[data-status="completed"]::before { opacity: 0; }
+@media (hover: hover) { .band:hover::before { opacity: 1; } .band:hover .band__name a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.18em; } .band:hover .band__go { translate: 3px 0; } }
+.band:focus-within::before { opacity: 1; }
+.band:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 4px; }
+.band a:focus-visible { outline: none; }
+.band__name { grid-area: name; font-size: var(--fs-h3); max-inline-size: 22em; }
+.band__name a { color: var(--color-ink-900); text-decoration: none; }
+.band__name a::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.band__meta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-end; gap: 6px 14px; }
+.band__years { font: 600 var(--fs-sm) / 1.6 var(--font-display); letter-spacing: var(--track-display); font-variant-numeric: tabular-nums lining-nums; color: var(--color-ink-700); }
+.band__go { align-self: center; width: 22px; height: 22px; color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+/* The span: shade slats for the whole run, sun slats up to today (a tick of full sun marks it). Years
+   not yet confirmed: the sun slats fade out along the run with no tick, so the bar never claims a date
+   nobody gave. */
+.band__bar { grid-area: bar; position: relative; height: 6px; }
+.band__bar::before, .band__lit { content: ""; position: absolute; inset: 0; }
+.band__bar::before { background: repeating-linear-gradient(to right, color-mix(in srgb, var(--color-shade-300) 75%, transparent) 0 10px, transparent 10px 14px); mask-image: linear-gradient(to right, black 90%, transparent); }
+.band__lit { right: auto; width: var(--at, 100%); background: repeating-linear-gradient(to right, var(--color-sun-400) 0 10px, transparent 10px 14px); }
+.band__bar[data-span="known"]::after { content: ""; position: absolute; left: var(--at); top: -6px; bottom: -6px; width: 3px; margin-left: -1px; background: var(--color-sun-500); }
+.band__bar:is([data-span="running"], [data-span="open"]) .band__lit { width: 100%; mask-image: linear-gradient(to right, black 30%, transparent 96%); }
+.band__bar[data-span="done"] .band__lit { display: none; }
+.band__text { grid-area: text; max-width: 62ch; color: var(--color-ink-700); }
+@media (max-width: 599px) {
+  .band { grid-template-columns: minmax(0, 1fr); grid-template-areas: "meta" "name" "bar" "text"; gap: 12px; }
+  .band__meta { justify-content: flex-start; }
+  .band__go { display: none; }
+}
+/* How to help: the plea at display size across the page, the needs as one line of lit marks under it. */
+.give { position: relative; display: grid; gap: 28px; padding-top: calc(var(--sec) * 1.25); }
+.give__title { font-size: clamp(2.75rem, 1rem + 5vw, 5.75rem); line-height: var(--lh-h1); max-inline-size: 11em; }
+.give__needs { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 14px clamp(28px, 4vw, 56px); }
+.give__needs li { display: inline-grid; grid-template-columns: 16px minmax(0, 1fr); gap: 14px; align-items: start; max-width: 30ch; font-size: var(--fs-lg); line-height: var(--lh-lead); }
+/* Each need takes the house's quatrefoil of last sun (the footer's mark), not the emblem again. */
+.give__mark { width: 16px; height: 16px; margin-top: 0.55em; fill: var(--color-sun-500); }
+.give__act { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 8px; }
+.give__btn { min-height: 56px; padding: 12px 36px; font-size: var(--fs-lg); }
+@media (max-width: 599px) { .give__btn { width: 100%; } }
+
+/* ---------- related news (P2, P3): one wide list, the date in its own 160 px column ---------- */
+.related { display: grid; gap: 24px 64px; padding-top: calc(var(--sec) * 1.25); }
+.related__list { grid-template-columns: 160px minmax(0, 1fr); }
+.related__list .dated__title { font-size: clamp(1.125rem, 1rem + 0.4vw, 1.375rem); }
+.related__list .dated__dm { font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem); }
+.related__all { grid-column: 1 / -1; }
+@media (max-width: 599px) { .related__list { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- P3 program: summary, its span, aims, where it runs, documents ---------- */
+.lit-head--program .lit-head__title { font-size: clamp(2.5rem, 1.3rem + 3.4vw, 4.75rem); }
+.brief { position: relative; display: grid; gap: 28px; padding-top: var(--sec); }
+.brief > :not(.lam) { position: relative; }
+/* Light through louvers falls across the right of the lead (never behind it): the program's signature. */
+.lam--brief { inset: clamp(24px, 3vw, 56px) -6vw auto auto; height: clamp(220px, 24vw, 340px); width: min(40%, 560px); }
+/* Narrow screens: the stripes stay in the space above the lead and behind the titles, never under text. */
+@media (max-width: 1023px) {
+  .lam--brief { top: 0; height: clamp(48px, 7vw, 64px); width: 80%; }
+  .lam--head { top: -12px; bottom: auto; height: clamp(84px, 16vw, 124px); }
+}
+@media (min-width: 1024px) { .brief { grid-template-columns: repeat(12, minmax(0, 1fr)); } .brief__lead { grid-column: 1 / span 7; } .brief__focus { grid-column: 7 / span 6; } }
+.brief__lead { max-width: 30ch; font: 500 clamp(1.375rem, 1rem + 1vw, 1.75rem) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: pretty; }
+.brief__focus { max-width: 60ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* The span: start, today and end on one line, the louver stripes as the bar (lit up to today, in the
+   shade after). The years are tokens until HCWA confirms them. */
+.span { padding-top: calc(var(--sec) * 0.75); }
+.timeband { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "start bar end"; align-items: center; gap: 12px 24px; }
+.timeband__end { grid-area: end; font: 600 var(--fs-h3) / 1.25 var(--font-display); letter-spacing: var(--track-display); font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.timeband__end--start { grid-area: start; }
+.timeband__bar { grid-area: bar; position: relative; height: 64px; margin-bottom: 28px; }
+.timeband__bar::before, .timeband__lit { content: ""; position: absolute; inset: 0; mask-image: linear-gradient(to right, transparent, black 6% 94%, transparent); }
+.timeband__bar::before { background: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--color-shade-300) 70%, transparent) 0 8px, transparent 8px 14px); }
+.timeband__lit { right: auto; width: var(--at); background: repeating-linear-gradient(to bottom, var(--color-sun-200) 0 8px, transparent 8px 14px); mask-image: linear-gradient(to right, transparent, black 8% 96%, transparent); }
+/* Today: a tick of full sun across the bar, its word under it. */
+.timeband__today { position: absolute; top: -8px; bottom: -30px; left: var(--at); display: grid; align-items: end; padding-left: 10px; border-left: 3px solid var(--color-sun-400); font-size: var(--fs-meta); font-weight: 600; line-height: 1.6; color: var(--color-ink-900); white-space: nowrap; }
+@media (max-width: 599px) {
+  .timeband { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "start end" "bar bar"; }
+  .timeband__end { white-space: normal; text-align: right; }
+  .timeband__end--start { text-align: left; }
+}
+
+/* Goals and activities: two lists across the page, each line numbered in Archivo. Only the goals take
+   the louver light (one striped list per page), sliding along as it passes (pages.css motion). */
+.aims { position: relative; display: grid; gap: clamp(48px, 6vw, 88px) clamp(48px, 6vw, 104px); padding-top: var(--sec); }
+.aims__title { margin-bottom: clamp(12px, 1.6vw, 20px); }
+/* From 1024 the two lists stand side by side, the goals wider and in the light, the activities beside
+   them in the plaster's plain shade, so the page does not run as a column of heading-and-list blocks. */
+@media (min-width: 1024px) { .aims { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } }
+.slats { list-style: none; padding: 0; display: grid; gap: 2px; }
+.slat { position: relative; isolation: isolate; display: grid; grid-template-columns: 4ch minmax(0, 1fr); gap: 20px; align-items: baseline; padding: 18px 16px 18px 0; font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.5rem); font-weight: 500; line-height: 1.6; }
+/* The light of .lam and the program rows: slanted, softened, feathered at both ends, 24 px into the margin. */
+.slats--lit .slat::before { --row-lit: 44%; content: ""; position: absolute; z-index: -1; inset: 0 auto 0 -24px; width: min(60%, 640px); pointer-events: none;
+  background: repeating-linear-gradient(-14deg, color-mix(in srgb, var(--color-sun-200) 65%, transparent) 0 8px, transparent 8px 20px); filter: blur(1.5px); opacity: 0.75;
+  mask-image: linear-gradient(to right, transparent 0, black 8%, black var(--row-lit), transparent calc(var(--row-lit) + 22%)), linear-gradient(to bottom, transparent, black 30% 70%, transparent); mask-composite: intersect; }
+@media (max-width: 599px) { .slats--lit .slat::before { --row-lit: 54%; width: 88%; } }
+.slat__n { font: 600 var(--fs-h3) / 1.6 var(--font-display); letter-spacing: var(--track-display); color: var(--color-gold-700); font-variant-numeric: tabular-nums lining-nums; }
+
+/* Where it runs: one line of names, each behind its small door. */
+.where { padding-top: calc(var(--sec) * 1.25); }
+.where__title { margin-bottom: clamp(20px, 3vw, 40px); }
+.places-row { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px clamp(32px, 5vw, 72px); }
+.place { display: inline-flex; align-items: flex-end; gap: 14px; }
+.place__name { font: 600 clamp(1.75rem, 1.2rem + 1.8vw, 3rem) / 1.1 var(--font-display); letter-spacing: var(--track-display); }
+.place__name a { color: var(--color-ink-900); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.place__name a:hover { text-decoration-thickness: 2px; }
+/* A door in its unit's paint (frame, leaf), its transom lit in the unit's emblem; open doors show the
+   light beyond and spill it on the floor. Little Rose stays shut under plain daylight (D6.5). */
+.place__door { position: relative; display: block; flex: none; width: clamp(30px, 2.6vw, 40px); aspect-ratio: 112 / 196; border: 3px solid var(--unit); border-bottom: 0; border-radius: 2px 2px 0 0; background: var(--color-sun-100); perspective: 300px; }
+.place__transom { position: absolute; inset: 0 0 auto; height: 20%; background: var(--color-sun-200); mask: var(--emblem, none) center / auto 82% repeat-x; }
+.place[data-door="closed"] .place__transom { mask: none; background: var(--color-lime-50); }
+.place__way { position: absolute; inset: 20% 0 0; background: linear-gradient(to bottom, var(--color-sun-100), var(--color-sun-200)); box-shadow: inset 0 3px 0 var(--unit); }
+.place__leaf { position: absolute; inset: 20% 0 0; background: var(--unit); transform-origin: 0 50%; transform: rotateY(-64deg); transition: transform 420ms var(--ease-out); }
+.place[data-door="closed"] .place__leaf { transform: none; }
+.place:has(a:hover) .place__leaf { transform: rotateY(-78deg); }
+.where__notes { display: grid; gap: 8px; max-width: 60ch; margin-top: 28px; }
+.where__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* Documents: the heading above its list, each paper a row lit on hover (no card). */
+.docs { display: grid; gap: clamp(16px, 2vw, 28px); padding-top: calc(var(--sec) * 1.25); }
+.docs__list { list-style: none; padding: 0; display: grid; gap: 4px; }
+.doc { position: relative; isolation: isolate; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 4px 16px; padding: 18px 0; }
+.doc::before { content: ""; position: absolute; z-index: -1; inset: 0 -20px; border-radius: var(--r-md); background: linear-gradient(to right, color-mix(in srgb, var(--color-sun-200) 60%, transparent), transparent 80%); opacity: 0; transition: opacity var(--d-hover) var(--ease-out); }
+@media (hover: hover) { .doc:hover::before { opacity: 1; } }
+.doc__icon { grid-row: span 2; margin-top: 2px; color: var(--color-blue-700); }
+.doc__title { font: 600 1.25rem / 1.3 var(--font-display); letter-spacing: var(--track-display); }
+.doc__meta { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.docs__empty { max-width: 48ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* ---------- scroll-linked light (CSS scroll-driven, transform and opacity only, motion on) ---------- */
+@keyframes door-drift { from { translate: 0 -3%; } to { translate: 0 3%; } }
+/* Thrive Together: the louver light slides along each goal as it passes (transform only). */
+@keyframes slat-slide { from { translate: -14px 0; } to { translate: 14px 0; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"] .door__img img { scale: 1.08; animation: door-drift linear both; animation-timeline: view(); }
+  html[data-motion="on"] .slats--lit .slat::before { animation: slat-slide linear both; animation-timeline: view(); }
+  html[data-motion="on"] .timeband__lit { animation: band-fill linear both; animation-timeline: view(); animation-range: entry 30% cover 50%; transform-origin: left; }
+}
+@keyframes band-fill { from { scale: 0.08 1; } to { scale: 1 1; } }
+/* Our Work: the open doorways' light reaches across the floor as the wall comes in (opacity and scale). */
+@keyframes doorway-light { from { opacity: 0.12; scale: 0.55 0.7; } to { opacity: 0.85; scale: 1; } }
+@supports (animation-timeline: view()) {
+  .door__still { view-timeline: --door; }
+  @media (min-width: 600px) { html[data-motion="on"] .doorwall--pano .door[data-door="open"]::before { animation: doorway-light linear both; animation-timeline: --wall; animation-range: entry 15% cover 50%; } }
+  @media (max-width: 599.98px) { html[data-motion="on"] .doorwall--pano .door[data-door="open"] .door__spill { animation: doorway-light linear both; animation-timeline: --door; animation-range: entry 10% cover 50%; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door__still, .door__spill, .door__go .icon, .place__leaf, .chip, .seg__opt, .doc::before, .band::before, .band__go { transition: none; }
+  .door__img img, .slat::before, .timeband__lit, .door::before, .door__spill { animation: none !important; }
+  .door::after { transition: none; }
+}
+
+/* =====================================================================================================
+   Get Involved, Donate, Contact, 404 (PLAN P4-P7). The same day continues: Get Involved at 17:00 through
+   louvers, Donate in full sun with no picture near the payment details, Contact on the street side of
+   the screen, the 404 in the shade of a wall with one block missing. No section fills, no rules.
+   ===================================================================================================== */
+
+/* A page that does not close on a dusk band hands its last light to the footer's evening sky. */
+.page-contact { --day-end: var(--color-sun-100); }
+.page-gap { --day-end: var(--color-lime-100); }
+
+/* ---------- P4 Get Involved ---------- */
+/* The header's shade warms to lime under the still's long seam, so the first slat's light never lands
+   on the cool wall (that would read as a line between header and body). */
+.page-involve .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 45%, var(--color-lime-100)); }
+.day--involve { --day: var(--color-lime-100) 0, var(--color-sun-100) 46%, var(--color-sun-100) 100%; }
+/* Padding, not margin: a margin would collapse through .day and open a band of body colour under the header. */
+.louvers--page { margin-top: 0; padding-top: clamp(32px, 5vw, 80px); }
+@media (max-width: 599.98px) {
+  .page-involve .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 30%, var(--color-lime-100) 80%); }
+  .louvers--page { padding-top: 64px; }
+}
+/* The slats open as they pass: each lit face widens from a sliver to its full band, the S3 duty cycle
+   in CSS (scroll-driven, transform only; at rest and without support the face is simply open). */
+@keyframes louver-open-face { from { scale: 1 0.16; opacity: 0.55; } to { scale: 1 1; opacity: 1; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"] .louvers--page .louver__face { animation: louver-open-face linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
+}
+/* The header's light comes in through louvers (light.css .lit--louver): here their duty cycle is
+   scrubbed by the header leaving, thin lines of sun at the top of the page that open to full bands as
+   it scrolls away. The sun-in still opens them on load (the smaller of the two wins); reduced motion,
+   pause and no support leave the light whole. */
+@property --louver-duty { syntax: "<length>"; inherits: true; initial-value: 14px; }
+@keyframes louver-duty { from { --louver-duty: 4px; } to { --louver-duty: 14px; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"] .page-involve .lit-head { animation: louver-duty linear both; animation-timeline: view(); animation-range: exit 0% exit 70%; }
+  html[data-motion="on"] .page-involve .lit--louver :is(.lit__light, .lit__screen) {
+    mask-image: repeating-linear-gradient(to bottom, black 0 var(--louver-duty), transparent var(--louver-duty) 14px); mask-size: auto; mask-position: 0 0; mask-repeat: repeat;
+  }
+  html.sun-in[data-motion="on"] .page-involve .lit--louver :is(.lit__light, .lit__screen) {
+    mask-image: repeating-linear-gradient(to bottom, black 0 min(var(--louver), var(--louver-duty)), transparent min(var(--louver), var(--louver-duty)) 14px);
+  }
+}
+
+.faq { display: grid; gap: 28px 64px; padding-top: clamp(80px, 9vw, 144px); }
+@media (min-width: 1024px) {
+  .faq { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; }
+  .faq__title { position: sticky; top: calc(var(--header-h-compact) + 40px); }
+}
+.faq__title { font-size: clamp(2.5rem, 1.2rem + 3.8vw, 5rem); max-inline-size: 7em; }
+.faq__list { display: grid; gap: 4px; }
+/* A question stands on the plaster with no box: under it a feathered underlight of sun (the louver
+   face's light, both ends faded), dark at rest, rising under a pointer and full when the question is
+   open (240 ms). The chevron is a plain mark. */
+.ask { position: relative; isolation: isolate; }
+.ask::before { content: ""; position: absolute; z-index: -1; inset: 0 calc(-1 * min(var(--gutter), 24px)); pointer-events: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-sun-200) 45%, transparent) 30%, transparent 80%);
+  mask-image: linear-gradient(to right, transparent, black 8% 92%, transparent); opacity: 0; transition: opacity var(--d-ui) var(--ease-out); }
+@media (hover: hover) { .ask:hover::before { opacity: 0.6; } }
+.ask[open]::before, .ask:has(summary:focus-visible)::before { opacity: 1; }
+.ask summary { display: grid; grid-template-columns: minmax(0, 1fr) 24px; gap: 24px; align-items: center; min-height: 76px; padding-block: 22px; cursor: pointer; list-style: none; }
+.ask summary::-webkit-details-marker { display: none; }
+.ask__q { font: 600 clamp(1.1875rem, 1rem + 0.55vw, 1.5rem) / 1.35 var(--font-display); letter-spacing: var(--track-display); color: var(--color-ink-900); text-wrap: pretty; }
+.ask__mark { display: grid; place-items: center; width: 24px; height: 24px; color: var(--color-blue-700); }
+.ask__mark .icon { width: 24px; height: 24px; transition: rotate var(--d-ui) var(--ease-out); }
+.ask[open] .ask__mark .icon { rotate: 180deg; }
+@media (hover: hover) { .ask summary:hover .ask__q { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; } }
+.ask__a { padding: 0 0 28px; max-width: 64ch; color: var(--color-ink-700); }
+/* The answer opens like a drawer: height and opacity, 240 ms (D5.7 accordion), where supported. */
+@supports (interpolate-size: allow-keywords) {
+  .ask { interpolate-size: allow-keywords; }
+  .ask::details-content { block-size: 0; opacity: 0; overflow: clip; transition: block-size var(--d-ui) var(--ease-out), opacity var(--d-ui) var(--ease-out), content-visibility var(--d-ui) allow-discrete; }
+  .ask[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+/* ---------- P5 Donate: a header without imagery, a sun band, the H1 as the picture ---------- */
+.sun-head { position: relative; isolation: isolate; overflow-x: clip; padding-bottom: clamp(40px, 6vw, 88px); background: var(--color-sun-100); }
+.sun-head::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 6px; background: var(--color-sun-400); }
+.sun-head__inner { position: relative; z-index: 1; display: grid; gap: 4px 64px; padding-top: 10px; }
+@media (min-width: 1024px) {
+  .sun-head__inner { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: end; }
+  .sun-head .breadcrumb { grid-column: 1 / -1; }
+}
+.sun-head__title { font-size: clamp(3.75rem, 1rem + 10.4vw, 10.5rem); max-inline-size: 6em; }
+.sun-head__side { display: grid; gap: 16px; justify-items: start; padding-bottom: clamp(4px, 1.4vw, 24px); }
+.sun-head__intro { max-width: 30ch; font: 500 var(--fs-statement) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: balance; }
+.sun-head__go { min-height: 56px; padding: 12px 32px; font-size: var(--fs-lg); }
+.sun-head__jump { list-style: none; padding: 0; display: grid; gap: 0; }
+/* The light falls across the H1 only: nothing near the payment details (P5 accept). */
+.sun-layer--donate { top: -24px; left: -8vw; width: min(64vw, 860px); height: clamp(260px, 30vw, 460px); --pitch: 92px; mask-image: radial-gradient(closest-side, black 55%, transparent); }
+/* A lower sun, less shear: each patch keeps the quatrefoil's shape instead of smearing into a blob. */
+.sun-layer--donate::before { transform: rotate(-3deg) skewX(-12deg) scaleY(1.12); opacity: 0.7; }
+@media (max-width: 1023px) { .sun-layer--donate { width: 100vw; height: 220px; } }
+
+.day--donate { --day: var(--color-sun-100) 0, var(--color-lime-100) 18%, var(--color-lime-100) 74%, var(--color-sun-100) 100%; }
+
+/* What a gift does (staging only while the amounts are [tokens]): one statement per line, the amount
+   lit by a band of sun like a word being read. */
+.gifts { display: grid; gap: 24px 64px; padding-top: clamp(48px, 6vw, 96px); }
+@media (min-width: 1024px) { .gifts { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); } }
+.gifts__title { font-size: var(--fs-h3); max-inline-size: 11em; }
+.gifts__list { list-style: none; padding: 0; display: grid; gap: clamp(20px, 2.4vw, 32px); }
+.gift { display: grid; gap: 4px 32px; align-items: baseline; }
+@media (min-width: 600px) { .gift { grid-template-columns: minmax(0, 10rem) minmax(0, 1fr); } }
+.gift__amount { justify-self: start; padding-inline: 0.12em; font: var(--wght-h2) clamp(1.75rem, 1.3rem + 1.4vw, 2.75rem) / 1.15 var(--font-display); letter-spacing: var(--track-display); color: var(--color-ink-900); background: linear-gradient(to bottom, transparent 52%, var(--color-sun-200) 52% 90%, transparent 90%); }
+.gift__text { font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem); font-weight: 500; line-height: 1.6; color: var(--color-ink-900); text-wrap: pretty; }
+
+.give-grid { display: grid; gap: clamp(72px, 8vw, 112px) 64px; padding-top: clamp(80px, 9vw, 144px); align-items: start; }
+@media (min-width: 1024px) { .give-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px clamp(56px, 6vw, 104px); } }
+
+/* The transfer slip: no card, no fills. The two ways to pay are named by text tabs that take a bar of
+   sun under the chosen one; the values stand in rows separated by 28 px of plaster, each label in
+   Archivo. Nothing in it animates; the tabs switch at once. */
+.slip { display: grid; gap: 20px; align-content: start; }
+.slip__head { font-size: var(--fs-h2); }
+.tabs { display: inline-flex; flex-wrap: wrap; justify-self: start; gap: 4px 28px; }
+.tabs__tab { position: relative; min-height: 48px; padding: 0 2px; border: 0; background: none; color: var(--color-ink-700); font: 600 var(--fs-lg) / 1.6 var(--font-display); letter-spacing: var(--track-display); cursor: pointer; transition: color var(--d-hover) var(--ease-hover); }
+.tabs__tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: 4px; height: 4px; background: var(--color-sun-400); transform: scaleX(0); transform-origin: left; }
+.tabs__tab:hover { color: var(--color-ink-900); }
+.tabs__tab[aria-selected="true"] { color: var(--color-ink-900); }
+.tabs__tab[aria-selected="true"]::after { transform: none; }
+.slip__panels { display: grid; gap: 48px; }
+.slip__panel { padding-top: 8px; }
+.slip__panel:focus-visible { outline-offset: 8px; }
+.slip__title { margin-bottom: 20px; font-size: var(--fs-h3); }
+/* With tabs, the tab names the panel; the heading stays for screen readers. */
+.slip.is-tabbed .slip__title { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.slip__body { display: grid; gap: 32px; }
+@media (min-width: 700px) { .slip__body:has(.slip__qr) { grid-template-columns: minmax(0, 1fr) 176px; align-items: start; } }
+.slip__rows { margin: 0; display: grid; gap: 28px; }
+.slip__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; }
+.slip__row dt { font: 600 var(--fs-meta) / 1.6 var(--font-display); letter-spacing: var(--track-display); color: var(--color-ink-700); }
+.slip__row dd { grid-column: 1; margin: 0; display: grid; gap: 6px; justify-items: start; }
+.slip__row > .copy-btn { grid-column: 2; grid-row: 1 / span 2; }
+.slip__hint { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.slip__row .pending-value { white-space: nowrap; }
+/* Phones: the copy button drops under its value, so the value keeps the row's width. */
+@media (max-width: 599px) { .slip__row { grid-template-columns: minmax(0, 1fr); } .slip__row > .copy-btn { grid-column: 1; grid-row: auto; justify-self: start; } }
+/* The QR frame is empty on purpose: the pending outline, never a drawing that could pass for a code. */
+.slip__qr { display: grid; place-content: center; justify-items: center; gap: 10px; aspect-ratio: 1; width: min(100%, 200px); padding: 16px; border: 1.5px dashed var(--color-gold-700); border-radius: var(--r-md); text-align: center; }
+.slip__qr-name { font-weight: 600; }
+.slip__alt { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 24px; }
+.slip__note { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; max-width: 62ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.slip__note .icon { width: 20px; height: 20px; margin-top: 3px; color: var(--color-blue-700); }
+.slip__center { display: grid; gap: 6px; max-width: 62ch; padding-top: 12px; }
+.slip__center-title { font-size: 1.25rem; }
+.slip__center p { color: var(--color-ink-700); }
+
+.tell { display: grid; gap: 14px; align-content: start; }
+.tell__title { font-size: var(--fs-h3); max-inline-size: 13em; }
+.tell__lead { color: var(--color-ink-700); }
+.tell .form { margin-top: 12px; }
+
+.trust { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 40px; padding-top: clamp(80px, 9vw, 128px); }
+.trust__title { font-size: var(--fs-h3); }
+.trust__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 32px; }
+
+/* ---------- P6 Contact: the street side of the screen at 16:30 ---------- */
+.page-contact .lit-head { background: var(--color-lime-100); }
+.lit-head__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.day--contact { --day: var(--color-lime-100) 0, var(--color-lime-100) 28%, var(--color-sun-100) 100%; }
+.reach { display: grid; gap: 72px 64px; padding-top: clamp(48px, 6vw, 96px); align-items: start; }
+@media (min-width: 1024px) {
+  .reach { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: clamp(64px, 7vw, 120px); }
+  .office { position: sticky; top: calc(var(--header-h-compact) + 40px); }
+}
+.reach__title { margin-bottom: clamp(24px, 3vw, 40px); font-size: var(--fs-h2); }
+/* Phones: call, write or find the office first; the form follows. */
+@media (max-width: 1023px) { .office { order: -1; } }
+.form__pair { display: grid; gap: 22px 20px; }
+@media (min-width: 600px) { .form__pair { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+
+/* The office as a house sign: the address in Archivo by the day's sun, phone and email as big links. */
+.office { display: grid; gap: 24px; align-content: start; }
+.office__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
+.office__address { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; font: 600 clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem) / 1.3 var(--font-display); letter-spacing: var(--track-display); color: var(--color-ink-900); text-wrap: balance; }
+.office__sun { width: 24px; height: 24px; margin-top: 0.32em; fill: var(--color-sun-500); }
+.office__lines { display: grid; gap: 18px; margin: 0; }
+.office__lines dt { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.office__lines dd { margin: 2px 0 0; font: 600 var(--fs-h3) / 1.25 var(--font-display); letter-spacing: var(--track-display); font-variant-numeric: tabular-nums lining-nums; overflow-wrap: anywhere; }
+.office__lines a { color: var(--color-ink-900); text-decoration-color: color-mix(in srgb, var(--color-blue-700) 50%, transparent); text-underline-offset: 0.18em; }
+.office__lines a:hover { text-decoration-color: var(--color-blue-700); }
+.office__chat { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.office__app { display: inline-flex; align-items: center; gap: 8px; color: var(--color-ink-900); font-weight: 500; }
+
+/* Each center by its door, in its unit's paint (D7: unit colours only on lime and sun). Little Rose's
+   door stays shut and carries no address. */
+.units { padding-top: clamp(96px, 11vw, 176px); }
+.units__title { margin-bottom: clamp(28px, 3.4vw, 56px); font-size: var(--fs-h2); }
+.units__list { list-style: none; padding: 0; display: grid; gap: 40px 56px; }
+@media (min-width: 900px) { .units__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.unit { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 20px; align-items: start; }
+.unit__door { position: relative; display: block; width: 52px; aspect-ratio: 112 / 196; border: 5px solid var(--unit); border-bottom: 0; border-radius: 3px 3px 0 0; background: linear-gradient(to bottom, var(--color-sun-100), var(--color-sun-200)); perspective: 400px; }
+.unit__leaf { position: absolute; inset: 0; background: var(--unit); transform-origin: 0 50%; transform: rotateY(-58deg); transition: transform 420ms var(--ease-out); }
+.unit[data-door="closed"] .unit__leaf { transform: none; }
+.unit__text { display: grid; gap: 8px; }
+.unit__name { font-size: var(--fs-h3); }
+.unit__name a { color: var(--color-ink-900); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.unit__name a:hover { text-decoration-thickness: 2px; }
+@media (hover: hover) { .unit:has(a:hover) .unit__leaf { transform: rotateY(-74deg); } }
+.unit__line { color: var(--color-ink-700); }
+.unit__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* ---------- P7 404: one block missing, the light pouring through ---------- */
+.day--gap { --day: var(--color-shade-100) 0, var(--color-shade-100) 30%, var(--color-lime-100) 100%; }
+.gap { display: grid; gap: 28px 64px; padding-top: clamp(8px, 2vw, 32px); }
+.gap__still { position: relative; margin-inline: calc(-1 * var(--gutter)); aspect-ratio: 4 / 3; overflow: hidden;
+  mask-image: linear-gradient(to bottom, black 70%, transparent); }
+.gap__still picture, .gap__still img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
+@media (min-width: 1024px) {
+  .gap { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; min-height: calc(100svh - var(--header-h-wide) - var(--bars-h, 0px)); padding-bottom: clamp(32px, 4vw, 64px); }
+  .gap__still { order: 2; margin-inline: 0 calc(-1 * max(var(--gutter), (100vw - var(--container)) / 2)); aspect-ratio: 1;
+    mask-image: linear-gradient(to right, transparent, black 16%), linear-gradient(to bottom, transparent, black 10% 82%, transparent); mask-composite: intersect; }
+}
+.gap__text { display: grid; gap: 20px; justify-items: start; align-content: center; }
+.gap__title { font-size: clamp(2.75rem, 1.2rem + 4.4vw, 5.75rem); max-inline-size: 8em; }
+.gap__lead { max-width: 34ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+.gap__proto { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; max-width: 48ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.gap__proto .icon { width: 20px; height: 20px; margin-top: 3px; color: var(--color-blue-700); }
+.gap .search { width: 100%; margin-top: 8px; }
+.gap__nav { display: grid; gap: 6px; width: 100%; max-width: 480px; margin-top: 12px; }
+.gap__nav-title { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.gap__links { list-style: none; padding: 0; display: grid; }
+.gap__links a { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding-block: 8px;
+  font: 600 clamp(1.5rem, 1.1rem + 1.1vw, 2.125rem) / 1.2 var(--font-display); letter-spacing: var(--track-display); color: var(--color-ink-900); text-decoration: none; }
+.gap__links a::before { content: ""; position: absolute; z-index: -1; inset: 4px -12px; border-radius: var(--r-sm); background: linear-gradient(to right, var(--color-sun-200), transparent 85%); transform: scaleX(0); transform-origin: left; transition: transform var(--d-reveal) var(--ease-out); }
+.gap__links .icon { color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+.gap__links a:focus-visible::before { transform: scaleX(1); }
+@media (hover: hover) {
+  .gap__links a:hover::before { transform: scaleX(1); }
+  .gap__links a:hover .icon { translate: 3px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask::before, .ask__mark .icon, .tabs__tab, .unit__leaf, .gap__links a::before, .gap__links .icon { transition: none; }
+  .ask::details-content { transition: none; }
+}
+
+/* ---------- P8 components page (prototype only) ---------- */
+.sun-head--kit::before { background: var(--color-blue-700); }
+.sun-head--kit .sun-head__title { font-size: var(--fs-h1); max-inline-size: 10em; }
+.sun-head--kit .sun-head__intro { font-size: var(--fs-lg); font-weight: 400; max-width: 40ch; }
+.day--kit { --day: var(--color-sun-100) 0, var(--color-lime-100) 4%, var(--color-lime-100) 100%; }
+.kit { display: grid; gap: 40px 64px; padding-top: clamp(32px, 4vw, 64px); }
+@media (min-width: 1024px) {
+  .kit { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
+  .kit__index { position: sticky; top: calc(var(--header-h-compact) + 32px); }
+}
+.kit__index-title { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.kit__index ol { list-style: none; padding: 0; margin-top: 6px; display: grid; }
+.kit__index a { display: flex; align-items: center; min-height: 36px; font-size: var(--fs-sm); color: var(--color-ink-900); text-decoration: none; }
+.kit__index a:hover { text-decoration: underline; }
+@media (max-width: 1023px) { .kit__index ol { display: flex; flex-wrap: wrap; gap: 0 18px; } .kit__index a { min-height: 44px; } }
+.kit__body { display: grid; gap: clamp(88px, 9vw, 136px); min-width: 0; }
+.kit-sec { display: grid; gap: 24px; min-width: 0; }
+.kit-sec__title { font-size: var(--fs-h2); }
+.kit-sec__note { max-width: 64ch; color: var(--color-ink-700); }
+.kit-states { display: flex; flex-wrap: wrap; align-items: end; gap: 28px 32px; }
+.kit-states--dusk { padding: clamp(20px, 3vw, 32px); border-radius: var(--r-md); background: var(--color-blue-900); }
+.kit-states--dusk .kit-state figcaption { color: var(--color-on-dusk-2); }
+.kit-state { display: grid; gap: 10px; justify-items: start; margin: 0; min-width: 0; }
+.kit-state figcaption { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.kit-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.kit-row { margin-top: 4px; }
+
+/* Type: the Vietnamese test line at every step of the scale; rows breathe in light, no rules. */
+.specimen { display: grid; gap: 4px; }
+.specimen__row { display: grid; gap: 4px 24px; padding: 14px 16px; border-radius: var(--r-sm); }
+.specimen__row:nth-child(odd) { background: color-mix(in srgb, var(--color-lime-50) 70%, transparent); }
+@media (min-width: 900px) { .specimen__row { grid-template-columns: 170px minmax(0, 1fr); align-items: baseline; } }
+.specimen__tag { font-size: var(--fs-meta); color: var(--color-ink-500); }
+.specimen__line { overflow-wrap: anywhere; }
+.specimen__line--display { font-family: var(--font-display); font-weight: var(--wght-h1); line-height: var(--lh-h1); letter-spacing: var(--track-display); }
+.specimen__line--figure { font-size: var(--fs-stat); font-weight: var(--wght-h1); line-height: var(--lh-h1); }
+.specimen__line--statement { font-weight: 500; line-height: var(--lh-lead); }
+.specimen__line--lead { line-height: var(--lh-lead); }
+
+/* Colour: every UI token, then each measured pair with its sample. */
+.swatches { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 14px 20px; }
+.swatches li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 12px; align-items: center; font-size: var(--fs-meta); }
+.swatch { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px rgb(32 32 90 / 0.12); }
+.swatches code { overflow-wrap: anywhere; }
+.swatch__hex { color: var(--color-ink-700); }
+.pairs { width: 100%; margin-top: 12px; border-collapse: collapse; font-size: var(--fs-sm); }
+.pairs td { padding: 8px 12px; vertical-align: middle; }
+.pair:nth-child(odd) { background: color-mix(in srgb, var(--color-lime-50) 70%, transparent); }
+.pair__sample { display: inline-grid; place-items: center; width: 52px; height: 36px; border-radius: var(--r-sm); font: 600 1.25rem / 1.6 var(--font-display); box-shadow: inset 0 0 0 1px rgb(32 32 90 / 0.1); }
+.pair__sample--ui { box-shadow: inset 0 0 0 1px rgb(32 32 90 / 0.1), inset 0 0 0 9px var(--fg); }
+.pair__on, .pair__kind { color: var(--color-ink-700); }
+.pair__ratio { text-align: right; font-weight: 600; }
+.pair__result { font-weight: 600; color: var(--color-ok); }
+.pair--fail .pair__result { color: var(--color-error); }
+@media (max-width: 699px) {
+  .pairs tbody { display: grid; gap: 4px; }
+  .pair { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 8px; border-radius: var(--r-sm); }
+  .pair td { padding: 0; }
+  .pair td:first-child { grid-row: span 2; }
+  .pair__kind { grid-column: 2; }
+  .pair__ratio { grid-column: 3; grid-row: 1; }
+  .pair__result { grid-column: 3; grid-row: 2; text-align: right; }
+}
+
+/* The block set: each block as a piece of the backlit screen, with what it stands for. */
+.blockset { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 32px 24px; }
+.blockset__item { display: grid; gap: 8px; align-content: start; }
+.blockset__art { display: block; width: 100%; max-width: 168px; height: auto; aspect-ratio: 1; border-radius: var(--r-sm); }
+.blockset__name { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; }
+.blockset__use { font-size: var(--fs-meta); color: var(--color-ink-700); }
+
+/* The light layer: a lit header still in a 3:1 box; the button replays S1 (light.css keyframes). */
+.kit-light { position: relative; isolation: isolate; aspect-ratio: 3 / 1; overflow: hidden; border-radius: var(--r-md); }
+@media (max-width: 599px) { .kit-light { aspect-ratio: 4 / 3; } }
+.kit-light.is-sun :is(.lit__light, .lit__screen) {
+  mask-image: linear-gradient(to bottom left, black 45%, transparent 55%); mask-size: 300% 300%; mask-repeat: no-repeat; mask-position: 100% 0%;
+  animation: sun-fade 1000ms cubic-bezier(0.25, 0.1, 0.25, 1) 80ms both, sun-sweep 1500ms cubic-bezier(0.33, 1, 0.68, 1) 80ms both;
+}
+.kit-light.is-sun .lit__light img { transform-origin: 100% 0; animation: sun-drift 2200ms cubic-bezier(0.33, 1, 0.68, 1) 80ms both; }
+
+.kit-forms { display: grid; gap: 22px 32px; max-width: 880px; }
+@media (min-width: 700px) { .kit-forms { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.kit-faq { max-width: 760px; }
+.kit-louvers { margin-top: 24px; }
+.kit-doors { margin-top: 8px; }
+
+.kit-dusk { display: grid; gap: 20px; justify-items: start; padding: clamp(24px, 3vw, 40px); border-radius: var(--r-md); background: var(--color-blue-900); color: var(--color-on-dusk); }
+.kit-dusk__title { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: var(--wght-h2); color: var(--color-on-dusk); }
+.kit-dusk a:not(.btn) { color: var(--color-on-dusk); }
+
+/* Motion tokens: each dot runs its easing or duration across the rail; nothing moves by itself. */
+.kit-motion { display: grid; gap: 48px 64px; }
+@media (min-width: 900px) { .kit-motion { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kit-motion__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 16px; }
+.kit-motion__title { font-size: var(--fs-h3); }
+.tracks { list-style: none; padding: 0; display: grid; gap: 12px; }
+.track { display: grid; gap: 6px; }
+.track__name { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.track__rail { position: relative; display: block; height: 24px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--color-lime-50) 85%, transparent); container-type: inline-size; }
+.track__dot { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--color-sun-500); transition: translate var(--d) var(--e); }
+.is-on .track__dot { translate: calc(100cqi - 24px) 0; }
+html[data-motion="off"] .track__dot { transition: none; }
+.tier-links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 32px; }
+.kit-review { display: grid; gap: 12px; max-width: 64ch; }
+.kit-review__label { margin-top: 12px; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .track__dot { transition: none; }
+  .kit-light.is-sun :is(.lit__light, .lit__screen), .kit-light.is-sun .lit__light img { animation: none; mask-image: none; }
+}

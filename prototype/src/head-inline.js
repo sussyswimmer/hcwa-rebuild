@@ -1,7 +1,8 @@
 // Inlined into <head> by src/lib/head-inline.mjs and run before first paint (05-DESIGN D6.9).
 // Sets data-tier (0 stills, 1 phone world, 2 full world; data-tier-flag when ?tier set it; hcwa:gpu0 = this
 // browser's GPU cannot run the world), data-motion (on|off), data-reduced
-// (the OS asks for less motion), sun-pending (the CSS sun-in will play), wf (fonts cached) and,
+// (the OS asks for less motion), sun-pending (the CSS sun-in will play), stages (the home's world sections
+// take their sticky stage layout: decided here so it never jumps), wf (fonts cached) and,
 // on staging, drafts-hidden (the reviewer hid the draft outlines this session).
 // Statements end in semicolons: the file is joined onto one line. Budget 1.5 KB.
 (function (d, w) {
@@ -19,6 +20,7 @@
   if (reduced) h.setAttribute("data-reduced", "");
   var cls = ["js"];
   if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending");
+  if (!off && tier > 0) cls.push("stages");
   if (get("sessionStorage", "hcwa:wf")) cls.push("wf");
   if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden");
   h.className = (h.className + " " + cls.join(" ")).trim();

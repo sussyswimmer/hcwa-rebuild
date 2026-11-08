@@ -1,7 +1,7 @@
 import { ExtrudeGeometry, InstancedMesh, Matrix4, Mesh, Path, PlaneGeometry, ShaderMaterial, Shape } from "three";
 import { APERTURE } from "../glsl/aperture.js";
 import { BLOCK, BLOCKS, DEPTH, HOA_THI } from "../glsl/blocks.js";
-import { LEAF, NOISE } from "../glsl/noise.js";
+import { DITHER, LEAF, NOISE } from "../glsl/noise.js";
 import { STREET } from "./sky.js";
 
 // The breeze-block screen, backlit: a logo-blue silhouette (--color-world-screen-face) with
@@ -9,15 +9,16 @@ import { STREET } from "./sky.js";
 // are shared by both tiers; only how the hole is made differs.
 const FACE = /* glsl */ `
 uniform vec3 uFace, uGlow, uRim, uWall;
-uniform float uRimI; // uTime comes with STREET
+uniform float uRimI, uHaloA, uHaloW; // uTime comes with STREET
 // d: hole SDF at this pixel (> 0 on the face), fw: its change per pixel. Cast blocks vary ±6% in
 // tone, 8 mm mortar joints sit 20% darker, and the street light halates 1.2 cm into the face
-// (world units, so the glow keeps its size at every distance).
+// (world units, so the glow keeps its size at every distance; the passage widens it as the camera nears
+// a hole, the eye adjusting to the light).
 vec3 faceColor(vec2 c, vec3 P, float d, float fw){
   vec3 col = uFace * (0.94 + 0.12 * h21(floor((P.zy - vec2(uZ0, uY0)) / uB)));
   float jd = 0.5 * uB - max(abs(c.x), abs(c.y));
   col *= 1. - 0.2 * (1. - smoothstep(0.004, 0.004 + fw, jd));
-  col = mix(col, uGlow, 0.35 * exp(-max(d, 0.) / 0.012));
+  col = mix(col, uGlow, uHaloA * exp(-max(d, 0.) / uHaloW));
   return col;
 }
 // A hole wall at H with inward normal n: sunlit where the sun reaches it through the
@@ -44,6 +45,7 @@ varying vec3 vP; varying vec3 vN;
 ${BLOCKS}
 ${APERTURE}
 ${NOISE}
+${DITHER}
 ${LEAF}
 ${STREET}
 ${FACE}
@@ -79,6 +81,7 @@ function sdfScreen(U, s) {
         }
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>
+        DITHER_OUT;
       }`,
     toneMapped: false,
   });
@@ -132,6 +135,7 @@ function instancedScreen(U, s) {
         }
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>
+        DITHER_OUT;
       }`,
     toneMapped: false,
   });
@@ -146,3 +150,15 @@ function instancedScreen(U, s) {
 }
 
 export const screenMesh = (U, s, tier) => (tier >= 2 ? instancedScreen(U, s) : sdfScreen(U, s));
+
+// One block of the screen as the analytic SDF (the passage's hero block on Tier 2): at 35 cm a 40-sample
+// quatrefoil shows its facets; the SDF is exact at any distance. Same grid, same light as the screen.
+export function blockMesh(U, s, center) {
+  const h = BLOCK / 2;
+  return sdfScreen(U, { sx: s.sx, z0: center.z - h, z1: center.z + h, y0: center.y - h, y1: center.y + h });
+}
+// The instance index of the block centred at `center` (instancedScreen lays columns, then rows).
+export function blockIndex(s, center) {
+  const rows = Math.round((s.y1 - s.y0) / BLOCK);
+  return Math.floor((center.z - s.z0) / BLOCK) * rows + Math.floor((center.y - s.y0) / BLOCK);
+}

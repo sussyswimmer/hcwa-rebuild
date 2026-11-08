@@ -65,5 +65,7 @@
   "partnersTitle": { "vi": "Cảm ơn các đối tác đã đồng hành", "en": "With thanks to our partners" },
   "contactBand": {
     "title": { "vi": "Bạn có câu hỏi hoặc muốn đến thăm?", "en": "Have a question or want to visit?" }
-  }
+  },
+  "partnerLogos": [],
+  "_partnerLogosNote": "One-tone logos HCWA has approved, as { name, src, approved }. Home shows the partners section only with 4 or more approved (PLAN H9); staging shows a pending strip until then."
 }

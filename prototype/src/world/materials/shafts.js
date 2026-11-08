@@ -11,7 +11,9 @@ import { EXPOSURE } from "../colors.js";
 // analytically, so no depth buffer is needed; density comes from the baked lime-wash noise
 // (shifted by the scroll wind, which is the shimmer). Then a 9-tap tent upsample, screen-blended
 // (1 − (1 − dst)(1 − src)): light over light never clips one channel ahead of the others.
-export function createShafts(gl, U, { box, tier, ortho, steps = null }) {
+// mask: { glsl, call } for sets lit through glsl/apertures.js (the stills): the chunk that defines the
+// light's mask and the expression that reads it at p; the room uses sunMask() and the canopy.
+export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = null }) {
   const rt = new WebGLRenderTarget(1, 1, { depthBuffer: false, minFilter: LinearFilter, magFilter: LinearFilter });
   const local = {
     uInvP: { value: new Matrix4() },
@@ -33,9 +35,8 @@ export function createShafts(gl, U, { box, tier, ortho, steps = null }) {
       uniform float uSunI, uDensity, uExposure, uCapScale, uTime;
       uniform sampler2D uLime;
       ${BLOCKS}
-      ${APERTURE}
       ${NOISE}
-      ${LEAF}
+      ${mask ? mask.glsl + "\n#define SHAFT_L uLt[0]" : APERTURE + LEAF + "\n#define SHAFT_L uL"}
       ${DISPLAY}
       ${CAPS}
       void main(){
@@ -46,10 +47,10 @@ export function createShafts(gl, U, { box, tier, ortho, steps = null }) {
         float dt = tExit / float(STEPS), j = h21(gl_FragCoord.xy) * dt, acc = 0.;
         for (int i = 0; i < STEPS; i++) {
           vec3 p = ro + rd * (j + dt * float(i));
-          float m = sunMask(p);
-          if (m > 0.) acc += m * leaf(p, uTime) * (0.5 + 0.5 * texture2D(uLime, (vec2(p.x + p.y, p.z) + uWind.xz) * 0.3).r) * dt;
+          float m = ${mask ? mask.call : "sunMask(p)"};
+          if (m > 0.) acc += m ${mask ? "" : "* leaf(p, uTime)"} * (0.5 + 0.5 * texture2D(uLime, (vec2(p.x + p.y, p.z) + uWind.xz) * 0.3).r) * dt;
         }
-        float g = .45, mu = dot(rd, uL), hg = (1. - g * g) / pow(1. + g * g - 2. * g * mu, 1.5) / 12.566;
+        float g = .45, mu = dot(rd, SHAFT_L), hg = (1. - g * g) / pow(1. + g * g - 2. * g * mu, 1.5) / 12.566;
         vec3 col = uSunCol * uSunI * uDensity * acc * (0.02 + 0.3 * hg) * capAt(gl_FragCoord.xy * uCapScale);
         gl_FragColor = vec4(toSRGB(neutralTM(col, uExposure)), 1.);
       }`,

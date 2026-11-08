@@ -1,4 +1,4 @@
-import { Vector4 } from "three";
+import { Vector2, Vector4 } from "three";
 import { PAD } from "../frame.js";
 
 // Patch intensity inside text rects is capped per kind of text with a 24 px feather (05-DESIGN
@@ -15,7 +15,9 @@ uniform vec4 uCaps[${MAX_CAPS}];
 uniform float uCapLv[${MAX_CAPS}];
 uniform int uCapN;
 uniform float uCapFeather;
+uniform vec2 uCapShift; // the text's scroll since the rest pose (device px, y up): the canvas is fixed
 float capAt(vec2 p){
+  p -= uCapShift;
   float m = 1.;
   for (int i = 0; i < ${MAX_CAPS}; i++) {
     if (i >= uCapN) break;
@@ -32,6 +34,7 @@ export const capUniforms = () => ({
   uCapLv: { value: new Array(MAX_CAPS).fill(1) },
   uCapN: { value: 0 },
   uCapFeather: { value: 24 },
+  uCapShift: { value: new Vector2() },
 });
 
 // rects: CSS px at rest ({ x, y, w, h, kind }); h: canvas height in CSS px.

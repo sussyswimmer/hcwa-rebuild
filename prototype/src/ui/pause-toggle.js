@@ -1,4 +1,4 @@
-import { $$, store } from "./dom.js";
+import { $$, i18n, store } from "./dom.js";
 import { bus } from "../bus.js";
 
 // Tạm dừng chuyển động / Pause motion (WCAG 2.2.2, 05-DESIGN D5.6). Stops what moves by itself on this
@@ -10,7 +10,12 @@ export function initPauseToggle() {
   const root = document.documentElement;
   const buttons = $$("[data-motion-toggle]");
   const paused = () => root.dataset.motion === "off";
-  const sync = () => buttons.forEach((b) => b.setAttribute("aria-pressed", String(paused())));
+  // The label says what a press will do; the icon matches it (no aria-pressed: one signal, not two).
+  const sync = () => buttons.forEach((b) => {
+    b.dataset.paused = String(paused());
+    const label = b.querySelector(".pause-toggle__label");
+    if (label) label.textContent = paused() ? i18n.motionPlay : i18n.motionPause;
+  });
   sync();
   bus.state.paused = paused();
   buttons.forEach((b) => b.addEventListener("click", () => {

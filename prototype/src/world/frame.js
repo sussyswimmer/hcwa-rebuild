@@ -98,7 +98,7 @@ export function edgePads(rects, bucket) {
 }
 
 // Separating axis test, convex polygon (shifted by sx, sy) against a padded rect.
-function hits(poly, sx, sy, r) {
+export function hits(poly, sx, sy, r) {
   if (poly.length < 3) return false;
   const x0 = r.x - PAD - sx, x1 = r.x + r.w + PAD - sx, y0 = r.y - (r.padTop ?? PAD) - sy, y1 = r.y + r.h + PAD - sy;
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;

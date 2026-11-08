@@ -1,22 +1,19 @@
 import { html } from "../../lib/html.mjs";
-import { placeholder, sectionHead } from "../../partials/components.mjs";
+import { viKeep } from "../../lib/vikeep.mjs";
+import { louvers } from "../../partials/louvers.mjs";
 
-// Home H8 how you can help. Phase 1 placeholder until rebuilt. Owner: page stream (prototype/PLAN.md section 3).
+// Home H8 how you can help (Action). The shutters have just opened onto it: four full-width louver
+// slats in big type on sun-100, and the page's only sun button, on the Ủng hộ row. It rises into the
+// shutters stage when that stage is live (pages.css); stacked, it simply follows the still.
+// Owner: page stream (prototype/PLAN.md section 3).
 export function help(c) {
   const { site, involve } = c.content;
   return html`
-<section class="section section--help" aria-labelledby="help-title" data-reveal>
+<section class="wall wall--light help" id="help" aria-labelledby="help-title">
+  <span class="sun-layer sun-layer--help" aria-hidden="true"></span>
   <div class="container">
-    ${sectionHead(c, { id: "help-title", title: c.tx(site.helpTitle) })}
-    <ul class="ways">
-      ${involve.ways.map(
-        (w) => html`<li class="way">
-          ${placeholder(c, { code: w.art, label: w.title, ratio: "1:1", illustration: true }, "way__art")}
-          <h3><a href="${c.url(w.page === "partner" ? "partner" : w.page === "in-kind" ? "inKind" : w.page)}">${c.tx(w.title)}</a></h3>
-          <p${c.d(w.text)}>${c.tx(w.text)}</p>
-        </li>`,
-      )}
-    </ul>
+    <h2 class="help__title" id="help-title" data-reveal data-reveal-on="entry">${viKeep(c.tx(site.helpTitle))}</h2>
   </div>
+  ${louvers(c, involve.ways)}
 </section>`;
 }

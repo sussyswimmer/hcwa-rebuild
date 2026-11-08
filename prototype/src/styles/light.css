@@ -9,6 +9,12 @@
    the ceiling and never slides the lattice down into the H1. */
 .lit img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; }
 
+/* Inner-page lit headers (posters.mjs litStill): the subject keeps the right of the 3:1 still, so a box
+   taller than 3:1 crops the plain wall on the left (where the H1 sits), never the subject. The phone crop
+   (4:3, text below it) is centred. */
+.lit--still img { object-position: 100% 50%; }
+@media (max-width: 599.98px) { .lit--still img { object-position: 50% 50%; } }
+
 /* head-inline.js sets sun-pending before first paint when the sun-in will play; motion/sun-in.js adds
    sun-in once both light layers have decoded. If neither script runs, the light still arrives at rest. */
 html.sun-pending :is(.lit__light, .lit__screen) { opacity: 0; animation: sun-safety 1ms 3s forwards; }
@@ -35,6 +41,27 @@ html.sun-in .lit__light img {
 @keyframes sun-drift { from { translate: 3% -14%; scale: 1.16; } to { translate: 0 0; scale: 1; } }
 @keyframes sun-sweep { from { mask-position: 0% 100%; } to { mask-position: 100% 0%; } }
 
+/* Get Involved (PLAN P4): the light comes in through louvers. Stripes 14 px apart open from nothing to
+   solid (duty 0 → 1) over 1200 ms instead of the diagonal sweep; the room's light still drifts down. */
+@property --louver { syntax: "<length>"; inherits: false; initial-value: 0px; }
+html.sun-in .lit--louver :is(.lit__light, .lit__screen) {
+  mask-image: repeating-linear-gradient(to bottom, black 0 var(--louver), transparent var(--louver) 14px);
+  mask-size: auto; mask-position: 0 0; mask-repeat: repeat;
+  animation:
+    sun-fade 1000ms cubic-bezier(0.25, 0.1, 0.25, 1) 80ms both,
+    louver-open 1200ms cubic-bezier(0.33, 1, 0.68, 1) 80ms both;
+}
+@keyframes louver-open { from { --louver: 0px; } to { --louver: 14px; } }
+
+/* Green Bamboo and Thrive Together (P2, P3): once the sun is in, the light layer drifts at 0.12× the
+   scroll as the header leaves (transform only, CSS scroll-driven where supported, still elsewhere). */
+@supports (animation-timeline: view()) {
+  html:not(.sun-in) .lit--drift :is(.lit__light, .lit__screen) { animation: lit-drift linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+  @keyframes lit-drift { to { translate: 0 12%; } }
+  html[data-motion="off"] .lit--drift :is(.lit__light, .lit__screen) { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.sun-pending :is(.lit__light, .lit__screen), html.sun-in :is(.lit__light, .lit__screen), html.sun-in .lit__light img { opacity: 1; animation: none; mask-image: none; }
+  .lit--drift :is(.lit__light, .lit__screen) { animation: none !important; translate: none; }
 }

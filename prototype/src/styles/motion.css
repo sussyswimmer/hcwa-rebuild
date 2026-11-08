@@ -1,14 +1,50 @@
 /* Reveals and the motion switches (05-DESIGN D5.4, D5.6). Content is visible by default:
    JS adds .reveal-pending only when motion is allowed, so no JS, reduced motion and pause show everything. */
-[data-reveal] { transition: opacity var(--d-reveal) var(--ease-out), translate var(--d-reveal) var(--ease-out); }
+[data-reveal]:not([data-reveal="stagger"]), [data-reveal="stagger"] > * { transition: opacity var(--d-reveal) var(--ease-out), translate var(--d-reveal) var(--ease-out); }
+[data-reveal="stagger"] > * { transition-delay: calc(var(--i, 0) * var(--stagger)); }
 .reveal-pending { opacity: 0; translate: 0 12px; }
+/* reveal-rise (D5.4) on section titles: the line climbs 0.6em out of a mask at the heading's own foot.
+   The clip leaves room for stacked diacritics above and descenders below, so nothing is cut at rest. */
+[data-reveal="rise"] { clip-path: inset(-0.6em -1em -0.28em -1em); }
+[data-reveal="rise"] > span { display: block; transition: opacity var(--d-reveal) var(--ease-out), translate var(--d-reveal) var(--ease-out); }
+[data-reveal="rise"].reveal-pending { opacity: 1; translate: none; }
+[data-reveal="rise"].reveal-pending > span { opacity: 0; translate: 0 0.6em; }
 
 /* Paused (data-motion="off") and reduced motion: nothing moves by itself. Hover color changes stay. */
-html[data-motion="off"] [data-reveal], html[data-motion="off"] .sheet[open], html[data-motion="off"] .sheet::backdrop { transition: none; animation: none; }
-html[data-motion="off"] .reveal-pending { opacity: 1; translate: none; }
+html[data-motion="off"] [data-reveal], html[data-motion="off"] [data-reveal] > *, html[data-motion="off"] .sheet[open], html[data-motion="off"] .sheet::backdrop { transition: none; animation: none; }
+html[data-motion="off"] .reveal-pending, html[data-motion="off"] .reveal-pending > span { opacity: 1; translate: none; }
+/* Focus inside a group still waiting to reveal: reveals.js shows the whole group at once, no transition. */
+.reveal-instant, .reveal-instant > *, .reveal-instant > span { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal], .site-header, .logo img, .nav__sub, .nav__toggle .icon, .sheet summary .icon, .foot-col summary .icon, .more summary .icon, .accordion summary .icon, .method summary .icon, .btn, .center-card, .text-link .icon, .program-row__arrow { transition: none; }
-  .reveal-pending { opacity: 1; translate: none; }
+  [data-reveal], [data-reveal] > *, .site-header, .logo img, .nav__sub, .nav__toggle .icon, .sheet summary .icon, .foot-col summary .icon, .more summary .icon, .accordion summary .icon, .method summary .icon, .btn, .text-link .icon, .program-row__arrow { transition: none; }
+  .reveal-pending, .reveal-pending > span { opacity: 1; translate: none; }
   .sheet[open], .sheet::backdrop { animation: none; }
-  .spinner { animation-duration: 2.4s; }
+  /* Sending, held still: the ring at rest, softly dimmed, beside the "Đang gửi…" / "Sending…" label. */
+  .spinner { animation: none; opacity: 0.6; }
 }
+
+/* Page to page (05-DESIGN D5.5, D0.5): one day carried across the change, no white flash. The old page
+   is wiped left to right by a soft mask (440 ms), the new one rises 8 px into place (360 ms, 80 ms in);
+   the header holds still. Off under reduced motion; transitions.js skips it when motion is paused. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+.site-header { view-transition-name: site-header; }
+::view-transition-group(site-header) { animation: none; }
+::view-transition-old(root) {
+  animation: vt-wipe 440ms var(--ease-in-out) both;
+  mask-image: linear-gradient(to right, transparent 40%, black 60%); mask-size: 300% 100%; mask-repeat: no-repeat;
+}
+::view-transition-new(root) { animation: vt-rise 360ms var(--ease-out) 80ms both; }
+@keyframes vt-wipe { from { mask-position: 100% 0; } to { mask-position: 0% 0; } }
+@keyframes vt-rise { from { opacity: 0; translate: 0 8px; } }
+/* back (a traverse to an earlier entry): the wipe runs right to left, the way you came. */
+html:active-view-transition-type(back)::view-transition-old(root) { mask-image: linear-gradient(to left, transparent 40%, black 60%); animation-name: vt-wipe-back; }
+@keyframes vt-wipe-back { from { mask-position: 0% 0; } to { mask-position: 100% 0; } }
+/* lang (the VI / EN switch): the same page in the other language, so no wipe and no rise, a 180 ms
+   crossfade; the header's words cross over in the same time. */
+html:active-view-transition-type(lang)::view-transition-old(root) { mask-image: none; animation: vt-fade-out 180ms var(--ease-out) both; }
+html:active-view-transition-type(lang)::view-transition-new(root) { animation: vt-fade-in 180ms var(--ease-out) both; }
+html:active-view-transition-type(lang)::view-transition-group(site-header) { animation-duration: 180ms; }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }

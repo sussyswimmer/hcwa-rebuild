@@ -1,8 +1,11 @@
 import { html, raw } from "../lib/html.mjs";
 import { routes } from "../routes.mjs";
-import { icon, button, pauseToggle } from "./components.mjs";
+import { icon, button, pauseToggle, quatrefoil } from "./components.mjs";
 import { worldCanvas } from "./world.mjs";
 import { headInline } from "../lib/head-inline.mjs";
+import { pageReveal } from "../motion/transitions.js";
+import { viKeep } from "../lib/vikeep.mjs";
+import { still, hasStill } from "./still.mjs";
 
 // Absolute hreflang URLs need the deployed origin; Netlify sets URL during builds.
 const BASE = (process.env.SITE_URL ?? process.env.URL ?? "").replace(/\/$/, "");
@@ -35,7 +38,7 @@ const langSwitch = (c, cls = "") => {
   // Visible "VI" stays inside the accessible name (WCAG 2.5.3): "VI (Tiếng Việt)".
   const link = (l, name) =>
     html`<a href="${r[l]}" lang="${l}" hreflang="${l}"${l === c.lang ? raw(' aria-current="true"') : ""}>${l.toUpperCase()}<span class="sr-only"> (${name})</span></a>`;
-  return html`<div class="lang-switch${cls ? " " + cls : ""}" role="group" aria-label="${c.t("language")}">${link("vi", "Tiếng Việt")}<span aria-hidden="true">/</span>${link("en", "English")}</div>`;
+  return html`<div class="lang-switch${cls ? " " + cls : ""}" role="group" aria-label="${c.t("language")}" data-lang-switch>${link("vi", "Tiếng Việt")}<span aria-hidden="true">/</span>${link("en", "English")}</div>`;
 };
 
 const desktopNav = (c) => html`<nav class="nav" aria-label="${c.t("mainNav")}" data-text-safe>
@@ -101,20 +104,33 @@ const header = (c, over) => html`<div class="header-slot${over ? " header-slot--
   </header>
 </div>`;
 
+// H11 the dusk footer, every page (05-DESIGN D7): the room at 18:00 as a still band (once the world has
+// rendered it), a row of breeze blocks against the evening, the house's name in big type, four columns
+// (accordions below 1024 px) with the day's last sun by the address, and the blue-950 bar.
 const footer = (c) => {
   const s = c.content.site;
-  const col = (title, body) => html`<details class="foot-col" open><summary><h2>${title}</h2>${icon("chevron")}</summary><div class="foot-col__body">${body}</div></details>`;
+  // A disclosure button below 1024 px (ui/footer.js folds the columns there), a plain heading above it.
+  // Without JS every column stays open.
+  let n = 0;
+  const col = (title, body) => {
+    const id = `foot-col-${++n}`;
+    return html`<div class="foot-col"><h2 class="foot-col__title"><span class="foot-col__label">${title}</span><button class="foot-col__toggle" type="button" aria-expanded="true" aria-controls="${id}">${quatrefoil("foot-col__mark")}<span>${title}</span>${icon("chevron")}</button></h2><div class="foot-col__body" id="${id}">${body}</div></div>`;
+  };
   const links = (keys) => html`<ul>${keys.map((k) => html`<li><a href="${c.url(k)}">${c.t(k)}</a></li>`)}</ul>`;
   return html`<footer class="site-footer">
+    ${hasStill("dusk") ? html`<div class="site-footer__still" aria-hidden="true">${still("dusk", "site-footer__dusk")}</div>` : ""}
+    <div class="footer-edge" aria-hidden="true"></div>
+    <div class="container site-footer__sign">
+      <picture><source type="image/webp" srcset="/img/hcwa-logo.webp"><img src="/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
+      <p class="site-footer__name">${viKeep(c.tx(s.orgName))}</p>
+    </div>
     <div class="container site-footer__grid">
       <div class="foot-brand">
-        <picture><source type="image/webp" srcset="/img/hcwa-logo.webp"><img src="/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
-        <p class="foot-brand__name">${c.tx(s.orgName)}</p>
         <p${c.d(s.description)}>${c.tx(s.description)}</p>
         <p class="foot-brand__reg"${c.d(s.registration)}>${c.tx(s.registration)}</p>
       </div>
       ${col(c.t("contact"), html`<ul class="foot-contact" data-draft>
-        <li>${icon("pin")}<span>${c.tx(s.address)}</span></li>
+        <li class="foot-contact__address">${quatrefoil("foot-contact__sun")}<span>${c.tx(s.address)}</span></li>
         <li>${icon("phone")}<a href="tel:${s.phone.tel}">${s.phone.display}</a></li>
         <li>${icon("mail")}<a href="mailto:${s.email.general}">${s.email.general}</a></li>
         <li>${icon("external")}<a href="${s.mapUrl}">${c.t("openMap")}</a></li>
@@ -130,7 +146,7 @@ const footer = (c) => {
     <div class="site-footer__bar">
       <div class="container site-footer__bottom">
         <p>© ${new Date().getFullYear()} HCWA</p>
-        <p class="foot-social"><a href="${s.facebook}">Facebook</a></p>
+        <p class="foot-social">${c.t("followUs")}: <a href="${s.facebook}">Facebook</a></p>
         ${langSwitch(c)}
         ${pauseToggle(c, "pause-toggle--dusk")}
       </div>
@@ -138,19 +154,24 @@ const footer = (c) => {
   </footer>`;
 };
 
+
 // English-speaking visitors on VI pages get a dismissible pointer to /en/ (07-BILINGUAL).
 const enBar = (c) =>
   c.lang === "vi"
-    ? html`<div class="en-bar" lang="en" data-en-bar hidden>
-        <div class="container en-bar__inner">
+    ? html`<aside class="en-bar" aria-label="${c.t("enBarLabel")}" data-en-bar hidden>
+        <div class="container en-bar__inner" lang="en">
           <a href="${routes[c.routeKey].en}" hreflang="en">${c.t("enBar")}${icon("arrow")}</a>
           <button class="icon-btn icon-btn--sm" type="button" data-dismiss-en-bar aria-label="${c.t("enBarDismiss")}">${icon("close")}</button>
         </div>
-      </div>`
+      </aside>`
     : "";
 
 // Staging only. The reviewer toggle hides the dashed draft outlines for this session (05-DESIGN D7).
 const prototypeNote = (c) => (c.prod ? "" : html`<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">${c.t("prototypeNote")}</span><span class="proto-note__short">${c.t("prototypeNoteShort")}</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>${c.t("draftHide")}</button></div></div>`);
+
+// The View Transition type (back, lang) is chosen in pagereveal, before first render: a classic script in
+// <head>, after head-inline.js has set data-motion (motion/transitions.js).
+const vtScript = raw(`<script>(${pageReveal})();</script>`);
 
 // Strings the client script needs, in the page language.
 const clientStrings = (c) =>
@@ -159,6 +180,8 @@ const clientStrings = (c) =>
   ).replace(/</g, "\\u003c")}</script>`);
 
 // lit: the page opens on a lit header (base still + light layer), so the head script may set sun-pending.
+// The bar stays above the still (its feathered foot crosses the still's ceiling), so a transom or a
+// screen at the top of a still is never under the nav.
 // world: the page carries the fixed world canvas (home); its header starts transparent over the hero.
 export function layout(c, { title, description, body, bodyClass = "", lit = false, world = false }) {
   const r = routes[c.routeKey];
@@ -170,6 +193,7 @@ export function layout(c, { title, description, body, bodyClass = "", lit = fals
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${headInline(c.prod)}
+${vtScript}
 <title>${fullTitle}</title>
 <meta name="description" content="${description}">
 ${c.prod ? "" : raw('<meta name="robots" content="noindex, nofollow">')}

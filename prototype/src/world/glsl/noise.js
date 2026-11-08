@@ -45,3 +45,11 @@ float leaf(vec3 P, float time){
   return mix(1., 0.42 + 0.68 * smoothstep(0.36, 0.64, n), uLeafAmt);
 }
 `;
+
+// Half a display level of noise on the output (sRGB): long soft gradients (the halation round a hole, the
+// wash clearing over the scene, the quatrefoil vignette) otherwise step into visible rings at 8 bits.
+// Interleaved gradient noise: no texture, no dependency.
+export const DITHER = /* glsl */ `
+float ign(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+#define DITHER_OUT gl_FragColor.rgb += (ign(gl_FragCoord.xy) - .5) / 255.
+`;

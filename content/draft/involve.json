@@ -54,5 +54,43 @@
     { "q": { "vi": "Tôi có thể tặng hiện vật gì?", "en": "What in-kind gifts are useful?" } },
     { "q": { "vi": "Tình nguyện viên cần đáp ứng yêu cầu gì về an toàn trẻ em?", "en": "What child-safety checks do volunteers go through?" } }
   ],
-  "faqAnswer": { "vi": "[Câu trả lời do HCWA cung cấp]", "en": "[Answer supplied by HCWA]" }
+  "faqAnswer": { "vi": "[Câu trả lời do HCWA cung cấp]", "en": "[Answer supplied by HCWA]" },
+  "intro": { "vi": "Bạn có thể ủng hộ, tình nguyện, hợp tác hoặc tặng hiện vật.", "en": "You can donate, volunteer, partner with us or give in kind.", "draft": true },
+  "faqTitle": { "vi": "Câu hỏi thường gặp", "en": "Common questions" },
+  "_donatePageNote": "Donate page copy (PLAN P5). Labels are UI; sentences are [DRAFT] until HCWA approves them. No payment value ever lives here.",
+  "donatePage": {
+    "intro": { "vi": "Dù lớn hay nhỏ, mỗi khoản ủng hộ đều có ý nghĩa.", "en": "Small or large, every gift matters.", "draft": true },
+    "giftTitle": { "vi": "Khoản ủng hộ của bạn giúp được gì", "en": "What your gift does" },
+    "howTitle": { "vi": "Cách ủng hộ", "en": "How to give" },
+    "tabsLabel": { "vi": "Chọn nơi bạn chuyển khoản", "en": "Choose where you are giving from" },
+    "inVietnam": { "vi": "Chuyển khoản trong nước", "en": "Bank transfer in Vietnam" },
+    "inVietnamShort": { "vi": "Trong nước", "en": "In Vietnam" },
+    "fromAbroad": { "vi": "Ủng hộ từ nước ngoài", "en": "Giving from abroad" },
+    "fromAbroadShort": { "vi": "Từ nước ngoài", "en": "From abroad" },
+    "qr": { "vi": "Mã VietQR", "en": "VietQR code" },
+    "pendingNote": { "vi": "Số tài khoản, tên chủ tài khoản và mã QR chỉ hiện ở đây sau khi bộ phận tài chính của Hội xác nhận bằng văn bản.", "en": "The account number, account holder and QR code appear here only after HCWA finance confirms them in writing.", "draft": true },
+    "paypal": { "vi": "Hoặc ủng hộ qua PayPal", "en": "Or give through PayPal" },
+    "toCenterTitle": { "vi": "Ủng hộ cho một cơ sở", "en": "Giving to one center" },
+    "toCenter": { "vi": "[HCWA quyết định có hiển thị tài khoản riêng của từng cơ sở, ví dụ Mái ấm Hoa Hồng Nhỏ, hay không.]", "en": "[HCWA decides whether each center, for example Little Rose, shows its own account.]", "draft": true },
+    "tellTitle": { "vi": "Báo cho Hội biết bạn đã ủng hộ", "en": "Tell us you donated" },
+    "tellLead": { "vi": "Để Hội cảm ơn và gửi biên nhận cho bạn.", "en": "So HCWA can thank you and send a receipt.", "draft": true },
+    "amount": { "vi": "Số tiền và ngày chuyển", "en": "Amount and date sent" },
+    "amountError": { "vi": "Nhập số tiền và ngày chuyển.", "en": "Enter the amount and the date you sent it." },
+    "giftFor": { "vi": "Ủng hộ cho (không bắt buộc)", "en": "Gift for (optional)" },
+    "giftForAny": { "vi": "Nơi cần nhất", "en": "Where it's needed most" },
+    "thanks": { "vi": "Đã gửi. Cảm ơn bạn đã ủng hộ!", "en": "Sent. Thank you for your gift!", "draft": true },
+    "questionsTitle": { "vi": "Bạn có câu hỏi về việc ủng hộ?", "en": "Questions about giving?", "draft": true }
+  },
+  "_contactPageNote": "Contact page copy (PLAN P6). Little Rose never gets an address or a direct contact line: everything goes through the office.",
+  "contactPage": {
+    "intro": { "vi": "Gửi lời nhắn cho Hội, hoặc gọi điện và email trực tiếp.", "en": "Send HCWA a message, or call or email us directly.", "draft": true },
+    "formTitle": { "vi": "Gửi lời nhắn", "en": "Send a message" },
+    "officeTitle": { "vi": "Văn phòng Hội", "en": "HCWA office" },
+    "centerPending": { "vi": "[Địa chỉ và liên hệ đã được duyệt]", "en": "[Approved address and contact]", "draft": true },
+    "littleRose": { "vi": "Mọi liên hệ về mái ấm xin gửi qua văn phòng Hội.", "en": "Please contact the shelter through the HCWA office.", "draft": true },
+    "chat": { "vi": "Nhắn tin qua", "en": "Message us on", "draft": true },
+    "chatPending": { "vi": "Chờ HCWA xác nhận", "en": "Waiting for HCWA" },
+    "callUs": { "vi": "Gọi cho Hội", "en": "Call HCWA" },
+    "writeUs": { "vi": "Gửi email", "en": "Email HCWA" }
+  }
 }

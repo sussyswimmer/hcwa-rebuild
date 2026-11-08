@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>still</title>
+<!-- Still entry for scripts/render-posters.mjs (05-DESIGN D6.10, PLAN section 5): one named still of
+     src/world/still-shots.js at one crop, no HTML text. ?still=<name> &crop=<crop> &w=<pixel width>
+     &layer=base|lit &debug=frame -->
+<style>
+  html, body { margin: 0; background: black; overflow: hidden; }
+  canvas { display: block; }
+</style>
+<script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }</script>
+</head>
+<body>
+<canvas id="world" aria-hidden="true"></canvas>
+<script type="module" src="./still.js"></script>
+</body>
+</html>

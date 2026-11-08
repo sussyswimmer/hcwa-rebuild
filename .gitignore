@@ -11,3 +11,6 @@ __pycache__/
 qa/m1/**
 !qa/m1/final/
 !qa/m1/final/*.png
+# Round-2 build QA working captures (frame sequences, critic evidence, matrices): local only.
+# A curated review set lives in qa/m2-review/.
+qa/m2/

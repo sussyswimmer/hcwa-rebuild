@@ -4,7 +4,7 @@ import { capUniforms } from "../materials/caps.js";
 import { surfaceMaterial } from "../materials/surface.js";
 import { createShafts } from "../materials/shafts.js";
 import { createMotes } from "../materials/motes.js";
-import { screenMesh } from "../objects/screen.js";
+import { blockIndex, blockMesh, screenMesh } from "../objects/screen.js";
 import { streetPlane, streetUniforms } from "../objects/sky.js";
 import { bakeLimeWash, bakeTerrazzo } from "../textures.js";
 import { makeSun, REST, sunAt } from "../clock.js";
@@ -15,8 +15,11 @@ import { mixc, tok, vec } from "../colors.js";
 // Metres, Y up, the camera always at a child's eye height (1.10 m).
 export const BOX = { min: [-6, 0, -4], max: [2.6, 3.3, 4] };
 export const SCREEN = { sx: 2.6, z0: -4, z1: 1.4, y0: 0.9, y1: 3.3 };
-// Row 1, column 9: the block the passage flies through (K1/K2, next milestone).
+// Row 1, column 9: the block the passage flies through (K1/K2). A phone stands in the back-right corner
+// (SHOTS.portrait) and flies into row 1, column 2, the block it already faces.
 export const HERO_BLOCK = new Vector3(2.6, 1.05, -1.15);
+export const HERO_BLOCKS = { portrait: new Vector3(2.6, 1.05, -3.25) };
+export const heroBlockFor = (bucket) => HERO_BLOCKS[bucket] ?? HERO_BLOCK;
 const MOTE_BOX = { min: [-3.5, 0.05, -3.9], max: [2.5, 3.2, 2.0] };
 
 // K0 per aspect bucket (D6.2 starting values; final shots are approved as stills on day 3).
@@ -96,6 +99,8 @@ export async function buildRoom({ gl, tier, slice = true, shaftSteps = null }) {
     uSunCol: { value: new Vector3() },
     uSunI: { value: 1 },
     uRimI: { value: 1 },
+    uHaloA: { value: 0.35 },
+    uHaloW: { value: 0.012 },
     uBoxMin: { value: new Vector3(...BOX.min) },
     uBoxMax: { value: new Vector3(...BOX.max) },
     uLime: { value: lime },
@@ -117,20 +122,32 @@ export async function buildRoom({ gl, tier, slice = true, shaftSteps = null }) {
 
   const scene = new Scene();
   const shell = new Mesh(shellGeometry(), surfaceMaterial(U));
-  let screen = screenMesh(U, SCREEN, tier);
+  let screen = screenMesh(U, SCREEN, 1);
   const street = streetPlane(U, { x: 9, z: -1 });
   const motes = createMotes(U, MOTE_BOX);
   scene.add(shell, screen, street, motes.points);
   const shafts = createShafts(gl.renderer, U, { box: BOX, tier, ortho: gl.ortho, steps: shaftSteps });
   const camera = new PerspectiveCamera(46, 1, 0.05, 60);
 
+  // Tier 2's instanced screen leaves the hero blocks' slots empty and draws them as the exact SDF.
+  let hero = [];
   const setTier = (t) => {
-    if ((t >= 2) !== screen.isInstancedMesh) {
+    if ((t >= 2) !== Boolean(screen.isInstancedMesh)) {
       scene.remove(screen);
       screen.geometry.dispose();
       screen.material.dispose();
       screen = screenMesh(U, SCREEN, t);
       scene.add(screen);
+      for (const m of hero) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
+      hero = [];
+      if (screen.isInstancedMesh) {
+        for (const at of [HERO_BLOCK, ...Object.values(HERO_BLOCKS)]) {
+          screen.setMatrixAt(blockIndex(SCREEN, at), new Matrix4().makeScale(0, 0, 0));
+          hero.push(blockMesh(U, SCREEN, at));
+        }
+        screen.instanceMatrix.needsUpdate = true;
+        scene.add(...hero);
+      }
     }
     street.visible = t >= 2; // Tier 1 draws the street inside the screen shader
     motes.setTier(t);
@@ -164,7 +181,7 @@ export async function buildRoom({ gl, tier, slice = true, shaftSteps = null }) {
   };
 
   return {
-    scene, camera, U, shafts, motes, setTier, setSun, setShot,
+    scene, camera, U, shafts, motes, setTier, setSun, setShot, textures: { lime, terr },
     compile: async () => {
       await gl.renderer.compileAsync(scene, camera);
       for (const s of shafts.scenes) await gl.renderer.compileAsync(s, gl.ortho);

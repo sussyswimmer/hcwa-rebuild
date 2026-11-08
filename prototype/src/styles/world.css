@@ -1,11 +1,11 @@
 /* The world canvas and its stills (05-DESIGN D6, PLAN H0). src/world/ draws; the page owns layout. */
 
-/* Behind every sheet (z-index -1 paints above the root background, under in-flow sections) and hidden
-   until the world has drawn the posters' rest frame and added html.world-live. Until the passage and the
-   corridor share it (day 4), the canvas scrolls with the hero like the stills do: the room moves with its
-   text at native speed on the compositor, never a frame late, and the framing solver's guarantee holds at
-   every scroll position. live.js stretches it to the hero's bottom edge when that sits below 100lvh. */
-.world-canvas { position: absolute; inset: 0 auto auto 0; z-index: -1; display: block; width: 100%; height: 100lvh; pointer-events: none; visibility: hidden; }
+/* Fixed behind every sheet (z-index -1 paints above the root background, under in-flow sections) and
+   hidden until the world has drawn the posters' rest frame and added html.world-live. One canvas for the
+   hero, the passage and the corridor (D5.3 S2): the camera moves, the canvas does not. While the hero
+   scrolls out the world carries the room up with the text where the text needs it (src/world/flight.js),
+   so the silhouette never crosses a line that is still on screen. */
+.world-canvas { position: fixed; inset: 0 auto auto 0; z-index: -1; display: block; width: 100%; height: 100lvh; pointer-events: none; visibility: hidden; }
 html.world-live .world-canvas { visibility: visible; }
 
 /* Handoff at rest: the canvas is already opaque underneath, so fading the stills out is a true
@@ -13,5 +13,31 @@ html.world-live .world-canvas { visibility: visible; }
 .hero__media { transition: opacity var(--d-handoff) var(--ease-out); }
 html.world-live .hero__media { opacity: 0; }
 
+/* Without the live world the hero's still ends where the hero does. Its floor dissolves into the light the
+   passage opens on (sun-100) over the last 18svh, so no edge is ever drawn (D0.5). On the stage layout
+   it waits for the first scroll: at rest the still must be the live frame's exact twin for the handoff. */
+.hero__media::after { content: ""; position: absolute; inset: auto 0 0; z-index: 1; height: 18svh; background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-sun-100) 70%, transparent) 55%, var(--color-sun-100)); opacity: 0; transition: opacity var(--d-ui) var(--ease-out); }
+html:not(.stages) .hero__media::after, html.stages:not(.world-live):has(.site-header.is-compact) .hero__media::after { opacity: 1; }
+
 /* World sections carry no sheet: the canvas shows through them. */
 [data-world] { background: transparent; }
+
+/* Below 1024 the pause toggle belongs to the hero's text: right under the intro, before the buttons, so it
+   scrolls away with the words it pauses and is never the last thing left on a bare frame. */
+@media (max-width: 1023px) {
+  .hero__inner { grid-template-areas: "title" "intro" "pause" "actions"; }
+  .hero__pause { margin-top: 8px; }
+  .hero__actions { margin-top: 16px; }
+}
+
+/* Text grown past the poster's safe zone (200% text, hero-plate.js): the H1, intro and pause toggle stand on a
+   feathered plate of plaster, so no line ever sits on the screen's silhouette. The buttons are opaque already. */
+.hero--plate .hero__inner { position: relative; isolation: isolate; }
+.hero--plate .hero__inner::before {
+  content: ""; position: absolute; z-index: -1; inset: -40px calc(-1 * var(--gutter)) -24px; pointer-events: none;
+  background: color-mix(in oklab, var(--color-lime-50) 94%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 24px), transparent), linear-gradient(to right, black 72%, transparent);
+  mask-composite: intersect;
+}
+/* The pause toggle can sit beside the intro, past the plate's feather: it takes its own plaster. */
+.hero--plate .hero__pause { background: var(--color-lime-50); }

@@ -2,9 +2,10 @@
   "name": "hcwa-prototype",
   "private": true,
   "type": "module",
-  "description": "HCWA Phase 1 clickable prototype (static, VI at /, EN at /en/)",
+  "description": "HCWA prototype: Bông gió (static, VI at /, EN at /en/)",
   "scripts": {
     "tokens": "node scripts/tokens-to-js.mjs",
+    "svg": "node scripts/blocks-svg.mjs",
     "posters": "node scripts/render-posters.mjs",
     "predev": "npm run tokens",
     "dev": "vite",
@@ -18,7 +19,9 @@
     "check:hero": "node scripts/check-hero.cjs http://localhost:4173 ../qa/m1",
     "lcp": "node scripts/lcp.cjs 3 /",
     "check:sun": "node scripts/check-sun-crisp.mjs",
-    "check:sunin": "node scripts/check-sunin.cjs http://localhost:4173 ../qa/m1/sunin"
+    "check:sunin": "node scripts/check-sunin.cjs http://localhost:4173 ../qa/m1/sunin",
+    "check:contrast": "node scripts/light-contrast.mjs http://localhost:4173",
+    "check:tiles": "node scripts/check-tiles.cjs http://localhost:4173"
   },
   "devDependencies": {
     "vite": "8.3.5"

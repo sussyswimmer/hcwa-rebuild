@@ -1,0 +1,5 @@
+{
+  "_note": "HCWA safeguarding switches for the world (05-DESIGN D6.8, section 13 question 1). A PROD build fails while traces are enabled and not approved, and while any page shows the Little Rose door before HCWA's safeguarding lead approves it. Only HCWA flips 'approved'.",
+  "traces": { "enabled": true, "approved": false },
+  "littleRoseDoor": { "approved": false }
+}

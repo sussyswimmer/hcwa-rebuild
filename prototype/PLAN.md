@@ -484,6 +484,7 @@ Nothing below is a photo of a child, a stock image, or text inside an image.
 | Street + canopy, shafts, motes, wash | shaders | `sky.js`, `materials/*` | | no |
 | Hero posters: base + light layer × 4 buckets × 3 widths | rendered from the world | `public/posters/hero-*` | 480 w ≤ 12 + 10 KB | no |
 | Door stills ×3, shutters still, dusk still, story still, 404 still | rendered | `public/posters/*` | ≤ 35 KB each (800 w) | no |
+| Gallery wall (Green Bamboo's B3 slots), 21:9 + 16:10 | rendered | `public/posters/gallery-wall-*` | ≤ 60 KB at 1600 w, ≤ 35 KB at 800 w | no |
 | Inner header stills (Our Work, Green Bamboo, Thrive Together, Get Involved, Contact) base + light | rendered | `public/posters/header-*` | ≤ 70 KB at 1600 w, ≤ 22 KB at 480 w | no |
 | CSS sun-layer overlays (Hoa thị morning, afternoon; lam stripes) | rendered, AVIF with alpha | `public/light/` | ≤ 12 KB each | no |
 | Sheet-edge mask, footer edge, block icons | generated SVG | `public/svg/` | ≤ 6 KB total | no |
@@ -564,3 +565,106 @@ English drafts go through `anti-slop`; HCWA approves all final wording.
 | iOS / Android address-bar jumps with sticky stages | real devices | `svh` units, `ignoreMobileResize`, stacked fallback |
 | Statement unreadable during the wash edge | render gate on passage frames | the halo is always sun-100, so it holds even if the wash lags |
 | Ten days is tight for one engineer | daily milestones | the cut list in section 2 |
+
+## 9. Departures logged at integration (8 Nov 2026)
+
+What the build does differently from sections 3 to 6, and why. HCWA or Maxwell can ask for any of
+these back.
+
+**H2 hero.** Below 1024 px the pause toggle sits under the intro (it scrolls away with the text, and the
+camera is freed about 120 px sooner at 390). When enlarged text would cross the still's screen
+(`src/hero-plate.js` tests each line against the poster's screen outline), the hero gets `.hero--plate`: a
+feathered lime-50 plate behind the H1, intro and toggle.
+
+**H3 passage.** The section is the flight's scroll length (180svh, 150svh below 600 px) plus its 100svh
+sticky frame, so the statement stays pinned through 0.28-0.78; home is 100svh longer than planned. Its
+ScrollTrigger runs top-top to bottom-bottom (`[data-stage]`). `html.stages` is set on every page with
+tier ≥ 1 and motion on; only the passage, hero media, corridor and shutters rules read it. When the
+statement is taller than the pinned frame (200% text on a phone), the passage gets `.is-unfit` and is a
+band of light in the flow instead of a pinned stage.
+
+**H4 corridor.**
+1. The track scales with the number of centers: 100svh + n × 50svh (n × 40svh below 600 px), 250svh and
+   220svh for three; no tail after the last door.
+   Phones: the card panel is the frame's bottom 45svh (one row more than 44%, for Little Rose's two link
+   rows), the door framed in the top 55%.
+2. The stacked fallback shows each bay as the live camera's own rendered view (`bay-*` frame stills,
+   16:10 or 3:4) with its card set into it, not a 4:3 door still beside a card. The `door-*` stills stay
+   for the Our Work hub.
+3. On desktop the door index is a column at the top of the right-hand panel, not a rail on the far edge.
+4. The stage header (H2 + intro) stays in the panel until the first card arrives; on desktop the panel's
+   content is centred, so the header is in view while the frame rises.
+5. Each card follows the door nearest the camera's look target (in at walk u 0.18, out at 0.97); the
+   last card leaves at stage 0.95 while the glass pane and the door index fade to nothing (0.95-1.0,
+   scrubbed), and from 0.95 the camera walks on past the blue door.
+6. `ui.allWork` sits under the stage on a plaster fade (at least 92% from 15svh above the section's foot);
+   past the stage's end the canvas washes to lime-100 over 20svh while the camera keeps walking, so the
+   link stands on plain plaster.
+7. The door at its reading spot is 4.4 m away; camera x 99.5, yaw 15° on desktop, x 100.05, yaw 2° on
+   phones, with a lens shift framing the door.
+
+**H7 shutters.**
+1. A 30svh lead (24svh on phones), then a 100svh sticky frame plus 180svh (150svh); help rises --rise
+   (24% of the track, 30% on phones) into it through the shutters section's own `margin-bottom` (no
+   `data-staged` flag; the old pages.css pull-up is gone). Help's top reaches the screen's foot at p 0.76
+   (0.70 on phones). On the stage, help's top padding is 24-32 px instead of a section's, and its H2
+   reveals as it crosses the foot (`data-reveal-on="entry"`), so the heading rises into the flood.
+2. The leaves swing into the room, matching `shutterSpec` and the Get Involved header still.
+3. A MIN-blend cap pass holds every S3 pixel at or below sun-100.
+4. The fallback still is a 16:10 / 3:4 frame crop, shown 16:9 on desktop and 3:4 on phones.
+5. The camera already moves during the approach. On phones (portrait) the dolly stops at 3.8 m with a
+   72° vertical field, so both leaves folded back to 110° stay in the 390 × 844 frame through the blend.
+   Through the opening: a tamarind canopy across its top (swaying on Tier 2 only) and a low parapet with
+   a course of lit Hoa thị holes.
+6. Idle tamarind sway in the corridor, Tier 2 only.
+7. Corridor doors swing on `--ease-out` instead of smoothstep.
+
+**Continuity (D0.5) on the sheets.** The work sheet's bento has no mortar lines and no outline: each
+focus area is a pool of shade feathered into the plaster under its block, separated by sunlit valleys.
+Plaques have no frames. Work (lime-100) runs into news (shade-100) over 28svh (18svh on phones) with
+eased stops. Louver faces feather in over 36 px. The footer parapet is a row of lit Hoa thị holes with
+no blue-950 band, and the dusk still's foot sinks into the night. Lit headers end their fade above the
+still's wall/floor line, measured per still on the re-rendered (warm plaster) stills: Our Work 58-75%
+(left fade 34-54%, so the screen wall comes out of the light), Green Bamboo 58-81%, Thrive Together
+66-94%, Get Involved 62-86% on desktop.
+
+**P1 Our Work hub.** From 600 px the centers are one render of the hub wall (`hub-doors-wide`, 21:9, doors
+at 1/6, 1/2 and 5/6 so each door stands over its own column; one level camera 5 m from the wall, the
+gallery screen behind it laying Hoa thị patches between the doors, none in Little Rose's bay). The wall
+comes out of the plaster over its top 5% and its floor sinks into the page from the threshold line (81%);
+each plate starts at 89%, on the floor in front of its door and clear of the open leaves' feet. Phones
+show each door's own 4:5 render from the same spot (`hub-door-<unit>`), shown whole. The CSS door leaves
+are gone (they matched no re-rendered still): the scroll-linked idea is now the open doorways' sun-200
+light carried on across the floor between the threshold and the name as the wall comes in. Little Rose's
+door is shut and throws no light.
+
+**P2 Green Bamboo.** The header still now shows the door already open from the door wall in perspective,
+so the CSS header leaf is dropped; the header's scroll-linked idea is the light layer's 0.12× drift. The
+gallery (B3 slots) hangs its six frames of light on its own render, `gallery-wall` (21:9 from 600 px,
+16:10 on phones): a stretch of the corridor's far wall, no door, a screen in the side wall out of frame
+raking a slanted band of Hoa thị across it. The picture fades out on every side. The `story` still is
+left to the home news feature.
+
+**P3 Thrive Together.** The header's lam stripes carry their gold in the render (sun-200 toward sun-400 on
+warm lime), so the page applies no filter to the light layer.
+
+**Guards (section 6).** `content/draft/world.json` holds `traces` (enabled, not approved) and
+`littleRoseDoor` (not approved). PROD fails once for the traces flag and on every page that shows the
+Little Rose door in any form (the corridor bay, door, hub-door and bay stills, the hub panorama
+`hub-doors-wide`, the contact page's painted door): home, Our Work, Thrive Together and Contact in both
+languages. No traces module exists yet, so the flag
+gates nothing drawn today.
+
+**Removed.** The Phase 1 kit exports (`placeholder`, `figure`, `figureStrip`, `centerCard`, `storyCard`,
+`newsItem`, `reportRow`, `ctaBand`, `sectionHead`, `unitDot`, `langNotice`) and their CSS. `centerCard`
+was the last place that could label Little Rose with `ui.visitCenter`.
+
+**Stills, corner seams (recheck r2).** The still surface's analytic AO skipped every box face within 3 mm of
+a point, which also skipped the neighbouring wall's last 3 mm: every corner of every still set (and of the
+live corridor and shutters, which use the same surface) drew a 1 px unshaded bright seam. A surface now
+skips only the face it lies in (by its normal). Every still was re-rendered and re-encoded within budget;
+the hero room (`materials/surface.js`) is unchanged.
+
+**Scripts.** `npm run svg` regenerates `public/svg/` from the block SDF numbers. `npm run check:tiles`
+checks that no home focus tile's heading touches its block art (1024 and 1440, VI and EN). The pause
+toggle carries `data-paused` (no `aria-pressed`); `check-page.cjs` and `check-hero.cjs` read that.

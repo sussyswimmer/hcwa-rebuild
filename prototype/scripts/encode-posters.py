@@ -19,6 +19,7 @@ light, scaled to cover the hero anyway (the screen's layer to 40%: haze that nev
 the LCP image, never does.
 
 Usage: encode-posters.py <png dir> <out dir> [--shot hero] [--bucket portrait]
+       encode-posters.py <png dir> <out dir> --stills     (inner headers, dusk, doors, 404, story)
 """
 import argparse
 import io
@@ -46,16 +47,20 @@ def blur(arr, radius):
     return out[0] if arr.ndim == 2 else np.dstack(out)
 
 
-def light_layer(base, lit):
+def light_layer(base, lit, soft=1.5, crisp=False):
     """A straight-alpha layer L, a such that base·(1−a) + L·a gives the lit frame. Light does not only
     add: a sun patch (sun-200) has less blue than the cool shade it lands on, so L is the lit color
     itself, not base plus a difference. Where the light is strong, L is that pixel's lit color; it is
     smoothed (16 px, weighted by the square of how much the light changed the pixel) so it costs almost
     nothing to encode, and alpha is the least-squares fit of the change along base → L. Softened 1.5 px
-    first (light is soft; this takes out the shafts' raymarch grain)."""
+    first (light is soft; this takes out the shafts' raymarch grain).
+    crisp (a still with no shafts: patches and stripes that must keep their edges, D6.4): no softening; the
+    fit's alpha carries the plaster's mottling as contour lines, so it is pushed to a plateau (0 off the
+    light, 1 on it, the penumbra between) and L is solved per pixel there, so the composite is the lit
+    frame itself, texture and all, wherever the light is."""
     b = np.asarray(base, dtype=np.float32) / 255
     l = np.asarray(lit, dtype=np.float32) / 255
-    d = np.dstack([blur((l - b)[..., i] * 0.5 + 0.5, 1.5) * 2 - 1 for i in range(3)])
+    d = l - b if crisp else np.dstack([blur((l - b)[..., i] * 0.5 + 0.5, soft) * 2 - 1 for i in range(3)])
     w = np.abs(d).mean(axis=2)
     w = (w / max(w.max(), 1e-6)) ** 2
     lit_soft = np.clip(b + d, 0, 1)
@@ -72,6 +77,13 @@ def light_layer(base, lit):
     # the layer stays out.
     Y = np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
     a[(smooth @ Y) < (b @ Y)] = 0
+    if crisp:
+        t = np.clip((a - 0.06) / 0.78, 0, 1)
+        a = t * t * (3 - 2 * t)
+        solved = np.clip((l - b * (1 - a[..., None])) / np.maximum(a, 1e-3)[..., None], 0, 1)
+        L = np.where(a[..., None] > 0.2, solved, smooth)
+        rgba = np.dstack([L, a]) * 255
+        return Image.fromarray(np.round(rgba).astype(np.uint8), "RGBA")
     # Weak light (the shafts' haze) is grain, not shape: blur it 5 px; patches keep their edges.
     keep = np.clip((a - 0.12) / 0.25, 0, 1)
     a = a * keep + blur(a, 5) * (1 - keep)
@@ -101,13 +113,17 @@ def grow(poly, by):
     return np.array(out)
 
 
-def screen_mask(size, outline, view):
+def screen_mask(size, outline, view, outlines=None):
     """The screen outline (poster px of a `view`-sized frame) as a soft mask at `size`: grown by 0.5% of
-    the frame (the rim glow belongs to the screen) and feathered over ~6 px at 1600 w."""
+    the frame (the rim glow belongs to the screen) and feathered over ~6 px at 1600 w. A still may hold
+    several openings (a transom and a doorway): `outlines` draws each."""
     w, h = size
-    pts = grow(np.array(outline, dtype=np.float64) * (w / view[0]), max(w, h) * 0.005)
     img = Image.new("L", size, 0)
-    ImageDraw.Draw(img).polygon([tuple(p) for p in pts], fill=255)
+    for o in outlines or [outline]:
+        if len(o) < 3:
+            continue
+        pts = grow(np.array(o, dtype=np.float64) * (w / view[0]), max(w, h) * 0.005)
+        ImageDraw.Draw(img).polygon([tuple(p) for p in pts], fill=255)
     return np.asarray(img.filter(ImageFilter.GaussianBlur(w / 1600 * 3)), dtype=np.float32) / 255
 
 
@@ -156,18 +172,88 @@ def fit(img, fmt, budget, floor):
     return best
 
 
+def encode_layer(img, name, layer, w, budget_kb, formats, out, rows, failures):
+    """One layer at one width in every format, the highest quality under budget. Light layers (and the
+    JPEG fallback) may step down in pixels under the same name; an AVIF or WebP base never does. Returns
+    the AVIF's size in KB (0 when none)."""
+    avif_kb = 0
+    for fmt in formats:
+        budget = budget_kb * 1024 * (1 if fmt == "AVIF" else FALLBACK)
+        floor = (LIGHT_FLOOR if layer.startswith("light") else FLOOR)[fmt]
+        ext = {"AVIF": "avif", "WEBP": "webp", "JPEG": "jpg"}[fmt]
+        fname = f"{name}-{layer}-{w}.{ext}"
+        got = None
+        # JPEG is the last-resort fallback (no AVIF, no WebP): it may step down like a light layer.
+        steps = SCREEN_STEPS if layer == "lightscreen" else STEPS if layer == "lightroom" or fmt == "JPEG" else STEPS[:1]
+        for step in steps:
+            small = resize(img, round(w * step))
+            got = fit(small, fmt, budget, floor)
+            if got:
+                break
+        if not got:
+            failures.append(f"{fname}: over {budget / 1024:.0f} KB even at quality {floor}")
+            continue
+        q, data = got
+        (out / fname).write_bytes(data)
+        rows.append(f"  {fname:<46} {small.width}×{small.height}  q{q:<3} {len(data) / 1024:5.1f} / {budget / 1024:.0f} KB")
+        if fmt == "AVIF":
+            avif_kb = len(data) / 1024
+    return avif_kb
+
+
+def encode_stills(src, out):
+    """The named stills of src/world/still-shots.js (render-posters.mjs --still writes stills.json with
+    each crop's widths, layers, AVIF budgets and the openings' outlines). Lit headers: base + lightroom
+    (+ lightscreen when the opening is in frame), composited exactly as the hero's; plain stills: the lit
+    frame as `still`."""
+    report = json.loads((src / "stills.json").read_text())
+    out.mkdir(parents=True, exist_ok=True)
+    failures, rows = [], []
+    for s in report["stills"]:
+        name = f"{s['still']}-{s['crop']}"
+        lit = Image.open(src / f"{name}-lit.png").convert("RGB")
+        if "base" in s["layers"]:
+            base = Image.open(src / f"{name}-base.png").convert("RGB")
+            light = light_layer(base, lit, crisp=not s.get("shafts", True))
+            layers = {"base": base}
+            if "lightscreen" in s["layers"]:
+                room, screen = split_light(light, screen_mask(base.size, None, s["view"], s.get("silhouettes") or []))
+                layers.update(lightroom=room, lightscreen=screen)
+            else:
+                layers["lightroom"] = light
+        else:
+            layers = {"still": lit}
+        # A lit header's budget is for its layers together (D6.7): what a plain wall leaves of the base's share
+        # goes to the room's light, so a crisp pattern is not encoded into mush.
+        for w in s["widths"]:
+            spare = 0
+            for layer, img in layers.items():
+                formats = ["AVIF", "WEBP"] if layer.startswith("light") else ["AVIF", "WEBP", "JPEG"]
+                budget = s["budgets"][layer][str(w)] + (spare if layer == "lightroom" else 0)
+                kb = encode_layer(img, name, layer, w, budget, formats, out, rows, failures)
+                if layer == "base" and kb:
+                    spare = max(0.0, s["budgets"][layer][str(w)] - kb - 0.5)
+    print("encode-posters (stills):\n" + "\n".join(rows))
+    if failures:
+        print("encode-posters: FAILED\n  " + "\n  ".join(failures), file=sys.stderr)
+        sys.exit(1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("src", type=Path)
     ap.add_argument("out", type=Path)
     ap.add_argument("--shot", default="hero")
     ap.add_argument("--bucket", choices=BUCKETS)
+    ap.add_argument("--stills", action="store_true", help="encode the named stills (stills.json) instead of the hero")
     args = ap.parse_args()
+    if not features.check("avif"):
+        sys.exit("encode-posters: this Pillow has no AVIF support (needs Pillow >= 11.3 with libavif)")
+    if args.stills:
+        return encode_stills(args.src, args.out)
     formats = {"base": ["AVIF", "WEBP", "JPEG"], "lightroom": ["AVIF", "WEBP"], "lightscreen": ["AVIF", "WEBP"]}
     report = json.loads((args.src / "render.json").read_text()) if (args.src / "render.json").exists() else {"buckets": []}
     outlines = {r["bucket"]: (r["silhouette"], r["view"]) for r in report["buckets"] if r.get("layer") == "lit"}
-    if not features.check("avif"):
-        sys.exit("encode-posters: this Pillow has no AVIF support (needs Pillow >= 11.3 with libavif)")
     args.out.mkdir(parents=True, exist_ok=True)
     failures, rows = [], []
     for bucket in [args.bucket] if args.bucket else BUCKETS:

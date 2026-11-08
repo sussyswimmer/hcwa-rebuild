@@ -1,248 +1,376 @@
 import { html, raw } from "../lib/html.mjs";
-import { breadcrumb, centerCard, programRow, placeholder, figureStrip, textLink, button, ctaBand, unitDot, reportRow, newsItem, icon, statusPill } from "../partials/components.mjs";
+import { viKeep } from "../lib/vikeep.mjs";
+import { visibleFigures } from "../lib/content.mjs";
+import { programRow, textLink, button, icon, statusPill, datedPost, pendingChip, duskBand, quatrefoil } from "../partials/components.mjs";
+import { litHeader } from "../partials/lit-header.mjs";
+import { screenArt, blockIcon, AREA_BLOCK } from "../partials/blocks.mjs";
+import { still, hasStill, stillAspect } from "../partials/still.mjs";
+
+// Our Work (PLAN P1-P3). Two kinds of work, two shapes that cannot be mistaken for each other:
+// centers are places (doors in one wall, unit paint, the emblem their transom throws), programs are
+// time-bound light (lit slats with a status, years and funders as text). Every page is one stretch of
+// the day (05-DESIGN D0.5): a single gradient behind the sections, no section fills, no rules, and no
+// two sections in a row built on the same grid.
 
 const A = { vi: { centers: "co-so", programs: "du-an" }, en: { centers: "centers", programs: "programs" } };
+const STATUSES = ["active", "completed"];
+const EMBLEM = { "green-bamboo": "dotTre", "cau-han": "vomCau" };
+// The corridor wall with the three doors in one frame, once the world stream renders it; until then the
+// three door stills stand side by side and feather into one wall.
+const PANORAMA = "hub-doors-wide";
 
-const pageHeader = (c, { trail, title, intro, accent, draftIntro, viName, extra = "" }) => html`<header class="page-header"${accent ? html` style="--unit:var(--color-unit-${accent})" data-unit` : ""}>
-  <div class="container">
-    ${breadcrumb(c, trail)}
-    <h1>${title}</h1>
-    ${viName && c.lang === "en" ? html`<p class="page-header__vi" lang="vi">(${viName})</p>` : ""}
-    ${intro ? html`<p class="page-header__intro"${draftIntro ? raw(" data-draft") : ""}>${intro}</p>` : ""}
-    ${extra}
+// Elements the no-JS filter can hide or show for an area (pages.css :target rules): which areas leave
+// a group empty is known when the page is built, so the empty note needs no script either.
+const emptyFor = (items, areas) => areas.filter((a) => !items.some((x) => x.areas.includes(a))).join(" ");
+
+// ---------- Our Work hub (P1) ----------
+
+// Area chips are plain links: ?area= for the server (WordPress) and #f-<area> for this static build, so
+// the filter works without JS through :target. ui/filters.js takes over when it runs (both filters at
+// once, the URL kept in step, a 240 ms FLIP, the count said in the live region).
+const filters = (c) => {
+  const { work } = c.content;
+  return html`<nav class="filters container" aria-labelledby="filters-label">
+  ${work.focusAreas.map((a) => html`<span class="filters__anchor" id="f-${a.id}"></span>`)}
+  <p class="filters__label" id="filters-label">${c.t("filterArea")}</p>
+  <ul class="filters__list">
+    <li><a class="chip chip--all" href="./" data-area="">${c.t("all")}</a></li>
+    ${work.focusAreas.map((a) => html`<li><a class="chip" href="?area=${a.id}#f-${a.id}" data-area="${a.id}">${screenArt(AREA_BLOCK[a.id], { cls: "chip__icon" })}${c.tx(a.name)}</a></li>`)}
+  </ul>
+  <p class="sr-only" data-filter-status aria-live="polite" data-centers-one="${c.t("countCenter")}" data-centers-many="${c.t("countCenters")}" data-programs-one="${c.t("countProgram")}" data-programs-many="${c.t("countPrograms")}" data-template="${c.t("filterShowing")}"></p>
+</nav>`;
+};
+
+// A center as a door in one long wall. The name is the link and covers the door; an open doorway's light
+// reaches the floor under its name as the wall scrolls in (pages.css, motion on only). Little Rose's
+// door stays shut and throws no light, says "about the shelter", never "visit", never where.
+// still: the door's own crop of the panorama (phones), or its door card when there is no panorama.
+export const door = (c, x, { sizes, stillName = "door-" + x.id }) => {
+  const lr = x.id === "little-rose";
+  const label = lr ? c.t("aboutShelter") : c.t("visitCenter");
+  return html`<li class="door" data-areas="${x.areas.join(" ")}" data-unit="${x.id}" data-door="${lr ? "closed" : "open"}" style="--unit:var(--color-unit-${x.accent})">
+  <div class="door__still" aria-hidden="true">${still(stillName, "door__img", sizes)}<span class="door__spill"></span></div>
+  <div class="door__plate">
+    <h3 class="door__name"><a href="${c.tx(x.path)}">${viKeep(c.tx(x.name))}</a></h3>
+    ${c.prod ? "" : html`<p class="door__since" data-draft>${c.t("since")} ${c.tx(x.sinceToken)}</p>`}
+    <p class="door__serves"${c.d(x.serves)}>${c.tx(x.serves)}</p>
+    ${!lr && x.location ? html`<p class="door__where"${c.d(x.location)}>${icon("pin", "icon door__pin")}${c.tx(x.location)}</p>` : ""}
+    ${lr ? html`<p class="door__note"${c.d(c.content.work.littleRose.privacyNote)}>${c.tx(c.content.work.littleRose.privacyNote)}</p>` : ""}
+    <p class="door__go" aria-hidden="true"><span>${label}</span>${icon("arrow")}</p>
+    ${lr ? html`<p class="door__extra">${textLink(c.url("bakery"), c.t("bakery"))}</p>` : ""}
   </div>
-</header>`;
+</li>`;
+};
 
-// Our Work hub: centers (places) and programs (time-bound), filterable by focus area.
+// The door wall: one full-bleed picture with each door's plate on the floor under it, or the three
+// door stills feathered into one wall. Phones: one door per plate, stacked, each its own crop of the
+// same wall (hub-door-<unit>, 4:5).
+export const doorWall = (c, centers, { cls = "" } = {}) => {
+  const pano = hasStill(PANORAMA);
+  const own = (x) => (pano && hasStill("hub-door-" + x.id) ? { stillName: "hub-door-" + x.id, sizes: "100vw" } : { sizes: "(min-width: 600px) 42vw, 100vw" });
+  return html`<div class="doorwall${pano ? " doorwall--pano" : ""}${cls ? " " + cls : ""}"${pano ? raw(` style="--ratio:${stillAspect(PANORAMA)}"`) : ""}>
+  ${pano ? html`<div class="doorwall__pano" aria-hidden="true">${still(PANORAMA, "doorwall__img", "100vw")}</div>` : ""}
+  <ul class="doors" data-reveal="stagger">${centers.map((x) => door(c, x, own(x)))}</ul>
+</div>`;
+};
+
+// Every group has one: CSS shows it for the areas known to leave the group empty, the script for any
+// combination (an area and a status together can empty the programs too).
+const emptyNote = (c, areas) =>
+  html`<p class="filter-empty" data-filter-empty data-show-for="${areas}" hidden>${c.t("noResults")} <a href="./" data-area="">${c.t("showAll")}</a></p>`;
+
 export function ourWork(c) {
   const { work } = c.content;
-  const intro = { vi: "Hội vận hành các cơ sở lâu dài và triển khai các dự án có thời hạn cùng đối tác.", en: "HCWA runs long-term centers and carries out time-bound projects with partners." };
-  const chip = (id, label) => html`<li><a class="chip" href="?area=${id}" data-area="${id}">${label}</a></li>`;
+  const ids = work.focusAreas.map((a) => a.id);
+  const programs = [...work.programs].sort((a, b) => STATUSES.indexOf(a.status) - STATUSES.indexOf(b.status));
   const body = html`
-${pageHeader(c, { trail: [[c.t("ourWork")]], title: c.t("ourWork"), intro: c.tx(intro), draftIntro: true })}
-<div class="container">
-  <nav class="filters" aria-label="${c.t("filterArea")}">
-    <ul>
-      <li><a class="chip" href="./" data-area="" aria-current="true">${c.t("all")}</a></li>
-      ${work.focusAreas.map((a) => chip(a.id, c.tx(a.name)))}
-    </ul>
-  </nav>
-  <p class="filters__empty" data-filter-empty hidden>${c.t("noResults")} <a href="./">${c.t("showAll")}</a></p>
-</div>
-<section class="section section--tight" aria-labelledby="${A[c.lang].centers}" data-filter-group>
-  <div class="container">
-    <h2 id="${A[c.lang].centers}">${c.t("centers")}</h2>
-    <div class="center-grid">${work.centers.map((x) => html`<div data-areas="${x.areas.join(" ")}">${centerCard(c, x)}</div>`)}</div>
-  </div>
-</section>
-<section class="section section--tight" aria-labelledby="${A[c.lang].programs}" data-filter-group>
-  <div class="container">
-    <h2 id="${A[c.lang].programs}">${c.t("programs")}</h2>
-    <ul class="program-list">${work.programs.map((p) => programRow(c, p))}</ul>
-  </div>
-</section>
-<section class="section section--tight">
-  <div class="container">
-    <aside class="note" data-draft>
-      ${icon("info")}
-      <p>${c.tx({ vi: "Cơ sở là nơi Hội vận hành lâu dài. Dự án và chương trình được tài trợ, có thời gian bắt đầu và kết thúc.", en: "Centers are long-term places HCWA runs. Projects and programs are funded work with a start and an end." })}</p>
-    </aside>
-  </div>
-</section>`;
-  return { title: c.t("ourWork"), description: c.tx(intro), body };
-}
-
-// Center template (06-PAGES), filled for Green Bamboo.
-export function center(c) {
-  const { work, news } = c.content;
-  const gb = work.centers.find((x) => x.id === "green-bamboo");
-  const programs = work.programs.filter((p) => p.centers.includes("green-bamboo"));
-  const T = (vi, en) => c.tx({ vi, en });
-  const glance = [
-    [T("Đối tượng", "Who we serve"), c.tx(gb.serves)],
-    [T("Hoạt động", "What we do"), html`<ul>${[
-      T("Lớp bồi dưỡng văn hóa và tiếng Anh", "Catch-up classes and English"),
-      T("Câu lạc bộ giáo dục và kỹ năng sống cho thanh thiếu niên", "Education and life-skills clubs for young people"),
-      T("Hội thảo cho phụ huynh và tư vấn gia đình", "Workshops for parents and family counseling"),
-      T("Hỗ trợ chăm sóc sức khỏe cho trẻ", "Help accessing healthcare"),
-    ].map((x) => html`<li>${x}</li>`)}</ul>`],
-    [c.t("since"), c.tx(gb.sinceToken)],
-    [c.t("contact"), T("[Người liên hệ và số điện thoại đã được duyệt]", "[Approved contact person and phone]")],
-  ];
-  const story = [
-    T(
-      "Tre Xanh bắt đầu là một câu lạc bộ, sau đó trở thành mái ấm cho trẻ trai không nơi nương tựa, giúp các em có chỗ ở, được học và học nghề.",
-      "Green Bamboo began as a club and later became a shelter for homeless boys, giving them a home, schooling and vocational training.",
-    ),
-    T(
-      "Từ [tháng/năm], Tre Xanh chuyển sang mô hình cơ sở bảo trợ xã hội. Thay vì nuôi dạy tập trung, cơ sở hỗ trợ trẻ và gia đình ngay tại cộng đồng: lớp học, câu lạc bộ, tư vấn, chăm sóc sức khỏe và kết nối dịch vụ xã hội.",
-      "In [month/year] Green Bamboo became a social protection center. Instead of residential care, it now supports children and families in their community: classes, clubs, counseling, healthcare and links to social services.",
-    ),
-  ];
-  const gallery = Array.from({ length: 6 }, (_, i) => ({ code: "B3", label: { vi: `Ảnh hoạt động ${i + 1}`, en: `Activity photo ${i + 1}` }, ratio: "3:2" }));
-  const body = html`
-${pageHeader(c, {
-  trail: [[c.t("ourWork"), c.url("ourWork")], [c.t("centers"), c.url("ourWork") + "#" + A[c.lang].centers], [c.tx(gb.name)]],
-  title: c.tx(gb.name),
-  viName: gb.name.vi,
-  accent: gb.accent,
-  extra: html`<div class="page-header__meta">
-    <img class="unit-logo" src="${gb.logo}" width="72" height="72" alt="${T("Logo Cơ sở Bảo trợ Xã hội Tre Xanh", "Green Bamboo Social Protection Center logo")}">
-    <p><span data-draft>${c.t("since")} ${c.tx(gb.sinceToken)}</span><span data-draft>${c.tx(gb.location)}</span></p>
-  </div>`,
-})}
-<div class="container cover">${placeholder(c, { code: "B1", label: gb.image.label, ratio: "16:9" }, "cover__media")}</div>
-
-<div class="container article-grid">
-  <aside class="glance" aria-labelledby="glance-title" data-draft>
-    <h2 id="glance-title" class="h4">${T("Thông tin nhanh", "At a glance")}</h2>
-    <dl>${glance.map(([k, v]) => html`<div><dt>${k}</dt><dd>${v}</dd></div>`)}</dl>
-  </aside>
-  <section class="prose" aria-labelledby="story-title">
-    <h2 id="story-title">${T("Câu chuyện của chúng tôi", "Our story")}</h2>
-    ${story.map((p) => html`<p data-draft>${p}</p>`)}
-    <details class="more">
-      <summary>${T("Đọc toàn bộ lịch sử", "Read the full history")}${icon("chevron")}</summary>
-      <p data-draft>${T("[Lịch sử đầy đủ do HCWA cung cấp, kèm các năm đã được xác minh.]", "[Full history supplied by HCWA, with verified years.]")}</p>
-    </details>
+${litHeader(c, { still: "header-our-work", trail: [[c.t("ourWork")]], title: viKeep(c.t("ourWork")), intro: c.tx(work.hubIntro), introDraft: work.hubIntro.draft, size: "display" })}
+<div class="day day--hub hub" data-hub>
+  ${filters(c)}
+  <section class="places" aria-labelledby="${A[c.lang].centers}" data-filter-group>
+    <div class="container"><h2 class="places__title" id="${A[c.lang].centers}" data-reveal="rise"><span>${viKeep(c.t("centers"))}</span></h2></div>
+    ${doorWall(c, work.centers)}
+    <div class="container places__foot">
+      <p class="places__lead"${c.d(work.hub.centersLead)} data-reveal>${c.tx(work.hub.centersLead)}</p>
+      ${emptyNote(c, emptyFor(work.centers, ids))}
+    </div>
+  </section>
+  <section class="times container" aria-labelledby="${A[c.lang].programs}" data-filter-group>
+    <div class="times__head">
+      ${STATUSES.map((s) => html`<span class="filters__anchor" id="f--${s}"></span>`)}
+      <span class="lam lam--head" aria-hidden="true"></span>
+      <h2 id="${A[c.lang].programs}" data-reveal="rise"><span>${viKeep(c.t("programs"))}</span></h2>
+      <p class="times__lead"${c.d(work.hub.programsLead)} data-reveal>${c.tx(work.hub.programsLead)}</p>
+      <nav class="seg" aria-label="${c.t("filterStatus")}" data-reveal>
+        <a class="seg__opt" href="./#${A[c.lang].programs}" data-status="">${c.t("all")}</a>
+        ${STATUSES.map((s) => html`<a class="seg__opt" href="?status=${s}#f--${s}" data-status="${s}"><span class="seg__light seg__light--${s}" aria-hidden="true"></span>${c.t("status_" + s)}</a>`)}
+      </nav>
+    </div>
+    <div class="times__rows">
+      <ul class="program-list program-list--hub" data-reveal="stagger">${programs.map((p) => programRow(c, p))}</ul>
+      ${emptyNote(c, emptyFor(work.programs, ids))}
+    </div>
   </section>
 </div>
+${duskBand(c, {
+  id: "hub-cta",
+  title: c.tx(work.hub.ctaTitle),
+  draft: work.hub.ctaTitle.draft,
+  body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${button({ href: c.url("volunteer"), label: c.t("volunteer"), kind: "on-dusk" })}</div>`,
+})}`;
+  return { title: c.t("ourWork"), description: c.tx(work.hubIntro), body, lit: true, bodyClass: "page-work" };
+}
 
-<section class="section section--tight" aria-labelledby="gb-figures">
-  <div class="container">
-    <h2 id="gb-figures">${T("Kết quả tại Tre Xanh", "Green Bamboo in numbers")}</h2>
-    ${figureStrip(c, "green-bamboo")}
-  </div>
-</section>
+// ---------- shared inner-page parts ----------
 
-<section class="section section--tight" aria-labelledby="gallery-title">
-  <div class="container">
-    <h2 id="gallery-title">${T("Hình ảnh hoạt động", "Photos")}</h2>
-    <ul class="gallery" data-gallery>
-      ${gallery.map((g, i) => html`<li><button class="gallery__item" type="button" data-index="${i}" aria-label="${c.tx(g.label)}: ${T("phóng to", "open larger")}">${placeholder(c, g)}</button></li>`)}
-    </ul>
-  </div>
-</section>
-<dialog class="lightbox" data-lightbox aria-label="${T("Hình ảnh hoạt động", "Photos")}">
-  <div class="lightbox__stage" data-lightbox-stage></div>
-  <p class="lightbox__count" data-lightbox-count aria-live="polite"></p>
-  <button class="icon-btn lightbox__prev" type="button" data-lightbox-prev aria-label="${T("Ảnh trước", "Previous photo")}">${icon("prev")}</button>
-  <button class="icon-btn lightbox__next" type="button" data-lightbox-next aria-label="${T("Ảnh sau", "Next photo")}">${icon("next")}</button>
-  <button class="icon-btn lightbox__close" type="button" data-lightbox-close aria-label="${c.t("close")}">${icon("close")}</button>
-</dialog>
+// Figures for one center or program: pending chips on staging, nothing at all on production until HCWA
+// verifies them (the guard in render.mjs fails on any data-pending). Never animated. One baseline row,
+// no boxes: the numbers stand on the wall with their labels under them.
+// nested: set under a story (h3 inside its section) rather than as a section of its own.
+const figuresFor = (c, scope, title, id, { nested = false } = {}) => {
+  const figs = visibleFigures(c.content.impact.filter((f) => f.scope === scope), c.prod);
+  if (!figs.length) return "";
+  const h = nested ? "h3" : "h2";
+  return html`<section class="counts${nested ? " counts--nested" : " container"}" aria-labelledby="${id}">
+  <${raw(h)} class="counts__title" id="${id}">${title}</${raw(h)}>
+  <ul class="counts__list">${figs.map((f) => html`<li class="count"${c.d(f.label)}>
+    <p class="count__value num">${f.verified ? c.number(f.value) + (f.suffix ?? "") : f.token}</p>
+    <p class="count__label">${c.tx(f.label)}</p>
+    ${f.verified ? "" : pendingChip(c)}
+  </li>`)}</ul>
+</section>`;
+};
 
-<section class="section section--tight" aria-labelledby="gb-programs">
-  <div class="container">
-    <h2 id="gb-programs">${T("Dự án tại cơ sở", "Programs run here")}</h2>
-    <ul class="program-list">${programs.map((p) => programRow(c, p))}</ul>
-  </div>
-</section>
+// A program's span from its years. Known years put "today" where it falls; a token (unconfirmed) never
+// claims a date: an open run ("since [year]") or a running one only fades, a completed one is past.
+const spanOf = (c, p) => {
+  const [start, end = ""] = c.tx(p.years).split("–");
+  const y = [start, end].map((s) => Number(s.trim()));
+  const known = y.every((n) => Number.isInteger(n) && n > 1900) && y[1] > y[0];
+  const at = known ? Math.min(1, Math.max(0, (new Date().getFullYear() - y[0]) / (y[1] - y[0]))) : p.status === "completed" ? 1 : 0.5;
+  const kind = known ? "known" : p.status === "completed" ? "done" : end.trim() ? "running" : "open";
+  return { start: start.trim(), end: end.trim(), at: Math.round(at * 1000) / 10, known, kind };
+};
 
-<section class="section section--sunken section--tight" aria-labelledby="gb-help">
-  <div class="container split">
-    <div class="split__lead">
-      <h2 id="gb-help">${T("Cách giúp Tre Xanh", "How to help Green Bamboo")}</h2>
-      <p data-draft>${T("[Nhu cầu cụ thể của cơ sở do HCWA cung cấp, ví dụ học bổng, đồ dùng học tập, giáo viên tình nguyện.]", "[Specific needs supplied by HCWA, for example scholarships, school supplies, volunteer teachers.]")}</p>
+// One wide list: the date in its own 160 px column, the title running beside it.
+const relatedNews = (c, id) => html`<section class="related container" aria-labelledby="${id}">
+  <h2 class="related__title" id="${id}" data-reveal="rise"><span>${c.t("relatedNews")}</span></h2>
+  <ol class="dated-list related__list" data-reveal="stagger">${c.content.news.posts.map((p) => datedPost(c, p))}</ol>
+  <p class="related__all">${textLink(c.url("news"), c.t("allNews"))}</p>
+</section>`;
+
+// ---------- Center: Green Bamboo (P2) ----------
+
+// A program run at the center: one lit band across the page (name, status and years on one baseline,
+// the span as a small louver bar lit up to today, the summary under it). Not the hub's program row.
+const band = (c, p) => {
+  const { at, kind } = spanOf(c, p);
+  return html`<li class="band" data-status="${p.status}">
+  <h3 class="band__name"><a href="${c.tx(p.path)}">${viKeep(c.tx(p.name))}</a></h3>
+  <p class="band__meta">${statusPill(c, p.status)}<span class="band__years" data-draft>${c.tx(p.years)}</span>${icon("arrow", "icon band__go")}</p>
+  <span class="band__bar" data-span="${kind}"${kind === "known" ? raw(` style="--at:${at}%"`) : ""} aria-hidden="true"><span class="band__lit"></span></span>
+  <p class="band__text"${c.d(p.summary)}>${c.tx(p.summary)}</p>
+</li>`;
+};
+
+// Where photos will hang (asset B3): one lit wall from the world (gallery-wall: the corridor's far wall,
+// its own render at the box's ratio), the six future frames drawn on it in light, one caption. Rendered, never a photo, never a child, never a crop posing as one. Staging only:
+// production hangs nothing until HCWA approves photos.
+const FRAMES = 6;
+const gallery = (c) => {
+  if (c.prod) return "";
+  return html`<section class="hang container" aria-labelledby="gallery-title">
+  <h2 class="hang__title" id="gallery-title" data-reveal="rise"><span>${c.t("photos")}</span></h2>
+  <figure class="hang__wall" data-draft>
+    <div class="hang__lit" aria-hidden="true">${still("gallery-wall", "hang__still", "(min-width: 1360px) 1320px, 100vw") || raw('<span class="lit-wall"><span class="lit-wall__light"></span></span>')}
+      <ol class="hang__frames">${Array.from({ length: FRAMES }, (_, i) => raw(`<li class="hang__frame hang__frame--${i + 1}"></li>`))}</ol>
     </div>
-    <div class="stack">
-      ${button({ href: c.url("donate") + "?center=green-bamboo", label: T("Ủng hộ Tre Xanh", "Donate to Green Bamboo") })}
+    <figcaption class="hang__cap"><span class="hang__code">B3</span> ${c.t("galleryWaiting")}</figcaption>
+  </figure>
+</section>`;
+};
+
+export function center(c) {
+  const { work, site } = c.content;
+  const gb = work.centers.find((x) => x.id === "green-bamboo");
+  const P = work.centerPages["green-bamboo"];
+  const programs = work.programs.filter((p) => p.centers.includes(gb.id));
+  const emblem = EMBLEM[gb.id];
+  const meta = html`<img class="lit-head__logo" src="${gb.logo}" width="56" height="56" alt="${c.tx(P.logoAlt)}">
+    <p class="lit-head__facts">
+      ${c.prod ? "" : html`<span data-draft>${c.t("since")} ${c.tx(gb.sinceToken)}</span>`}
+      <span${c.d(gb.location)}>${icon("pin")}${c.tx(gb.location)}</span>
+    </p>`;
+  const body = html`
+${litHeader(c, {
+  still: "header-green-bamboo",
+  unit: gb.accent,
+  trail: [[c.t("ourWork"), c.url("ourWork")], [c.t("centers"), c.url("ourWork") + "#" + A[c.lang].centers], [c.tx(gb.shortName)]],
+  title: viKeep(c.tx(gb.name)),
+  meta,
+  extra: c.lang === "en" ? html`<p class="lit-head__vi" lang="vi">${gb.name.vi}</p>` : "",
+})}
+<div class="day day--center" style="--unit:var(--color-unit-${gb.accent})">
+  <section class="plate container" aria-labelledby="glance-title">
+    <h2 class="plate__title" id="glance-title">${c.t("glance")}</h2>
+    <dl class="plate__facts">
+      ${c.prod ? "" : html`<div data-draft><dt>${c.t("since")}</dt><dd>${c.tx(gb.sinceToken)}</dd></div>`}
+      <div${c.d(gb.location)}><dt>${c.t("address")}</dt><dd>${c.tx(gb.location)}</dd></div>
+      <div${c.d(P.contactPerson)}><dt>${c.t("contact")}</dt><dd>${c.tx(P.contactPerson)}</dd></div>
+    </dl>
+    <div class="plate__serves">
+      <p class="plate__label">${c.t("whoWeServe")}</p>
+      <p class="plate__statement"${c.d(gb.serves)} data-reveal>${c.tx(gb.serves)}</p>
+    </div>
+    <div class="plate__does">
+      <p class="plate__label plate__label--mark">${blockIcon(emblem, "plate__mark")}${c.t("whatWeDo")}</p>
+      <ul class="does" data-reveal="stagger">${P.activities.map((a) => html`<li${c.d(a)}>${c.tx(a)}</li>`)}</ul>
+    </div>
+  </section>
+
+  <section class="story container" aria-labelledby="story-title">
+    <span class="sun-layer sun-layer--story" aria-hidden="true"></span>
+    <h2 class="story__title" id="story-title" data-reveal="rise"><span>${viKeep(c.tx(P.storyTitle))}</span></h2>
+    <div class="story__text">
+      ${P.story.map((p, i) => html`<p class="${i ? "" : "story__first"}"${c.d(p)} data-reveal>${c.tx(p)}</p>`)}
+      <details class="more story__more">
+        <summary>${c.t("readFullHistory")}${icon("chevron")}</summary>
+        <div class="more__body"><p${c.d(P.history)}>${c.tx(P.history)}</p></div>
+      </details>
+    </div>
+    ${figuresFor(c, gb.id, c.tx(P.figuresTitle), "gb-figures", { nested: true })}
+  </section>
+
+  ${gallery(c)}
+
+  <section class="here container" aria-labelledby="gb-programs">
+    <h2 class="here__title" id="gb-programs" data-reveal="rise"><span>${c.t("programsHere")}</span></h2>
+    <ul class="bands" data-reveal="stagger">${programs.map((p) => band(c, p))}</ul>
+  </section>
+
+  <section class="give container" aria-labelledby="gb-help">
+    <h2 class="give__title" id="gb-help" data-reveal="rise"><span>${viKeep(c.tx(P.helpTitle))}</span></h2>
+    <ul class="give__needs" data-reveal="stagger">${P.needs.map((n) => html`<li${c.d(n)}>${quatrefoil("give__mark")}<span>${c.tx(n)}</span></li>`)}</ul>
+    <div class="give__act">
+      ${button({ href: c.url("donate") + "?center=" + gb.id, label: c.tx(P.donate), cls: "give__btn" })}
       ${textLink(c.url("volunteer"), c.t("volunteer"))}
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section section--tight" aria-labelledby="gb-news">
-  <div class="container">
-    <h2 id="gb-news">${T("Tin liên quan", "Related news")}</h2>
-    <ul class="news-list news-list--row">${news.posts.map((p) => newsItem(c, p))}</ul>
-  </div>
-</section>
-${ctaBand(c, {
-  title: T("Muốn đến thăm Tre Xanh?", "Want to visit Green Bamboo?"),
-  actions: button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk" }),
-  extra: html`<p class="cta-band__note" data-draft>${T("[Chỉ hiển thị thông tin liên hệ HCWA đã duyệt.]", "[Only contact details HCWA has approved.]")}</p>`,
+  ${relatedNews(c, "gb-news")}
+</div>
+${duskBand(c, {
+  id: "gb-visit",
+  title: c.tx(P.visitTitle),
+  body: html`<dl class="dusk__lines">
+      <div${c.d(P.contactPerson)}><dt>${c.t("contact")}</dt><dd>${c.tx(P.contactPerson)}</dd></div>
+      <div data-draft><dt>${c.t("phone")}</dt><dd><a href="tel:${site.phone.tel}">${site.phone.display}</a></dd></div>
+    </dl>
+    <p class="dusk__note"${c.d(P.contactNote)}>${c.tx(P.contactNote)}</p>
+    ${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk", cls: "dusk__btn" })}`,
 })}`;
-  return { title: c.tx(gb.name), description: c.tx(gb.serves), body };
+  return { title: c.tx(gb.name), description: c.tx(gb.serves), body, lit: true, bodyClass: "page-center" };
 }
 
-// Program template (06-PAGES), filled for Thrive Together.
+// ---------- Program: Thrive Together (P3) ----------
+
+// Where a program runs, said as a line of names, each behind a small door in its unit paint (the
+// transom lit in its emblem). Little Rose: its door shut under plain daylight, the name only (no
+// place, no visit link).
+const placeDoor = (c, x) => {
+  const lr = x.id === "little-rose";
+  const built = x.built && !lr;
+  const name = c.tx(x.shortName);
+  const emblem = EMBLEM[x.id] ? raw(`;--emblem:url('/svg/hole-${EMBLEM[x.id] === "dotTre" ? "dot-tre" : "vom-cau"}.svg')`) : "";
+  return html`<li class="place" data-unit="${x.id}" data-door="${lr ? "closed" : "open"}" style="--unit:var(--color-unit-${x.accent})${emblem}">
+  <span class="place__door" aria-hidden="true"><span class="place__transom"></span><span class="place__way"></span><span class="place__leaf"></span></span>
+  <span class="place__name">${built ? html`<a href="${c.tx(x.path)}">${name}</a>` : name}</span>
+</li>`;
+};
+
+// The program's span as one band of louver light: start, today, end on one line. The years are tokens
+// until HCWA confirms them; "today" sits where the real years put it, in the middle until then.
+const timeBand = (c, p) => {
+  const { start, end, at, known } = spanOf(c, p);
+  return html`<section class="span container" aria-labelledby="tt-span">
+  <h2 class="sr-only" id="tt-span">${c.t("years")}</h2>
+  <div class="timeband timeband--${p.status}" style="--at:${at}%"${known ? "" : raw(" data-draft")}>
+    <p class="timeband__end timeband__end--start">${start}</p>
+    <p class="timeband__bar"><span class="timeband__lit" aria-hidden="true"></span><span class="timeband__today">${c.t("today")}</span></p>
+    <p class="timeband__end">${end}</p>
+  </div>
+</section>`;
+};
+
 export function program(c) {
-  const { work, news } = c.content;
+  const { work } = c.content;
   const p = work.programs.find((x) => x.id === "thrive-together");
-  const T = (vi, en) => c.tx({ vi, en });
-  const list = (items) => html`<ul class="check-list">${items.map((x) => html`<li>${icon("check")}<span>${x}</span></li>`)}</ul>`;
+  const P = work.programPages["thrive-together"];
+  const centers = p.centers.map((id) => work.centers.find((x) => x.id === id)).filter(Boolean);
+  const [main, ...rest] = c.tx(p.fullName).split(": ");
+  const meta = html`${statusPill(c, p.status)}<span class="lit-head__years" data-draft>${c.tx(p.years)}</span>
+    <span class="lit-head__funder"><span class="lit-head__k">${c.t("fundedBy")}</span> ${p.partners.join(", ")}</span>`;
+  const list = (items, id, lit = false) => html`<ol class="slats${lit ? " slats--lit" : ""}" aria-labelledby="${id}" data-reveal="stagger">${items.map((x, i) => html`<li class="slat"${c.d(x)}><span class="slat__n num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><span class="slat__text">${c.tx(x)}</span></li>`)}</ol>`;
+  const reports = c.prod
+    ? html`<p class="docs__empty"${c.d(c.content.ui.noDocuments)}>${c.t("noDocuments")} ${textLink(c.url("reports"), c.t("annualReports"))}</p>`
+    : html`<ul class="docs__list">${P.reports.map((r) => html`<li class="doc" data-draft>
+        ${icon("file", "icon doc__icon")}
+        <p class="doc__title">${c.tx(r.title)}</p>
+        <p class="doc__meta">${c.tx(r.year)} · ${c.tx(P.reportType)} · PDF · <span lang="${r.docLang}">${r.docLang === "vi" ? "Tiếng Việt" : "English"}</span> · ${r.size}</p>
+      </li>`)}</ul>`;
   const body = html`
-${pageHeader(c, {
+${litHeader(c, {
+  still: "header-thrive-together",
   trail: [[c.t("ourWork"), c.url("ourWork")], [c.t("programs"), c.url("ourWork") + "#" + A[c.lang].programs], [c.tx(p.name)]],
-  title: c.tx(p.fullName),
-  viName: p.name.vi,
-  extra: html`<div class="page-header__meta">${statusPill(c, p.status)}<p><span data-draft>${c.tx(p.years)}</span></p>
-    <span class="ph ph--logo ph--inline" role="img" aria-label="C5 · ${p.partners[0]}"><span class="ph__code">C5</span><span class="ph__label">${p.partners[0]}</span></span></div>`,
+  title: rest.length ? { main: viKeep(main), sub: rest.join(": ") } : viKeep(main),
+  meta,
+  size: "program",
+  extra: c.lang === "en" ? html`<p class="lit-head__vi" lang="vi">${p.name.vi}</p>` : "",
 })}
-<div class="container article-grid article-grid--wide">
-  <section class="prose" aria-labelledby="tt-summary">
-    <h2 id="tt-summary" class="sr-only">${T("Tóm tắt", "Summary")}</h2>
-    <p class="lead"${c.d(p.summary)}>${c.tx(p.summary)}</p>
-    <p data-draft>${T(
-      "Chương trình đặc biệt hướng đến trẻ em di cư, trẻ thiếu giấy tờ pháp lý, trẻ khuyết tật, trẻ chịu ảnh hưởng bởi HIV/AIDS và trẻ sống trong môi trường thiếu an toàn.",
-      "It focuses on migrant children, children without legal documents, children with disabilities, children affected by HIV/AIDS and children living in unsafe places.",
-    )}</p>
-    <div class="two-col">
-      <div data-draft>
-        <h2 class="h3">${T("Mục tiêu", "Goals")}</h2>
-        ${list([
-          T("Trẻ được tiếp cận liên tục với giáo dục", "Children keep steady access to education"),
-          T("Trẻ được chăm sóc sức khỏe thể chất và tinh thần", "Children get physical and mental healthcare"),
-          T("Trẻ phát triển kỹ năng phù hợp với độ tuổi", "Children build age-appropriate skills"),
-        ])}
-      </div>
-      <div data-draft>
-        <h2 class="h3">${T("Hoạt động", "Activities")}</h2>
-        ${list([
-          T("Củng cố và mở rộng hoạt động tại các cơ sở của Hội", "Strengthen and expand activities at HCWA's centers"),
-          T("Tập huấn cho phụ huynh, nhân viên và cộng tác viên", "Train parents, staff and community collaborators"),
-        ])}
-      </div>
+<div class="day day--program">
+  <section class="brief container" aria-labelledby="tt-summary">
+    <span class="lam lam--brief" aria-hidden="true"></span>
+    <h2 class="sr-only" id="tt-summary">${c.t("summary")}</h2>
+    <p class="brief__lead"${c.d(p.summary)} data-reveal>${c.tx(p.summary)}</p>
+    <p class="brief__focus"${c.d(P.focus)} data-reveal>${c.tx(P.focus)}</p>
+  </section>
+
+  ${timeBand(c, p)}
+
+  <section class="aims container" aria-labelledby="tt-goals">
+    <div class="aims__col">
+      <h2 class="aims__title" id="tt-goals" data-reveal="rise"><span>${c.t("goals")}</span></h2>
+      ${list(P.goals, "tt-goals", true)}
+    </div>
+    <div class="aims__col aims__col--next">
+      <h2 class="aims__title" id="tt-activities" data-reveal="rise"><span>${c.t("activities")}</span></h2>
+      ${list(P.activities, "tt-activities")}
     </div>
   </section>
-  <aside class="glance" aria-labelledby="tt-where">
-    <h2 id="tt-where" class="h4">${T("Nơi thực hiện và nhà tài trợ", "Where it runs and who funds it")}</h2>
-    <dl>
-      <div data-draft><dt>${T("Cơ sở", "Centers")}</dt><dd>${T("[Các cơ sở thực hiện chương trình, HCWA xác nhận]", "[Which centers run it, HCWA to confirm]")}</dd></div>
-      <div><dt>${T("Nhà tài trợ", "Funded by")}</dt><dd>${p.partners.join(", ")}</dd></div>
-    </dl>
-    ${textLink(c.url("greenBamboo"), c.tx(work.centers[0].name))}
-  </aside>
+
+  ${figuresFor(c, p.id, c.t("results"), "tt-results")}
+
+  <section class="where container" aria-labelledby="tt-where">
+    <h2 class="where__title" id="tt-where" data-reveal="rise"><span>${c.t("whereItRuns")}</span></h2>
+    <ul class="places-row" data-reveal="stagger">${centers.map((x) => placeDoor(c, x))}</ul>
+    <div class="where__notes">
+      <p class="where__note"${c.d(P.runsAtNote)}>${c.tx(P.runsAtNote)}</p>
+      <p class="where__note"${c.d(work.littleRose.privacyNote)}>${c.tx(work.littleRose.privacyNote)}</p>
+    </div>
+  </section>
+
+  <section class="docs container" aria-labelledby="tt-docs">
+    <h2 class="docs__title" id="tt-docs" data-reveal="rise"><span>${c.t("documents")}</span></h2>
+    ${reports}
+  </section>
+
+  ${relatedNews(c, "tt-news")}
 </div>
-
-<section class="section section--tight" aria-labelledby="tt-results">
-  <div class="container">
-    <h2 id="tt-results">${T("Kết quả", "Results")}</h2>
-    ${figureStrip(c, "thrive-together")}
-  </div>
-</section>
-
-<section class="section section--tight" aria-labelledby="tt-docs">
-  <div class="container">
-    <h2 id="tt-docs">${T("Tài liệu", "Documents")}</h2>
-    <ul class="report-list">
-      ${reportRow(c, { title: T("[Tên báo cáo dự án]", "[Program report title]"), year: T("[năm]", "[year]"), type: T("Báo cáo dự án", "Program report"), docLang: "Tiếng Việt", size: "[KB]" })}
-      ${reportRow(c, { title: T("[Tên báo cáo dự án]", "[Program report title]"), year: T("[năm]", "[year]"), type: T("Báo cáo dự án", "Program report"), docLang: "English", size: "[KB]" })}
-    </ul>
-  </div>
-</section>
-
-<section class="section section--tight" aria-labelledby="tt-news">
-  <div class="container">
-    <h2 id="tt-news">${T("Tin liên quan", "Related news")}</h2>
-    <ul class="news-list news-list--row">${news.posts.map((x) => newsItem(c, x))}</ul>
-  </div>
-</section>
-${ctaBand(c, {
-  title: T("Đồng hành cùng những dự án như thế này", "Support work like this"),
-  actions: html`${button({ href: c.url("donate"), label: c.t("donate"), kind: "primary" })}${button({ href: c.url("partner"), label: T("Hợp tác trong một dự án", "Partner on a program"), kind: "on-dusk" })}`,
+${duskBand(c, {
+  id: "tt-cta",
+  title: c.tx(P.ctaTitle),
+  draft: P.ctaTitle.draft,
+  body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${button({ href: c.url("partner"), label: c.tx(P.partner), kind: "on-dusk" })}</div>`,
 })}`;
-  return { title: c.tx(p.name), description: c.tx(p.summary), body };
+  return { title: c.tx(p.name), description: c.tx(p.summary), body, lit: true, bodyClass: "page-program" };
 }
-
-export { pageHeader };

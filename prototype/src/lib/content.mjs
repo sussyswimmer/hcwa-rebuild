@@ -18,6 +18,8 @@ export const content = {
   work: load("work"),
   news: load("news"),
   involve: load("involve"),
+  // Safeguarding switches for the world (traces, the Little Rose door); read by the PROD guards.
+  world: load("world"),
 };
 
 // Unverified figures never render on production; on the prototype they show as tokens.

@@ -1,171 +1,265 @@
 import { html, raw } from "../lib/html.mjs";
-import { button, textLink, placeholder, field, icon, ctaBand } from "../partials/components.mjs";
-import { pageHeader } from "./work.mjs";
+import { viKeep } from "../lib/vikeep.mjs";
+import { still as stillPicture, stillReady } from "../lib/posters.mjs";
+import { button, textLink, field, choiceField, consentField, formSent, copyButton, quatrefoil, icon, breadcrumb, duskBand } from "../partials/components.mjs";
+import { litHeader } from "../partials/lit-header.mjs";
+import { louvers } from "../partials/louvers.mjs";
+import { litWall } from "../partials/still.mjs";
 
-const wayRoute = { donate: "donate", volunteer: "volunteer", partner: "partner", "in-kind": "inKind" };
+// Get Involved, Donate, Contact and the 404 (PLAN P4-P7). Same day as the rest of the site (05-DESIGN
+// D0.5): each page is one stretch of light from its header to the dusk, no section fills, no rules.
+// Get Involved is late afternoon through louvers; Donate keeps every picture away from the payment
+// details; Contact is the street side of the screen; the 404 is the wall with one block missing.
 
+// The phone and email on the night (home's contact band, D7): every page that ends on a dusk band
+// with nothing else to say ends on these.
+const reachLines = (c, email) => {
+  const { site } = c.content;
+  return html`<dl class="dusk__lines" data-draft>
+      <div><dt>${c.t("phone")}</dt><dd><a href="tel:${site.phone.tel}">${site.phone.display}</a></dd></div>
+      <div><dt>${c.t("email")}</dt><dd><a href="mailto:${email}">${email}</a></dd></div>
+    </dl>`;
+};
+
+// ---------- Get Involved (P4) ----------
+
+// The open shutters at 17:00, their light coming in through louver stripes (light.css .lit--louver);
+// the four ways to help as slats whose lit face opens as each one passes (pages.css), then the
+// questions, then the evening.
 export function getInvolved(c) {
-  const { involve } = c.content;
-  const T = (vi, en) => c.tx({ vi, en });
-  const intro = { vi: "Bạn có thể ủng hộ, tình nguyện, hợp tác hoặc tặng hiện vật.", en: "You can donate, volunteer, partner with us or give in kind." };
+  const { involve, site } = c.content;
   const body = html`
-${pageHeader(c, { trail: [[c.t("getInvolved")]], title: c.t("getInvolved"), intro: c.tx(intro), draftIntro: true })}
-<section class="section section--tight" aria-label="${c.tx(c.content.site.helpTitle)}">
-  <div class="container">
-    <ul class="ways">
-      ${involve.ways.map(
-        (w) => html`<li class="way">
-          ${placeholder(c, { code: w.art, label: w.title, ratio: "1:1", illustration: true }, "way__art")}
-          <h2 class="h3"><a href="${c.url(wayRoute[w.id])}">${c.tx(w.title)}</a></h2>
-          <p${c.d(w.text)}>${c.tx(w.text)}</p>
-        </li>`,
-      )}
-    </ul>
-  </div>
-</section>
-<section class="section section--sunken" aria-labelledby="faq-title">
-  <div class="container split">
-    <div class="split__lead">
-      <h2 id="faq-title">${T("Câu hỏi thường gặp", "Common questions")}</h2>
-      <p data-draft>${T("Không thấy câu trả lời bạn cần? Hãy liên hệ, Hội sẽ trả lời qua email.", "Can't find your answer? Get in touch and HCWA will reply by email.")}</p>
-      ${textLink(c.url("contact"), c.t("contactUs"))}
+${litHeader(c, { still: "header-get-involved", trail: [[c.t("getInvolved")]], title: viKeep(c.t("getInvolved")), intro: c.tx(involve.intro), introDraft: involve.intro.draft, size: "display" })}
+<div class="day day--involve">
+  ${louvers(c, involve.ways, { level: 2, cls: "louvers--page" })}
+  <section class="faq container" aria-labelledby="faq-title">
+    <h2 class="faq__title" id="faq-title" data-reveal="rise"><span>${viKeep(c.tx(involve.faqTitle))}</span></h2>
+    <div class="faq__list" data-reveal="stagger">
+      ${involve.faq.map((f) => html`<details class="ask">
+        <summary><span class="ask__q">${c.tx(f.q)}</span><span class="ask__mark" aria-hidden="true">${icon("chevron")}</span></summary>
+        <div class="ask__a"><p data-draft>${c.tx(involve.faqAnswer)}</p></div>
+      </details>`)}
     </div>
-    <div class="accordion">
-      ${involve.faq.map((f) => html`<details><summary>${c.tx(f.q)}${icon("chevron")}</summary><p data-draft>${c.tx(involve.faqAnswer)}</p></details>`)}
-    </div>
-  </div>
-</section>`;
-  return { title: c.t("getInvolved"), description: c.tx(intro), body };
+  </section>
+</div>
+${duskBand(c, {
+  id: "gi-contact",
+  title: c.tx(site.contactBand.title),
+  body: html`${reachLines(c, site.email.general)}${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk", cls: "dusk__btn" })}`,
+})}`;
+  return { title: c.t("getInvolved"), description: c.tx(involve.intro), body, lit: true, bodyClass: "page-involve" };
 }
 
-// Donate: every payment detail is a placeholder until content/verified/donation.json exists.
+// ---------- Donate (P5) ----------
+
+// Fragment ids in the page language: the header's jump links and the tabs share them.
+const PAY_IDS = { vi: { vn: "trong-nuoc", abroad: "tu-nuoc-ngoai", tell: "bao-cho-hoi" }, en: { vn: "in-vietnam", abroad: "from-abroad", tell: "tell-us" } };
+const PAY_NOTE = "pay-note";
+
+// One bank form, as a transfer slip: every value is HCWA finance's to confirm, so every value shows the
+// pending chip and carries data-donation-placeholder (PROD refuses the page until content/verified/
+// donation.json exists). Nothing in the slip animates (D5.1).
+const slipRows = (c, fields) => html`<dl class="slip__rows">${fields.map((f) => html`<div class="slip__row">
+    <dt>${c.tx(f.label)}</dt>
+    <dd><span class="pending-value" data-donation-placeholder>${c.t("pendingFinance")}</span>${f.hint ? html`<span class="slip__hint">${c.tx(f.hint)}</span>` : ""}</dd>
+    ${f.copy ? copyButton(c, { label: c.tx(f.label), describedBy: PAY_NOTE }) : ""}
+  </div>`)}</dl>`;
+
+// The QR frame stays empty: a dashed outline in the pending colour, never a drawing that could pass
+// for a code.
+const qrSlot = (c, D) => html`<div class="slip__qr" role="img" aria-label="${c.tx(D.qr)}: ${c.t("pendingFinance")}" data-donation-placeholder>
+    <span class="slip__qr-name">${c.tx(D.qr)}</span><span class="pending-value">${c.t("pendingFinance")}</span>
+  </div>`;
+
 export function donate(c) {
-  const { involve } = c.content;
-  const T = (vi, en) => c.tx({ vi, en });
-  const pendingValue = html`<span class="pending-value" data-donation-placeholder>${c.t("pendingFinance")}</span>`;
-  const detailRows = (fields) => html`<dl class="pay-details">${fields.map(
-    (f) => html`<div class="pay-details__row">
-      <dt>${c.tx(f.label)}</dt>
-      <dd>${pendingValue}${f.hint ? html`<span class="pay-details__hint">${c.tx(f.hint)}</span>` : ""}</dd>
-      ${f.copy ? html`<button class="btn btn--small btn--secondary" type="button" data-copy="" disabled aria-label="${c.t("copy")}: ${c.tx(f.label)}">${icon("copy")}<span>${c.t("copy")}</span></button>` : html`<span></span>`}
-    </div>`,
-  )}</dl>`;
-  const method = (id, title, inner, open = false) => html`<details class="method" id="${id}"${open ? raw(" open") : ""}><summary><span>${title}</span>${icon("chevron")}</summary><div class="method__body">${inner}</div></details>`;
-  const intro = { vi: "Dù lớn hay nhỏ, mỗi khoản ủng hộ đều có ý nghĩa.", en: "Small or large, every gift matters." };
+  const { involve, site, work } = c.content;
+  const D = involve.donatePage;
+  const id = PAY_IDS[c.lang];
+  const tabs = [[id.vn, D.inVietnamShort], [id.abroad, D.fromAbroadShort]];
+  // Gift examples carry [amount] tokens: staging only until HCWA sets the amounts.
+  const gifts = c.prod
+    ? ""
+    : html`<section class="gifts container" aria-labelledby="gift-title">
+    <h2 class="gifts__title" id="gift-title">${c.tx(D.giftTitle)}</h2>
+    <ul class="gifts__list" data-reveal="stagger">${involve.giftExamples.map((g) => html`<li class="gift" data-draft>
+      <span class="gift__amount" data-pending>${c.tx(g.amount)}</span>
+      <span class="gift__text">${c.tx(g.text)}</span>
+    </li>`)}</ul>
+  </section>`;
   const body = html`
-${pageHeader(c, { trail: [[c.t("getInvolved"), c.url("getInvolved")], [c.t("donate")]], title: c.t("donate"), intro: c.tx(intro), draftIntro: true })}
-<section class="section section--tight" aria-labelledby="gift-title">
-  <div class="container">
-    <h2 id="gift-title" class="h3">${T("Khoản ủng hộ của bạn giúp được gì", "What your gift does")}</h2>
-    <ul class="gift-list" data-draft>
-      ${involve.giftExamples.map((g) => html`<li><span class="gift-list__amount" data-pending>${c.tx(g.amount)}</span><span>${c.tx(g.text)}</span></li>`)}
-    </ul>
-  </div>
-</section>
-<section class="section section--tight" aria-labelledby="methods-title">
-  <div class="container donate-grid">
-    <div>
-      <h2 id="methods-title">${T("Cách ủng hộ", "How to give")}</h2>
-      <div class="methods">
-        ${method(T("trong-nuoc", "in-vietnam"), T("Chuyển khoản trong nước", "Bank transfer in Vietnam"), html`
-          <div class="pay">
-            ${detailRows(involve.bankFields)}
-            ${placeholder(c, { code: "C6", label: { vi: "Mã VietQR", en: "VietQR code" }, ratio: "1:1" }, "pay__qr")}
-          </div>`, true)}
-        ${method(T("quoc-te", "from-abroad"), T("Ủng hộ từ nước ngoài", "Giving from abroad"), html`
-          ${detailRows(involve.abroadFields)}
-          <p class="method__alt">${T("Hoặc ủng hộ qua PayPal:", "Or give through PayPal:")} <button class="btn btn--secondary btn--small" type="button" disabled data-donation-placeholder>PayPal</button></p>`)}
-        ${method(T("theo-co-so", "to-a-center"), T("Ủng hộ cho một cơ sở", "Give to a specific center"), html`
-          <p data-draft>${T("[HCWA quyết định có hiển thị tài khoản riêng của từng cơ sở, ví dụ Mái ấm Hoa Hồng Nhỏ, hay không.]", "[HCWA decides whether each center, for example Little Rose, shows its own account.]")}</p>`)}
-      </div>
+<header class="sun-head">
+  <span class="sun-layer sun-layer--donate" aria-hidden="true"></span>
+  <div class="container sun-head__inner">
+    ${breadcrumb(c, [[c.t("getInvolved"), c.url("getInvolved")], [c.t("donate")]])}
+    <h1 class="sun-head__title">${viKeep(c.t("donate"))}</h1>
+    <div class="sun-head__side">
+      <p class="sun-head__intro"${c.d(D.intro)}>${c.tx(D.intro)}</p>
+      ${button({ href: "#" + id.vn, label: c.tx(D.inVietnam), cls: "sun-head__go" })}
+      <ul class="sun-head__jump">
+        <li>${textLink("#" + id.abroad, c.tx(D.fromAbroad))}</li>
+        <li>${textLink("#" + id.tell, c.tx(D.tellTitle))}</li>
+      </ul>
     </div>
-    <aside class="tell-us" aria-labelledby="tell-title">
-      <h2 id="tell-title" class="h3">${T("Báo cho Hội biết bạn đã ủng hộ", "Tell us you donated")}</h2>
-      <p>${T("Để Hội cảm ơn và gửi biên nhận cho bạn.", "So HCWA can thank you and send a receipt.")}</p>
-      <form class="form" data-form novalidate>
+  </div>
+</header>
+<div class="day day--donate">
+  ${gifts}
+  <div class="give-grid container">
+    <section class="slip" aria-labelledby="how-title" data-tabs>
+      <h2 class="slip__head" id="how-title">${c.tx(D.howTitle)}</h2>
+      <div class="tabs" role="tablist" aria-label="${c.tx(D.tabsLabel)}" hidden>
+        ${tabs.map(([panel, label], i) => html`<button class="tabs__tab" type="button" role="tab" id="tab-${panel}" aria-controls="${panel}" aria-selected="${i ? "false" : "true"}"${i ? raw(' tabindex="-1"') : ""}>${c.tx(label)}</button>`)}
+      </div>
+      <div class="slip__panels">
+        <section class="slip__panel" id="${id.vn}" aria-labelledby="${id.vn}-title" data-tab-panel>
+          <h3 class="slip__title" id="${id.vn}-title">${c.tx(D.inVietnam)}</h3>
+          <div class="slip__body">${slipRows(c, involve.bankFields)}${qrSlot(c, D)}</div>
+        </section>
+        <section class="slip__panel" id="${id.abroad}" aria-labelledby="${id.abroad}-title" data-tab-panel>
+          <h3 class="slip__title" id="${id.abroad}-title">${c.tx(D.fromAbroad)}</h3>
+          <div class="slip__body">${slipRows(c, involve.abroadFields)}</div>
+          <p class="slip__alt">${c.tx(D.paypal)} <button class="btn btn--secondary btn--small" type="button" disabled aria-describedby="${PAY_NOTE}" data-donation-placeholder>PayPal</button></p>
+        </section>
+      </div>
+      <p class="slip__note" id="${PAY_NOTE}"${c.d(D.pendingNote)}>${icon("info")}<span>${c.tx(D.pendingNote)}</span></p>
+      <div class="slip__center">
+        <h3 class="slip__center-title">${c.tx(D.toCenterTitle)}</h3>
+        <p${c.d(D.toCenter)}>${c.tx(D.toCenter)}</p>
+      </div>
+    </section>
+    <section class="tell" id="${id.tell}" aria-labelledby="tell-title">
+      <h2 class="tell__title" id="tell-title">${viKeep(c.tx(D.tellTitle))}</h2>
+      <p class="tell__lead"${c.d(D.tellLead)}>${c.tx(D.tellLead)}</p>
+      <form class="form" data-form novalidate aria-labelledby="tell-title">
         <div class="form__summary" data-summary tabindex="-1" role="alert" hidden></div>
         ${field(c, { id: "d-name", label: c.t("f_name"), required: true, autocomplete: "name", error: c.t("e_name") })}
         ${field(c, { id: "d-email", label: c.t("f_email"), type: "email", required: true, autocomplete: "email", error: c.t("e_email") })}
-        ${field(c, { id: "d-amount", label: T("Số tiền và ngày chuyển", "Amount and date sent"), required: true, error: T("Nhập số tiền và ngày chuyển.", "Enter the amount and the date you sent it.") })}
-        ${field(c, { id: "d-center", label: T("Ủng hộ cho (không bắt buộc)", "Gift for (optional)"), options: { placeholder: T("Nơi cần nhất", "Where it's needed most"), items: c.content.work.centers.map((x) => [x.id, c.tx(x.name)]) }, error: "" })}
-        <button class="btn btn--primary" type="submit">${c.t("f_send")}</button>
-        <div class="form__success" data-success tabindex="-1" role="status" hidden>${icon("check")}<div><p>${T("Đã gửi. Cảm ơn bạn đã ủng hộ!", "Sent. Thank you for your gift!")}</p>${c.prod ? "" : html`<p class="form__note">${c.t("f_prototypeSent")}</p>`}</div></div>
+        ${field(c, { id: "d-amount", label: c.tx(D.amount), required: true, error: c.tx(D.amountError) })}
+        ${field(c, { id: "d-center", label: c.tx(D.giftFor), options: { placeholder: c.tx(D.giftForAny), items: work.centers.map((x) => [x.id, c.tx(x.name)]) }, error: "" })}
+        ${consentField(c, "d-consent")}
+        <button class="btn btn--primary form__send" type="submit">${c.t("f_send")}</button>
+        ${formSent(c, c.tx(D.thanks), { draft: D.thanks.draft })}
       </form>
-    </aside>
+    </section>
   </div>
-</section>`;
-  return { title: c.t("donate"), description: c.tx(intro), body };
+  <nav class="trust container" aria-labelledby="trust-title">
+    <h2 class="trust__title" id="trust-title">${c.t("trust")}</h2>
+    <ul class="trust__list">
+      <li>${textLink(c.url("reports"), c.t("annualReports"))}</li>
+      <li>${textLink(c.url("safeguarding"), c.t("safeguarding"))}</li>
+      <li>${textLink(c.url("privacy"), c.t("privacy"))}</li>
+    </ul>
+  </nav>
+</div>
+${duskBand(c, {
+  id: "donate-questions",
+  title: c.tx(D.questionsTitle),
+  draft: D.questionsTitle.draft,
+  body: html`${reachLines(c, site.email.sponsorship)}${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk", cls: "dusk__btn" })}`,
+})}`;
+  return { title: c.t("donate"), description: c.tx(D.intro), body, bodyClass: "page-donate" };
 }
+
+// ---------- Contact (P6) ----------
+
+// A center's way in: its door in unit paint and its name. Little Rose has no address and no line of its
+// own; the office takes everything, and the privacy note says why.
+const unitReach = (c, x) => {
+  const { work, involve } = c.content;
+  const P = involve.contactPage;
+  const lr = x.id === "little-rose";
+  const page = x.built && !lr;
+  return html`<li class="unit" data-unit="${x.id}" data-door="${lr ? "closed" : "open"}" style="--unit:var(--color-unit-${x.accent})">
+    <span class="unit__door" aria-hidden="true"><span class="unit__leaf"></span></span>
+    <div class="unit__text">
+      <h3 class="unit__name">${page ? html`<a href="${c.tx(x.path)}">${viKeep(c.tx(x.name))}</a>` : viKeep(c.tx(x.name))}</h3>
+      ${lr
+        ? html`<p class="unit__line"${c.d(P.littleRose)}>${c.tx(P.littleRose)}</p><p class="unit__note"${c.d(work.littleRose.privacyNote)}>${c.tx(work.littleRose.privacyNote)}</p>`
+        : html`<p class="unit__line"${c.d(P.centerPending)}>${c.tx(P.centerPending)}</p>`}
+    </div>
+  </li>`;
+};
 
 export function contact(c) {
-  const { site, work } = c.content;
-  const T = (vi, en) => c.tx({ vi, en });
+  const { site, work, involve } = c.content;
+  const P = involve.contactPage;
   const topics = ["donate", "partner", "volunteer", "media", "other"].map((k) => [k, c.t("topic_" + k)]);
-  const intro = { vi: "Gửi lời nhắn cho Hội, hoặc gọi điện và email trực tiếp.", en: "Send HCWA a message, or call or email us directly." };
   const body = html`
-${pageHeader(c, { trail: [[c.t("contact")]], title: c.t("contact"), intro: c.tx(intro), draftIntro: true })}
-<section class="section section--tight">
-  <div class="container contact-grid">
-    <form class="form" data-form novalidate aria-labelledby="form-title">
-      <h2 id="form-title" class="h3">${T("Gửi lời nhắn", "Send a message")}</h2>
-      <div class="form__summary" data-summary tabindex="-1" role="alert" hidden></div>
-      ${field(c, { id: "name", label: c.t("f_name"), required: true, autocomplete: "name", error: c.t("e_name") })}
-      ${field(c, { id: "email", label: c.t("f_email"), type: "email", required: true, autocomplete: "email", help: c.t("f_emailHelp"), error: c.t("e_email") })}
-      ${field(c, { id: "phone", label: c.t("f_phone"), type: "tel", autocomplete: "tel", error: "" })}
-      ${field(c, { id: "topic", label: c.t("f_topic"), required: true, options: { placeholder: c.t("f_topicChoose"), items: topics }, error: c.t("e_topic") })}
-      ${field(c, { id: "message", label: c.t("f_message"), required: true, rows: 6, error: c.t("e_message") })}
-      <div class="field field--check" data-field>
-        <input type="checkbox" id="consent" name="consent" required aria-describedby="consent-error">
-        <label for="consent"><span data-draft>${c.t("f_consent")}</span> <a href="${c.url("privacy")}">${c.t("privacy")}</a></label>
-        <p class="field__error" id="consent-error" data-error="${c.t("e_consent")}" hidden>${icon("alert")}<span></span></p>
-      </div>
-      <button class="btn btn--primary" type="submit">${c.t("f_send")}</button>
-      <div class="form__success" data-success tabindex="-1" role="status" hidden>${icon("check")}<div><p>${c.t("f_sent")}</p>${c.prod ? "" : html`<p class="form__note">${c.t("f_prototypeSent")}</p>`}</div></div>
-    </form>
-    <aside class="offices" aria-labelledby="offices-title">
-      <h2 id="offices-title" class="h3">${T("Văn phòng và cơ sở", "Office and centers")}</h2>
-      <article class="office" data-draft>
-        <h3 class="h4">${T("Văn phòng Hội", "HCWA office")}</h3>
-        <ul class="contact-lines">
-          <li>${icon("pin")}<span>${c.tx(site.address)}</span></li>
-          <li>${icon("phone")}<a href="tel:${site.phone.tel}">${site.phone.display}</a></li>
-          <li>${icon("mail")}<a href="mailto:${site.email.general}">${site.email.general}</a></li>
-        </ul>
-        <a class="map-link" href="${site.mapUrl}">${placeholder(c, { code: "C7", label: { vi: "Bản đồ tĩnh", en: "Static map" }, ratio: "4:3" })}<span class="text-link"><span>${c.t("openMap")}</span>${icon("external")}</span></a>
-      </article>
-      ${work.centers.map((x) => html`<article class="office office--unit" style="--unit:var(--color-unit-${x.accent})" data-draft>
-        <h3 class="h4">${c.tx(x.name)}</h3>
-        <p>${T("[Địa chỉ và liên hệ đã được duyệt]", "[Approved address and contact]")}</p>
-      </article>`)}
-      <p class="offices__chat" data-draft>${T("Nhắn tin qua", "Message us on")} <a href="#">Zalo</a> · <a href="${site.facebook}">Facebook Messenger</a></p>
-    </aside>
+${litHeader(c, {
+  still: "header-contact",
+  trail: [[c.t("contact")]],
+  title: viKeep(c.t("contact")),
+  intro: c.tx(P.intro),
+  introDraft: P.intro.draft,
+  size: "display",
+  // The two quickest ways in, on the first screen (the office card repeats them with the address).
+  extra: html`<p class="lit-head__actions" data-draft>
+    <a class="btn btn--secondary" href="tel:${site.phone.tel}">${icon("phone")}<span>${c.tx(P.callUs)}</span></a>
+    <a class="btn btn--secondary" href="mailto:${site.email.general}">${icon("mail")}<span>${c.tx(P.writeUs)}</span></a>
+  </p>`,
+})}
+<div class="day day--contact">
+  <div class="reach container">
+    <section class="reach__write" aria-labelledby="form-title">
+      <h2 class="reach__title" id="form-title" data-reveal="rise"><span>${c.tx(P.formTitle)}</span></h2>
+      <form class="form form--wide" data-form novalidate aria-labelledby="form-title">
+        <div class="form__summary" data-summary tabindex="-1" role="alert" hidden></div>
+        <div class="form__pair">
+          ${field(c, { id: "name", label: c.t("f_name"), required: true, autocomplete: "name", error: c.t("e_name") })}
+          ${field(c, { id: "phone", label: c.t("f_phone"), type: "tel", autocomplete: "tel", error: "" })}
+        </div>
+        ${field(c, { id: "email", label: c.t("f_email"), type: "email", required: true, autocomplete: "email", help: c.t("f_emailHelp"), error: c.t("e_email") })}
+        ${choiceField(c, { id: "topic", label: c.t("f_topic"), items: topics, required: true, error: c.t("e_topic") })}
+        ${field(c, { id: "message", label: c.t("f_message"), required: true, rows: 6, error: c.t("e_message") })}
+        ${consentField(c)}
+        <button class="btn btn--primary form__send" type="submit">${c.t("f_send")}</button>
+        ${formSent(c, c.t("f_sent"))}
+      </form>
+    </section>
+    <section class="office" aria-labelledby="office-title">
+      <h2 class="office__title" id="office-title">${c.tx(P.officeTitle)}</h2>
+      <p class="office__address" data-draft>${quatrefoil("office__sun")}<span>${c.tx(site.address)}</span></p>
+      <dl class="office__lines" data-draft>
+        <div><dt>${c.t("phone")}</dt><dd><a href="tel:${site.phone.tel}">${site.phone.display}</a></dd></div>
+        <div><dt>${c.t("email")}</dt><dd><a href="mailto:${site.email.general}">${site.email.general}</a></dd></div>
+      </dl>
+      <p class="office__map"><a class="text-link" href="${site.mapUrl}"><span>${c.t("openMap")}</span>${icon("external")}</a></p>
+      ${c.prod ? "" : html`<p class="office__chat"${c.d(P.chat)}>${c.tx(P.chat)} <span class="office__app">Zalo <span class="chip-pending">${c.tx(P.chatPending)}</span></span> <a href="${site.facebook}">Facebook Messenger</a></p>`}
+    </section>
   </div>
-</section>`;
-  return { title: c.t("contact"), description: c.tx(intro), body };
+  <section class="units container" aria-labelledby="units-title">
+    <h2 class="units__title" id="units-title" data-reveal="rise"><span>${viKeep(c.t("centers"))}</span></h2>
+    <ul class="units__list" data-reveal="stagger">${work.centers.map((x) => unitReach(c, x))}</ul>
+  </section>
+</div>`;
+  return { title: c.t("contact"), description: c.tx(P.intro), body, lit: true, bodyClass: "page-contact" };
 }
 
+// ---------- 404 (P7) ----------
+
+// "Một viên gạch bị thiếu": the screen with one block missing and the light pouring through the gap.
+// Static: nothing on this page moves. The still is the first thing on the page, so it loads eagerly.
 export function notFound(c) {
-  const T = (vi, en) => c.tx({ vi, en });
+  const links = [["home", "home"], ["ourWork", "ourWork"], ["contact", "contact"]];
+  const art = stillReady("not-found") ? stillPicture("not-found", { cls: "gap__img", sizes: "(min-width: 1024px) 46vw, 100vw", eager: true }) : litWall();
   const body = html`
-<section class="section not-found">
-  <div class="container not-found__grid">
-    <div>
-      <h1>${c.t("nf_title")}</h1>
-      <p class="lead">${c.t("nf_text")}</p>
-      ${c.prod ? "" : html`<p class="note" data-draft>${icon("info")}<span>${c.t("notInPrototype")}</span></p>`}
+<div class="day day--gap">
+  <section class="gap container" aria-labelledby="nf-title">
+    <div class="gap__still" aria-hidden="true">${art}</div>
+    <div class="gap__text">
+      <h1 class="gap__title" id="nf-title">${viKeep(c.t("nf_title"))}</h1>
+      <p class="gap__lead">${c.t("nf_text")}</p>
+      ${c.prod ? "" : html`<p class="gap__proto" data-draft>${icon("info")}<span>${c.t("notInPrototype")}</span></p>`}
       <form class="search" action="${c.url("home")}" method="get" role="search">
         <label for="s">${c.t("nf_search")}</label>
-        <div class="search__row"><input type="search" id="s" name="s"><button class="btn btn--secondary" type="submit">${icon("search")}<span>${c.t("nf_searchBtn")}</span></button></div>
+        <div class="search__row"><input type="search" id="s" name="s" autocomplete="off"><button class="btn btn--secondary" type="submit">${icon("search")}<span>${c.t("nf_searchBtn")}</span></button></div>
       </form>
-      <ul class="link-list">
-        <li>${textLink(c.url("home"), c.t("home"))}</li>
-        <li>${textLink(c.url("ourWork"), c.t("ourWork"))}</li>
-        <li>${textLink(c.url("contact"), c.t("contact"))}</li>
-      </ul>
+      <nav class="gap__nav" aria-labelledby="nf-links">
+        <p class="gap__nav-title" id="nf-links">${c.t("nf_links")}</p>
+        <ul class="gap__links">${links.map(([route, key]) => html`<li><a href="${c.url(route)}"><span>${c.t(key)}</span>${icon("arrow")}</a></li>`)}</ul>
+      </nav>
     </div>
-    ${placeholder(c, { code: "C8", label: { vi: "Minh họa trang 404", en: "404 illustration" }, ratio: "1:1", illustration: true }, "not-found__art")}
-  </div>
-</section>`;
-  return { title: c.t("nf_title"), description: c.t("nf_text"), body };
+  </section>
+</div>`;
+  return { title: c.t("nf_title"), description: c.t("nf_text"), body, bodyClass: "page-gap" };
 }
-
