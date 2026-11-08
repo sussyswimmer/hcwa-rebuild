@@ -150,6 +150,14 @@ the passage and the pause toggle are never cut.
 
 ## 3. Home, section by section
 
+> **Continuity override (8 Nov 2026, Maxwell):** 05-DESIGN section 0.5 "One continuous
+> flow" overrides every layout note in sections 3 and 4. Where a section below says
+> "opaque sheet", "sheet edge", "band", a section background colour, "rows separated by
+> lines" or a header with an edge, build it as part of the single day gradient with long
+> feathered seams and translucent reading surfaces instead. No hard lines anywhere on any
+> page; a visible hard line is a must-fix.
+
+
 Section order: header → hero → passage (what we do) → corridor (centers) → Our work sheet →
 news → shutters → help → partners → contact band → footer. The hero, passage and corridor
 share one fixed canvas and one camera path with no opaque sheet between them (D5.3).
@@ -369,6 +377,14 @@ layer in the right margin.
 - **Accept:** no embedded feeds; accordions keyboard-operable; still is decorative.
 
 ## 4. Inner pages
+
+> **Continuity override (8 Nov 2026, Maxwell):** 05-DESIGN section 0.5 "One continuous
+> flow" overrides every layout note in this section and section 3. Where a section below says
+> "opaque sheet", "sheet edge", "band", a section background colour, "rows separated by
+> lines" or a header with an edge, build it as part of the single day gradient with long
+> feathered seams and translucent reading surfaces instead. No hard lines anywhere on any
+> page; a visible hard line is a must-fix.
+
 
 No live WebGL on inner pages. Each page gets one lit header (base still + light layer + CSS
 sun-in), reveals, micro-interactions and View Transitions. One idea per page.

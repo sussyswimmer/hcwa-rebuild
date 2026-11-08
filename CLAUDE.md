@@ -43,6 +43,11 @@ and donation details before anything goes live.
   text is HTML, never only in a canvas; impact numbers never count up (they appear as
   they are); mobile LCP < 2.5s on a mid-range Android, 3D loads after the text. Motion
   and 3D rules are in `docs/plan/05-DESIGN.md`.
+- One continuous flow (Maxwell, 8 Nov 2026): the whole site reads as one journey through
+  one day with no hard lines. No straight edges, rules or abrupt background changes between
+  sections, sheets, bands, headers, footers or pages; everything blends through light and a
+  single page-length day gradient, and pages hand off through View Transitions.
+  `docs/plan/05-DESIGN.md` section 0.5 has the rules.
 
 ## Skills to use
 

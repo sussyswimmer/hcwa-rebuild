@@ -70,6 +70,45 @@ specific to Saigon; trustworthy for donors aged 25 to 70; fast on a mid-range An
   DOM cards, 0 to N (fit 6). Ten-day plan, fallbacks first, device gate in week 1 (craft
   13, fit 3/14).
 
+## 0.5 One continuous flow (Maxwell, 8 Nov 2026: binding, overrides any section below)
+
+> "I want there to be one continuous flow of the entire site. There should be no hard lines;
+> one part of the site should flow to the next."
+
+The whole site is **one journey through one day**, and nothing in it has a hard edge.
+
+- **No hard section boundaries, anywhere.** No straight edge, 1 px rule, border-top or
+  abrupt background change between sections, sheets, bands, the header, the footer or a page
+  header and its body. Every change of background, light or "world" happens over a long
+  feathered blend: at least 24svh on desktop and 16svh on phones, eased (never linear), and
+  ideally carried by the light itself: sun patches, shafts or the bông gió pattern that fade
+  through the seam.
+- **One continuous background, not stacked bands.** Section backgrounds come from a single
+  page-length "day" gradient that follows the sun clock: morning lime wash at the hero,
+  midday at the work sheet, late-afternoon gold around the shutters and help, dusk blue at
+  the contact band and footer. A section never has its own flat fill. The existing tokens
+  stay the palette; the gradient moves between them.
+- **The world never disappears behind a wall.** Where content needs a calm surface for
+  reading, use a translucent, feathered surface (soft mask, backdrop blur at most 8 px,
+  opacity <= 0.92) through which the world's light still reads, and keep text contrast
+  rules (H1 >= 4.5, running text >= 7 over the real background). "Opaque sheets" in PLAN
+  H5 become feathered surfaces; the bông gió sheet edge becomes a soft, light-filled mask,
+  never a cut-out line.
+- **Lists and grids have no hard dividers either.** Rows breathe with space and light
+  (hover light, gradients that fade to nothing), not 1 px lines. Cards, if any, have no hard
+  outline: shape comes from light and shadow.
+- **Pages flow into each other.** Inner pages continue the same day: their lit header blends
+  into the body without a bottom edge; the background day position matches the page's place
+  in the site. Navigation uses View Transitions so the light and background carry across the
+  change (shared light layer, no white flash); off under reduced motion and pause.
+- **Motion follows the scroll continuously.** Section reveals overlap the previous
+  section's exit, so there is never a dead moment with nothing moving while the visitor
+  scrolls, and never a "slide" that starts at a hard line. Native scroll speed still.
+- **Fallbacks keep the flow too.** Reduced motion, Tier 0 and no-JS pages show the same
+  continuous day gradient and soft seams, just without movement.
+- **Review rule:** any visible hard line between two parts of the site is a must-fix in
+  every critique, at 390 and 1440, in both languages.
+
 ## 1. Color tokens
 
 Source of truth: the block below, copied verbatim into `prototype/src/styles/tokens.css`
