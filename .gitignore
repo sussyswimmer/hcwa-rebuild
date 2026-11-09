@@ -19,3 +19,5 @@ qa/m2/
 qa/m3/
 # WordPress port QA working captures (parity renders, critic evidence): local only.
 qa/wp-port/
+# Local WordPress smoke-test screenshots and reports (scripts/wp-local.sh smoke): local only.
+qa/wp/
