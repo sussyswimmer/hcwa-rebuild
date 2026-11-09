@@ -135,9 +135,10 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
 /* The section ends where the walk does (critique r1: no plaster tail, no link alone on it). The live canvas goes
    out by itself: the camera walks on past the last door looking down to the runner, and the frame washes to
    lime-100 from its top down while the work sheet rises over it (world/journey.js WALK_OUT, at least 24svh /
-   16svh, eased), so the runner is the last thing seen, still fading just above the sheet's bông gió row. Without
-   the live world the bay's view feathers into the root's lime-100 (.bay__view's mask). The link to every center
-   comes in under the last card (.bays__all below). */
+   16svh, eased), so the runner is the last thing seen. Critique r2: the picture also fades to lime-100 over a hem above
+   the sheet's top (renderer.js uHem, 38svh / 36svh), so the sheet never cuts it at full strength. Without the live
+   world the bay's view takes the same hem (.bay__view's --hem-mask). The link to every center comes in under the last
+   card (.bays__all below). */
 html.stages .bays-section.is-stage { padding: 0; background: transparent; }
 html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 50svh); }
 @media (max-width: 599.98px) { html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 40svh); } }

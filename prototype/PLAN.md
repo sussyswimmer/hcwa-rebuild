@@ -1023,3 +1023,54 @@ errors, no frame with two headings above 10%. The matrix (home corridor, Our Wor
 Tier 1/2, reduced, Tier 0, no JS; 320): 56 views, 0 console errors, 0 overflow. `check:tiles` passes, its stage
 overlap included (the EN 390 open item of the focus round is closed: the link now shares the last card's links
 row). Tastegate passes on home, VI and EN. Captures: `qa/m3/fix-r1-corridor/`.
+
+**H4 corridor, fix round 2 (9 Nov 2026; corridor engineer).** Maxwell: "the hallway section is so boring its jst a
+plain white wall". The round-2 critique's items, each at its source; where the build differs, and what it supersedes
+above (fix round 1 items 1, 2, 4 and 5; the richness pass's leaflets and door swing):
+1. **The hem (must).** The picture fades to lime-100 over a hem above the work sheet's top, whatever the top-down wash
+   is doing, so the sheet never cuts the corridor at full strength. **Departure:** it is drawn in the wash program
+   (`renderer.js` `uHem`, `journey.js` `hemSpan`), not as a CSS mask on the canvas fed by a per-frame `--sheet-top`:
+   one full-screen pass in a program that already runs there, no style write or mask repaint per frame, and the hem
+   and the sweep multiply in one place. The hem is 0.38 of a screen (0.36 under 600 px; D0.5's 24svh / 16svh are the
+   floor), on eased stops (0.11 at an eighth, 0.51 at half): at the critique's 24svh the stops moved 40 px band means by
+   16-19 levels over the corridor's darkest floor. While the scene is drawn, the clear colour (what shows past an open
+   doorway) stays the light, so the hem never switches it at once. Without the world on the stage (the GPU lost mid-walk,
+   `world-off`) the bay's still takes the same hem (`stages.css` `--hem-mask`; `motion/stages.js` writes `--sheet-y`, the
+   sheet's top in the frame's box, only while the stills show). Seam scan (a frame every 40 px from 1.4 screens before
+   the corridor's end to the H2 at 0.3 of the screen; band means of row luma; VI and EN, 390 and 1440, Tier 1 and 2,
+   `qa/m3/fix-r2-corridor/evidence/seam.py`): over the lower hem, where the sheet used to cut, no 40 px band moves the
+   mean by more than 11.9 levels (it was 42 in 18 px). Over the whole hem the picture's own edges as they fade (the
+   dado's line, the yellow pane's foot over the floor under a phone card) still reach 18.1 at 1440 and 25.5 at 390.
+   Least non-background share 24.8% (≥ 15%). 0 console errors.
+2. **Running text ≥ 7 (must).** `.bays__intro` is ink-900 in both layouts (one rule). Live probe (stage 0.04 / 0.17 /
+   0.22 / 0.50 / 0.78; Tier 1 and 2; VI and EN; 390 and 1440; darkest 1%): 304 lines, 0 below; worst running text 7.58
+   (the blue-700 links at 1440 Tier 2), `.bays__intro` 12.23, headings 11.55, rail labels 11.37. The probe takes a
+   throwaway capture after hiding the text: SwiftShader at Tier 2 sometimes handed the first capture a stale text layer.
+3. **Doors (should).** An open door opens into its room, hinged on the jamb nearer the camera's approach, to 96°
+   (`sets/corridor.js` `DOOR_OPEN`, `journey.js` `DOOR_DEG`): it turns away from the visitor, the lit room opening from
+   the far jamb first, and comes to rest behind the near wall. **Departure:** folded back outward along the wall (166°)
+   it was still a green slab beside the lens at 1440, so the critique's alternative is taken; the units' colour stays
+   in the frames, the transoms and the doors still shut ahead. `glsl/doors.js` knows the swing (`uDoors.w` ±2), the lit
+   room's glow plane is 1.05 m back (the leaf stands in front of it). Backstop: corridor paint and walls nearer the lens
+   than 1.4 m along its axis dither away (gone by 0.7 m; discarded, no sort; walls only, as a phone frame's foot is that
+   near). Little Rose's door is untouched (its hinge, shut). `little-rose.test.mjs`: over the whole walk, 390 and 1440,
+   three orders, no point of any leaf in frame is nearer than 1.5 m. `bay-*` and `passage-corridor` re-rendered.
+4. **The pane (should).** It is the wall it stands on: lime-50 with 60% `world-vang-sun` (96% / 92%), token maths ink-900
+   ≥ 12.3 and blue-700 links ≥ 8.4 over the dado line or indigo. Between cards it eases back to the door index alone, on
+   every width; under 1024 px its foot also follows the shown text (+24 px, then a 96 px eased feather), so the runner and
+   the dado fill the screen under the card. The panel's layout box never moves (the camera frames the door above it).
+   8 strips (34 frames each): no corridor frame with two headings above 10%.
+5. **Coulds.** (a) The dwell beside the card (1440 layout) looks 3° down, eased in over 0.12-0.42 of each beat and out
+   over 0.62-0.92, scrubbed: **departure**, a lens shift, not a pitch, so verticals stay vertical (D5.3); the desk bay
+   stills take it too. (b) The transom's emblem lands 1.5× its size about its centre (`EMBLEM`), its penumbra kept.
+   (c) Lò cò (staging only): 3.5 cm lines, whiter chalk (60% lime-50), dry-brushed, 0.97, 10 cm nearer its door; still
+   no numbers, letters or names, never near Little Rose's bay. (d) Leaflets cut on every tier and from the stills
+   (`objects/props.js`, `leafFade` and its tests removed; the fans, the shafts and the tamarinds' dapple carry the life).
+   (e) Door wear shows an older, lighter coat (`mix(paint, tile-cream, 0.45)`), not wood; the kick zone is 12.5 cm and a
+   face takes at most 0.06. ΔE2000 of the most a face spot can take: green 2.48, blue 2.13, pink 1.84 (were 2.11, 1.96,
+   1.47 with wood at 0.1).
+Budgets: corridor chunk 9.18 KB gzip (10.40), live chunk 16.21 KB (16.19); per frame no allocation (the hem is a reused
+`Vector4`). GPU on a real phone: still not measured on device; the hem adds the wash pass over the stage's last
+0.38 screen of scroll. `npm test` 103/103; build, `PROD=1` (blocked only on drafts and guards), `build:pages`. Strips,
+matrix (72 views, 0 console errors, 0 overflow, plus the stage after a lost GPU context), live probe, seam scan and
+tastegate (home, VI and EN, pass): `qa/m3/fix-r2-corridor/`.
