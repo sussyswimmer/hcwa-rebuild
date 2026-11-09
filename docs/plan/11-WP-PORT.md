@@ -936,7 +936,10 @@ run in a fresh clone because their inputs are committed, 1.1):
   next request; re-seed with `seed main` after a content-model change (idempotent). Never `stop`,
   `reset`, `setup` or `env` on `main`.
 - **Production pass**, on a throwaway instance:
-  1. `setup scratch-prod 8890`, `seed scratch-prod`, `env scratch-prod production`, `start scratch-prod`.
+  1. `setup scratch-prod 8890`, `seed scratch-prod`, `env scratch-prod production`, `start scratch-prod`,
+     then `wp scratch-prod -- hcwa protect-little-rose --apply`. A fresh production instance has never
+     had that review step, so `wp hcwa coverage` blocks on it until it runs (on the live site it is a
+     reviewed step, Phase 3 before 3.6; on seeded content it marks nothing).
   2. CONTRACT rule 4's procedure after a database push: first
      `wp hcwa draft-scan --printed=raw --format=urls > qa/wp-port/scratch-prod/unpublished.json` (the
      public URLs of those posts, written while they are still published: a draft's permalink is

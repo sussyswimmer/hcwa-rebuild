@@ -738,8 +738,19 @@ def is_container(meta: dict, index_js: str = "") -> bool:
     return bool(re.search(r"\bregisterContainer\s*\(|\bInnerBlocks\b|\buseInnerBlocksProps\b", index_js))
 
 
-# Blocks hcwa_render_sections() removes from inside a container (11-WP-PORT.md 2.1 rule 4).
-CONTAINER_DROPPED = ("core/html", "core/freeform", "core/shortcode")
+# Blocks hcwa_render_sections() removes from inside a container (11-WP-PORT.md 2.1 rule 4;
+# hcwa_sections_banned_blocks() in hcwa-core includes/sections.php), plus every old
+# core-embed/* name (CONTAINER_DROPPED_PREFIX).
+CONTAINER_DROPPED = (
+    "core/html", "core/freeform", "core/shortcode",
+    "core/block", "core/pattern", "core/template-part", "core/post-content",
+    "core/embed", "core/rss",
+)
+CONTAINER_DROPPED_PREFIX = "core-embed/"
+
+
+def container_dropped(full_name: str) -> bool:
+    return full_name in CONTAINER_DROPPED or full_name.startswith(CONTAINER_DROPPED_PREFIX)
 
 
 def load_blocks(report: Report, dump: dict | None = None) -> dict[str, dict]:
@@ -815,7 +826,9 @@ def parse_block_comments(text: str, where: str, report: Report, blocks: dict, ba
     Every hcwa/* block is dynamic and saved self-closing, except the containers
     (is_container(): hcwa/sections, hcwa/day), which wrap their inner blocks. With
     balance on, nothing but whitespace may sit between the inner blocks of a container,
-    and no core/html, core/freeform or core/shortcode block may be one of them:
+    and no block hcwa_render_sections() removes (container_dropped(): core/html,
+    core/freeform, core/shortcode, synced patterns, template parts, post content, embeds
+    and RSS) may be one of them:
     hcwa_render_sections() drops both (11-WP-PORT.md 2.1 rule 4), so a pattern holding them
     would print differently from what the editor shows."""
     stack: list[str] = []
@@ -834,7 +847,7 @@ def parse_block_comments(text: str, where: str, report: Report, blocks: dict, ba
         if balance and stack and container(stack[-1]) and between.strip():
             report.error("patterns", loc, f"literal HTML between the inner blocks of {stack[-1]} "
                          f"({between.strip()[:40]!r}); hcwa_render_sections() drops it")
-        if balance and not m.group("closer") and full in CONTAINER_DROPPED and any(container(s) for s in stack):
+        if balance and not m.group("closer") and container_dropped(full) and any(container(s) for s in stack):
             report.error("patterns", loc, f"{full} inside {next(s for s in reversed(stack) if container(s))}; "
                          "hcwa_render_sections() removes it")
         attrs = {}
@@ -1454,6 +1467,14 @@ def self_test() -> int:
                                                         "<!-- wp:html -->\n<img src=x>\n<!-- /wp:html -->\n<!-- /wp:hcwa/day"),
                                            "fixture.php", r, fixture_blocks, balance=True)
         expect("core/html inside hcwa/day: one error (its content is inside the html block, not between)", r, 1, 0, "core/html inside hcwa/day")
+        r = Report(); parse_block_comments(good.replace("<!-- wp:hcwa/hero /-->\n<!-- /wp:hcwa/day",
+                                                        '<!-- wp:block {"ref":157} /-->\n<!-- /wp:hcwa/day'),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("synced pattern (core/block) inside hcwa/day: one error", r, 1, 0, "core/block inside hcwa/day")
+        r = Report(); parse_block_comments(good.replace("<!-- wp:hcwa/hero /-->\n<!-- /wp:hcwa/day",
+                                                        '<!-- wp:core-embed/instagram {"url":"https://example.com/p/x"} /-->\n<!-- /wp:hcwa/day'),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("old core-embed/* block inside hcwa/day: one error", r, 1, 0, "core-embed/instagram inside hcwa/day")
 
         blocks = root / "blocks"
         (blocks / "center-grid").mkdir(parents=True)

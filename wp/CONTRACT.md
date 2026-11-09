@@ -461,7 +461,12 @@ editable in Polylang.
      `hcwa_end_as_404()`: `WP_Query::set_404()` keeps `is_feed` and the found posts, so
      every refusal also clears the feed flags, the posts and the queried object, and the
      404 template prints as HTML, never a feed item (found on real WordPress, fix round 2).
-     Embeds and the oEmbed endpoint are off.
+     The theme keeps its own copy for when the plugin is off
+     (`hcwa_theme_refuse_attachment_page()` through `hcwa_theme_request_attachment_ids()`
+     and `hcwa_theme_end_as_404()`). The smoke test probes every one of these forms, each
+     also as an `rss2`, `atom` and `comments-rss2` feed, and reads the body, not only the
+     status (wp/README.md "What the smoke test checks"). Embeds and the oEmbed endpoint are
+     off.
    - **Center logo.** `hcwa_logo_id` is center media: the lit header prints it only when
      `hcwa_image_allowed()` passes in the center's context (`hcwa_center_logo_html()`),
      with the prototype's plain `<img>`. The seed marks its own drawn unit logos approved.
@@ -654,26 +659,36 @@ builders are the only raw output, and they come from build files, not the databa
 ```
 find wp scripts -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v 'No syntax errors'
 find wp -name '*.js' -print0 | xargs -0 -n1 node --check
-bash -n scripts/wp-local.sh && python3 -m py_compile scripts/wp-smoke.py
+bash -n scripts/wp-local.sh && python3 -m py_compile scripts/wp-smoke.py scripts/wp-parity/run.py
 php wp/tests/run.php
 python3 -I scripts/wp-static-check.py
+python3 -I scripts/wp-static-check.py --self-test
 ```
 
-On real WordPress (Maxwell's permission, 9 Nov 2026; every command needs
-`HCWA_WP_LOCAL_OK=1`):
+On real WordPress (Maxwell's permission, 9 Nov 2026; automated runs set
+`HCWA_WP_LOCAL_OK=1`; in a root container `wp-local.sh` passes `--allow-root` to WP-CLI
+itself):
 
 ```
 scripts/wp-local.sh wp main -- hcwa coverage          # no blocking row
-scripts/wp-local.sh wp main -- hcwa draft-scan        # printed=raw|guarded, --format=ids
-scripts/wp-local.sh smoke main                        # every seeded view, the attachment probes
+scripts/wp-local.sh wp main -- hcwa draft-scan        # printed=raw|guarded, --format=ids|urls
+scripts/wp-local.sh smoke main                        # every seeded view and the 48 HTTP probes
 scripts/wp-local.sh parity main -- --quick            # or --full, --only home, --self-test
 scripts/wp-local.sh seed main                         # after a content-model change (idempotent)
 ```
 
+The smoke probes read the response body as well as the status (`body_absent`,
+`body_absent_re`): every form of the refused attachment, each also as a feed, and the
+center, program, search and any-type feeds (wp/README.md). The parity driver masks images
+served from `/wp-content/uploads/` out of the pixel compare (it blurs them, as the smoke
+test does) and compares `<meta name=description>`, `og:title`, `og:description` and
+`og:locale` with the prototype on every route; `--production-asserts` also runs the
+attachment and feed probes. Allow entries may carry `width` and `mode`.
+
 `.wp-local/main/logs/debug.log` must gain no warning, notice or deprecation naming
 `hcwa-2026` or `hcwa-core`. Production checks run on a throwaway instance
-(`setup scratch-prod 8890`, `seed`, `env scratch-prod production`, `start`, the 5.9
-procedure, `stop`). Never install another plugin or theme from the internet, and never
+(`setup scratch-prod 8890`, `seed`, `env scratch-prod production`, `start`,
+`wp hcwa protect-little-rose --apply`, the rest of the 5.9 procedure, `stop`). Never install another plugin or theme from the internet, and never
 download other external code (Composer packages and the like). Never `git commit` or push;
 the lead commits.
 

@@ -201,22 +201,6 @@
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), so the frame strip (5.5) lands the footer's lines a fraction of a pixel apart (WordPress sits 28.8 px higher, 13538.95 against 13567.75) and anti-aliased text differs by 1.26% in the band; the one page-length day gradient (05-DESIGN 0.5) also shifts its tone by that fraction. Same markup and height; the matrix's own footer shot differs by 0.12%.",
       "owner": "templates"
-    },
-    {
-      "route": "/hoat-dong/co-so/tre-xanh/",
-      "section": "main>header.lit-head",
-      "kind": "pixels",
-      "match": "",
-      "reason": "The center logo comes from the media library (the center's logo field, 3.2), and the driver blurs every /wp-content/uploads/ image as the smoke test does (run.py new_context; this repo is public), where the prototype serves the same PNG from /img/. Same file, same 56 px box; the blurred logo is a larger share of the header at 390.",
-      "owner": "templates"
-    },
-    {
-      "route": "/en/our-work/centers/green-bamboo/",
-      "section": "main>header.lit-head",
-      "kind": "pixels",
-      "match": "",
-      "reason": "The center logo comes from the media library (the center's logo field, 3.2), and the driver blurs every /wp-content/uploads/ image as the smoke test does (run.py new_context; this repo is public), where the prototype serves the same PNG from /img/. Same file, same 56 px box; the blurred logo is a larger share of the header at 390.",
-      "owner": "templates"
     }
   ]
 }

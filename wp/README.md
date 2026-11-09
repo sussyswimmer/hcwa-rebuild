@@ -19,14 +19,30 @@ signatures and gating rules. Read it before changing anything here.
 
 ## Permission note
 
-Nothing in this folder has run inside WordPress yet. In the shared build environment,
-downloading and running WordPress and WP-CLI needs Maxwell's permission. Until he gives it,
-the only checks are `php -l`, `node --check` and `php wp/tests/run.php`, which uses
-WordPress stubs (see "Checks without WordPress" below).
+Maxwell gave permission on 9 Nov 2026 to download and run WordPress locally in the shared
+build environment. Since then the theme and plugin run in a real local WordPress (7.1.4,
+Polylang 3.9.1, SQLite), and that instance is the main check of every change (see
+"Run it locally"). The stub tests (`php wp/tests/run.php`) and the static check still run
+without WordPress, for CI and a fresh clone.
 
-`scripts/wp-local.sh` enforces this. Commands that download or run WordPress (`setup`,
-`start`, `seed`, `wp`, `reset`) only run from a terminal, or with `HCWA_WP_LOCAL_OK=1`
-set once permission is given. Automated runs are refused with a message pointing here.
+`scripts/wp-local.sh` still asks for the permission to be stated. Commands that download or
+run WordPress (`setup`, `start`, `seed`, `wp`, `reset`) run from a terminal, or from an
+automated run with `HCWA_WP_LOCAL_OK=1` set. Without either they are refused with a message
+pointing here. Automated runs set it on every command, for example
+`HCWA_WP_LOCAL_OK=1 scripts/wp-local.sh smoke main`.
+
+Root containers: cloud build containers only have the root user, and WP-CLI refuses to run
+as root unless it is given `--allow-root`. `scripts/wp-local.sh` passes that flag itself
+whenever it runs as root (`id -u` is 0), on every WP-CLI call it makes (`setup`, `seed`,
+`wp`, and the language-cache reset of `start`), so nobody needs to add it by hand. That is safe here because the
+instance only listens on 127.0.0.1 and runs this repo's code plus the pinned, hash-checked
+downloads. Do not pass `--allow-root` on HCWA's own servers.
+
+Rules for the shared instances (`docs/plan/11-WP-PORT.md` 5.9): the seeded instance `main`
+(port 8881) is shared by every agent, so never `stop`, `reset`, `setup` or `env` it; re-seed
+it with `seed main` after a content-model change. Production checks and editor checks run on
+a throwaway instance with its own name and port (`setup scratch-<label> <port>`), stopped
+when done. Never install another plugin or theme from the internet.
 
 ## Run it locally
 
@@ -38,11 +54,20 @@ Playwright (`.venv`, as for `scripts/live-audit.py`). `smoke` uses the repo-loca
 in `.playwright-browsers/` when that folder exists.
 
 ```sh
+npm --prefix prototype ci && npm --prefix prototype run export:wp   # the theme's assets/dist/ (not committed)
 scripts/wp-local.sh setup main      # once: WordPress + Polylang + SQLite, our plugin and theme
 scripts/wp-local.sh seed main       # languages, pages, centers, programs, figures, news, menus
 scripts/wp-local.sh start main      # http://127.0.0.1:8881/  (English: /en/)
-scripts/wp-local.sh smoke main      # browser check, screenshots in qa/wp/<date>/
+scripts/wp-local.sh smoke main      # browser check, screenshots in qa/wp/<date>-<time>/
+scripts/wp-local.sh parity main -- --quick   # side by side with the built prototype
 ```
+
+The theme takes every CSS, JS, font, still and SVG file from `assets/dist/`, which
+`npm --prefix prototype run export:wp` builds from the prototype's own sources
+(`docs/plan/11-WP-PORT.md` 1.1). It is not committed (the posters alone are 14 MB), so run
+the export once after a clone and again after any prototype change. The generated files
+the PHP reads (`assets/generated/`, `hcwa-core/includes/prototype-data.php`,
+`wp/tests/fixtures/golden.json`) are committed, so the tests run without it.
 
 Log in at `http://127.0.0.1:8881/wp-admin/` as `admin` / `admin`. That account is fine
 because the server only listens on this computer. Never expose it.
@@ -54,6 +79,7 @@ because the server only listens on this computer. Never expose it.
 | `stop [name]` | Stops one instance, or all of them. |
 | `seed <name>` | Fills the instance from `content/draft/` (details below). Safe to run again. |
 | `smoke <name> [-- args]` | Runs `scripts/wp-smoke.py` against the running instance (details below). |
+| `parity <name> [-- args]` | Runs `scripts/wp-parity/run.py`: the built prototype (`prototype/dist`, served by `vite preview`) and this instance side by side (details below). Reads the instance, never changes it. `--quick`, `--full`, `--only home`, `--self-test`, `--production-asserts`. |
 | `env <name> local\|staging\|production` | Sets `WP_ENVIRONMENT_TYPE`. `production` switches on the live-site gates, so you can check them locally. No restart needed. |
 | `wp <name> -- <args>` | WP-CLI passthrough, for example `scripts/wp-local.sh wp main -- hcwa coverage`. |
 | `reset <name> [--yes]` | Deletes the instance and sets it up again on the same port. The downloads cache stays. The repo's plugin and theme are symlinks, so they are not touched. |
@@ -195,34 +221,112 @@ Vietnamese permalink on the host being tested. It also checks that the SEO plugi
 stays out of public REST (`/wp-json/wp/v2/posts` carries no `yoast_head` or
 `yoast_head_json`, `/wp-json/yoast/v1/get_head` never answers 200) and that
 `post-sitemap.xml` lists no `<image:loc>`; these pass without Yoast too and become real
-checks once it is installed. For the seed's photo-gate fixture, its attachment page
-(`/?attachment_id=<id>`) must answer 404 with no `Location` header, and the Little Rose
-center page must not contain the photo's file name anywhere, so neither the page nor an
-SEO plugin's `og:image`, `twitter:image` or JSON-LD prints it.
+checks once it is installed. For the seed's photo-gate fixture (a refused Little Rose
+photo), the Little Rose center page must not contain the photo's file name anywhere, so
+neither the page nor an SEO plugin's `og:image`, `twitter:image` or JSON-LD prints it. Its
+attachment page is probed in every form that reaches it: `/?attachment_id=<id>`,
+`/?p=<id>`, `/?page_id=<id>`, the same through `post_type=attachment` (`p`, `page_id`,
+`name`, `post_type[]`) and `/?attachment=<slug>`. Each must answer 404 with no `Location`
+header and a body that names neither the file nor the Little Rose path (`/hoa-hong-nho/`,
+`/little-rose/`); each is also requested as an `rss2`, `atom` and `comments-rss2` feed,
+which must answer 404 the same way with no `<item>` or `<entry>` (fix round 2 found the
+feed forms printing the photo's item with a 404 status). The center and program type
+feeds and the search feeds (`?feed=rss2|atom&post_type=hcwa_center|hcwa_program`,
+`?s=a&feed=rss2|atom`) must answer 404 with no item, and the any-type feed must list no
+center or program page. A probe declares what it checks with `status`, `no_location`,
+`body_absent` (text the body must not contain) and `body_absent_re` (patterns it must not
+match). 48 HTTP probes in all on `main`, 32 of them feeds.
 
-It saves full-page screenshots and `report.json` to `qa/wp/<date>/`, prints a summary,
-and exits with 1 if anything fails. Images from the media library and from other sites are
-blurred before the page renders, so screenshots of a copy of the live site never show an
-identifiable child. Without `--manifest`, it checks the built pages from
-`prototype/src/routes.mjs`.
+**Port checks** (`docs/plan/11-WP-PORT.md` 5.7) run on every seeded view as well: the head
+order (head-inline, then `pageReveal`, `#i18n` with its 11 keys), the CSS and module from
+`assets/dist/` with no `?ver` and no jQuery, Fraunces, `wp-embed` or emoji script, the
+`body` order and the lit-page pairs, the language switch against `hreflang`, every menu
+link answering 200 in the page's language, the corridor's beat count, the Little Rose rules
+(no location line, no visit link, no unit colour; on production no door in any form and no
+listed still), traces off production, impact numbers that never count up, no mixed
+language, and the no-JS Contact submit on staging. Under `--production` the exported
+`BLOCKERS` scan, the Little Rose scans and the still-name scan always run, whatever
+`--allow-draft` says. `--unpublished <file>` lists URLs that must answer 404 (the 5.9
+production pass below). The script's docstring lists every check.
+
+It saves full-page screenshots and `report.json` to `qa/wp/<date>-<time>/` (one folder
+per run, `-production` added for a production run), prints a summary, and exits with 1 if
+anything fails. Images from the media library and from other sites are blurred before the
+page renders, so screenshots of a copy of the live site never show an identifiable child.
+Without `--manifest`, it checks the built pages from `prototype/src/routes.mjs`.
+
+## Parity with the prototype
+
+`scripts/wp-local.sh parity main` (`scripts/wp-parity/run.py`, spec in
+`docs/plan/11-WP-PORT.md` section 5) serves `prototype/dist` with `vite preview` and loads
+the prototype and WordPress side by side on the 16 parity routes (VI and EN of home, Our
+Work, Green Bamboo, Thrive Together, Get Involved, Donate, Contact and the 404) at 390 and
+1440, in the reduced, no-JS, no-WebGL and Tier 0 modes. Per section it compares the
+structure, the visible text, the links and a screenshot (height within 2 px, at most 1.0%
+of pixels differing). Images served from `/wp-content/uploads/` are blurred as in the smoke
+test, so their boxes, and the prototype image in the same place, are masked out of the
+pixel count (`masked` and `maskedShare` in each pixel row). Each page also gets one H1, no
+sideways scroll, no console error or failed request, and the same `<meta name=description>`,
+`og:title`, `og:description` and `og:locale` as the prototype. The default run adds the
+prototype's own browser checks against both sides, the world (`world-live` at Tier 1 and 2)
+and the byte and request budgets; `--full` adds the home frame strips and mobile LCP through
+a local gzip proxy. It also fails on any new `debug.log` line naming our code and on a hard
+line WordPress adds between sections. Accepted differences live in
+`scripts/wp-parity/allow-assets.json` and `allow-templates.json`, each entry with a reason
+and optionally scoped to one width or mode. The report goes to
+`qa/wp-port/parity/<date>-<time>/` (`report.json`, `report.html` with the images side by
+side, `strips/`). At most 2 headless browsers run at a time. `--self-test` compares the
+prototype with itself (the driver's noise floor).
+
+## Production pass
+
+Production behaviour is checked on a throwaway instance, never on `main`
+(`docs/plan/11-WP-PORT.md` 5.9):
+
+```sh
+scripts/wp-local.sh setup scratch-prod 8890 && scripts/wp-local.sh seed scratch-prod
+scripts/wp-local.sh env scratch-prod production && scripts/wp-local.sh start scratch-prod
+scripts/wp-local.sh wp scratch-prod -- hcwa protect-little-rose --apply
+scripts/wp-local.sh wp scratch-prod -- hcwa draft-scan --printed=raw --format=urls > qa/wp-port/scratch-prod/unpublished.json
+scripts/wp-local.sh wp scratch-prod -- post update $(scripts/wp-local.sh wp scratch-prod -- hcwa draft-scan --printed=raw --format=ids) --post_status=draft
+scripts/wp-local.sh smoke scratch-prod -- --unpublished qa/wp-port/scratch-prod/unpublished.json
+scripts/wp-local.sh parity scratch-prod -- --production-asserts
+scripts/wp-local.sh wp scratch-prod -- hcwa draft-scan --printed=raw   # lists nothing
+scripts/wp-local.sh wp scratch-prod -- hcwa coverage                    # no blocking row
+scripts/wp-local.sh stop scratch-prod
+```
+
+`protect-little-rose --apply` is the review step a live site runs once (Phase 3, before
+3.6); a fresh production instance has never had it, so `coverage` blocks until it runs (on
+seeded content it marks nothing). `draft-scan --format=urls` must run before the posts are
+set to draft: a draft's permalink is `?p=N`, not its public path. Rows marked `guarded`
+stay published, because the pass proves their draft text never prints on production.
 
 ## Checks without WordPress
 
 Run these before every report (from `CONTRACT.md`):
 
 ```sh
-find wp -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v 'No syntax errors'
+find wp scripts -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v 'No syntax errors'
 find wp -name '*.js' -print0 | xargs -0 -n1 node --check
+bash -n scripts/wp-local.sh && python3 -m py_compile scripts/wp-smoke.py scripts/wp-parity/run.py
 php wp/tests/run.php
-bash -n scripts/wp-local.sh && php -l scripts/wp-seed.php && php -l scripts/wp-router.php
-.venv/bin/python -I -m py_compile scripts/wp-smoke.py
 python3 -I scripts/wp-static-check.py
+python3 -I scripts/wp-static-check.py --self-test
 ```
 
 `wp-static-check.py` cross-checks the parts against each other and against `CONTRACT.md`:
 string keys, function names, block names and attributes, pattern slugs and links, CSS
-classes, meta keys, the text rules, plus the lint commands above. It exits 1 on any error;
-warnings are listed for review.
+classes (against the exported `classes.json` and `wp.css`), meta keys, the text rules,
+the freshness of the generated files (`sources.json`) and of the patterns, the blocks
+`hcwa_render_sections()` removes from a sections page, plus the lint commands above. It
+exits 1 on any error; warnings are listed for review. Both it and `php wp/tests/run.php`
+run in a fresh clone without `assets/dist/` (the bundle checks are then skipped).
+
+On real WordPress, before a report (see `CONTRACT.md`): `wp main -- hcwa coverage` (no
+blocking row), `smoke main` (every view passes) and `parity main -- --quick`, plus the
+production pass above when production behaviour changed. `.wp-local/main/logs/debug.log`
+must gain no warning, notice or deprecation naming `hcwa-2026` or `hcwa-core`.
 
 ## Phase 2 status
 
