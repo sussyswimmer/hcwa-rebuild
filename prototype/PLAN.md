@@ -900,3 +900,68 @@ file re-encoded within `encode-posters.py`'s budgets (bay and passage AVIF at q4
 HCWA approves before production: the yellow and mint paint, the fans, the leaflets and the tile palette
 (D0.6.4); the safeguarding lead sees `bay-little-rose` re-rendered (no fan, no leaflet, door shut, plain
 transom, the same dado break as every door).
+
+**H4 corridor, fix round 1 (9 Nov 2026; corridor engineer).** Maxwell: "the hallway section is so boring its
+jst a plain white wall". The critique's items, each at its source; where the build differs, and what it
+supersedes above (item 6 of "H4 corridor" and items 5 and 10 of the richness pass):
+1. **The way out.** The link to every center is in the panel: it comes in with the last card, beside that
+   card's own link when the row has room (under it otherwise), and goes with it (`--all-x` / `--all-y` from
+   `motion/stages.js`; focusing it walks to the last door). The section ends where the walk does: no plaster
+   tail, no bottom fade. Over stage 0.92-1.0 the camera looks 14° down to the runner (scrubbed, sine in-out; the
+   4° option was invisible). From the stage's end the image scrolls up with the frame (a lens shift equal to the
+   scroll since the pin let go) and washes to lime-100 **from the top of the frame down** (`renderer.js`
+   `uSweep`: a front feathered over 0.6 of the part still seen above the next sheet), `--ease-in-out`, until
+   the sheet's top is 0.12 of a screen from the frame's top and never in under 24svh (16svh below 600 px;
+   `journey.js` `washSpan`). The runner is the last thing seen, fading just above the work sheet's bông gió
+   row as its tiles rise (the sheet's 24svh / 16svh rise is the focus engineer's). Seam scan, the critique's
+   method (a frame every 40 px from stage 0.86 to the H2 at 0.3 of the screen; background = within 10 levels of
+   lime-100, the header left out): SEAM_RESULT
+2. **Leaflets.** Tier 1 draws none (D0.6.2 ladder step 2 taken now; `LEAFLETS`). Tier 2: two a beat, 8 at
+   most (was 32), released where their drift passes 1.7-2.6 m ahead of each door's reading spot and drawn only
+   1.3-3.6 m from the camera (faded and shrunk outside it), 68 × 26 mm with a tapered tip and a midrib,
+   `mixc(tile-jade, sun-400, 0.25)`, glinting only when the face shown is to the sun. `uLeafFade`
+   (`journey.js` `leafFade`, from the stage's progress, never time) takes their alpha and size to 0 over the
+   first 0.04 of Little Rose's beat and back over its last 0.04; a gate step down to Tier 1 grounds them.
+   `little-rose.test.mjs` projects every point of every leaflet's drift with the dwell camera at 390 × 844
+   and 1440 × 900 for u 0.05-0.95 of Little Rose's beat, three bay orders.
+3. **Thresholds.** Before every door, Little Rose's identical, the runner stops for 6 plain cream tiles (1.2 m,
+   either side of the tile joint nearest the door's centre) across its whole width, its border chain turning
+   the corner (mitred corner tiles): each bay has its own rug (`uGachP.y`, `still-surface.js`). So the pools
+   read on them: the transom's emblem is drawn crisper than the doorway's spill (penumbra 0.0015 + 0.0035·d,
+   was 0.0025 + 0.0056·d), the rooms' daylight on the floor is the day colour itself (was 86% of it) at full
+   strength (`uI[1]` 1, was 0.9), and on phones the door's centre sits at 0.44 of the free frame (was 0.5),
+   which puts the threshold above the card panel's feather. Signature check (rooms' light on and off, the
+   pixels it brightens inside each pool's floor quad, `pool.cjs`): POOL_RESULT The medians carry the
+   antialiased edges of 2-3 px slots; the slots themselves pass 1.6. **Little Rose's threshold has no pool**:
+   its plain transom glows on the wall and casts nothing on the floor (`glsl/doors.js`), so its floor has only
+   the corridor's untinted shade.
+4. **The pane.** On desktop the plaster runs only from the door index's top − 24 px to the shown text's foot +
+   72 px, feathered over 96 px with eased stops (`--pane-t` / `--pane-b`, registered and eased between
+   cards): the wash and the ceiling show above it, the dado and the floor below. It leans to the wall it stands
+   on: lime-50 with 20% of `world-vang-sun`, at 96% (Tier 1) and 92% (Tier 2). Live probe (stage 0.04 / 0.17 /
+   0.22 / 0.50 / 0.78, Tier 1 and 2, VI and EN, 390 and 1440, darkest 1%): 296 lines, 0 below; worst running
+   text 7.42 (the phone stage intro), headings ≥ 12.21. The 20% tint stays.
+5. **Door wear.** A leaf (its `aLeafP`, hinge space, `objects/door.js`) is worn only within 4 cm of its edges,
+   in a kick zone fading up its foot's 25 cm and in a 10 cm disc at the handle; its face takes at most 0.1, and
+   the chips stay on the leaf as it swings. Frames keep their chipped edge band. One rule for every door,
+   Little Rose's at its 0.3. Lit swatches by the paint's own maths (token × the sun tint in full light) are
+   unchanged by this: green 1.65 and blue 3.0 ΔE2000 at t 0.25; the most a face can now take moves them by at
+   most 0.6. Pink reads 5.0 by the same maths (it was before this round), but Little Rose's door never takes
+   the corridor's sun.
+6. **Ceiling (could).** Warmed toward `world-vang-shade` by up to 30% within 0.5 m of the long walls, and aged
+   with the wash's loang (the lime texture's A, no new fetch).
+7. **Doorways (could).** Each open door's lit room: sun-100 under the head to sun-200 at the threshold over the
+   door's height, the reveal's shade along the jambs and the floor line, and a 7% Hoa thị dapple of the room's
+   own screen on its back wall. Departure: the dapple is on the room seen through the doorway, not on the jamb
+   reveal (the frames are one merged draw and take no light from the room on their reveal faces).
+8. **Traces (could, staging only).** The chalk lò cò (six rows of 0.34 m squares and a half-round home, blue
+   chalk, no numbers, names or letters) on the Tre Xanh bay's plain band, on the side of its door away from
+   Little Rose and its whole length at least 1.5 m from Little Rose's bay (else none). It is drawn only when
+   the corridor section carries `data-traces`: in staging while `content/draft/world.json` has traces on and
+   unapproved (the PROD guard fails the build then), in PROD only once HCWA approves. Never in a still.
+Stills re-rendered and re-encoded within `encode-posters.py`'s budgets: `bay-*` and `passage-corridor`
+(thresholds, pools, Little Rose's bare threshold, ceiling, wear), `hub-doors-wide`, `hub-door-*`, `door-*`,
+`gallery-wall` and `header-green-bamboo` (wear, ceiling). `light-contrast.mjs`: 212 lines, 0 below.
+Budgets: corridor chunk 10.40 KB gzip (10.05; limit 10.5), live chunk 16.19 KB (15.98); fewer leaflet
+triangles; per frame still no allocation (`uLeafFade` is written only when it changes). GPU on a real phone:
+still not measured on device. QA_RESULT

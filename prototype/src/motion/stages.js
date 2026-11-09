@@ -46,12 +46,19 @@ export function initStages() {
   // and below the card), and the link to every center sits just under the last card (never alone on plaster).
   const GAP = 12;
   let ext = null;
+  // The link goes beside the last card's own link when the row has room for it (one row of links, the card no
+  // taller, clear of the sheet that rises under the stage's end on phones), else on its own row under the card.
   const measure = () => {
     const f = frame.getBoundingClientRect(), y = (e) => e.getBoundingClientRect();
-    const lb = n ? y(texts[n - 1]).bottom : y(head).bottom, cell = y(list);
-    ext = { top: y(rail).top - f.top, head: y(head).bottom - f.top, cards: texts.map((t) => y(t).bottom - f.top), all: lb - f.top + GAP + all.offsetHeight };
-    el.style.setProperty("--all-y", `${Math.round(lb - cell.top + GAP)}px`);
-    return lb + GAP + all.offsetHeight <= cell.bottom + 1;
+    const lb = n ? y(texts[n - 1]).bottom : y(head).bottom, cell = y(list), a = all.firstElementChild;
+    const own = n ? texts[n - 1].querySelector(".bay__links")?.lastElementChild : null, o = own ? y(own) : null;
+    const beside = o && o.right + 2 * GAP + a.offsetWidth <= cell.right;
+    const ax = beside ? o.right + 2 * GAP - cell.left : 0, ay = beside ? o.top - cell.top : lb - cell.top + GAP;
+    const bottom = beside ? lb : lb + GAP + all.offsetHeight;
+    ext = { top: y(rail).top - f.top, head: y(head).bottom - f.top, cards: texts.map((t) => y(t).bottom - f.top), all: bottom - f.top };
+    el.style.setProperty("--all-x", `${Math.round(ax)}px`);
+    el.style.setProperty("--all-y", `${Math.round(ay)}px`);
+    return bottom <= cell.bottom + 1;
   };
   let lastK = -1;
   const extent = (k) => {
