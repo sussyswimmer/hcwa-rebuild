@@ -701,10 +701,8 @@ the lead commits.
   draft-scan `printed` column and the coverage rows for the new fields; the harness
   (`scripts/wp-parity/`, the smoke and seed extensions, the static check).
 - **Locking spike:** contentOnly passed, 15 of 15 checks (Decisions above).
-- **Verified on real WordPress** (`main`, 9 Nov): the parity driver passes structure,
-  text, links and pixels on 16 routes × 2 widths × the reduced, no-JS, no-WebGL and
-  Tier 0 modes; the world reaches `world-live` at Tier 1 and 2; LCP within the gates; the
-  `?attachment_id`, `?p` and `?page_id` probes answer 404 with no `Location`.
+- **Verified on real WordPress** (`main`, 9 Nov): see "Final recheck" below for the
+  numbers on the final tree.
 - **Fix round 1 (9 Nov, templates):** refused attachments are refused through a
   `post_type=attachment` query too (rule 2); REST closes centers, programs, reports and
   focus areas to visitors, feeds of those types answer 404, and production drops draft
@@ -715,9 +713,26 @@ the lead commits.
   unit is little-rose counts whether or not its flag is ticked; links to pages that are
   not published are left out on production (rule 11); an empty center plate is left out
   and a sun head with a left-out title prints an sr-only H1 (rule 12);
-  `hcwa_page_description()` gives the prototype's per-page description. Pending in the
-  assets stream: `inc/assets.php` prints `hcwa_theme_own_description()` before the
-  tagline, without draft brackets, plus `og:title`, `og:description` and `og:locale`.
+  `hcwa_page_description()` gives the prototype's per-page description.
+- **Fix round 2 (9 Nov):** two critics found that a refused Little Rose photo still leaked
+  through its feed (`/?attachment_id=40&feed=rss2` answered 404 but printed the photo's
+  item, with the Little Rose path and the upload URL), because `WP_Query::set_404()` keeps
+  `is_feed` and the posts. Every refusal now ends through `hcwa_end_as_404()` (theme twin
+  `hcwa_theme_end_as_404()`), which also clears the feed flags, the posts and the queried
+  object, and reads the attachment from the query vars too
+  (`hcwa_request_attachment_ids()`); the type, search and comment feeds of rule 4 print
+  the 404 template the same way (rule 2, rule 4). Sections pages also remove synced
+  patterns, template parts, post content and embeds at any depth, including inside a
+  synced pattern at render time (rule 8). The theme prints the page's own meta
+  description plus `og:title`, `og:description` and `og:locale`, as the prototype does
+  ("Head metadata"). `wp hcwa draft-scan --format=urls` writes the unpublish list for the
+  production pass. The harness now reads response bodies and probes feeds (smoke and
+  `--production-asserts`), masks uploaded images out of the pixel compare, and compares
+  the head metadata with the prototype; the allow entries for the EN 390 news shift are
+  scoped to 390, and the two lit-header logo entries were deleted once the mask made them
+  unnecessary.
+- **Final recheck (9 Nov, final tree).** All gates of `docs/plan/11-WP-PORT.md` section 7
+  were run again; results, and what is not green, are in "Final recheck" below.
 - The 5 Nov sections below are history. Where they mention `site.css`, `patterns.css`,
   `site.js`, hide wrappers, `.empty-state`, `hcwa/center-grid` or the old section
   patterns, the port replaced them (see the sections above). "Unverified until
