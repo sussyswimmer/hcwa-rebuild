@@ -834,6 +834,55 @@ critique's items; where the build differs, and what it supersedes above:
 Budgets: home HTML +54 B gzip (VI and EN), main CSS +0.33 KB gzip (with the corridor's concurrent stages.css
 changes), `public/svg` 5.3 KB of 6. No JS. HCWA still approves the tile palette and the brick tile.
 
+**H5a focus floor, fix round 2 (9 Nov 2026; focus engineer).** Maxwell: "so bland and all white". Built to the
+round-2 critique; where the build differs, and what it supersedes above:
+1. **The sheet lays no lace over the live corridor.** On the stage (`html.stages #centers.is-stage + #work`) the
+   bông gió row is gone and the sheet is solid `--wall` from its top; the corridor's canvas fades itself out
+   above the sheet (its hem, the corridor engineer's). The 24svh / 16svh rise and the H2 lead are unchanged.
+   Stacked (Tier 0, reduced motion, no JS) keeps its 62% row and 24 px fade (supersedes fix r1 item 1 on the
+   stage only). Seam scan at 390 and 1440, Tier 1: no step over 1 level across the sheet's top in a continuous
+   scroll (`qa/m3/fix-r2-focus/logs/seam.log`).
+2. **Light: isolated quatrefoils.** `sun-hoa-thi.svg` draws each hole (quatrefoil and 4 pips) at 0.6 of its
+   300-unit cell, so 0.4 of a cell of tile lies between two lit shapes in x and in y; three rows, each a third
+   of a cell further along, so the 300 × 990 file repeats seamlessly in x and y. **Departures:** (a) the cell
+   is `0.54 × --T`, not 0.62: at 0.62 a single tile holds one row of light, so Gia đình and Vận động could
+   never show the critique's "at least 2 whole quatrefoils"; at 0.54 two rows land whole on any tile (the
+   mask's rows are centred on it, 0.5 T ± 0.55 cell) and a quatrefoil cell is 89 px at 1440 and 63 px at
+   390, the critique's own sizes. (b) A hole leans 8°, not 14°: the 14° shear turned the four lobes into one
+   lump, which is half of what read as camouflage. (c) The lit copy's cream is `sun-200`, not `sun-100` (1.08:1
+   on tile-cream), so the light shows on the inlays too and each quatrefoil reads whole instead of breaking
+   into the scraps that fell on pigment. Wear: 0.22 on the floor, 0.08 in the light. `check:tiles` counts,
+   from the mask's own lattice, whole quatrefoils at rest and at mid-sweep: 2 / 2 on a single tile, 5 / 6 on
+   Bảo vệ, 8 / 9 on Giáo dục, at 390 to 1440, VI and EN.
+3. **A floor of plain cement tiles.** The patches are laid into a lattice of plain tiles at exactly `--T`
+   (1.5 px joints, `color-mix(tile-cream, ink-700 10%)`, half on each side of a tile's edge), and `--T` is now
+   a whole number of pixels (`round(down, …, 1px)`). From a 56rem container the floor is one lattice: four
+   columns of two tiles with no gaps (`--T` at most an eighth of the container), rows of at least one tile, so
+   every patch corner is a joint (Bảo vệ at 4 T, Giáo dục at 1 T down, Gia đình and Vận động at 2 T, a plain
+   row under Bảo vệ); the plain tiles there also vary 0-4.5% in tone (`plain-tiles.svg`, black alpha, a 5 × 4
+   run). Below, each area's joints are registered to its own patch and fade over half the gap to the next
+   (tablets: Vận động starts 3 T in, so both share one lattice); tones would read as bands there, so none.
+   **Departures:** (a) D0.6.3's "text never sits on a tile" now means a pigment tile: the words cross plain
+   joints (lead sign-off). Measured with the text hidden, darkest 1% under each line, VI and EN, 390 / 768 /
+   1024 / 1440, Tier 0 and Tier 1: H2 ≥ 11.28, names and lines ≥ 9.43, 0 below. (b) From 1024 to about 1180 px
+   `--T` is under D0.6.3's 136 px floor (118 at 1024), so that eight tiles fit the container. (c) Both
+   two-tile patches set their words beside the patch from 1024 (supersedes fix r1 item 5 for 1024-1279), in
+   the second column of two tiles; Giáo dục's words take the patch's full height with the link's arrow at its
+   foot, level with the patch's last joint. (d) The floor's layouts follow its container in rem
+   (`@container`, 33rem / 56rem: a 600 / 1024 px window at the default text size), so with text at 200% it
+   steps down a layout instead of pushing words onto the tiles.
+4. **Program rows carry the floor's pigments.** Each row's head has an `aria-hidden` strip of its areas'
+   gạch tiles (blocks.mjs `gachStrip`, the same symbols, one 44 px tile per area, 48 px from 1024, never turned,
+   never scaled per row) above the status line, on the home sheet and on Our Work. The page's one sprite comes
+   with the floor on home and with the first row elsewhere (`gachSpriteOnce`); it never sits inside a row a
+   filter may hide on home. On Our Work, when a filter hides the first row, the other rows' tiles lose their
+   wear speckle (Chromium drops a filter inside `display: none`); the shapes are unchanged. The row's light
+   stays sunlight: the critique's optional pigment-tinted hover is not taken (tinted light is the declined
+   *kính màu*, 0.6 item 5).
+5. Not done (could): the Our Work filter chips' gạch tiles. `src/pages/work.mjs` still has no owner.
+Budgets: home HTML +0.10 KB gzip (VI and EN); Our Work +1.5 KB gzip (the sprite now ships there); pages.css +0.12
+KB gzip, components.css ±0; `public/svg` 5.7 KB of 6. No JS. Captures: `qa/m3/fix-r2-focus/`.
+
 **H4 corridor richness pass (9 Nov 2026; corridor engineer).** Built to D0.6.2 and D0.6.4 from the port list
 (saigon-home's bake, house surface, fans and leaflets, vertex paint, props clock; colour-light's loang in the
 lime texture's alpha, Little Rose leaf merge, still baking, ink-900 meta lines, red/pink test). Not ported:

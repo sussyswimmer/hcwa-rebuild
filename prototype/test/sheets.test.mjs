@@ -183,6 +183,9 @@ test("our work sheet, fix r2: isolated quatrefoils, a sheet that lays no lace ov
   assert.match(css, /--jx: linear-gradient\(to right, var\(--joint\) 0\.75px, transparent 0\.75px calc\(100% - 0\.75px\), var\(--joint\) 0\)/);
   assert.match(css, /--T: round\(down, min\(clamp\(136px, 11\.7vw, 176px\), 100cqi \/ 8\), 1px\)/, "desktop: eight tiles across the container");
   assert.match(css, /grid-template-columns: repeat\(4, calc\(2 \* var\(--T\)\)\)/, "desktop columns are two tiles each, no gaps");
+  // the plain tiles' tones: black alpha only (0-4.5%), laid on the same lattice, 5 × 4 tiles
+  assert.doesNotMatch(files["plain-tiles.svg"], /fill="#|rgb\(|fill-opacity="\.(?:0[5-9]|[1-9])/, "no colour, never darker than 4.5%");
+  assert.match(css, /url\("\/svg\/plain-tiles\.svg"\), var\(--color-tile-cream\); background-size: var\(--T\) var\(--T\), var\(--T\) var\(--T\), calc\(5 \* var\(--T\)\) calc\(4 \* var\(--T\)\), auto; background-position: var\(--gutter\) var\(--s-7\);/);
 });
 
 test("programs, fix r2: each row carries its areas as gạch tiles from the page's one sprite", () => {

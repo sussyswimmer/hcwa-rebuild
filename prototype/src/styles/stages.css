@@ -174,10 +174,10 @@ html.stages .is-stage .bay { grid-area: 1 / 1; display: block; }
 html.stages .is-stage .bay__view { position: absolute; inset: 0 0 calc(var(--panel-h) - 72px); z-index: 0; margin: 0; aspect-ratio: auto; opacity: 0; transition: opacity var(--d-reveal) var(--ease-out); }
 html.stages .is-stage .bay__view img { object-position: 50% 40%; }
 /* The view fades to the plaster over the hem above the next sheet's top, as the live canvas does (renderer.js uHem,
-   critique r2): 28svh on stops eased like the canvas's (24svh below 600 px). --sheet-y: motion/stages.js, only near
+   critique r2): 38svh on stops eased like the canvas's (36svh below 600 px). --sheet-y: motion/stages.js, only near
    the stage's end; elsewhere the third layer is black. */
-html.stages .is-stage .bay__view { --hem: 28svh; --sy: var(--sheet-y, 400svh); --hem-mask: linear-gradient(to bottom, black calc(var(--sy) - var(--hem)), rgb(0 0 0 / 0.55) calc(var(--sy) - var(--hem) * 0.5), rgb(0 0 0 / 0.15) calc(var(--sy) - var(--hem) * 0.125), transparent var(--sy)); mask-image: linear-gradient(to bottom, transparent, black 12svh, black 80%, transparent), var(--hem-mask); mask-composite: intersect; }
-@media (max-width: 599.98px) { html.stages .is-stage .bay__view { --hem: 24svh; } }
+html.stages .is-stage .bay__view { --hem: 38svh; --sy: var(--sheet-y, 400svh); --hem-mask: linear-gradient(to bottom, black calc(var(--sy) - var(--hem)), rgb(0 0 0 / 0.51) calc(var(--sy) - var(--hem) * 0.5), rgb(0 0 0 / 0.11) calc(var(--sy) - var(--hem) * 0.125), transparent var(--sy)); mask-image: linear-gradient(to bottom, transparent, black 12svh, black 80%, transparent), var(--hem-mask); mask-composite: intersect; }
+@media (max-width: 599.98px) { html.stages .is-stage .bay__view { --hem: 36svh; } }
 html.stages .is-stage .bay.is-at .bay__view { opacity: 1; }
 html.world-live .is-stage .bay__view { display: none; }
 /* Not even fetched while the world may still draw the corridor (lazy images under display:none never load):

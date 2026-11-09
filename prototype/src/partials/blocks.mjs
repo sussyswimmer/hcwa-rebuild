@@ -257,6 +257,14 @@ export function sunMaskFile() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}"><defs><path id="h" transform="matrix(${m.join(" ")})" d="${holes("hoaThi")}"/></defs>${uses.join("")}</svg>\n`;
 }
 
+// The plain tiles' tones (fix r2): no two plain cement tiles are quite alike. A 5 × 4 run of tiles (100 units
+// each), each darkened by 0-4.5% black, alpha only; pages.css lays it at 5 × 4 tiles on the floor's lattice.
+const PLAIN = [0, 3, 1, 4, 2, 4, 0, 2, 0, 3, 1, 3, 4, 1, 0, 2, 0, 1, 3, 2];
+export function plainTilesFile() {
+  const paths = [12, 22, 34, 45].map((o, l) => `<path fill-opacity=".0${o}" d="${PLAIN.map((k, i) => (k === l + 1 ? `M${(i % 5) * 100} ${Math.floor(i / 5) * 100}h100v100H${(i % 5) * 100}z` : "")).join("")}"/>`).join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" width="500" height="400" preserveAspectRatio="none">${paths}</svg>\n`;
+}
+
 // The cement ground the patches are laid in (pages.css .floor::after): the tiles' own wear speckle (the same
 // fractal noise, frequency and threshold as #gach-wear, here one per CSS pixel) as a seamless 240 px alpha
 // mask. A mask reads alpha only, so it carries no colour; it is rasterised once and never animated.

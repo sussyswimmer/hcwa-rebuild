@@ -70,7 +70,9 @@ html.stages #centers.is-stage + #work::before { display: none; }
    corridor's plain cream band seen from above, so what lies round and between them is floor, not plaster.
    --T is a whole number of pixels, so every joint lands on the pixel grid. The words stand beside or under
    their patch on that plain cement, crossing its joints but never on a pigment tile (D0.6.3 departure,
-   PLAN section 9). No line is drawn between areas (D0.5): the joints are the floor's own. */
+   PLAN section 9). No line is drawn between areas (D0.5): the joints are the floor's own. From 1024, where
+   the whole floor is one lattice, no two plain tiles are quite the same tone either (plain-tiles.svg, 0-4.5%
+   darker, a 5 × 4 run), as no two cement tiles are. */
 .floor { --T: clamp(88px, 30vw, 128px); --T: round(down, clamp(88px, 30vw, 128px), 1px); --rg: var(--s-7);
   --joint: color-mix(in oklab, var(--color-tile-cream), var(--color-ink-700) 10%);
   /* One plain tile's joints, half on each side of its edges, so neighbours meet at one 1.5 px joint. */
@@ -89,8 +91,14 @@ html.stages #centers.is-stage + #work::before { display: none; }
   mask: url("/svg/cement.svg") 0 0 / 240px 240px repeat, var(--ground); mask-composite: intersect; }
 /* Below 1024 the areas stack and their heights follow their words, so the plain tiles are laid per area:
    each area's joints are registered to its own patch (the li's top-left corner) and fade out over half
-   the gap to the next area, where that one's fade in. The cement under them runs on unbroken. */
-@media (max-width: 1023px) {
+   the gap to the next area, where that one's fade in. The cement under them runs on unbroken (and keeps
+   one tone: tones fading in and out between areas read as bands).
+   The floor's layouts follow its container in rem (fix r2), not the viewport in px: with the reader's text at
+   200% the words would no longer fit beside a two-tile patch, so the floor steps down to the tablet or phone
+   layout instead of pushing words onto the tiles. At the default size the steps sit where they did: 56rem is
+   a 1024 px window less its gutters and a scrollbar, 33rem a 600 px one. */
+#work > .container { container-type: inline-size; }
+@container (width < 56rem) {
   .gach::before { content: ""; position: absolute; z-index: -1; inset: calc(-0.5 * var(--rg)) calc(-1 * var(--gutter)); pointer-events: none;
     background: var(--jx), var(--jy); background-size: var(--T) var(--T); background-position: var(--gutter) calc(0.5 * var(--rg));
     mask: linear-gradient(to bottom, transparent, black calc(0.5 * var(--rg)), black calc(100% - 0.5 * var(--rg)), transparent); }
@@ -152,17 +160,17 @@ html.stages #centers.is-stage + #work::before { display: none; }
 .gach a:focus-visible { outline: none; }
 .gach-sprite { position: absolute; inline-size: 0; block-size: 0; overflow: hidden; }
 
-/* Phones (< 600): one column. Giáo dục shows its whole 2 × 2 patch and Bảo vệ its 2 × 1, above their words,
+/* Phones (a container under 33rem): one column. Giáo dục shows its whole 2 × 2 patch and Bảo vệ its 2 × 1, above their words,
    so the tile count is still the hierarchy here (fix r1); Gia đình and Vận động keep one tile beside
    their words. A tile is never scaled. */
-@media (max-width: 599px) {
+@container (width < 33rem) {
   .gach__body { padding-block-start: 2px; }
   .gach--education, .gach--protection { --vc: var(--c); --vr: var(--r); grid-template-columns: minmax(0, 1fr); }
   .gach--education .gach__body, .gach--protection .gach__body { padding-block-start: 0; }
 }
-/* Tablets: Giáo dục and Bảo vệ take a row each, patch with its words beside; Gia đình and Vận động sit side
+/* Tablets (33-56rem): Giáo dục and Bảo vệ take a row each, patch with its words beside; Gia đình and Vận động sit side
    by side, tile with its words under. Vận động starts three tiles in, so both lie on one lattice. */
-@media (min-width: 600px) {
+@container (width >= 33rem) {
   .floor { --T: clamp(112px, 13vw, 136px); --T: round(down, clamp(112px, 13vw, 136px), 1px); }
   .floor__areas { grid-template-columns: calc(3 * var(--T)) minmax(0, 1fr); column-gap: 0; }
   .gach { --vc: var(--c); --vr: var(--r); }
@@ -170,20 +178,19 @@ html.stages #centers.is-stage + #work::before { display: none; }
   .gach--family, .gach--policy { grid-template-columns: minmax(0, 1fr); }
   .gach--family .gach__body { max-inline-size: min(34ch, 100% - var(--s-5)); }
 }
-@media (min-width: 600px) and (max-width: 1023px) {
+@container (33rem <= width < 56rem) {
   .gach--family::before { right: 0; }
   .gach--policy::before { left: 0; background-position: 0 calc(0.5 * var(--rg)); }
 }
-/* Desktop: the floor is a lattice of plain tiles, 8 across the container (--T is at most an eighth of it),
+/* Desktop (56rem and up): the floor is a lattice of plain tiles, 8 across the container (--T is at most an eighth of it),
    and the areas are laid on it: four columns of two tiles and rows of at least one tile, no gaps, so every
    patch's corner is a joint of the plain floor round it. The H2 stands at columns 1-2 of the first row,
    Bảo vệ fills the top right with its words beside, Giáo dục the two columns under the H2 with its words
    beside, Gia đình and Vận động one column each in the third row, a plain row under Bảo vệ. */
-@media (min-width: 1024px) {
-  #work > .container { container-type: inline-size; }
+@container (width >= 56rem) {
   .floor { --T: min(clamp(136px, 11.7vw, 176px), 100cqi / 8); --T: round(down, min(clamp(136px, 11.7vw, 176px), 100cqi / 8), 1px);
     grid-template-columns: repeat(4, calc(2 * var(--T))); grid-template-rows: minmax(var(--T), auto) minmax(var(--T), auto) auto; gap: 0; }
-  .floor::before { background: var(--jx), var(--jy), var(--color-tile-cream); background-size: var(--T) var(--T), var(--T) var(--T), auto; background-position: var(--gutter) var(--s-7), var(--gutter) var(--s-7), 0 0; }
+  .floor::before { background: var(--jx), var(--jy), url("/svg/plain-tiles.svg"), var(--color-tile-cream); background-size: var(--T) var(--T), var(--T) var(--T), calc(5 * var(--T)) calc(4 * var(--T)), auto; background-position: var(--gutter) var(--s-7); }
   .floor__title { grid-area: 1 / 1 / 2 / 3; align-self: start; }
   .floor__areas { grid-area: 1 / 1 / 4 / 5; grid-template-columns: subgrid; grid-template-rows: subgrid; gap: 0; }
   .gach { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }

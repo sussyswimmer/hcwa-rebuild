@@ -50,7 +50,8 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   // just above the sheet that rises over it (critique r1, fix round 1).
   // The hem (uHem: on, the next sheet's top in uv from the bottom, the hem's height in uv; critique r2, D0.5): the
   // picture fades to the wash's color over the hem above that top, whatever the sweep is doing, on eased stops
-  // (0.15 at an eighth of the hem, 0.55 at half), so the sheet never cuts the corridor at full strength. Hem and
+  // (0.11 at an eighth of the hem, 0.51 at half: no 40 px band of it moves the frame's mean by more than about 12
+  // levels over the corridor's darkest floor), so the sheet never cuts the corridor at full strength. Hem and
   // sweep multiply (their masks intersect). The canvas fades; the page's text never does.
   const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, hemU = { value: new Vector4() }, light = tok("wash");
   const wash = new ShaderMaterial({
@@ -85,7 +86,7 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         }
         if (uHem.x > 0.) {
           float h = clamp((vU.y - uHem.y) / uHem.z, 0., 1.);
-          float v = h < .125 ? 1.2 * h : h < .5 ? .15 + (h - .125) * 1.0667 : .55 + (h - .5) * .9;
+          float v = h < .125 ? .88 * h : h < .5 ? .11 + (h - .125) * 1.0667 : .51 + (h - .5) * .98;
           a = 1. - (1. - a) * v;
         }
         gl_FragColor = vec4(col, max(a, f));
@@ -100,6 +101,7 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   const ortho = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   let size = { w: 0, h: 0, dpr: 1 }, lite = false, fence = null;
+  const clearC = light.clone();
   const ctx = renderer.getContext();
   return {
     renderer,
@@ -132,7 +134,11 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
       renderer.info.reset();
       renderer.setRenderTarget(null);
       const c = color ?? light;
-      if (!wash.uniforms.uColor.value.equals(c)) { wash.uniforms.uColor.value.copy(c); renderer.setClearColor(c, 1); }
+      if (!wash.uniforms.uColor.value.equals(c)) wash.uniforms.uColor.value.copy(c);
+      // What shows where nothing is drawn (past an open doorway) stays the light while the scene is drawn, so the hem
+      // and the sweep never change it at once; the wash pass fades it with everything else. A full wash is its color.
+      const clear = washAmount >= 1 ? c : light;
+      if (!clearC.equals(clear)) { clearC.copy(clear); renderer.setClearColor(clear, 1); }
       renderer.clear();
       if (washAmount < 1) {
         renderer.render(scene, camera);

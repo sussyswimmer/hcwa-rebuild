@@ -270,7 +270,7 @@ html:not(.js) .pause-toggle, html[data-reduced] .pause-toggle { display: none; }
 /* Fix r2: the row's areas as a strip of the work sheet's floor (blocks.mjs gachStrip), one tile per area
    laid edge to edge with a patch's grout, above the status line: the same pigments carry on from the floor
    into the list. A tile is 44 px (48 on wide screens) whatever the row; decoration only (aria-hidden). */
-.program-row__floor { display: block; position: relative; line-height: 0; margin-block-end: 4px; }
+.program-row__floor { display: block; position: relative; margin-block-end: 4px; }
 .program-row__tiles { display: block; block-size: 44px; inline-size: auto; max-inline-size: none; }
 @media (min-width: 1024px) { .program-row__tiles { block-size: 48px; } }
 .program-row__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }

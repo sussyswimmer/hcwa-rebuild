@@ -72,7 +72,7 @@ export const WALK = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOu
 // first, the runner last, still fading just above the work sheet while its tiles rise over it. The wash lasts
 // until the sheet's top is `end` of a screen from the frame's top, and never less than `wash` screens (`washPhone`
 // under 600 px wide; 05-DESIGN D0.5: 24svh / 16svh at least). No hard cut, no double exposure, no bare plaster.
-export const WALK_OUT = { leave: 0.45, wash: 0.24, washPhone: 0.16, end: 0.12, feather: 0.6, pitch: 14, tilt: [0.92, 1], hem: 0.28, hemPhone: 0.24 };
+export const WALK_OUT = { leave: 0.45, wash: 0.24, washPhone: 0.16, end: 0.12, feather: 0.6, pitch: 14, tilt: [0.92, 1], hem: 0.38, hemPhone: 0.36 };
 export const walkLeave = (x) => WALK_OUT.leave * sineIn(clamp01(x));
 const sineInOut = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 // Degrees the camera looks down at stage progress q (0 until 0.92, 14 from the stage's end on).

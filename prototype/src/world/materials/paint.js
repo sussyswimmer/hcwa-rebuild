@@ -91,7 +91,11 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
           float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.02, .25, vL.y)); // edges; scuffs fading up the kick zone
           #endif
           m = max(m, 1. - smoothstep(.085, .105, length(vec2(vL.y - 1.02, az - ${(DOOR.w - 0.08).toFixed(3)}))));
+          #ifdef OLD_COAT
+          wear = mix(min(uWear, .06), uWear, m); // the lighter coat shows more than wood did: its face takes less
+          #else
           wear = mix(min(uWear, .1), uWear, m);
+          #endif
           grain = vL.zy * 38. + vL.xx * 21.; // the chips stay on the leaf as it swings
         }
         #endif
