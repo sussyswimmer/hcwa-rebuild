@@ -198,6 +198,10 @@
   .hero { padding-bottom: 16px; }
   .hero__pause { margin-top: 12px; }
 }
+/* With large text (200%, final m3 recheck) the toggle no longer fits beside the intro at 1024-1100 px and ran 56 px
+   off the screen: under 56rem of the hero's width (896 px at 16 px text, so never at normal size from 1024 px up) it
+   sits under the buttons, as it does below 1024. */
+@media (min-width: 1024px) { @container (width < 56rem) { .hero__inner > .hero__pause { grid-area: auto; grid-column: 1 / -1; grid-row: 4; align-self: start; margin-top: 12px; } } }
 @media (max-width: 599px) {
   .hero__intro { font-size: 1.0625rem; line-height: var(--lh-body); }
   .hero__inner, .hero__actions { justify-items: stretch; }
@@ -391,6 +395,11 @@ main:has(> :last-child.dusk) + .site-footer::before { display: none; }
 @media (max-width: 599px) { .site-footer__sign { align-items: flex-start; flex-direction: column; } .site-footer__name { font-size: 2rem; } }
 .site-footer__grid { display: grid; gap: 8px; padding-block: 40px; }
 @media (min-width: 1024px) { .site-footer__grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px; padding-block: 48px 64px; } }
+/* With large text (200%, final m3 recheck) four columns no longer fit at 1024-1280 px: the address, the e-mail and
+   "Reports & policies" ran 146 px off the screen. The footer's width in rem decides: under 58rem of it (928 px at
+   16 px text, so never at normal size from 1024 px up) the columns go two by two. */
+.site-footer__cols { container-type: inline-size; }
+@media (min-width: 1024px) { @container (width < 58rem) { .site-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } } }
 .foot-brand { display: grid; gap: 12px; align-content: start; max-width: 40ch; margin-bottom: 24px; color: var(--color-on-dusk-2); }
 .foot-brand__reg { font-size: var(--fs-sm); }
 /* Below 1024 px each column folds behind a disclosure button: a borderless row, a lit Hoa thị mark before
@@ -526,13 +535,12 @@ main:has(> :last-child.dusk) + .site-footer::before { display: none; }
 .chip--all { padding-inline: 22px; }
 .chip:hover { box-shadow: inset 0 0 0 1.5px var(--color-blue-700); color: var(--color-blue-700); }
 .chip:active { scale: 0.97; }
-/* The chip's block is a piece of the screen (blocks.mjs screenArt): logo-blue face, holes unlit until
-   the chip is hovered (sun-200) or chosen (sun-400). */
-.chip__icon { width: 30px; height: 30px; flex: none; border-radius: 3px; }
-.chip__icon .block-art__sky { fill: var(--color-lime-50); transition: fill var(--d-hover) var(--ease-hover); }
-.chip:hover .block-art__sky { fill: var(--color-sun-200); }
+/* The area chip's tile (final m3 recheck): one gạch tile of its area, the home floor's pigments (blocks.mjs
+   gachStrip, pages.css --pig/--acc), 26 px, never scaled per chip, decoration only. Chosen, the chip turns logo
+   blue and the tile keeps its pigment, rimmed in the plaster so it never melts into the blue. */
+.chip__tile { inline-size: 26px; block-size: 26px; flex: none; max-inline-size: none; border-radius: 2px; transition: box-shadow var(--d-hover) var(--ease-hover); }
 .chip[aria-current="true"] { background: var(--color-blue-700); box-shadow: none; color: var(--color-on-dusk); }
-.chip[aria-current="true"] .block-art__sky { fill: var(--color-sun-400); }
+.chip[aria-current="true"] .chip__tile { box-shadow: 0 0 0 1.5px var(--color-lime-50); }
 .search { display: grid; gap: 6px; max-width: 480px; }
 .search label { font-weight: 600; }
 .search__row { display: flex; gap: 8px; }

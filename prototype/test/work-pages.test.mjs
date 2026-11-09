@@ -35,6 +35,23 @@ test("hub filters work without JS: every area and status chip lands on a :target
   }
 });
 
+test("hub area chips carry their area's gạch tile from the page's one sprite, before every program row (final m3)", () => {
+  const PIG = { education: "ochre", protection: "indigo", family: "jade", policy: "brick" };
+  for (const lang of LANGS) {
+    const h = page(ourWork, lang, "ourWork");
+    assert.equal((h.match(/class="gach-sprite"/g) ?? []).length, 1, "one sprite per page");
+    const nav = h.match(/<nav class="filters[\s\S]*?<\/nav>/)[0];
+    assert.match(nav, /class="gach-sprite"/, "the filters bring the sprite (never a row a filter may hide)");
+    assert.ok(h.indexOf('class="gach-sprite"') < h.indexOf('class="program-row"'));
+    for (const a of content.work.focusAreas) {
+      const chip = nav.match(new RegExp(`<a class="chip" href="\\?area=${a.id}#f-${a.id}"[\\s\\S]*?</a>`))[0];
+      assert.match(chip, new RegExp(`<svg class="gach-strip chip__tile" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#gach-[a-zA-Z]+" class="pig--${a.id}"/></svg>`));
+      assert.ok(css.includes(`.pig--${a.id})`) && css.includes(`var(--color-tile-${PIG[a.id]})`), `pages.css paints ${a.id} in ${PIG[a.id]}`);
+    }
+    assert.doesNotMatch(nav, /block-art|chip__icon/, "no more navy screen blocks in the area filter");
+  }
+});
+
 test("home's focus tiles land on the hub's filter, filtered without JS", () => {
   for (const lang of LANGS) {
     const c = ctx(lang, "home", false);

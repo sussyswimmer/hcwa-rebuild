@@ -3,7 +3,7 @@ import { viKeep } from "../lib/vikeep.mjs";
 import { visibleFigures } from "../lib/content.mjs";
 import { programRow, textLink, button, icon, statusPill, datedPost, pendingChip, duskBand, quatrefoil } from "../partials/components.mjs";
 import { litHeader } from "../partials/lit-header.mjs";
-import { screenArt, blockIcon, AREA_BLOCK } from "../partials/blocks.mjs";
+import { blockIcon, gachStrip, gachSpriteOnce } from "../partials/blocks.mjs";
 import { still, hasStill, stillAspect } from "../partials/still.mjs";
 
 // Our Work (PLAN P1-P3). Two kinds of work, two shapes that cannot be mistaken for each other:
@@ -27,15 +27,18 @@ const emptyFor = (items, areas) => areas.filter((a) => !items.some((x) => x.area
 
 // Area chips are plain links: ?area= for the server (WordPress) and #f-<area> for this static build, so
 // the filter works without JS through :target. ui/filters.js takes over when it runs (both filters at
-// once, the URL kept in step, a 240 ms FLIP, the count said in the live region).
+// once, the URL kept in step, a 240 ms FLIP, the count said in the live region). Each area chip carries one
+// gạch tile of its area (final m3 recheck, critique r1/r2 could): the home floor's pigments, decoration only,
+// from the page's one tile sprite, which the filters bring (they come before every program row).
 const filters = (c) => {
   const { work } = c.content;
   return html`<nav class="filters container" aria-labelledby="filters-label">
   ${work.focusAreas.map((a) => html`<span class="filters__anchor" id="f-${a.id}"></span>`)}
+  ${gachSpriteOnce(c)}
   <p class="filters__label" id="filters-label">${c.t("filterArea")}</p>
   <ul class="filters__list">
     <li><a class="chip chip--all" href="./" data-area="">${c.t("all")}</a></li>
-    ${work.focusAreas.map((a) => html`<li><a class="chip" href="?area=${a.id}#f-${a.id}" data-area="${a.id}">${screenArt(AREA_BLOCK[a.id], { cls: "chip__icon" })}${c.tx(a.name)}</a></li>`)}
+    ${work.focusAreas.map((a) => html`<li><a class="chip" href="?area=${a.id}#f-${a.id}" data-area="${a.id}">${gachStrip([a.id], "gach-strip chip__tile")}${c.tx(a.name)}</a></li>`)}
   </ul>
   <p class="sr-only" data-filter-status aria-live="polite" data-centers-one="${c.t("countCenter")}" data-centers-many="${c.t("countCenters")}" data-programs-one="${c.t("countProgram")}" data-programs-many="${c.t("countPrograms")}" data-template="${c.t("filterShowing")}"></p>
 </nav>`;

@@ -4,7 +4,7 @@ import { viKeep } from "../lib/vikeep.mjs";
 import { litStill, stillReady } from "../lib/posters.mjs";
 import { parse } from "../../scripts/tokens-to-js.mjs";
 import { button, textLink, icon, breadcrumb, statusPill, pendingChip, programRow, doorChip, datedPost, field, choiceField, consentField, copyButton, pauseToggle } from "../partials/components.mjs";
-import { screenArt, KINDS, AREA_BLOCK } from "../partials/blocks.mjs";
+import { screenArt, KINDS, AREA_BLOCK, gachStrip, gachSpriteOnce } from "../partials/blocks.mjs";
 import { louver } from "../partials/louvers.mjs";
 import { doorWall } from "./work.mjs";
 
@@ -121,9 +121,9 @@ export function components(c) {
 
   // ---- chips ----
   const area = work.focusAreas[0];
-  const chips = html`<div class="kit-states">
-      ${state("rest", html`<a class="chip" href="#k-chips">${screenArt(AREA_BLOCK[area.id], { cls: "chip__icon" })}${c.tx(area.name)}</a>`)}
-      ${state("chosen", html`<a class="chip" href="#k-chips" aria-current="true">${screenArt(AREA_BLOCK[area.id], { cls: "chip__icon" })}${c.tx(area.name)}</a>`)}
+  const chips = html`${gachSpriteOnce(c)}<div class="kit-states">
+      ${state("rest", html`<a class="chip" href="#k-chips">${gachStrip([area.id], "gach-strip chip__tile")}${c.tx(area.name)}</a>`)}
+      ${state("chosen", html`<a class="chip" href="#k-chips" aria-current="true">${gachStrip([area.id], "gach-strip chip__tile")}${c.tx(area.name)}</a>`)}
       ${state("rest", html`<span class="kit-inline">${statusPill(c, "active")}${statusPill(c, "completed")}${statusPill(c, "planned")}</span>`)}
       ${state("rest", pendingChip(c))}
       ${state("rest", html`<ul class="door-chips">${work.centers.map((x) => doorChip(c, x))}</ul>`)}

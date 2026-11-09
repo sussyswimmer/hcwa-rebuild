@@ -124,7 +124,7 @@ const footer = (c) => {
       <picture><source type="image/webp" srcset="/img/hcwa-logo.webp"><img src="/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
       <p class="site-footer__name">${viKeep(c.tx(s.orgName))}</p>
     </div>
-    <div class="container site-footer__grid">
+    <div class="site-footer__cols"><div class="container site-footer__grid">
       <div class="foot-brand">
         <p${c.d(s.description)}>${c.tx(s.description)}</p>
         <p class="foot-brand__reg"${c.d(s.registration)}>${c.tx(s.registration)}</p>
@@ -142,7 +142,7 @@ const footer = (c) => {
         <li><a href="${c.url("privacy")}">${c.t("privacy")}</a></li>
         <li><a href="${c.url("partners")}">${c.t("partners")}</a></li>
       </ul>`)}
-    </div>
+    </div></div>
     <div class="site-footer__bar">
       <div class="container site-footer__bottom">
         <p>© ${new Date().getFullYear()} HCWA</p>

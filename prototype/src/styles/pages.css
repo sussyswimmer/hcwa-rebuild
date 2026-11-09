@@ -486,10 +486,10 @@ body:has(.day) { background: var(--color-sun-100); }
 .hub:not(.js-filters):has(#f-family:target) .chip[data-area="family"],
 .hub:not(.js-filters):has(#f-policy:target) .chip[data-area="policy"],
 .hub:not(.js-filters):not(:has(.filters__anchor[id^="f-"]:not([id^="f--"]):target)) .chip--all { background: var(--color-blue-700); box-shadow: none; color: var(--color-on-dusk); }
-.hub:not(.js-filters):has(#f-education:target) .chip[data-area="education"] .block-art__sky,
-.hub:not(.js-filters):has(#f-protection:target) .chip[data-area="protection"] .block-art__sky,
-.hub:not(.js-filters):has(#f-family:target) .chip[data-area="family"] .block-art__sky,
-.hub:not(.js-filters):has(#f-policy:target) .chip[data-area="policy"] .block-art__sky { fill: var(--color-sun-400); }
+.hub:not(.js-filters):has(#f-education:target) .chip[data-area="education"] .chip__tile,
+.hub:not(.js-filters):has(#f-protection:target) .chip[data-area="protection"] .chip__tile,
+.hub:not(.js-filters):has(#f-family:target) .chip[data-area="family"] .chip__tile,
+.hub:not(.js-filters):has(#f-policy:target) .chip[data-area="policy"] .chip__tile { box-shadow: 0 0 0 1.5px var(--color-lime-50); }
 .hub:not(.js-filters):has(#f--active:target) .seg__opt[data-status="active"],
 .hub:not(.js-filters):has(#f--completed:target) .seg__opt[data-status="completed"],
 .hub:not(.js-filters):not(:has(.filters__anchor[id^="f--"]:target)) .seg__opt[data-status=""] { background: var(--color-ink-900); color: var(--color-lime-50); }
