@@ -138,24 +138,20 @@ const ORDERS = [["green-bamboo", "little-rose", "cau-han"], ["little-rose", "gre
 const beatsOf = (units) => units.map((unit) => ({ unit, door: "open", emblem: unit === "cau-han" ? "vomCau" : "dotTre" }));
 
 test("the house's props never come near Little Rose's bay, in any order, live or in a still", async () => {
-  const { buildProps, FAN, KIND, LEAFLET } = await import("../src/world/objects/props.js");
-  const { CORRIDOR, corridorLayout } = await import("../src/world/journey.js");
-  for (const units of ORDERS) for (const leaflets of [16, 32, "rest"]) {
+  const { buildProps, FAN, KIND } = await import("../src/world/objects/props.js");
+  const { corridorLayout } = await import("../src/world/journey.js");
+  for (const units of ORDERS) {
     const lay = corridorLayout(beatsOf(units)), [z0, z1] = lay.doors.find((d) => d.unit === "little-rose").bay;
-    const { geometry, fans } = buildProps({ C: CORRIDOR, lay, leaflets });
+    const { geometry, fans } = buildProps({ lay });
     const pos = geometry.getAttribute("position"), piv = geometry.getAttribute("aPivot"), k = geometry.getAttribute("aK");
     for (let i = 0; i < pos.count; i++) {
-      const kind = k.getX(i), at = `${units.join("/")} ${leaflets}: vertex ${i}`;
-      if (kind === KIND.leaflet) {
-        // its whole drift: the spawn z ± the sway, kept 0.8 m from the bay
-        const z = piv.getZ(i);
-        assert.ok(z + LEAFLET.sway < z0 - LEAFLET.clear || z - LEAFLET.sway > z1 + LEAFLET.clear, `${at}: leaflet path within ${LEAFLET.clear} m`);
-      } else {
-        // a fan's vertex anywhere on its turn (radius about its rod), a resting leaflet where it lies
-        const reach = kind === KIND.fan ? Math.hypot(pos.getX(i) - piv.getX(i), pos.getZ(i) - piv.getZ(i)) : 0;
-        const z = kind === KIND.fan ? piv.getZ(i) : pos.getZ(i);
-        assert.ok(z + reach < z0 - 0.3 || z - reach > z1 + 0.3, `${at}: prop within 0.3 m of the bay`);
-      }
+      const kind = k.getX(i), at = `${units.join("/")}: vertex ${i}`;
+      // Critique r2 cut the leaflets: every prop is a fan or its fixed canopy and rod.
+      assert.ok(kind === KIND.fan || kind === KIND.solid, `${at}: a prop that is not a fan`);
+      // a fan's vertex anywhere on its turn (radius about its rod)
+      const reach = kind === KIND.fan ? Math.hypot(pos.getX(i) - piv.getX(i), pos.getZ(i) - piv.getZ(i)) : 0;
+      const z = kind === KIND.fan ? piv.getZ(i) : pos.getZ(i);
+      assert.ok(z + reach < z0 - 0.3 || z - reach > z1 + 0.3, `${at}: prop within 0.3 m of the bay`);
     }
     for (const f of fans) assert.ok(f.z + FAN.r + 0.1 < z0 || f.z - FAN.r - 0.1 > z1, `${units.join("/")}: a fan disc touches the bay`);
     assert.equal(fans.length, units.length - 1, "a fan in every bay but Little Rose's");
@@ -201,7 +197,7 @@ test("no brick in the corridor, and every colour it uses as light is daylight or
     light(set.U.uSunCol.value, `the sun at ${tt}`);
     set.U.uSpillT.value.forEach((c, k) => light(c, `the rooms' daylight (kind ${k})`));
     const props = set.objects.find((o) => o.material?.uniforms?.uSunTint && o.geometry?.getAttribute("aK"));
-    light(props.material.uniforms.uSunTint.value, "the leaflets' glint");
+    light(props.material.uniforms.uSunTint.value, "the fans' glint");
   }
   // Little Rose's transom: the rooms' plain daylight behind it, never its unit's colour.
   const { mixc, tok, vec } = await import("../src/world/colors.js");
@@ -225,66 +221,66 @@ test("the house's door walls in the stills: Little Rose's door breaks the dado l
   assert.equal(hub.U.uFans, undefined, "no fans");
   const card = SHOTS["door-little-rose"].scene({ lime: null, terr: null });
   assert.equal(card.U.uDoorN.value, 1);
-  // The walk's stills of its bay: leaflets only resting, none in its bay (checked above), its door shut.
+  // The walk's stills of its bay: no fan in it (checked above), its door shut.
   const bay = SHOTS["bay-little-rose"].scene({ lime: null, terr: null });
   const i = bay.specs.findIndex((d) => d.unit === "little-rose");
   assert.equal(bay.U.uDoors.value[i].z, 0);
 });
 
-// ---- Critique r1, fix round 1 ----
-// A leaflet hung beside Little Rose's door during its beat (EN 390 Tier 1): the props test above checks world-space
-// paths only. Now the camera's view: over the middle of its beat (u 0.05–0.95) every leaflet is faded out
-// (journey.js leafFade, scrubbed with the scroll), or else no point of any leaflet's whole drift is in the frame of
-// the dwell camera, at 390 × 844 and 1440 × 900, in three bay orders. And no leaflet flies on Tier 1 at all.
-test("no leaflet is seen while Little Rose's door is read, in any order, at 390 and 1440; none on Tier 1", async () => {
-  const { CORRIDOR, DOOR_FOCUS_Y, LEAF_FADE, VIEW, WALK, corridorLayout, leafFade, lensFor, walkPose, walkT } = await import("../src/world/journey.js");
-  const { buildProps, KIND, LEAFLET } = await import("../src/world/objects/props.js");
-  const { LEAFLETS } = await import("../src/world/sets/corridor.js");
+// ---- Critique r1, fix round 1; critique r2 ----
+// Critique r2: the leaflets are cut on every tier and from the stills (D0.6.2's ladder), so none can ever be seen
+// near Little Rose's door. And no door leaf passes the lens: every open leaf opens into its room on the near jamb
+// (sets/corridor.js DOOR_OPEN), so over the whole walk, at 390 × 844 and 1440 × 900, in three bay orders, no
+// point of any leaf inside the camera's frame is nearer than 1.5 m, and none is a full-height slab across the frame.
+test("no leaflets anywhere; no door leaf in the walk camera's near field, at 390 and 1440, in any order", async () => {
+  const { CORRIDOR, DOOR_FOCUS_Y, VIEW, WALK, WALK_OUT, corridorLayout, doorAngle, lensFor, walkPose, walkT, walkLeave, walkPitch } = await import("../src/world/journey.js");
+  const { corridorScene } = await import("../src/world/sets/corridor.js");
+  const { DOOR } = await import("../src/world/objects/door.js");
   const { PerspectiveCamera, Vector3 } = await import("three");
-  assert.equal(LEAFLETS[1], 0, "Tier 1 draws no leaflets (D0.6.2 ladder step 2)");
-  assert.ok(LEAF_FADE[0] <= 0.05 && LEAF_FADE[1] >= 0.95);
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["../src/world/objects/props.js", "../src/world/sets/corridor.js", "../src/world/live.js", "../src/world/sets/stills.js"]) {
+    assert.doesNotMatch(readFileSync(new URL(f, import.meta.url), "utf8"), /leaflets?:|LEAFLET|leafFade/, `${f} still draws leaflets`);
+  }
   const FRAMINGS = [["side", 1440, 900, { x0: 0, x1: 940, y0: 64, y1: 900 }], ["below", 390, 844, { x0: 0, x1: 390, y0: 60, y1: 844 * 0.55 }]];
   for (const units of ORDERS) {
-    const beats = beatsOf(units), lay = corridorLayout(beats), n = beats.length, lr = units.indexOf("little-rose");
-    const w = (WALK.beats[1] - WALK.beats[0]) / n;
-    const { geometry } = buildProps({ C: CORRIDOR, lay, leaflets: LEAFLETS[2] });
-    const piv = geometry.getAttribute("aPivot"), k = geometry.getAttribute("aK");
-    // Every point a leaflet can reach on its drift (objects/props.js vertex shader), with its own size around it.
-    const reach = [];
-    const r = LEAFLET.size[0], seen = new Set();
-    for (let i = 0; i < piv.count; i++) {
-      if (k.getX(i) !== KIND.leaflet) continue;
-      const key = `${piv.getX(i)},${piv.getY(i)},${piv.getZ(i)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      for (let a = 0; a <= 4; a++) for (let b = 0; b <= 4; b++) for (let c = 0; c <= 2; c++) {
-        reach.push(new Vector3(piv.getX(i) - 0.06 - r + (a / 4) * (LEAFLET.across[0] + LEAFLET.across[1] + 0.12 + 2 * r), (b / 4) * (piv.getY(i) + r), piv.getZ(i) + (c - 1) * (LEAFLET.sway + r)));
-      }
-    }
-    assert.ok(seen.size > 0 && seen.size <= LEAFLETS[2], `${units.join("/")}: ${seen.size} leaflets on Tier 2`);
+    const beats = beatsOf(units), lay = corridorLayout(beats), n = beats.length;
+    const set = corridorScene({ beats });
     for (const [name, W, H, free] of FRAMINGS) {
       const v = VIEW[name], p1 = walkPose(1, name, lay);
       const fx = (free.x0 + v.at[0] * (free.x1 - free.x0)) / W, fy = (free.y0 + v.at[1] * (free.y1 - free.y0)) / H;
       const lens = lensFor(p1.pos, p1.yaw, [CORRIDOR.wallX, DOOR_FOCUS_Y, lay.doors[0].zc], p1.fov, W / H, fx, fy);
-      for (let s = 5; s <= 95; s++) {
-        const u = s / 100, q = WALK.beats[0] + (lr + u) * w;
-        if (leafFade(q, n, lr) === 0) continue;
-        const p = walkPose(walkT(q, n), name, lay), cam = new PerspectiveCamera(p.fov, W / H, 0.05, 60), y = (p.yaw * Math.PI) / 180;
+      let nearest = Infinity;
+      for (let s = 0; s <= 400; s++) {
+        const q = s / 400, out = q > WALK.release ? (q - WALK.release) / (1 - WALK.release) * 0.4 : 0;
+        const p = walkPose(walkT(q, n) + walkLeave(out), name, lay), cam = new PerspectiveCamera(p.fov, W / H, 0.05, 60), y = (p.yaw * Math.PI) / 180;
+        const pt = (walkPitch(q) * Math.PI) / 180, c10 = Math.cos(pt) * 10;
         cam.position.set(...p.pos);
-        cam.lookAt(p.pos[0] + Math.sin(y) * 10, 1.1, p.pos[2] - Math.cos(y) * 10);
+        cam.lookAt(p.pos[0] + Math.sin(y) * c10, 1.1 - Math.sin(pt) * 10, p.pos[2] - Math.cos(y) * c10);
         cam.updateMatrixWorld();
         cam.projectionMatrix.makePerspective(lens.l * cam.near, lens.r * cam.near, lens.t * cam.near, lens.b * cam.near, cam.near, cam.far);
-        for (const P of reach) {
-          const c = P.clone().project(cam);
-          assert.ok(!(c.z < 1 && Math.abs(c.x) <= 1 && Math.abs(c.y) <= 1), `${units.join("/")} ${name} u ${u.toFixed(2)}: a leaflet in the frame while Little Rose's door is read`);
-        }
+        const eye = new Vector3(...p.pos);
+        set.specs.forEach((d, i) => {
+          if (d.unit === "little-rose") return;
+          assert.ok(d.hinge === 1 && d.swing === -1, `${d.unit}: hinged on the near jamb, opening into its room`);
+          set.setDoor(i, doorAngle(i, q, n));
+          const a = (doorAngle(i, q, n) * Math.PI) / 180;
+          // The leaf's centre plane (objects/door.js: from its hinge along (−swing·sin a, −hinge·cos a)), sampled.
+          const hx = CORRIDOR.wallX + 0.03, hz = d.zc + d.hinge * (DOOR.w / 2);
+          let inFrame = 0;
+          for (let r = 0; r <= 8; r++) for (let h = 0; h <= 8; h++) {
+            const sAlong = (r / 8) * DOOR.w, P = new Vector3(hx - d.swing * Math.sin(a) * sAlong, (h / 8) * DOOR.h, hz - d.hinge * Math.cos(a) * sAlong);
+            const c = P.clone().project(cam);
+            if (!(c.z < 1 && Math.abs(c.x) <= 1 && Math.abs(c.y) <= 1)) continue;
+            inFrame++;
+            nearest = Math.min(nearest, P.distanceTo(eye));
+            assert.ok(P.distanceTo(eye) >= 1.5, `${units.join("/")} ${name} q ${q.toFixed(3)}: door ${i}'s leaf ${P.distanceTo(eye).toFixed(2)} m from the lens`);
+          }
+        });
       }
-      // And the fade is the scroll's, never time's: 0 over the middle of its beat, 1 well before and after.
-      assert.equal(leafFade(WALK.beats[0] + (lr + 0.5) * w, n, lr), 0);
-      assert.equal(leafFade(WALK.beats[0] + (lr - 0.2) * w, n, lr), 1);
-      assert.equal(leafFade(WALK.beats[0] + (lr + 1.2) * w, n, lr), 1);
+      assert.ok(nearest > 1.5 && Number.isFinite(nearest), `${units.join("/")} ${name}: nearest leaf in frame ${nearest.toFixed(2)} m`);
     }
   }
+  assert.ok(WALK_OUT.hem >= 0.24 && WALK_OUT.hemPhone >= 0.16, "the hem is at least D0.5's 24svh / 16svh");
 });
 
 // The thresholds (critique r1): before every door, Little Rose's too, the runner gives way to the same plain cream,

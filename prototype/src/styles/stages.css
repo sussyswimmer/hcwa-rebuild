@@ -93,7 +93,9 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
 .bays__glass, .bays__rail { display: none; }
 .bays__head { display: grid; gap: 16px; justify-items: start; margin-bottom: clamp(32px, 5vw, 72px); }
 .bays__head h2 { margin: 0; }
-.bays__intro { margin: 0; max-width: 34ch; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-ink-700); }
+/* Critique r2: ink-900, as the cards' meta lines (D0.6.1). The pane's feather let the mint dado in under the first
+   words of the line at 1440 (ink-700 6.93:1); size and weight keep it under the H2. */
+.bays__intro { margin: 0; max-width: 34ch; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-ink-900); }
 .bays { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(40px, 7vw, 120px); }
 .bay { display: grid; }
 .bay__view { position: relative; aspect-ratio: 3 / 4; margin-inline: calc(-1 * var(--gutter)); mask-image: linear-gradient(to bottom, transparent, black 12%, black 62%, transparent); }
@@ -148,10 +150,11 @@ html.stages .is-stage .bays__frame { --panel-h: 45svh; position: sticky; top: 0;
    frame lets go of the corridor with no box on it. A backdrop blur only where the GPU has room for it
    (Tier 2: 92% plaster); elsewhere the plaster is denser instead (96%), so nothing behind it reads as an
    edge (fixing-motion-performance: no continuous blur over a large animated surface on a phone). */
-/* Critique r1: the plaster leans toward the wall it stands on (lime-50 with 20% of the wash in the sun), so the
-   pane reads as the house's own wash, not a cream wall over it. Measured live (Tier 1 and 2, darkest 1%): see
-   PLAN section 9. */
-html.stages .is-stage { --pane-c: color-mix(in oklab, var(--color-lime-50) 80%, var(--color-world-vang-sun)); --pane: color-mix(in oklab, var(--pane-c) 96%, transparent); }
+/* Critique r1: the plaster leans toward the wall it stands on. Critique r2: every line on the pane is ink-900 now,
+   so the pane is that wall: the yellow lime wash in the sun (lime-50 with 60% world-vang-sun), the yellow running on
+   behind the words instead of stopping at a cream card. Token maths for ink-900 over it: 12.4 at 96% over the
+   dado line, 11.5 at 92% over indigo, 10.9 at the worst (100% vang-sun). Measured live: PLAN section 9. */
+html.stages .is-stage { --pane-c: color-mix(in oklab, var(--color-lime-50) 40%, var(--color-world-vang-sun)); --pane: color-mix(in oklab, var(--pane-c) 96%, transparent); }
 html.stages[data-tier="2"] .is-stage { --pane: color-mix(in oklab, var(--pane-c) 92%, transparent); }
 html.stages .is-stage .bays__glass { display: block; position: absolute; inset: auto 0 0; height: calc(var(--panel-h) + 56px); z-index: 1; pointer-events: none; background: var(--pane); mask-image: linear-gradient(to bottom, transparent, black 56px); }
 html.stages[data-tier="2"] .is-stage .bays__glass { backdrop-filter: blur(8px); }
@@ -168,8 +171,13 @@ html.stages .is-stage .bays { grid-area: stack; gap: 0; align-self: stretch; gri
 html.stages .is-stage .bay { grid-area: 1 / 1; display: block; }
 /* The bay's view behind the frame when the world is not drawing it (no WebGL, the gates, the corridor not
    built yet): the frame's top part, softened into the panel. Hidden while the canvas draws (not loaded). */
-html.stages .is-stage .bay__view { position: absolute; inset: 0 0 calc(var(--panel-h) - 72px); z-index: 0; margin: 0; aspect-ratio: auto; opacity: 0; transition: opacity var(--d-reveal) var(--ease-out); mask-image: linear-gradient(to bottom, transparent, black 12svh, black 80%, transparent); }
+html.stages .is-stage .bay__view { position: absolute; inset: 0 0 calc(var(--panel-h) - 72px); z-index: 0; margin: 0; aspect-ratio: auto; opacity: 0; transition: opacity var(--d-reveal) var(--ease-out); }
 html.stages .is-stage .bay__view img { object-position: 50% 40%; }
+/* The view fades to the plaster over the hem above the next sheet's top, as the live canvas does (renderer.js uHem,
+   critique r2): 28svh on stops eased like the canvas's (24svh below 600 px). --sheet-y: motion/stages.js, only near
+   the stage's end; elsewhere the third layer is black. */
+html.stages .is-stage .bay__view { --hem: 28svh; --sy: var(--sheet-y, 400svh); --hem-mask: linear-gradient(to bottom, black calc(var(--sy) - var(--hem)), rgb(0 0 0 / 0.55) calc(var(--sy) - var(--hem) * 0.5), rgb(0 0 0 / 0.15) calc(var(--sy) - var(--hem) * 0.125), transparent var(--sy)); mask-image: linear-gradient(to bottom, transparent, black 12svh, black 80%, transparent), var(--hem-mask); mask-composite: intersect; }
+@media (max-width: 599.98px) { html.stages .is-stage .bay__view { --hem: 24svh; } }
 html.stages .is-stage .bay.is-at .bay__view { opacity: 1; }
 html.world-live .is-stage .bay__view { display: none; }
 /* Not even fetched while the world may still draw the corridor (lazy images under display:none never load):
@@ -203,6 +211,13 @@ html.stages .is-stage .bays__rail { display: block; grid-area: rail; }
   html.stages .is-stage .bay__text { max-inline-size: 100%; }
   html.stages .is-stage .bay__links { display: flex; flex-wrap: wrap; gap: 4px 20px; }
   html.stages .is-stage .bays__panel { gap: 10px; }
+  /* Critique r2: the plaster only as far as the shown text (--pane-b, motion/stages.js, eased between cards): the
+     index alone between beats, so the runner and the dado fill the screen under it; the card's foot + 24 px, then a
+     96 px feather on eased stops. The panel's layout never moves (the camera frames the door above it). */
+  html.stages .is-stage .bays__glass {
+    --b0: calc(var(--pane-b) + 24px); --b1: calc(var(--pane-b) + 120px);
+    mask-image: linear-gradient(to bottom, transparent, black 56px, black var(--b0), rgb(0 0 0 / 0.84) calc(var(--b0) + 24px), rgb(0 0 0 / 0.5) calc(var(--b0) + 48px), rgb(0 0 0 / 0.16) calc(var(--b0) + 72px), transparent var(--b1));
+    transition: --pane-b var(--d-reveal) var(--ease-out); }
 }
 /* Below 380 px the names go without their transoms (the EN names need the room at 360). */
 @media (max-width: 379.98px) { html.stages .is-stage .rail__transom { display: none; } }
@@ -254,7 +269,7 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
   html.stages .is-stage .bays__panel { grid-area: 1 / 2; padding: calc(var(--header-h-compact) + clamp(24px, 4svh, 48px)) clamp(32px, 3.4vw, 56px) var(--foot) 8px; gap: clamp(24px, 4svh, 48px); }
   html.stages .is-stage .bays__head { align-self: center; }
   html.stages .is-stage .bays { align-self: stretch; grid-template-rows: minmax(0, 1fr); align-items: center; }
-  html.stages .is-stage .bay__view { inset: 0 min(500px, 36vw) 0 0; mask-image: linear-gradient(to bottom, transparent, black 12svh), linear-gradient(to right, black 70%, transparent); mask-composite: intersect; }
+  html.stages .is-stage .bay__view { inset: 0 min(500px, 36vw) 0 0; mask-image: linear-gradient(to bottom, transparent, black 12svh), linear-gradient(to right, black 70%, transparent), var(--hem-mask); mask-composite: intersect; }
   html.stages .is-stage .bay__view img { object-position: 58% 50%; }
   .bays__rail ol { flex-direction: column; gap: 0; }
   .bays__rail a { gap: 10px; font-size: var(--fs-sm); }

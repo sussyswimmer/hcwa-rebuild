@@ -61,7 +61,7 @@ export function corridorLayout(beats) {
 // the camera's look target only from i + 1.5), so a card is never over another center's door. The last card
 // holds to `release` (critique r2: its door stays the subject no longer than its card), where the pane fades
 // out over the stage's last 0.05 and the camera starts to leave the door (walkLeave), on into the plaster wash
-// the corridor goes out through. An open door swings 0 → 72° over 0.10–0.45. motion/stages.js shows the cards
+// the corridor goes out through. An open door swings 0 → 96° into its room over 0.10–0.45. motion/stages.js shows the cards
 // from the same numbers (test/beats.test.mjs keeps them equal and checks every card against the camera):
 // motion/ never imports world/.
 export const WALK = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOut: 0.97, release: 0.95, swing: [0.1, 0.45], sun: [0.25, 0.45] };
@@ -72,7 +72,7 @@ export const WALK = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOu
 // first, the runner last, still fading just above the work sheet while its tiles rise over it. The wash lasts
 // until the sheet's top is `end` of a screen from the frame's top, and never less than `wash` screens (`washPhone`
 // under 600 px wide; 05-DESIGN D0.5: 24svh / 16svh at least). No hard cut, no double exposure, no bare plaster.
-export const WALK_OUT = { leave: 0.45, wash: 0.24, washPhone: 0.16, end: 0.12, feather: 0.6, pitch: 14, tilt: [0.92, 1] };
+export const WALK_OUT = { leave: 0.45, wash: 0.24, washPhone: 0.16, end: 0.12, feather: 0.6, pitch: 14, tilt: [0.92, 1], hem: 0.28, hemPhone: 0.24 };
 export const walkLeave = (x) => WALK_OUT.leave * sineIn(clamp01(x));
 const sineInOut = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 // Degrees the camera looks down at stage progress q (0 until 0.92, 14 from the stage's end on).
@@ -84,7 +84,29 @@ export function washSpan(stageEnd, next, w, h) {
   return { y0: stageEnd, len: Math.max(next - WALK_OUT.end * h - stageEnd, min) };
 }
 
+// The hem (critique r2, D0.5: at least 24svh / 16svh, eased): the picture fades to the plaster over `hem` of a screen
+// (`hemPhone` under 600 px wide) above the next sheet's top, renderer.js's stops, so the corridor is already plaster
+// where the sheet passes over it. top: the sheet's top from the frame's top (px); into `out` (on, the top in uv from
+// the frame's foot, the hem's height in uv); false while the sheet is more than a hem below the frame.
+export function hemSpan(top, w, h, out) {
+  const len = w < 600 ? WALK_OUT.hemPhone : WALK_OUT.hem;
+  if (top >= h * (1 + len)) { out.x = 0; return false; }
+  out.x = 1; out.y = 1 - top / h; out.z = len; out.w = 0;
+  return true;
+}
+
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
+
+// The dwell's look down (critique r2: at 1440 the threshold and its emblem pool sat at the frame's foot): while a
+// card is read beside its door (the "side" layout), the frame slides down by DWELL_TILT° worth of lens shift, eased in
+// over 0.12–0.42 of the beat and out over 0.62–0.92, scrubbed, so the threshold rises into the frame. A lens shift,
+// not a pitch: verticals stay vertical (D5.3). 0..1 at stage progress q.
+export const DWELL_TILT = 3;
+export function dwellTilt(q, n) {
+  if (n <= 0) return 0;
+  const u = (q - WALK.beats[0]) / beatW(n) - beatI(q, n);
+  return smooth(0.12, 0.42, u) * (1 - smooth(0.62, 0.92, u));
+}
 
 // The beat q falls in (clamped to the doors there are) and how far through it, u < 0 before the first beat
 // and u > 1 after the last.
@@ -95,21 +117,12 @@ export function beatAt(q, n) {
   return { i, u: (q - WALK.beats[0]) / w - i, w };
 }
 
-// The leaflets keep away from Little Rose's beat (05-DESIGN D0.6.4, critique r1): scrubbed with the scroll (never
-// time), their alpha and size go to 0 over the first 0.04 of its beat and come back over its last 0.04, so none
-// is drawn anywhere in the frame while its door is read. lr: its index (−1: no Little Rose, always 1).
-export const LEAF_FADE = [0.04, 0.96];
-export function leafFade(q, n, lr) {
-  if (lr < 0 || n <= 0) return 1;
-  const u = (q - WALK.beats[0]) / beatW(n) - lr;
-  return 1 - smooth(0, LEAF_FADE[0], u) + smooth(LEAF_FADE[1], 1, u);
-}
-
-// An open door's angle at q, in degrees: shut until its beat, 72° from 0.45 of it on (the door stays open
+// An open door's angle at q, in degrees: shut until its beat, DOOR_DEG from 0.45 of it on (the door stays open
 // once passed). Little Rose's is shut whatever is asked (sets/corridor.js setDoor). The swing is a push, not
 // a fade: it leaves the frame at once and glides the rest of the way (--ease-out), so the door answers the
-// scroll the moment its beat arrives.
-export const DOOR_DEG = 72;
+// scroll the moment its beat arrives. Critique r2: it opens into its room (96°, hinged on the near jamb;
+// sets/corridor.js DOOR_OPEN), so no leaf stands in the corridor when the walk passes it.
+export const DOOR_DEG = 96;
 const push = cubicBezier(bezier.out);
 export function doorAngle(i, q, n) {
   const u = (q - WALK.beats[0]) / beatW(n) - i;

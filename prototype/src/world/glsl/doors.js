@@ -11,9 +11,11 @@ export { MAX_DOORS };
 export const DOOR_PATTERN = { open: 0, dotTre: 1, vomCau: 2, hoaThi: 3 };
 
 const f = (n) => n.toFixed(4);
+// How much larger than its transom the emblem's light lands on the floor (critique r2).
+export const EMBLEM = 1.5;
 
 export const DOORS = /* glsl */ `
-uniform vec4 uDoors[${MAX_DOORS}];  // zc, pattern id, leaf angle (rad), hinge side (+1 the +z jamb, −1 the −z)
+uniform vec4 uDoors[${MAX_DOORS}];  // zc, pattern id, leaf angle (rad), hinge side (+1 the +z jamb, −1 the −z; ±2: into the room)
 uniform int uDoorN;
 uniform vec4 uDoorWall;             // wx, transom y0, 0, 0
 float doorPat(float id, vec2 c){
@@ -38,12 +40,15 @@ float doorsMask(vec3 P, vec3 L){
   float w = 0.0025 + 0.0093 * t0 * 0.6;
   // Transom: three blocks, two face tests through the block's depth. Its emblem lands on the plain threshold
   // (critique r1): drawn crisper than the doorway's soft spill, so the slots and the arch read on the floor.
+  // Critique r2: at 1440 the Đốt tre pool was three pairs of 6 px dashes. The light is cast as through a transom
+  // ${EMBLEM}× the size about its own centre (the pool lands where it did, ${EMBLEM}× larger, its shape and its crisp
+  // penumbra kept): the slots and the arch read as the unit's light, not as marks on the tiles.
   float wt = 0.0015 + 0.0035 * t0;
   float tr = 1.;
   for (int s = 0; s < 2; s++) {
     float t = (wx + float(s) * ${f(DEPTH)} - P.x) / L.x;
     vec3 R = P + L * t;
-    vec2 uv = vec2(R.z - (D.x - ${f(1.5 * BLOCK)}), R.y - uDoorWall.y);
+    vec2 uv = vec2(R.z - D.x, R.y - uDoorWall.y - ${f(0.5 * BLOCK)}) / ${f(EMBLEM)} + vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)});
     float rect = sdBox2(uv - vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}), vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}));
     // Little Rose's (pattern 0): its transom glows with plain daylight on the wall, and casts nothing on its
     // threshold, no pool of any kind (critique r1): its floor has only the corridor's untinted shade.
@@ -60,10 +65,10 @@ float doorsMask(vec3 P, vec3 L){
       float rect = sdBox2(vec2(R.z - D.x, R.y - ${f(DOOR.h / 2)}), vec2(${f(DOOR.w / 2)}, ${f(DOOR.h / 2)}));
       dw *= smoothstep(w, -w, rect);
     }
-    // The leaf swings out into the corridor about its hinge jamb.
-    float h = D.w < 0. ? -1. : 1.;
+    // The leaf swings about its hinge jamb, out into the corridor or (|w| 2) into the room.
+    float h = D.w < 0. ? -1. : 1., sw = abs(D.w) > 1.5 ? -1. : 1.;
     vec3 C = vec3(wx + 0.03, 0., D.x + h * ${f(DOOR.w / 2)});
-    vec3 U = vec3(-sin(D.z), 0., -h * cos(D.z)), N = vec3(h * cos(D.z), 0., -sin(D.z));
+    vec3 U = vec3(-sw * sin(D.z), 0., -h * cos(D.z)), N = vec3(h * cos(D.z), 0., -sw * sin(D.z));
     float ln = dot(L, N);
     if (abs(ln) > 1e-4) {
       float t = dot(C - P, N) / ln;

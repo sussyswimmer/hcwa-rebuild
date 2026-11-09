@@ -4,7 +4,7 @@ import { BLOCK } from "../glsl/blocks.js";
 // A unit's door in a wall at x = wx that faces −x (05-DESIGN D6.3, D6.5): frame (two jambs and a
 // head), a leaf 0.95 × 2.2 × 0.04 m with four raised panels a face, a transom of three blocks of the
 // unit's emblem above it, and behind an open door one glowing quad (nothing inside is modeled: only
-// light). The leaf swings out into the corridor about its hinge at the +z jamb.
+// light). The leaf swings about its hinge jamb, out into the corridor or (inward) into the room.
 // Little Rose is fixed by its unit, whatever the caller asks: closed, Hoa thị transom (D6.5).
 export const DOOR = { w: 0.95, h: 2.2, t: 0.04, frame: 0.06, reveal: 0.14 };
 export const EMBLEMS = { "green-bamboo": "dotTre", "cau-han": "vomCau", "little-rose": "hoaThi" };

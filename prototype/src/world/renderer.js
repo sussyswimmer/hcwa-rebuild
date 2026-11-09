@@ -48,11 +48,15 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   // And it goes from the top of the frame down (uSweep: on, the front's feather, the foot of what is still seen,
   // in uv from the bottom): the ceiling and the walls go first, the floor last, so the runner is still fading
   // just above the sheet that rises over it (critique r1, fix round 1).
-  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, light = tok("wash");
+  // The hem (uHem: on, the next sheet's top in uv from the bottom, the hem's height in uv; critique r2, D0.5): the
+  // picture fades to the wash's color over the hem above that top, whatever the sweep is doing, on eased stops
+  // (0.15 at an eighth of the hem, 0.55 at half), so the sheet never cuts the corridor at full strength. Hem and
+  // sweep multiply (their masks intersect). The canvas fades; the page's text never does.
+  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, hemU = { value: new Vector4() }, light = tok("wash");
   const wash = new ShaderMaterial({
-    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU, uSweep: sweepU },
+    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU, uSweep: sweepU, uHem: hemU },
     vertexShader: SCREEN_VERT,
-    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim; uniform vec4 uFlare, uHole, uSweep; varying vec2 vU;
+    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim; uniform vec4 uFlare, uHole, uSweep, uHem; varying vec2 vU;
       ${DITHER}
       float h12(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float lobes(vec2 p, float r){ return min(min(length(p - vec2(r, 0.)), length(p + vec2(r, 0.))), min(length(p - vec2(0., r)), length(p + vec2(0., r)))) - r; }
@@ -78,6 +82,11 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
           // r: 0 at the frame's top, 1 at the foot of what is still seen; the front runs down it, feathered.
           float r = clamp((1. - vU.y) / max(1. - uSweep.z, .05), 0., 1.), F = uSweep.y, g = uWash * (1. + F) - F * .5;
           a = 1. - smoothstep(g - F * .5, g + F * .5, r);
+        }
+        if (uHem.x > 0.) {
+          float h = clamp((vU.y - uHem.y) / uHem.z, 0., 1.);
+          float v = h < .125 ? 1.2 * h : h < .5 ? .15 + (h - .125) * 1.0667 : .55 + (h - .5) * .9;
+          a = 1. - (1. - a) * v;
         }
         gl_FragColor = vec4(col, max(a, f));
       #include <colorspace_fragment>
@@ -117,8 +126,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
     },
     // scene + passes (shafts) unless the wash covers everything. flare: a Vector4 (see the wash); hole: a
     // Vector4 (amount, drift x, drift y), the passage's inside of the hole; color: the wash's (default the light);
-    // sweep: a Vector4 (on, feather, foot) for a wash from the top of the frame down (see the wash).
-    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null, sweep = null) {
+    // sweep: a Vector4 (on, feather, foot) for a wash from the top of the frame down; hem: a Vector4 (on, the next
+    // sheet's top, the hem's height) for the fade above that sheet (see the wash).
+    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null, sweep = null, hem = null) {
       renderer.info.reset();
       renderer.setRenderTarget(null);
       const c = color ?? light;
@@ -128,12 +138,13 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         renderer.render(scene, camera);
         for (const p of passes) p.render(camera);
       }
-      const flaring = flare && flare.w > 0, holing = hole && hole.x > 0 && washAmount > 0;
-      if ((washAmount < 1 && (washAmount > 0 || flaring)) || holing) {
+      const flaring = flare && flare.w > 0, holing = hole && hole.x > 0 && washAmount > 0, hemming = hem && hem.x > 0;
+      if ((washAmount < 1 && (washAmount > 0 || flaring || hemming)) || holing) {
         wash.uniforms.uWash.value = washAmount;
         if (flaring) flareU.value.copy(flare); else flareU.value.w = 0;
         if (holing) holeU.value.copy(hole); else holeU.value.x = 0;
         if (sweep && sweep.x > 0) sweepU.value.copy(sweep); else sweepU.value.x = 0;
+        if (hemming) hemU.value.copy(hem); else hemU.value.x = 0;
         aspectU.value = size.w / Math.max(size.h, 1);
         renderer.render(washScene, ortho);
       }

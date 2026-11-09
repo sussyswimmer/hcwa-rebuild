@@ -35,6 +35,7 @@ export function initStages() {
   const track = el.querySelector("[data-stage-track]"), frame = el.querySelector(".bays__frame");
   const panel = el.querySelector(".bays__panel"), rail = el.querySelector(".bays__rail"), head = el.querySelector(".bays__head");
   const glass = el.querySelector(".bays__glass"), all = el.querySelector(".bays__all"), list = el.querySelector(".bays");
+  const views = [...el.querySelectorAll(".bay__view")], next = el.nextElementSibling;
   const cards = [...el.querySelectorAll("[data-beat]")], n = cards.length;
   const texts = cards.map((c) => c.querySelector(".bay__text"));
   const links = [...el.querySelectorAll(".bays__rail a[data-to]")];
@@ -44,6 +45,9 @@ export function initStages() {
   // Where the panel's content is, read once per layout (decide): the pane is plaster only from the door index's
   // top to the shown text's foot (stages.css, critique r1: the yellow wash, the mint dado and the floor show above
   // and below the card), and the link to every center sits just under the last card (never alone on plaster).
+  // Between two cards the pane eases back to the index alone (critique r2: on a phone the runner and the dado fill
+  // the screen between beats, never an empty band of plaster). In the glass's own box (phones: it rises from the
+  // frame's foot; desktop: it starts at the frame's top).
   const GAP = 12;
   let ext = null;
   // The link goes beside the last card's own link when the row has room for it (one row of links, the card no
@@ -55,16 +59,17 @@ export function initStages() {
     const beside = o && o.right + 2 * GAP + a.offsetWidth <= cell.right;
     const ax = beside ? o.right + 2 * GAP - cell.left : 0, ay = beside ? o.top - cell.top : lb - cell.top + GAP;
     const bottom = beside ? lb : lb + GAP + all.offsetHeight;
-    ext = { top: y(rail).top - f.top, head: y(head).bottom - f.top, cards: texts.map((t) => y(t).bottom - f.top), all: bottom - f.top };
+    const g = y(glass).top;
+    ext = { top: y(rail).top - g, rail: y(rail).bottom - g, head: y(head).bottom - g, cards: texts.map((t) => y(t).bottom - g), all: bottom - g };
     el.style.setProperty("--all-x", `${Math.round(ax)}px`);
     el.style.setProperty("--all-y", `${Math.round(ay)}px`);
     return bottom <= cell.bottom + 1;
   };
   let lastK = -1;
   const extent = (k) => {
-    if (k != null) lastK = k;
-    if (!ext || k == null) return;
-    const b = k === -1 ? ext.head : k === n - 1 ? ext.all : ext.cards[k];
+    lastK = k;
+    if (!ext) return;
+    const b = k == null ? ext.rail : k === -1 ? ext.head : k === n - 1 ? ext.all : ext.cards[k];
     glass.style.setProperty("--pane-t", `${Math.round(ext.top)}px`);
     glass.style.setProperty("--pane-b", `${Math.round(b)}px`);
   };
@@ -95,13 +100,29 @@ export function initStages() {
     rail.inert = v <= 0;
   };
   const apply = () => {
+    writeHem();
     if (!staged()) return fade(1);
     show(cardAt(q, n));
     mark(doorAt(q, n), q >= TIMELINE.beats[0]);
     fade(paneAt(q));
   };
+  // Without the live world the bay's view is the picture (stages.css): it fades to the plaster over the hem above
+  // the next sheet's top, as the canvas does (world/journey.js hemSpan; critique r2, D0.5). --sheet-y is that top in
+  // the frame's box, read with the progress (the frame is pinned at the top until the stage ends, and the sheet
+  // scrolls with it after that) and written only when it changes, only while the views show.
+  let sheetY = null, sheetW = null;
+  const hem = () => {
+    if (!next || root.classList.contains("world-live")) return null;
+    const v = next.getBoundingClientRect().top - frame.getBoundingClientRect().top;
+    return v < frame.offsetHeight * 1.4 ? Math.round(v) : null;
+  };
+  const writeHem = () => {
+    if (sheetY === sheetW) return;
+    sheetW = sheetY;
+    for (const v of views) sheetY == null ? v.style.removeProperty("--sheet-y") : v.style.setProperty("--sheet-y", `${sheetY}px`);
+  };
   // The scroll only reads; the writes wait for the frame's one batch (batch.js).
-  const update = (st) => { q = st.progress; write(apply); };
+  const update = (st) => { q = st.progress; sheetY = staged() ? hem() : null; write(apply); };
 
   // The stage only when the stage header and every card fit the panel; otherwise (a long card, 200% text,
   // a short screen) the stacked layout, with the same cards and the bays' views (D6.10).

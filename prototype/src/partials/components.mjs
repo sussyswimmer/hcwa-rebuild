@@ -1,6 +1,6 @@
 import { html, raw } from "../lib/html.mjs";
 import { viKeep } from "../lib/vikeep.mjs";
-import { holes } from "./blocks.mjs";
+import { holes, gachStrip, gachSpriteOnce } from "./blocks.mjs";
 import { still, hasStill } from "./still.mjs";
 
 // Lucide outline paths (ISC), drawn on a 24px grid at 1.5px stroke (05-DESIGN icons).
@@ -42,10 +42,15 @@ export const statusPill = (c, status) => html`<span class="status status--${stat
 
 // Program row (D7): rows, never cards; places are doors, programs are light passing through. The centers it
 // runs at show as small door chips in their unit paint, names only (Little Rose: never a place or a link).
+// Fix r2: the row carries the floor's pigments. Its areas are a strip of the same gạch tiles (one per area,
+// decoration only: the areas are not named here; the light stays sunlight, never tinted). The page's tile
+// sprite comes with the first row when nothing before it brought one.
 export const programRow = (c, p) => {
   const centers = p.centers.map((id) => c.content.work.centers.find((x) => x.id === id)).filter(Boolean);
+  const strip = gachStrip(p.areas, "gach-strip program-row__tiles");
   return html`<li class="program-row" data-areas="${p.areas.join(" ")}" data-status="${p.status}">
   <div class="program-row__head">
+    ${strip ? html`<span class="program-row__floor" aria-hidden="true">${gachSpriteOnce(c)}${strip}</span>` : ""}
     <p class="program-row__meta">${statusPill(c, p.status)}<span class="program-row__years" data-draft>${c.tx(p.years)}</span></p>
     <h3 class="program-row__name"><a href="${c.tx(p.path)}">${viKeep(c.tx(p.name))}</a></h3>
   </div>

@@ -191,8 +191,8 @@ const symbol = (kind) => {
 };
 
 // The page's one sprite. The wear (worn pigment and cement speckle) is one feTurbulence, rasterised once
-// with the tile and never animated; the lit copy keeps half of it (--wear 0.16), so the speckle runs on
-// through the light instead of leaving a smooth wet-looking patch.
+// with the tile and never animated (--wear 0.22 on the floor; fix r2, was 0.32). The lit copy keeps a trace
+// of it (0.08), so the grain runs on through the light without blurring the light's crisp edges.
 export function gachSprite() {
   const wear = `<filter id="gach-wear" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 -4.1" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/></filter>`;
   // The corner motifs are clipped to the tile's own square, so they run to the joint and close into one
@@ -201,6 +201,12 @@ export function gachSprite() {
   const kinds = Object.values(AREA_BLOCK), blocks = kinds.filter((k) => k !== "bacThang").map((k) => `<path id="gach-b-${k}" d="${(INLAY_HOLES[k] ?? holes)(k)}"/>`);
   return raw(`<svg class="gach-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>${wear}${clip}${blocks.join("")}${kinds.map(symbol).join("")}</defs></svg>`);
 }
+
+// The sprite is one per page, wherever the tiles first appear (the work sheet's floor, or the first program
+// row on a page without one). It must never sit inside a display: none subtree (a filtered-out program
+// row): Chromium then drops its filter and clip, so the floor emits it before its rows.
+const spriteOn = new WeakSet();
+export const gachSpriteOnce = (c) => (spriteOn.has(c) ? "" : (spriteOn.add(c), gachSprite()));
 
 // One area's patch: cols × rows tiles at a 200 mm pitch. Symmetric tiles are laid at quarter turns, as a
 // real floor is, so the wear never repeats; the stair always rises left to right. The joints are one
@@ -218,21 +224,37 @@ export function gachArt(kind, [cols, rows], cls = "gach__art") {
   return raw(`<svg class="${cls}" viewBox="0 0 ${cols * TILE} ${rows * TILE}" aria-hidden="true" focusable="false">${uses.join("")}${grout}</svg>`);
 }
 
-// The sun through the house's Hoa thị screen as it lands on the floor (a CSS mask, public/svg/sun-hoa-thi.svg):
-// the holes under the floor's projection, skewX(-14°) scale(1, 1.1), crisp, no blur. One block is 300 units
-// wide and repeats exactly in x. The shear does not repeat in y, so the file holds enough rows that it never
-// has to: five rows (1650 units) are 2.3 tiles at the band's 0.42-tile block, more than the tallest patch.
+// A program's areas as a strip of the same floor (program rows, fix r2): one tile per area, side by side at
+// the 200 mm pitch, each in its own pigment (the class on its <use> sets --pig and --acc, pages.css), never
+// turned, never scaled per row, with a patch's 1.5 px grout between them. Needs the page's sprite.
+export function gachStrip(areas, cls = "gach-strip") {
+  const known = areas.filter((a) => a in AREA_BLOCK);
+  if (!known.length) return "";
+  const uses = known.map((a, i) => `<use href="#gach-${AREA_BLOCK[a]}" class="pig--${a}"${i ? ` x="${i * TILE}"` : ""}/>`);
+  const joints = known.slice(1).map((_, i) => `M${(i + 1) * TILE} 0V${TILE}`).join("");
+  const grout = joints ? `<path fill="none" stroke-width="${GROUT_PX}" vector-effect="non-scaling-stroke" style="stroke:var(--grout)" d="${joints}"/>` : "";
+  return raw(`<svg class="${cls}" viewBox="0 0 ${known.length * TILE} ${TILE}" aria-hidden="true" focusable="false">${uses.join("")}${grout}</svg>`);
+}
+
+// The sun through the house's Hoa thị screen as it lands on the floor (a CSS mask, public/svg/sun-hoa-thi.svg),
+// crisp, no blur. Fix r2 (9 Nov): sunlight through a screen, not a stain. Each hole (the quatrefoil with its
+// 4 pips, 266 units across) is drawn at 0.6 of its 300-unit cell, so at least 0.4 of a cell of tile lies
+// between two lit shapes in every direction and each quatrefoil stands alone. A hole keeps the floor's
+// 1.1 stretch but leans only 8° (was 14°, which turned the lobes into one lump); the lattice steps a third
+// of a cell per row, so three rows come back to the first and the 300 × 990 file tiles seamlessly in x and
+// in y. Row j's centres sit at x = 150 - 100 j (mod 300), y = 165 + 330 j.
+export const SUN = { hole: 0.6, lean: 8, stretch: 1.1, rows: 3, step: 1 / 3 };
+export const SUN_REACH = mm(HOA_THI.pipAt + HOA_THI.pipR); // a hole's half extent, pips included (133)
 export function sunMaskFile() {
-  const k = Math.tan((14 * Math.PI) / 180) * 1.1, W = SIZE, rows = 5, x0 = W / 2 + (k * W) / 2, uses = [];
-  for (let j = 0; j < rows; j++) {
-    const yp = W / 2 + j * W;
-    for (let i = -2; i <= 4; i++) {
-      const xp = x0 + i * W, xs = xp - k * yp; // the sheared centre; a block reaches 170 either side of it
-      if (xs > -170 && xs < W + 170) uses.push(`<use href="#h" x="${n(xp)}" y="${yp}"/>`);
-    }
+  const W = SIZE, rowH = W * SUN.stretch, s = (SUN.hole * W) / (2 * SUN_REACH), lean = Math.tan((SUN.lean * Math.PI) / 180);
+  const m = [s, 0, -s * SUN.stretch * lean, s * SUN.stretch, 0, 0].map((v) => +v.toFixed(4));
+  const uses = [];
+  for (let j = 0; j < SUN.rows; j++) for (let i = -1; i <= 2; i++) {
+    const x = W / 2 - j * W * SUN.step + i * W;
+    if (x > -W / 2 && x < 1.5 * W) uses.push(`<use href="#h" x="${n(x)}" y="${n(rowH / 2 + j * rowH)}"/>`);
   }
-  const h = n(W * 1.1 * rows);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}"><defs><path id="h" d="${holes("hoaThi")}"/></defs><g transform="skewX(-14) scale(1 1.1)">${uses.join("")}</g></svg>\n`;
+  const h = n(rowH * SUN.rows);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}"><defs><path id="h" transform="matrix(${m.join(" ")})" d="${holes("hoaThi")}"/></defs>${uses.join("")}</svg>\n`;
 }
 
 // The cement ground the patches are laid in (pages.css .floor::after): the tiles' own wear speckle (the same

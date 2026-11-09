@@ -9,7 +9,7 @@ import { DOOR } from "../objects/door.js";
 // cooled toward the room's shade. Worn edges show the wood (world-wood) on about 12% of the edge band.
 // Lit by the same lights and apertures as the shell, so a leaf in a beam takes the beam.
 const VERT = /* glsl */ `
-varying vec3 vP; varying vec3 vN; varying vec2 vUv;
+varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vDepth;
 #ifdef VERTEX_PAINT
 attribute vec4 aPaint; varying vec4 vPaint;
 #endif
@@ -29,7 +29,9 @@ void main(){
   #endif
   vec4 w = m * vec4(position, 1.);
   vP = w.xyz; vN = normalize(mat3(m) * normal); vUv = uv;
-  gl_Position = projectionMatrix * viewMatrix * w;
+  vec4 v = viewMatrix * w;
+  vDepth = -v.z;
+  gl_Position = projectionMatrix * v;
 }`;
 
 // ao: GLSL `float paintAo(vec3 P)`, contact shade where the paint meets something (a leaf at its hinge, a
@@ -41,13 +43,19 @@ void main(){
 // objects/door.js, in hinge space) is worn only where a door wears, within 4 cm of its edges, in the 25 cm kick
 // zone at its foot and a 10 cm disc round the handle; elsewhere its face takes at most 0.1. Frames (aLeafP.y −1)
 // keep the chipped edge band. The same rule for every door, Little Rose's at its 0.3.
-export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, leafWear = false } = {}) {
+// oldCoat (the corridor, critique r2: the kick zone read as mud or rust at 1440): what a chip shows is an older,
+// lighter coat of the same paint (mix(paint, uWood, 0.45), uWood the tiles' cream), not bare wood, and a leaf's
+// kick zone fades up its foot's 12.5 cm (it was 25).
+// nearFade (the corridor, critique r2): a backstop for what passes the lens: paint nearer the camera than 1.4 m along
+// its view axis dithers away (gone by 0.7 m), so no leaf or frame is ever a blurred slab with straight edges across the
+// frame. Discarded, never blended: no transparency sort.
+export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, leafWear = false, nearFade = false, oldCoat = false } = {}) {
   return new ShaderMaterial({
-    defines: { ...(vertexPaint ? { VERTEX_PAINT: "" } : {}), ...(leafWear ? { LEAF_WEAR: "" } : {}) },
+    defines: { ...(vertexPaint ? { VERTEX_PAINT: "" } : {}), ...(leafWear ? { LEAF_WEAR: "" } : {}), ...(nearFade ? { NEAR_FADE: "" } : {}), ...(oldCoat ? { OLD_COAT: "" } : {}) },
     uniforms: { ...U, uGrad: { value: 0 }, ...own },
     vertexShader: VERT,
     fragmentShader: /* glsl */ `
-      varying vec3 vP; varying vec3 vN; varying vec2 vUv;
+      varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vDepth;
       #ifdef LEAF_WEAR
       varying vec3 vL;
       #endif
@@ -66,6 +74,9 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
       ${aperturesGLSL(lights)}
       ${ao ?? "float paintAo(vec3 P){ return 1.; }"}
       void main(){
+        #ifdef NEAR_FADE
+        if (h21(gl_FragCoord.xy) > smoothstep(.7, 1.4, vDepth)) discard;
+        #endif
         vec3 N = normalize(vN);
         // Edge band in face UV, broken up by noise: chipped paint at corners and edges only.
         vec2 e = min(vUv, 1. - vUv);
@@ -74,14 +85,22 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
         #ifdef LEAF_WEAR
         if (vL.y > -.5) {
           float az = abs(vL.z), d = min(min(vL.y, ${DOOR.h.toFixed(3)} - vL.y), min(az, ${DOOR.w.toFixed(3)} - az));
+          #ifdef OLD_COAT
+          float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.01, .125, vL.y)); // edges; scuffs fading up the kick zone
+          #else
           float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.02, .25, vL.y)); // edges; scuffs fading up the kick zone
+          #endif
           m = max(m, 1. - smoothstep(.085, .105, length(vec2(vL.y - 1.02, az - ${(DOOR.w - 0.08).toFixed(3)}))));
           wear = mix(min(uWear, .1), uWear, m);
           grain = vL.zy * 38. + vL.xx * 21.; // the chips stay on the leaf as it swings
         }
         #endif
         float chip = smoothstep(0.62, 0.7, vn(grain)) * wear;
+        #ifdef OLD_COAT
+        vec3 albedo = mix(uPaint, mix(uPaint, uWood, .45), chip);
+        #else
         vec3 albedo = mix(uPaint, uWood, chip);
+        #endif
         float sky = 0.82 + 0.18 * N.y;
         vec3 shade = mix(albedo * uShadeK, uCool * uShadeK * 1.08, 0.18) * sky;
         float n0 = max(dot(N, uLt[0]), 0.), n1 = max(dot(N, uLt[1]), 0.);

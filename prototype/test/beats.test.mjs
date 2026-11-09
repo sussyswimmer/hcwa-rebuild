@@ -190,8 +190,9 @@ test("cards: the stage header first, one card per beat, never two, gaps between 
   assert.equal(cardAt(0.5, 0), -1, "no centers: the header only");
 });
 
-test("doors swing open at their beat, 0 → 72°, and stay open", async () => {
+test("doors swing open at their beat, 0 → 96° into their room, and stay open", async () => {
   const { doorAngle, WALK, DOOR_DEG } = await import("../src/world/journey.js");
+  const { DOOR_OPEN } = await import("../src/world/sets/corridor.js");
   const n = 3, w = (WALK.beats[1] - WALK.beats[0]) / n, at = (i, u) => WALK.beats[0] + (i + u) * w;
   for (let i = 0; i < n; i++) {
     assert.equal(doorAngle(i, at(i, 0.05), n), 0, `door ${i} shut before its beat`);
@@ -200,7 +201,8 @@ test("doors swing open at their beat, 0 → 72°, and stay open", async () => {
     let prev = 0;
     for (let u = 0; u <= 1; u += 0.01) { const a = doorAngle(i, at(i, u), n); assert.ok(a >= prev - 1e-9); prev = a; }
   }
-  assert.equal(DOOR_DEG, 72);
+  assert.equal(DOOR_DEG, DOOR_OPEN, "the live swing ends where the stills stand");
+  assert.ok(DOOR_DEG > 90 && DOOR_DEG < 110, "just past square, behind the near wall (critique r2)");
 });
 
 test("the lens puts the door where the card leaves the frame free, at any aspect", async () => {

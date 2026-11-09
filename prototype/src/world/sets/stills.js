@@ -15,7 +15,7 @@ import { BOX as ROOM_BOX, SCREEN as ROOM_SCREEN } from "./room.js";
 import { camera, houseShade, houseSun, houseUniforms, roomShade, roomSun, screenColors, street, surfaceUniforms, tint } from "./common.js";
 import { corridorScene, DOOR_OPEN, EXIT, exitLook } from "./corridor.js";
 import { WIN_Z, shuttersScene } from "./shutters.js";
-import { CORRIDOR, DOOR_FOCUS_Y, SHUTTERS, WALK, beatAt, corridorLayout, leafAt, lensFor, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, slatAt, walkPose } from "../journey.js";
+import { CORRIDOR, DOOR_FOCUS_Y, DWELL_TILT, SHUTTERS, WALK, beatAt, corridorLayout, leafAt, lensFor, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, slatAt, walkPose } from "../journey.js";
 import { STILLS } from "../still-shots.js";
 
 // The still sets (05-DESIGN D6.10, PLAN sections 4 and 5): framings of the same world for the inner-page
@@ -540,7 +540,7 @@ export const SHOTS = {
   } },
   // The passage's end (K4) for the pages without the live flight: the home corridor's own three doors, the
   // open ones open, Little Rose shut.
-  "passage-corridor": { scene: (o) => corridorScene({ ...o, beats: HOME_BEATS, open: DOOR_OPEN, leaflets: "rest" }), crops: {
+  "passage-corridor": { scene: (o) => corridorScene({ ...o, beats: HOME_BEATS, open: DOOR_OPEN }), crops: {
     desk: { pos: EXIT.to.toArray(), look: exitLook(EXIT.to).toArray(), fov: EXIT.fov.landscape },
     mobile: { pos: EXIT.to.toArray(), look: exitLook(EXIT.to, 14).toArray(), fov: 62 },
   } },
@@ -557,14 +557,14 @@ function bayShot(i) {
   const crops = {};
   for (const [name, c] of Object.entries(BAY_CROPS)) {
     const p = walkPose(i + 1, c.layout, lay), y = (p.yaw * Math.PI) / 180;
-    crops[name] = {
-      pos: p.pos, look: [p.pos[0] + Math.sin(y) * 10, 1.1, p.pos[2] - Math.cos(y) * 10], fov: p.fov,
-      lens: lensFor(p.pos, p.yaw, [CORRIDOR.wallX, DOOR_FOCUS_Y, lay.doors[i].zc], p.fov, c.aspect, c.fx, c.fy),
-    };
+    const lens = lensFor(p.pos, p.yaw, [CORRIDOR.wallX, DOOR_FOCUS_Y, lay.doors[i].zc], p.fov, c.aspect, c.fx, c.fy);
+    // The live dwell's look down beside the card (journey.js dwellTilt, at its height mid-beat).
+    if (c.layout === "side") { const k = Math.tan((DWELL_TILT * Math.PI) / 180); lens.t -= k; lens.b -= k; }
+    crops[name] = { pos: p.pos, look: [p.pos[0] + Math.sin(y) * 10, 1.1, p.pos[2] - Math.cos(y) * 10], fov: p.fov, lens };
   }
   return {
     scene: (o) => {
-      const set = corridorScene({ ...o, beats: HOME_BEATS, t, leaflets: "rest" });
+      const set = corridorScene({ ...o, beats: HOME_BEATS, t });
       set.specs.forEach((_, j) => set.setDoor(j, j <= i ? DOOR_OPEN : 0));
       return set;
     },

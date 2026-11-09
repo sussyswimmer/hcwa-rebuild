@@ -1,7 +1,7 @@
 import { MathUtils, Vector3 } from "three";
 import { EXIT } from "./sets/places.js";
 import { applyBounds, centred, exitYaw } from "./flight.js";
-import { CORRIDOR, DOOR_FOCUS_Y, VIEW, lensFor, walkLeave, walkPose, walkT } from "./journey.js";
+import { CORRIDOR, DOOR_FOCUS_Y, DWELL_TILT, VIEW, dwellTilt, lensFor, walkLeave, walkPose, walkT } from "./journey.js";
 
 // S2 part 2 (05-DESIGN D5.3, PLAN H4): the camera from K4, where the passage leaves it, down the corridor
 // door by door. Everything is a function of the scroll (never time), so it reverses at the visitor's speed.
@@ -12,6 +12,7 @@ import { CORRIDOR, DOOR_FOCUS_Y, VIEW, lensFor, walkLeave, walkPose, walkT } fro
 // the floor (journey.js walkPitch), once the last card is going.
 
 const smooth = (x) => { const t = MathUtils.clamp(x, 0, 1); return t * t * (3 - 2 * t); };
+const TILT = Math.tan(MathUtils.degToRad(DWELL_TILT));
 
 export function createWalk() {
   const pos = new Vector3(), look = new Vector3(), at = { pos: [0, 0, 0], yaw: 0, fov: 0 };
@@ -47,6 +48,8 @@ export function createWalk() {
     centred(fov, aspect, k4);
     const s = Math.tan(MathUtils.degToRad(fov / 2)) / Math.tan(MathUtils.degToRad(p.fov / 2));
     for (const key of ["l", "r", "t", "b"]) b[key] = MathUtils.lerp(k4[key], lens[key] * s, e);
+    // The dwell's look down, beside the card (journey.js dwellTilt): the window slides down, verticals stay vertical.
+    if (layout === "side") { const k = TILT * dwellTilt(q, n) * e; b.t -= k; b.b -= k; }
     applyBounds(cam, b, lift, viewH);
   };
 

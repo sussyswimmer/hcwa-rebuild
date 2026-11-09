@@ -64,8 +64,9 @@ export function houseUniforms({ gach = null, runnerX = 0, runner = HOUSE.runner,
   }
   return U;
 }
-// Blue chalk as albedo relative to the tiles' cream ground (the floor's targets are the cream's).
-const chalkRel = () => { const c = mixc(tok("tile-indigo-lit"), tok("lime-50"), 0.45), g = tok("tile-cream"); return c.multiply({ r: 1 / g.r, g: 1 / g.g, b: 1 / g.b }); };
+// Blue-white chalk as albedo relative to the tiles' cream ground (the floor's targets are the cream's). Critique r2:
+// whiter (it was 45% lime-50 and read as faded blue tape), still never pink near anyone's door.
+const chalkRel = () => { const c = mixc(tok("tile-indigo-lit"), tok("lime-50"), 0.6), g = tok("tile-cream"); return c.multiply({ r: 1 / g.r, g: 1 / g.g, b: 1 / g.b }); };
 // The dado's lit targets when the sun moves (the corridor's clock).
 export function setHouseSun(U, sun, k = 0.5) {
   const d = dadoSun(sun, k), l = lineSun(sun, k);

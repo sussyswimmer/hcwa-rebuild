@@ -5,8 +5,12 @@
 //   the corridor's own "all work" link or the corridor's cards.
 // - Tile count is the hierarchy at every width: Giáo dục shows 2 × 2 whole tiles and Bảo vệ 2 × 1, on phones
 //   too; Gia đình and Vận động one each. A tile is never scaled (all four patches share one --T).
-// - The light band at rest (reduced motion / Tier 0) shows at least 3 whole crisp quatrefoils on every area,
-//   inside the band's unfaded part, computed from the mask's own lattice (sun-hoa-thi.svg, blocks.mjs).
+// - Fix r2: the light band shows at least 2 whole, isolated quatrefoils (4 pips each) on every area, at rest
+//   (reduced motion / Tier 0) and at mid-sweep, inside the band's unfaded part, computed from the mask's own
+//   lattice (sun-hoa-thi.svg, blocks.mjs sunMaskFile).
+// - Fix r2: the floor is a lattice of plain tiles. At 1024 and up every patch's corner lies on it (a whole
+//   number of tiles from the floor's corner); below, each patch sits at its area's top-left corner, where
+//   that area's joints are registered.
 // - All four names inside the first 1440 × 900 view of the section, and no page overflow.
 // Widths 390 / 600 / 768 / 1024 / 1440 (and 320 for overflow and patches), VI and EN, Tier 0 with reduced
 // motion; plus Tier 1 (the corridor as a stage) at 390 and 1440 for the corridor overlap.
@@ -17,21 +21,22 @@ const base = process.argv[2] ?? "http://localhost:4173";
 const intersects = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
 const PATCH = { education: [2, 2], protection: [2, 1], family: [1, 1], policy: [1, 1] };
 
-// Whole Hoa thị quatrefoils of the rest band over one area. The mask (blocks.mjs sunMaskFile) is a 300-unit
-// block lattice under skewX(-14°) scale(1, 1.1), repeating every 300 units in x and 1650 in y; a hole's body
-// reaches 114 units either side in x (the skewed lobes) and 123 in y.
-const K = Math.tan((14 * Math.PI) / 180) * 1.1, HX = 114.1, HY = 123.2;
-function wholeHoles(a) {
+// Whole Hoa thị quatrefoils of the band over one area. The mask (blocks.mjs sunMaskFile) is a 300-unit cell,
+// three rows to a 990-unit repeat: row j's hole centres at x = 150 - 100 j + 300 i, y = 165 + 330 j. A hole
+// (0.6 of its cell, leaning 8°, stretched 1.1) reaches 101.9 units either side in x (its leaning pips) and 99
+// in y. bandLeft is where the band stands (its rest translate, or mid-sweep).
+const HX = 101.9, HY = 99;
+function wholeHoles(a, bandLeft = a.light.left) {
   const u = a.maskW / 300, bw = a.light.right - a.light.left;
-  const x0 = a.light.left + a.fade * bw + HX * u, x1 = a.light.right - a.fade * bw - HX * u;
+  const x0 = bandLeft + a.fade * bw + HX * u, x1 = bandLeft + bw - a.fade * bw - HX * u;
   const lx0 = Math.max(x0, a.floor.left + HX * u), lx1 = Math.min(x1, a.floor.right - HX * u);
   const ly0 = a.floor.top + HY * u, ly1 = a.floor.bottom - HY * u;
   let n = 0;
-  for (let rep = 0; rep < 3; rep++) for (let j = 0; j < 5; j++) {
-    const cy = a.light.top + u * (1.1 * (150 + 300 * j) + 1650 * rep);
+  for (let rep = -1; rep < 4; rep++) for (let j = 0; j < 3; j++) {
+    const cy = a.light.top + a.maskY + u * (165 + 330 * j + 990 * rep);
     if (cy < ly0 || cy > ly1) continue;
     for (let i = -6; i <= 12; i++) {
-      const cx = a.light.left + u * (150 + 300 * i - 300 * K * j);
+      const cx = bandLeft + u * (150 - 100 * j + 300 * i);
       if (cx >= lx0 && cx <= lx1) n++;
     }
   }
@@ -45,7 +50,8 @@ const measure = () => {
     const cols = art.viewBox.baseVal.width / 200;
     return {
       id: g.className.replace("gach gach--", ""), floor: r(g.querySelector(".gach__floor")), light: r(light), T: art.getBoundingClientRect().width / cols,
-      maskW: parseFloat(cs.maskSize || cs.webkitMaskSize), fade: +((cs.maskImage || cs.webkitMaskImage).match(/black (\d+(?:\.\d+)?)%/)?.[1] ?? 0) / 100, opacity: +cs.opacity,
+      maskW: parseFloat(cs.maskSize || cs.webkitMaskSize), maskY: parseFloat((cs.maskPosition || cs.webkitMaskPosition).split(" ")[1]),
+      fade: +((cs.maskImage || cs.webkitMaskImage).match(/black (\d+(?:\.\d+)?)%/)?.[1] ?? 0) / 100, opacity: +cs.opacity, li: r(g),
       words: [r(g.querySelector(".gach__name")), r(g.querySelector(".gach__text"))],
     };
   });
@@ -57,7 +63,7 @@ const measure = () => {
   // The sheet hides what is under it from its top, and from 0.6 of the way up its bông gió row, where that
   // row's fade (linear-gradient to top, black 20% → transparent) is half opaque.
   const edge = parseFloat(getComputedStyle(document.querySelector("#work"), "::before").height) || 0;
-  return { areas, title: r(document.querySelector(".floor__title")), sectionTop: work.top, sheet: { left: 0, right: innerWidth, top: work.top - 0.6 * edge, bottom: work.bottom }, corridor, overflow: document.documentElement.scrollWidth - innerWidth, stage: !!document.querySelector("#centers.is-stage") };
+  return { areas, floorBox: r(document.querySelector(".floor")), title: r(document.querySelector(".floor__title")), sectionTop: work.top, sheet: { left: 0, right: innerWidth, top: work.top - 0.6 * edge, bottom: work.bottom }, corridor, overflow: document.documentElement.scrollWidth - innerWidth, stage: !!document.querySelector("#centers.is-stage") };
 };
 
 (async () => {
@@ -84,9 +90,16 @@ const measure = () => {
       const texts = [["H2", m.title], ...m.areas.flatMap((a) => [[`${a.id} name`, a.words[0]], [`${a.id} line`, a.words[1]]])];
       for (const a of m.areas) {
         for (const [name, t] of texts) if (intersects(a.floor, t)) fail(`${tag}: ${name} touches the ${a.id} tiles`);
-        const n = wholeHoles(a);
-        if (n < 3) fail(`${tag}: the ${a.id} light at rest shows ${n} whole quatrefoils (at least 3)`);
+        const w = a.floor.right - a.floor.left, rest = wholeHoles(a), mid = wholeHoles(a, a.floor.left + (w - 2 * a.T) / 2);
+        a.holes = `${rest}/${mid}`;
+        if (rest < 2 || mid < 2) fail(`${tag}: the ${a.id} light shows ${rest} whole quatrefoils at rest and ${mid} at mid-sweep (at least 2)`);
         if (a.opacity < 0.85) fail(`${tag}: the ${a.id} light rests at opacity ${a.opacity}`);
+        // the plain floor's lattice: every patch corner on it (desktop), or at its own area's corner (below)
+        const off = (v) => Math.min(v % a.T, a.T - (v % a.T));
+        if (width >= 1024) {
+          const dx = off(a.floor.left - m.floorBox.left), dy = off(a.floor.top - m.floorBox.top);
+          if (dx > 1 || dy > 1) fail(`${tag}: the ${a.id} patch is ${dx.toFixed(1)} × ${dy.toFixed(1)} px off the floor's lattice`);
+        } else if (Math.abs(a.floor.left - a.li.left) > 0.5 || Math.abs(a.floor.top - a.li.top) > 0.5) fail(`${tag}: the ${a.id} patch is not at its area's corner, where its joints are registered`);
       }
       for (const cr of m.corridor) for (const [name, t] of [...texts, ...m.areas.map((a) => [`${a.id} tiles`, a.floor])]) if (intersects(cr, t)) fail(`${tag}: ${name} touches the corridor's text`);
       if (width === 1440) {
@@ -94,7 +107,7 @@ const measure = () => {
         const limit = m.sectionTop + 900;
         for (const a of m.areas) if (a.words[0].bottom > limit) fail(`${tag}: the ${a.id} name is below the section's first view`);
       }
-      console.log(`ok   ${tag}  (--T ${T.toFixed(0)}px, whole quatrefoils ${m.areas.map((a) => `${a.id} ${wholeHoles(a)}`).join(", ")})`);
+      console.log(`ok   ${tag}  (--T ${T.toFixed(0)}px, whole quatrefoils at rest/mid-sweep ${m.areas.map((a) => `${a.id} ${a.holes}`).join(", ")})`);
       await page.close();
     }
     // Tier 1: the corridor is a sticky stage and the sheet rises over its last frame. Walk the overlap in 40 px

@@ -2,7 +2,7 @@ import { html, raw } from "../../lib/html.mjs";
 import { viKeep } from "../../lib/vikeep.mjs";
 import { visibleFigures } from "../../lib/content.mjs";
 import { icon, pendingChip, programRow } from "../../partials/components.mjs";
-import { gachArt, gachSprite, AREA_BLOCK, AREA_PATCH } from "../../partials/blocks.mjs";
+import { gachArt, gachSpriteOnce, AREA_BLOCK, AREA_PATCH } from "../../partials/blocks.mjs";
 
 // Home H5, the Our work sheet (Desire 2): the first sheet after the corridor. Places were doors; here the
 // work is the floor they open onto (focus areas as gạch bông), the plaques (figures) and light passing
@@ -51,7 +51,7 @@ export function workSheet(c) {
       <h2 class="wall__title floor__title" id="focus-title" data-reveal${c.d(work.focusTitle)}>${viKeep(c.tx(work.focusTitle))}</h2>
       <ul class="floor__areas" data-reveal="stagger">${work.focusAreas.map((a) => gach(c, a))}</ul>
     </div>
-    ${gachSprite()}
+    ${gachSpriteOnce(c)}
     ${plaques(c)}
   </div>
   <section class="programs" aria-labelledby="programs-title">

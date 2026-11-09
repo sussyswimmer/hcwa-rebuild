@@ -267,6 +267,12 @@ html:not(.js) .pause-toggle, html[data-reduced] .pause-toggle { display: none; }
   .program-row:hover::before, .program-row:focus-within::before { --row-lit: 74%; }
 }
 .program-row__head { display: grid; gap: 12px; align-content: start; }
+/* Fix r2: the row's areas as a strip of the work sheet's floor (blocks.mjs gachStrip), one tile per area
+   laid edge to edge with a patch's grout, above the status line: the same pigments carry on from the floor
+   into the list. A tile is 44 px (48 on wide screens) whatever the row; decoration only (aria-hidden). */
+.program-row__floor { display: block; position: relative; line-height: 0; margin-block-end: 4px; }
+.program-row__tiles { display: block; block-size: 44px; inline-size: auto; max-inline-size: none; }
+@media (min-width: 1024px) { .program-row__tiles { block-size: 48px; } }
 .program-row__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .program-row__years { font-size: var(--fs-meta); font-weight: 500; color: var(--color-ink-700); }
 .program-row__name { font-size: clamp(1.625rem, 1.1rem + 1.5vw, 2.5rem); max-inline-size: 16em; }

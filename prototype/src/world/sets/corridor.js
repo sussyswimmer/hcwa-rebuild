@@ -25,18 +25,22 @@ import { bakeGachBong } from "../gach.js";
 // The richness pass (D0.6.2, Maxwell: "a plain white wall"): a Saigon mái ấm. Yellow lime wash with its loang
 // over a mint dado to 0.90 m on every wall, broken 10 cm short of every door frame (Little Rose's too); a
 // gạch bông runner on the screen side and plain cream tiles in the sunlit band by the doors; a warm ceiling;
-// a fan in every bay but Little Rose's and tamarind leaflets drifting in through the screen, never near it.
+// a fan in every bay but Little Rose's (critique r2 cut the drifting tamarind leaves: objects/props.js).
 // Used by the live world (live.js) and by the still renderer (sets/stills.js), so both see one corridor.
 
-export const DOOR_OPEN = 72; // degrees a door swings to at its beat (D5.3); live.js drives it
-// Leaflets in the air per tier (critique r1, D0.6.2's ladder step 2 taken now): none on a phone's Tier 1, where
-// they were 2–6 px specks at best and frozen blobs at worst; on Tier 2 two a beat (objects/props.js LEAFLET).
-export const LEAFLETS = { 1: 0, 2: 8 };
+// Degrees a door swings to at its beat (D5.3; live.js drives it). Critique r2: at 72° out into the corridor the leaf
+// stood 0.9 m from the wall and the walk passed its edge, a blurred slab with full-height straight edges filling the
+// frame's right; folded back flat along the wall it was still a green slab beside the lens. So an open door opens into
+// its room, as a Saigon room door does: hinged on the jamb nearer the camera's approach, it turns away from the
+// visitor, the lit room opening from the far jamb first, and comes to rest just past square, behind the near wall,
+// where the corridor never sees it. The doorway stays clear for its light. Little Rose's stays shut and untouched
+// (its hinge and leaf are as they were).
+export const DOOR_OPEN = 96;
 
 // Traces of children's lives (05-DESIGN D6.8, staging only until HCWA approves): the chalk lò cò on the Tre Xanh
 // bay's plain band, on the side of its door away from Little Rose, its whole length kept LO_CO.clear from Little
 // Rose's bay (else none). Never in a still. Its squares are 0.34 m: 6 rows and a half-round home, 2.21 m.
-export const LO_CO = { unit: "green-bamboo", len: 6 * 0.34 + 0.17, gap: 0.15, clear: 1.5 };
+export const LO_CO = { unit: "green-bamboo", len: 6 * 0.34 + 0.17, gap: 0.05, clear: 1.5 };
 export function loCoSpot(lay, C = CORRIDOR) {
   const d = lay.doors.find((x) => x.unit === LO_CO.unit), lr = lay.doors.find((x) => x.unit === "little-rose")?.bay;
   if (!d) return null;
@@ -51,10 +55,9 @@ export function loCoSpot(lay, C = CORRIDOR) {
   return null;
 }
 
-// gach: the baked runner ({ field, border }, gach.js; null in tests). leaflets: at most how many drift live
-// (LEAFLETS), or "rest" in the stills. fanShadows: the blades in the sun's mask (Tier 2 and the stills; never on
-// a phone). traces: the chalk lò cò (live corridor only, when the page carries data-traces).
-export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.25, leaflets = LEAFLETS[2], fanShadows = true, fanAngle = 0.6, traces = false }) {
+// gach: the baked runner ({ field, border }, gach.js; null in tests). fanShadows: the blades in the sun's mask (Tier 2
+// and the stills; never on a phone). traces: the chalk lò cò (live corridor only, when the page carries data-traces).
+export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.25, fanShadows = true, fanAngle = 0.6, traces = false }) {
   if (beats.length > MAX_DOORS) throw new Error(`corridor: ${beats.length} doors > ${MAX_DOORS}`);
   const lay = corridorLayout(beats), C = CORRIDOR, s = lay.screen;
   const box = { min: [C.screenX, 0, lay.end], max: [C.wallX, C.ceiling, lay.start] };
@@ -65,8 +68,8 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
   const screen = { mode: "window", pattern: "hoaThi", corner: [s.sx, s.y0, s.z0], u: [0, 0, 1], v: [0, 1, 0], size: [s.z1 - s.z0, s.y1 - s.y0], depth: DEPTH };
   // Tamarinds along the street: the patches come and go as in the room.
   const trees = { mode: "occluder", pattern: "canopy", corner: [s.sx - 3.2, -2, lay.end - 6], u: [0, 0, 1], v: [0, 1, 0], size: [lay.start - lay.end + 12, 9], depth: 0, params: [0.9, 0.56, 1.3, 4.1] };
-  // The fans and leaflets: never in Little Rose's bay (objects/props.js).
-  const props = buildProps({ C, lay, leaflets });
+  // The fans: never in Little Rose's bay (objects/props.js).
+  const props = buildProps({ lay });
   const shadows = fanShadows && props.fans.length > 0;
   const lights = [
     { dir: sun.dir, apertures: shadows ? [screen, trees, fanAperture({ C, lay })] : [screen, trees], glsl: NO_SUN + (shadows ? fansGLSL(props.fans.length) : ""), factor: "bayFree(P)" },
@@ -93,13 +96,14 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
   if (loCo) U.uTrace.value.set(loCo.from, loCo.dir, loCo.x, 1);
 
   // ---- doors from the beats ----
-  const specs = lay.doors.map((d) => ({ ...doorSpec({ wx: C.wallX, zc: d.zc, unit: d.unit, open: 0, hinge: -1 }), beat: d }));
+  const specs = lay.doors.map((d) => ({ ...doorSpec({ wx: C.wallX, zc: d.zc, unit: d.unit, open: 0, ...(d.unit === "little-rose" ? { hinge: -1 } : { hinge: 1, inward: true }) }), beat: d }));
   U.uDoorN.value = specs.length;
   U.uDoorWall.value.set(C.wallX, specs[0]?.transom.y0 ?? 2.3, 0, 0);
   let lr = 0;
   specs.forEach((d, i) => {
     const light = doorLight(d.unit);
-    U.uDoors.value[i].set(d.zc, DOOR_PATTERN[light.transomPattern] ?? DOOR_PATTERN.hoaThi, 0, d.hinge);
+    // w: the hinge side (±1), doubled when the leaf swings into the room (glsl/doors.js).
+    U.uDoors.value[i].set(d.zc, DOOR_PATTERN[light.transomPattern] ?? DOOR_PATTERN.hoaThi, 0, d.hinge * (d.swing < 0 ? 2 : 1));
     if (!light.corridorSun && lr < 2) U.uNoSun.value[lr++].set(d.beat.bay[0], d.beat.bay[1], 0, 0);
   });
 
@@ -119,13 +123,13 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
       ...rect("x", C.wallX - P, [z - half, z + half], [0, H], -1, 0),
     ]),
   ];
-  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights, { house: true }));
+  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights, { house: true, nearFade: true }));
 
   // Faces the corridor (+x): laid from the screen's +z end along −z, on the light's own block grid.
   const lattice = latticePanel(U, lights, { corner: [s.sx, s.y0, s.z1], u: [0, 0, -1], v: [0, 1, 0], size: screen.size, pattern: "hoaThi", light: 0, own: street() });
   screenColors(lattice.material.uniforms);
 
-  // The fans and leaflets: one draw, before the shell (props.js).
+  // The fans: one draw, before the shell (props.js).
   const propMesh = propsMesh(U, lights, props, tint(tok("lime-50"), sun.color, 0.6));
   const objects = [shell, lattice, propMesh];
   // Every door frame, and Little Rose's leaf (it never moves: setDoor keeps it at 0), as one draw: the paint
@@ -138,7 +142,8 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     return geo;
   };
   const paintOwn = () => ({
-    uWood: { value: vec(tok("wood")) }, uCool: { value: vec(tok("wallShade")) },
+    // The chips show an older, lighter coat (paint.js oldCoat): uWood is the tiles' cream it is mixed with.
+    uWood: { value: vec(tok("tile-cream")) }, uCool: { value: vec(tok("wallShade")) },
     uSunTint: { value: vec(tint(tok("lime-50"), sun.color)) }, uSpillTint: { value: vec(mixc(tok("lime-50"), day, 0.5)) },
     uShadeK: { value: 0.58 },
   });
@@ -151,7 +156,7 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     leaf.position.set(...g.hinge);
     if (isLR) { fixed.push(paintOf(g.leaf.clone().translate(...g.hinge), unitColor, wear)); g.leaf.dispose(); }
     else {
-      const paint = paintMaterial(U, lights, { ...paintOwn(), uPaint: { value: vec(unitColor) }, uWear: { value: wear } }, { leafWear: true });
+      const paint = paintMaterial(U, lights, { ...paintOwn(), uPaint: { value: vec(unitColor) }, uWear: { value: wear } }, { leafWear: true, nearFade: true, oldCoat: true });
       leaf.add(new Mesh(g.leaf, paint));
       objects.push(leaf);
     }
@@ -163,7 +168,8 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     if (!isLR) {
       const glow = new Mesh(new PlaneGeometry(DOOR.w + 0.4, DOOR.h + 0.3), glowMaterial({ low: mixc(tok("sun-200"), unitColor, 0.08), high: mixc(tok("sun-100"), unitColor, 0.05), y0: 0, y1: DOOR.h, dapple: { zc: d.zc, half: DOOR.w / 2, amount: 0.07 } }));
       glow.rotation.y = -Math.PI / 2;
-      glow.position.set(C.wallX + 0.9, DOOR.h / 2, d.zc);
+      // 1.05 m back: the leaf, open into the room (0.98 m), stands in front of it.
+      glow.position.set(C.wallX + 1.05, DOOR.h / 2, d.zc);
       glow.visible = false;
       objects.push(glow);
       glows.push(glow);
@@ -180,14 +186,14 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     u.uHalo.value = 0.18;
     objects.push(tr);
   }
-  if (fixed.length) objects.push(new Mesh(mergeGeometries(fixed), paintMaterial(U, lights, paintOwn(), { vertexPaint: true, leafWear: true })));
+  if (fixed.length) objects.push(new Mesh(mergeGeometries(fixed), paintMaterial(U, lights, paintOwn(), { vertexPaint: true, leafWear: true, nearFade: true, oldCoat: true })));
 
   // A door at its angle: the leaf, the light past it, the lit room behind it. Little Rose stays shut.
   const setDoor = (i, deg) => {
     const d = specs[i];
     if (!d) return;
     const a = d.unit === "little-rose" ? 0 : (Math.min(Math.max(deg, 0), DOOR_OPEN) * Math.PI) / 180;
-    leaves[i].rotation.y = d.hinge * a;
+    leaves[i].rotation.y = d.hinge * d.swing * a;
     U.uDoors.value[i].z = a;
     if (glows[i]) glows[i].visible = a > 0.01;
   };
@@ -208,22 +214,14 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
   };
 
   // The life in it: tm in seconds of the props clock (live.js: Tier 2 the clock and the scroll, Tier 1 the
-  // scroll alone, frozen while paused). Two uniform writes, no allocation.
-  const animate = (tm) => {
-    U.uFanA.value = (fanAngle + tm * FAN.omega) % (Math.PI * 2);
-    propMesh.material.uniforms.uTime.value = tm;
-  };
-  // The leaflets' alpha and size (journey.js leafFade: 0 while Little Rose's door is read), and whether they fly
-  // at all (a live gate step down to Tier 1 grounds them). One uniform write when it changes.
-  let leafOn = 1, leafAt = 1;
-  const setLeafFade = (f) => { leafAt = f; propMesh.material.uniforms.uLeafFade.value = f * leafOn; };
-  const setLeaflets = (on) => { leafOn = on ? 1 : 0; setLeafFade(leafAt); };
+  // scroll alone, frozen while paused). One uniform write, no allocation.
+  const animate = (tm) => { U.uFanA.value = (fanAngle + tm * FAN.omega) % (Math.PI * 2); };
   const lrIndex = lay.doors.findIndex((d) => d.unit === "little-rose");
   // Tier 2 → 1 at runtime (the live gate): the fans stop casting (their test stays compiled, every fan off).
   const setFanShadows = (on) => { for (const v of U.uFans.value) if (v.x || v.y) v.w = on && shadows ? 1 : 0; };
 
   return {
-    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun, animate, setFanShadows, setLeafFade, setLeaflets, lr: lrIndex, props,
+    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun, animate, setFanShadows, lr: lrIndex, props,
     // For the still renderer: what frames the shot, what glows on its own.
     subject: [screen], glow: [screen], shafts: 1.4,
   };
@@ -238,7 +236,7 @@ export { EXIT, exitLook };
 // took the phone proxy +80%); phones turn the fans and cast nothing.
 export async function buildCorridor({ gl, tier, beats, textures, traces = false, onSlice = null }) {
   const gach = await bakeGachBong({ worker: true, size: tier >= 2 ? 512 : 256, aniso: tier >= 2 ? 4 : 2, rows: tier >= 2 ? 16 : 8, onSlice });
-  const set = corridorScene({ ...textures, gach, beats, leaflets: LEAFLETS[tier >= 2 ? 2 : 1], fanShadows: tier >= 2, traces });
+  const set = corridorScene({ ...textures, gach, beats, fanShadows: tier >= 2, traces });
   const scene = new Scene();
   scene.add(...set.objects);
   // The shafts leave the fans out: the blade test in every step of the march was most of Tier 2's added
@@ -251,7 +249,7 @@ export async function buildCorridor({ gl, tier, beats, textures, traces = false,
   const treeP = set.U.uApP.value[1], treeAt = treeP.clone();
   return {
     ...set, scene, camera, shafts, bakedInWorker: gach.worker,
-    setTier: (t) => { shafts.setTier(t); set.setFanShadows(t >= 2); set.setLeaflets(t >= 2); },
+    setTier: (t) => { shafts.setTier(t); set.setFanShadows(t >= 2); },
     // The tamarinds outside sway on the props clock (live.js: with the scroll on phones): two slow sines.
     sway(time) { treeP.z = treeAt.z + 0.2 * Math.sin(time * 0.31 + 0.6) + 0.06 * Math.sin(time * 1.07); treeP.w = treeAt.w + 0.1 * Math.sin(time * 0.23 + 2.1); },
     compile: async () => {

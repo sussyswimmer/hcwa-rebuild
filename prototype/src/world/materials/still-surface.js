@@ -43,26 +43,32 @@ float loCo(vec2 p){
   }
   if (p.y > 6. * S) d = min(d, abs(length(vec2(p.x, p.y - 6. * S)) - S * .5));
   float aa = max(fwidth(p.y), fwidth(p.x));
-  float stroke = 1. - smoothstep(.013 - aa, .013 + aa, d);
-  // Chalk on cement: the stroke breaks where the tile's grain is low, and is a little worn all over.
-  return stroke * smoothstep(.22, .55, vn(p * 46.)) * (.7 + .3 * vn(p * 9. + 3.1));
+  // Critique r2: a child's chalk line, about 3.5 cm (it was 2.6 and read as faded tape at 1440).
+  float stroke = 1. - smoothstep(.0175 - aa, .0175 + aa, d);
+  // Dry-brushed chalk: streaks along the line (the noise stretched along both axes, so either direction of a stroke
+  // breaks the same way), skipping where the tile's grain is low; barely worn elsewhere.
+  float streak = max(vn(vec2(p.x * 160., p.y * 9.)), vn(vec2(p.x * 9., p.y * 160.)));
+  return stroke * smoothstep(.18, .42, streak) * smoothstep(.12, .4, vn(p * 46.)) * (.82 + .18 * vn(p * 9. + 3.1));
 }
 `;
-export function stillSurface(U, lights, { contact = null, house = false } = {}) {
+// nearFade (the live corridor and its stills, critique r2): a backstop: a wall or pier nearer the camera than 1.4 m
+// along its view axis dithers away (gone by 0.7 m). Walls only: the floor at a phone frame's foot is that near.
+export function stillSurface(U, lights, { contact = null, house = false, nearFade = false } = {}) {
   // The corridor's light 1 already declares the doors (glsl/doors.js); a still's house declares them itself.
   const doorsDeclared = lights.some((l) => l.glsl?.includes("uDoors["));
   return new ShaderMaterial({
     uniforms: U,
+    defines: nearFade ? { NEAR_FADE: "" } : {},
     vertexShader: /* glsl */ `
       attribute float aKind;
-      varying vec3 vP; varying vec3 vN; varying float vKind;
+      varying vec3 vP; varying vec3 vN; varying float vKind, vDepth;
       void main(){
-        vec4 w = modelMatrix * vec4(position, 1.);
-        vP = w.xyz; vN = normalize(mat3(modelMatrix) * normal); vKind = aKind;
-        gl_Position = projectionMatrix * viewMatrix * w;
+        vec4 w = modelMatrix * vec4(position, 1.), v = viewMatrix * w;
+        vP = w.xyz; vN = normalize(mat3(modelMatrix) * normal); vKind = aKind; vDepth = -v.z;
+        gl_Position = projectionMatrix * v;
       }`,
     fragmentShader: /* glsl */ `
-      varying vec3 vP; varying vec3 vN; varying float vKind;
+      varying vec3 vP; varying vec3 vN; varying float vKind, vDepth;
       uniform vec3 uShade[3], uSunT[3], uSpillT[3], uGlare, uBoxMin, uBoxMax, uFillDir;
       uniform float uRef[2], uI[2], uAoK;
       uniform sampler2D uLime, uTerr;
@@ -78,6 +84,9 @@ export function stillSurface(U, lights, { contact = null, house = false } = {}) 
       void main(){
         int k = int(vKind + 0.5);
         vec3 N = normalize(vN);
+        #ifdef NEAR_FADE
+        if (k == 0 && h21(gl_FragCoord.xy) > smoothstep(.7, 1.4, vDepth)) discard;
+        #endif
         vec2 uv = abs(N.z) > .5 ? vP.xy : abs(N.x) > .5 ? vP.zy : vP.xz;
         vec4 lw = texture2D(uLime, uv * 0.25);
         float vertical = 1. - step(.5, abs(N.y));
@@ -103,7 +112,7 @@ export function stillSurface(U, lights, { contact = null, house = false } = {}) 
             vec2 q = abs(fract(vec2(s, vP.z) / T + .5) - .5) * T;
             float fw = max(fwidth(s), fwidth(vP.z));
             rel = vec3(1. - .11 * (1. - smoothstep(.0007, .0007 + 1.5 * fw, min(q.x, q.y))));
-            if (uTrace.w > .5) rel = mix(rel, uChalk, .92 * loCo(vec2(vP.x - uTrace.z, (vP.z - uTrace.x) * uTrace.y)));
+            if (uTrace.w > .5) rel = mix(rel, uChalk, .97 * loCo(vec2(vP.x - uTrace.z, (vP.z - uTrace.x) * uTrace.y)));
           }
           rel *= tone * (1. + mott * .3);
         } else if (k == 0) {

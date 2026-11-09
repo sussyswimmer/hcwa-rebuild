@@ -12,7 +12,7 @@ import { tok } from "./colors.js";
 import { bezier } from "./tokens.js";
 import { cubicBezier, stepSpring } from "./ease.js";
 import { createFlight, journeyAt } from "./flight.js";
-import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, leafFade, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, walkPitch, washSpan, wash as washAt } from "./journey.js";
+import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, walkPitch, washSpan, hemSpan, wash as washAt } from "./journey.js";
 import { createWalk } from "./walk.js";
 import { worldOff } from "./index.js";
 
@@ -184,7 +184,8 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   const hole = new Vector4(), DUST = 0.3;
   // The corridor's way out: its wash from the top of the frame down (renderer.js sweep), eased --ease-in-out.
   const sweep = new Vector4(), EDGE = 28;
-  let leafLast = -1;
+  // And its hem (critique r2): the picture already fading to that plaster over the frame above the next sheet's top.
+  const hem = new Vector4();
   const s3Cam = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 };
   let s3Last = -1, s3Sunt = -1, floodHold = null;
 
@@ -314,13 +315,13 @@ export async function live({ canvas, stage, bus, probed, forced }) {
         // The foot of what is still seen: the sheet's top (its bông gió row half over the frame).
         sweep.set(1, WALK_OUT.feather, clamp01(1 - (c.next - y - EDGE) / view.h), 0);
       } else sweep.x = 0;
-      // The leaflets are gone while Little Rose's door is read (scrubbed with the scroll; journey.js leafFade).
-      const lf = walking ? leafFade(at.stage, n, corridor.lr) : 1;
-      if (lf !== leafLast) { corridor.setLeafFade(lf); leafLast = lf; }
+      // The hem (journey.js hemSpan): from the moment the sheet's top is a hem below the frame's foot, the picture
+      // fades to the plaster above it, so the sheet's top never cuts the corridor at full strength (D0.5).
+      if (walking && hemSpan(c.next - y, view.w, view.h, hem)) washColor = PLASTER;
       // Each open door swings at its beat and stays open; held at K4 (stacked cards) they stand open, as in
       // the stills. Little Rose's stays shut whatever is asked (setDoor).
       for (let i = 0; i < n; i++) corridor.setDoor(i, walking ? doorAngle(i, at.stage, n) : DOOR_DEG);
-      // The house's life (D0.6.2): fans, leaflets and the tamarinds outside on one props clock. Tier 2 on the
+      // The house's life (D0.6.2): the fans and the tamarinds outside on one props clock. Tier 2 on the
       // clock and the scroll, Tier 1 on the scroll alone (a phone draws nothing new while the page is still);
       // frozen while motion is paused.
       if (!paused) propT = tier >= 2 ? time + y / 300 : y / 300;
@@ -339,7 +340,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     hole.set(!inS3 && p > 0 && p < 1 ? wash : 0, 0.25 * Math.sin(drift * 2.1), -11 * drift, 0);
     gate?.begin();
     // No corridor yet (a fast scroll before it was built): the wash holds until it is.
-    if (scene) gl.frame(scene, camera, passes, wash, glow, hole, washColor, !inS3 && !inRoom ? sweep : null);
+    if (scene) gl.frame(scene, camera, passes, wash, glow, hole, washColor, !inS3 && !inRoom ? sweep : null, !inS3 && !inRoom ? hem : null);
     else gl.frame(room.scene, cam, [], 1, null, inS3 ? null : hole.setX(1));
     gate?.end(now);
   };
@@ -361,7 +362,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     // Idle motion belongs to the rooms at rest (the hero's, and S3's once built); in the flight nothing moves
     // by itself.
     const s3 = inShutters(scrollY) && shutters && blendAt(at.s3 ?? 0) < 1;
-    // The corridor's fans, leaflets and tamarinds move by themselves on Tier 2 only (a phone keeps its battery),
+    // The corridor's fans and tamarinds move by themselves on Tier 2 only (a phone keeps its battery),
     // at the 30 fps idle cadence, while the corridor is on screen and not washed out.
     const hall = !inRoom && !inS3 && corridor && tier >= 2 && washAt(at.passage) < 1 && hallWash < 0.999 && (sections.get(corridorEl) || sections.get(passageEl));
     // A modal over the page (the menu sheet) covers the canvas: nothing moves by itself under it.
