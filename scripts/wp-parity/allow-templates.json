@@ -1,0 +1,4 @@
+{
+  "_note": "Accepted parity differences owned by the templates stream (docs/plan/11-WP-PORT.md 5.4). Only that stream edits this file; the lead reviews every entry. An entry: {\"route\": \"*\" or a path, \"section\": a section key from the report (\"*\" for every section), \"kind\": \"structure|text|links|pixels|timing\", \"match\": a regular expression, \"reason\": why the difference is right, \"owner\": \"templates\"}. For structure, text and links, match is tested against each differing line (without its +/- sign) and the lines it matches are dropped from the diff. For pixels it is ignored: the entry accepts the section's pixel failure. For timing it names the prototype check line (its PASS/FAIL text) that may be re-run once.",
+  "entries": []
+}

@@ -73,11 +73,13 @@ function hcwa_seed_main( array $argv ): void {
 	}
 
 	hcwa_seed_require_code();
+	hcwa_seed_repo( $repo );
 	$data = array(
 		'site'   => hcwa_seed_json( $repo, 'site' ),
 		'work'   => hcwa_seed_json( $repo, 'work' ),
 		'impact' => hcwa_seed_json( $repo, 'impact' ),
 		'news'   => hcwa_seed_json( $repo, 'news' ),
+		'world'  => hcwa_seed_json( $repo, 'world' ),
 	);
 
 	if ( 'content' !== $stage ) {
@@ -132,6 +134,43 @@ function hcwa_seed_json( string $repo, string $name ): array {
 		WP_CLI::error( "$file is not valid JSON: " . json_last_error_msg() );
 	}
 	return $data;
+}
+
+/**
+ * The repository root, set once by hcwa_seed_main().
+ *
+ * @param string|null $set Root to remember.
+ */
+function hcwa_seed_repo( ?string $set = null ): string {
+	static $repo = '';
+	if ( null !== $set ) {
+		$repo = $set;
+	}
+	return $repo;
+}
+
+/**
+ * The lit header still for a center or program: 'header-<id>' when the prototype has rendered
+ * a still of that name (the theme's generated stills.json once the export exists, otherwise the
+ * prototype's poster files), else '' (the template prints the plain placeholder). Never one for a
+ * protected center (docs/plan/11-WP-PORT.md 3.4: Little Rose has no header still).
+ *
+ * @param string $id        Center or program id from work.json.
+ * @param bool   $protected Whether the center is protected.
+ */
+function hcwa_seed_header_still( string $id, bool $protected = false ): string {
+	if ( $protected ) {
+		return '';
+	}
+	$name   = 'header-' . sanitize_title( $id );
+	$repo   = hcwa_seed_repo();
+	$stills = $repo . '/wp/themes/hcwa-2026/assets/generated/stills.json';
+	if ( is_readable( $stills ) ) {
+		$data = json_decode( (string) file_get_contents( $stills ), true );
+		$list = is_array( $data ) ? ( $data['stills'] ?? $data ) : array();
+		return is_array( $list ) && isset( $list[ $name ] ) ? $name : '';
+	}
+	return glob( $repo . '/prototype/public/posters/' . $name . '-*' ) ? $name : '';
 }
 
 // ------------------------------------------------------------------------- text helpers
@@ -571,17 +610,19 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 	$fixtures   = array( 'refused_photo' => hcwa_seed_little_rose_photo( $centers ) );
 	$partners   = hcwa_seed_partners( $data['work'] );
 	$programs   = hcwa_seed_programs( $data['work'], $focus, $centers, $partners );
+	$reports    = hcwa_seed_program_reports( $data['work'], $programs );
 	$scopes     = hcwa_seed_impact( $data['impact'], $centers, $programs );
 	$posts      = hcwa_seed_posts( $data['news'], $categories );
 
 	hcwa_seed_reading( $pages );
 	hcwa_seed_menus( $pages );
-	hcwa_seed_settings( $data['site'], $pages );
+	hcwa_seed_settings( $data['site'], $pages, $data['work'], $data['world'] );
 
 	PLL()->model->clean_languages_cache();
 	flush_rewrite_rules( false );
 
 	if ( '' !== $manifest ) {
+		$fixtures['parity'] = hcwa_seed_parity( $data['work'], $centers, $programs, $reports );
 		hcwa_seed_write_manifest( $manifest, $pages, $centers, $programs, $posts, $categories, $scopes, $fixtures );
 	}
 
@@ -1147,24 +1188,34 @@ function hcwa_seed_area_ids( array $areas, array $focus, string $lang ): array {
  * @return array<string, array{vi: int, en: int}> center id => IDs.
  */
 function hcwa_seed_centers( array $work, array $focus ): array {
-	$copy = hcwa_seed_prototype_copy();
-	$out  = array();
+	$copy  = hcwa_seed_prototype_copy();
+	$pages = (array) ( $work['centerPages'] ?? array() );
+	$out   = array();
 
 	foreach ( array_values( (array) ( $work['centers'] ?? array() ) ) as $i => $center ) {
-		$id    = sanitize_title( (string) $center['id'] );
-		$extra = $copy[ $id ] ?? array();
-		$slugs = hcwa_seed_cpt_slugs( (array) ( $center['path'] ?? array() ), (array) $center['name'], "Center $id" );
+		$id        = sanitize_title( (string) $center['id'] );
+		$page      = (array) ( $pages[ $id ] ?? array() );
+		$extra     = $copy[ $id ] ?? array();
+		$protected = 'little-rose' === $id;
+		$slugs     = hcwa_seed_cpt_slugs( (array) ( $center['path'] ?? array() ), (array) $center['name'], "Center $id" );
+
+		// Story before <!--more-->, history after (hcwa_center_body(), 11-WP-PORT.md 2.5):
+		// work.json centerPages first, the old prototype copy as a fallback.
+		$story   = (array) ( $page['story'] ?? $extra['story'] ?? array() );
+		$history = $page['history'] ?? ( $extra['history'] ?? null );
 
 		$by_lang = array();
 		foreach ( array( 'vi', 'en' ) as $lang ) {
-			if ( ! empty( $extra['story'] ) ) {
+			if ( $story ) {
 				$blocks = array();
-				foreach ( $extra['story'] as $paragraph ) {
-					$blocks[] = hcwa_seed_block_p( hcwa_seed_draft( $paragraph[ $lang ] ) );
+				foreach ( $story as $paragraph ) {
+					$blocks[] = hcwa_seed_block_p( hcwa_seed_draft( (string) $paragraph[ $lang ] ) );
 				}
-				$blocks[] = hcwa_seed_block_more();
-				$blocks[] = hcwa_seed_block_p( hcwa_seed_draft( $extra['history'][ $lang ] ) );
-				$body     = implode( "\n\n", $blocks );
+				if ( is_array( $history ) ) {
+					$blocks[] = hcwa_seed_block_more();
+					$blocks[] = hcwa_seed_block_p( hcwa_seed_draft( (string) $history[ $lang ] ) );
+				}
+				$body = implode( "\n\n", $blocks );
 			} else {
 				$body = hcwa_seed_block_p( hcwa_seed_draft( $copy['center_intro'][ $lang ] ) );
 			}
@@ -1180,21 +1231,37 @@ function hcwa_seed_centers( array $work, array $focus ): array {
 		}
 		$pair = hcwa_seed_upsert_pair( 'center:' . $id, $by_lang );
 
+		$activities = (array) ( $page['activities'] ?? $extra['what_we_do'] ?? array() );
 		foreach ( $pair as $lang => $post_id ) {
+			$text = static fn( string $key ) => isset( $page[ $key ] ) ? hcwa_seed_text( $page[ $key ], $lang ) : '';
 			hcwa_seed_meta(
 				$post_id,
 				array(
 					'hcwa_summary'                  => hcwa_seed_text( $center['serves'] ?? '', $lang ),
 					'hcwa_who_we_serve'             => hcwa_seed_text( $center['serves'] ?? '', $lang ),
-					'hcwa_what_we_do'               => hcwa_seed_draft_lines( (array) ( $extra['what_we_do'] ?? array() ), $lang ),
-					'hcwa_location'                 => hcwa_seed_text( $center['location'] ?? '', $lang ),
+					'hcwa_what_we_do'               => hcwa_seed_draft_lines( $activities, $lang ),
+					'hcwa_location'                 => $protected ? '' : hcwa_seed_text( $center['location'] ?? '', $lang ),
 					'hcwa_help_text'                => hcwa_seed_draft( $copy['center_help'][ $lang ] ),
-					'hcwa_contact_name'             => '',
+					'hcwa_contact_name'             => $text( 'contactPerson' ),
+					// Per-language fields of the center page (11-WP-PORT.md 3.2); '' where work.json
+					// has no centerPages entry, so the template falls back to its own wording.
+					'hcwa_short_name'               => hcwa_seed_text( $center['shortName'] ?? '', $lang ),
+					'hcwa_story_title'              => $text( 'storyTitle' ),
+					'hcwa_figures_title'            => $text( 'figuresTitle' ),
+					'hcwa_help_title'               => $text( 'helpTitle' ),
+					'hcwa_needs'                    => hcwa_seed_draft_lines( (array) ( $page['needs'] ?? array() ), $lang ),
+					'hcwa_donate_label'             => $text( 'donate' ),
+					'hcwa_visit_title'              => $text( 'visitTitle' ),
+					'hcwa_contact_note'             => $text( 'contactNote' ),
+					'hcwa_logo_alt'                 => $text( 'logoAlt' ),
 					// Shared fields. Years are tokens in work.json until HCWA confirms them.
 					'hcwa_since_year'               => 0,
-					'hcwa_accent'                   => (string) ( $center['accent'] ?? 'blue' ),
+					'hcwa_since_verified'           => false,
+					// The unit key: data-unit, #center-{unit}, ?center={unit}, still names.
+					'hcwa_accent'                   => (string) ( $center['accent'] ?? $id ),
+					'hcwa_header_still'             => hcwa_seed_header_still( $id, $protected ),
 					'hcwa_contact_approved'         => false,
-					'hcwa_no_identifiable_children' => 'little-rose' === $id,
+					'hcwa_no_identifiable_children' => $protected,
 				)
 			);
 			wp_set_object_terms( $post_id, hcwa_seed_area_ids( (array) ( $center['areas'] ?? array() ), $focus, $lang ), 'hcwa_focus_area' );
@@ -1203,7 +1270,7 @@ function hcwa_seed_centers( array $work, array $focus ): array {
 		$out[ $id ] = $pair;
 	}
 
-	WP_CLI::log( sprintf( 'Centers: %d in each language (Little Rose marked "no identifiable children").', count( $out ) ) );
+	WP_CLI::log( sprintf( 'Centers: %d in each language (Little Rose marked "no identifiable children"; unit keys, short names, header stills).', count( $out ) ) );
 	return $out;
 }
 
@@ -1424,17 +1491,20 @@ function hcwa_seed_partners( array $work ): array {
  * @return array<string, array{vi: int, en: int}> program id => IDs.
  */
 function hcwa_seed_programs( array $work, array $focus, array $centers, array $partners ): array {
-	$copy = hcwa_seed_prototype_copy();
-	$out  = array();
+	$copy  = hcwa_seed_prototype_copy();
+	$pages = (array) ( $work['programPages'] ?? array() );
+	$out   = array();
 
 	foreach ( array_values( (array) ( $work['programs'] ?? array() ) ) as $i => $program ) {
 		$id    = sanitize_title( (string) $program['id'] );
+		$page  = (array) ( $pages[ $id ] ?? array() );
 		$extra = $copy[ $id ] ?? array();
 		$slugs = hcwa_seed_cpt_slugs( (array) ( $program['path'] ?? array() ), (array) $program['name'], "Program $id" );
 
 		$by_lang = array();
 		foreach ( array( 'vi', 'en' ) as $lang ) {
-			$intro            = $extra['intro'][ $lang ] ?? $copy['program_intro'][ $lang ];
+			// The old templates print the post content; the port prints only meta (11-WP-PORT.md P3).
+			$intro            = isset( $page['focus'][ $lang ] ) ? (string) $page['focus'][ $lang ] : ( $extra['intro'][ $lang ] ?? $copy['program_intro'][ $lang ] );
 			$by_lang[ $lang ] = array(
 				'post_type'    => 'hcwa_program',
 				'post_status'  => 'publish',
@@ -1446,9 +1516,14 @@ function hcwa_seed_programs( array $work, array $focus, array $centers, array $p
 		}
 		$pair = hcwa_seed_upsert_pair( 'program:' . $id, $by_lang );
 
-		// One center per program in the content model: the first one work.json lists.
-		$center_ids = (array) ( $program['centers'] ?? array() );
-		$center_id  = isset( $center_ids[0], $centers[ $center_ids[0] ] ) ? (int) $centers[ $center_ids[0] ]['vi'] : 0;
+		// Every center work.json lists, as Vietnamese originals (hcwa_center_ids). hcwa_center_id
+		// keeps the first one for templates that still read the single field.
+		$center_ids = array();
+		foreach ( (array) ( $program['centers'] ?? array() ) as $center ) {
+			if ( isset( $centers[ $center ]['vi'] ) ) {
+				$center_ids[] = (int) $centers[ $center ]['vi'];
+			}
+		}
 
 		$partner_ids = array();
 		foreach ( (array) ( $program['partners'] ?? array() ) as $name ) {
@@ -1457,19 +1532,33 @@ function hcwa_seed_programs( array $work, array $focus, array $centers, array $p
 			}
 		}
 
+		$goals      = (array) ( $page['goals'] ?? $extra['goals'] ?? array() );
+		$activities = (array) ( $page['activities'] ?? $extra['activities'] ?? array() );
 		foreach ( $pair as $lang => $post_id ) {
+			$text = static fn( string $key ) => isset( $page[ $key ] ) ? hcwa_seed_text( $page[ $key ], $lang ) : '';
 			hcwa_seed_meta(
 				$post_id,
 				array(
-					'hcwa_summary'     => hcwa_seed_text( $program['summary'] ?? '', $lang ),
-					'hcwa_goals'       => hcwa_seed_draft_lines( (array) ( $extra['goals'] ?? array() ), $lang ),
-					'hcwa_activities'  => hcwa_seed_draft_lines( (array) ( $extra['activities'] ?? array() ), $lang ),
+					'hcwa_summary'       => hcwa_seed_text( $program['summary'] ?? '', $lang ),
+					'hcwa_goals'         => hcwa_seed_draft_lines( $goals, $lang ),
+					'hcwa_activities'    => hcwa_seed_draft_lines( $activities, $lang ),
+					// Per-language fields of the program page (11-WP-PORT.md 3.2).
+					'hcwa_full_name'     => hcwa_seed_text( $program['fullName'] ?? $program['name'], $lang ),
+					// Kept as work.json writes it: the [năm bắt đầu]–[năm kết thúc] tokens are the
+					// draft marker (hcwa_draft_text() treats them as draft).
+					'hcwa_years_label'   => hcwa_seed_text( $program['years'] ?? '', $lang ),
+					'hcwa_focus'         => $text( 'focus' ),
+					'hcwa_runs_at_note'  => $text( 'runsAtNote' ),
+					'hcwa_cta_title'     => $text( 'ctaTitle' ),
+					'hcwa_partner_label' => $text( 'partner' ),
 					// Shared fields: IDs point at the Vietnamese originals (wp/CONTRACT.md).
-					'hcwa_status'      => (string) ( $program['status'] ?? 'active' ),
-					'hcwa_start_year'  => 0,
-					'hcwa_end_year'    => 0,
-					'hcwa_center_id'   => $center_id,
-					'hcwa_partner_ids' => $partner_ids,
+					'hcwa_status'        => (string) ( $program['status'] ?? 'active' ),
+					'hcwa_start_year'    => 0,
+					'hcwa_end_year'      => 0,
+					'hcwa_center_ids'    => $center_ids,
+					'hcwa_center_id'     => $center_ids[0] ?? 0,
+					'hcwa_partner_ids'   => $partner_ids,
+					'hcwa_header_still'  => hcwa_seed_header_still( $id ),
 				)
 			);
 			wp_set_object_terms( $post_id, hcwa_seed_area_ids( (array) ( $program['areas'] ?? array() ), $focus, $lang ), 'hcwa_focus_area' );
@@ -1478,7 +1567,55 @@ function hcwa_seed_programs( array $work, array $focus, array $centers, array $p
 		$out[ $id ] = $pair;
 	}
 
-	WP_CLI::log( sprintf( 'Programs: %d in each language.', count( $out ) ) );
+	WP_CLI::log( sprintf( 'Programs: %d in each language (every center they run at, full names, year labels).', count( $out ) ) );
+	return $out;
+}
+
+/**
+ * The program reports listed in work.json programPages[...].reports as draft hcwa_report posts,
+ * linked to their program with hcwa_program_id (the Vietnamese original). Titles and years are
+ * placeholders, so the posts stay drafts and carry no file.
+ *
+ * @param array $work     content/draft/work.json.
+ * @param array $programs hcwa_seed_programs() result.
+ * @return array<string, array{vi: int, en: int}> seed id => IDs.
+ */
+function hcwa_seed_program_reports( array $work, array $programs ): array {
+	$out = array();
+	foreach ( (array) ( $work['programPages'] ?? array() ) as $program => $page ) {
+		$program = sanitize_title( (string) $program );
+		if ( empty( $programs[ $program ]['vi'] ) ) {
+			continue;
+		}
+		foreach ( array_values( (array) ( $page['reports'] ?? array() ) ) as $i => $report ) {
+			$seed_id = 'report:' . $program . ':' . ( $i + 1 );
+			$by_lang = array();
+			foreach ( array( 'vi', 'en' ) as $lang ) {
+				$by_lang[ $lang ] = array(
+					'post_type'   => 'hcwa_report',
+					'post_status' => 'draft',
+					'post_title'  => hcwa_seed_text( $report['title'] ?? '', $lang ),
+					'post_name'   => sanitize_title( $program . '-report-' . ( $i + 1 ) . '-' . $lang ),
+				);
+			}
+			$pair = hcwa_seed_upsert_pair( $seed_id, $by_lang );
+			$doc  = (string) ( $report['docLang'] ?? 'vi' );
+			foreach ( $pair as $post_id ) {
+				hcwa_seed_meta(
+					$post_id,
+					array(
+						'hcwa_year'         => 0,
+						'hcwa_report_type'  => 'program',
+						'hcwa_doc_language' => in_array( $doc, array( 'vi', 'en', 'both' ), true ) ? $doc : 'vi',
+						'hcwa_file_id'      => 0,
+						'hcwa_program_id'   => (int) $programs[ $program ]['vi'],
+					)
+				);
+			}
+			$out[ $seed_id ] = $pair;
+		}
+	}
+	WP_CLI::log( sprintf( 'Program reports: %d in each language, as drafts.', count( $out ) ) );
 	return $out;
 }
 
@@ -1818,13 +1955,24 @@ function hcwa_seed_menus( array $pages ): void {
  * @param array $site  content/draft/site.json.
  * @param array $pages Page IDs.
  */
-function hcwa_seed_settings( array $site, array $pages ): void {
+function hcwa_seed_settings( array $site, array $pages, array $work = array(), array $world = array() ): void {
 	$settings = get_option( 'hcwa_settings', array() );
 	$settings = is_array( $settings ) ? $settings : array();
 
-	$emails   = array_filter( array( (string) ( $site['email']['general'] ?? '' ), (string) ( $site['email']['sponsorship'] ?? '' ) ) );
-	$phone    = (array) ( $site['phone'] ?? array() );
-	$defaults = array(
+	$emails    = array_filter( array( (string) ( $site['email']['general'] ?? '' ), (string) ( $site['email']['sponsorship'] ?? '' ) ) );
+	$phone     = (array) ( $site['phone'] ?? array() );
+	$note      = $work['littleRose']['privacyNote'] ?? '';
+	// "HCWA has confirmed the phone number and email addresses": on only when site.json marks
+	// neither as draft (11-WP-PORT.md 3.2). Emails cannot carry a [DRAFT: …] wrapper.
+	$confirmed = empty( $phone['draft'] ) && empty( $site['email']['draft'] ) && ( $phone || $emails );
+	$defaults  = array(
+		'short_name_vi'        => array( 'text', hcwa_seed_text( $site['shortName'] ?? '', 'vi' ) ),
+		'short_name_en'        => array( 'text', hcwa_seed_text( $site['shortName'] ?? '', 'en' ) ),
+		'little_rose_note_vi'  => array( 'textarea', hcwa_seed_text( $note, 'vi' ) ),
+		'little_rose_note_en'  => array( 'textarea', hcwa_seed_text( $note, 'en' ) ),
+		'contact_confirmed'    => array( 'checkbox', $confirmed ? '1' : '' ),
+		// Staging only in every case: hcwa_traces_on() ignores it on production.
+		'world_traces_enabled' => array( 'checkbox', ! empty( $world['traces']['enabled'] ) ? '1' : '' ),
 		'announcement_enabled' => array( 'checkbox', '' ),
 		'address_vi'           => array( 'textarea', hcwa_seed_text( $site['address'] ?? '', 'vi' ) ),
 		'address_en'           => array( 'textarea', hcwa_seed_text( $site['address'] ?? '', 'en' ) ),
@@ -1854,8 +2002,83 @@ function hcwa_seed_settings( array $site, array $pages ): void {
 	}
 	$settings['page_map'] = $map;
 
+	// Never seeded: the Little Rose door approval (world_lr_door_approved_*) and any donation_* value.
+	foreach ( array_keys( $settings ) as $key ) {
+		if ( 0 === strpos( (string) $key, 'world_lr_door_approved' ) && empty( $settings[ $key ] ) ) {
+			unset( $settings[ $key ] );
+		}
+	}
+
 	update_option( 'hcwa_settings', $settings );
-	WP_CLI::log( 'Settings → HCWA: contact details from site.json (marked draft), page map filled, no donation details.' );
+	$kept = array_diff( array( 'short_name_vi', 'little_rose_note_vi', 'contact_confirmed', 'world_traces_enabled' ), array_keys( (array) get_option( 'hcwa_settings', array() ) ) );
+	if ( $kept ) {
+		WP_CLI::log( 'Settings → HCWA does not know ' . implode( ', ', $kept ) . ' yet (hcwa-core drops unknown keys); run the seed again once hcwa-core has the fields.' );
+	}
+	WP_CLI::log( 'Settings → HCWA: contact details from site.json (marked draft, not confirmed), page map filled, no donation details, no approvals.' );
+}
+
+/**
+ * What the parity driver and the smoke test need to know about the seeded world
+ * (docs/plan/11-WP-PORT.md 5.6): the 16 parity routes, each center's unit key and whether it
+ * is protected, the programs' unit keys, the expected corridor beat count (all centers off
+ * production; on production before the Little Rose door is approved, the unprotected ones), and
+ * the draft program reports.
+ *
+ * @param array $work     content/draft/work.json.
+ * @param array $centers  Center IDs.
+ * @param array $programs Program IDs.
+ * @param array $reports  Report IDs.
+ */
+function hcwa_seed_parity( array $work, array $centers, array $programs, array $reports ): array {
+	$units = array();
+	foreach ( array_values( (array) ( $work['centers'] ?? array() ) ) as $i => $center ) {
+		$id = sanitize_title( (string) $center['id'] );
+		if ( empty( $centers[ $id ] ) ) {
+			continue;
+		}
+		$units[] = array(
+			'id'        => $id,
+			'unit'      => (string) ( $center['accent'] ?? $id ),
+			'protected' => 'little-rose' === $id || (bool) get_post_meta( (int) $centers[ $id ]['vi'], 'hcwa_no_identifiable_children', true ),
+			'order'     => $i,
+			'paths'     => array(
+				'vi' => hcwa_seed_path( (string) get_permalink( (int) $centers[ $id ]['vi'] ) ),
+				'en' => hcwa_seed_path( (string) get_permalink( (int) $centers[ $id ]['en'] ) ),
+			),
+		);
+	}
+	$program_units = array();
+	foreach ( (array) ( $work['programs'] ?? array() ) as $program ) {
+		$id = sanitize_title( (string) $program['id'] );
+		if ( empty( $programs[ $id ] ) ) {
+			continue;
+		}
+		$program_units[] = array(
+			'id'      => $id,
+			'centers' => array_values( array_filter( array_map( 'strval', (array) ( $program['centers'] ?? array() ) ), static fn( $c ) => isset( $centers[ $c ] ) ) ),
+			'paths'   => array(
+				'vi' => hcwa_seed_path( (string) get_permalink( (int) $programs[ $id ]['vi'] ) ),
+				'en' => hcwa_seed_path( (string) get_permalink( (int) $programs[ $id ]['en'] ) ),
+			),
+		);
+	}
+	$routes = array( '/', '/en/', '/hoat-dong/', '/en/our-work/', '/hoat-dong/co-so/tre-xanh/', '/en/our-work/centers/green-bamboo/', '/hoat-dong/du-an/cung-vuon-len/', '/en/our-work/programs/thrive-together/', '/chung-tay/', '/en/get-involved/', '/chung-tay/ung-ho/', '/en/get-involved/donate/', '/lien-he/', '/en/contact/', '/404.html', '/en/404.html' );
+	$routes_file = hcwa_seed_repo() . '/scripts/wp-parity/routes.json';
+	if ( is_readable( $routes_file ) ) {
+		$data = json_decode( (string) file_get_contents( $routes_file ), true );
+		if ( ! empty( $data['routes'] ) ) {
+			$routes = array_values( array_map( static fn( $r ) => (string) $r['path'], (array) $data['routes'] ) );
+		}
+	}
+	$protected = count( array_filter( $units, static fn( $u ) => $u['protected'] ) );
+	return array(
+		'routes'                     => $routes,
+		'centers'                    => $units,
+		'programs'                   => $program_units,
+		'expected_beats'             => count( $units ),
+		'expected_beats_production'  => count( $units ) - $protected,
+		'reports'                    => array_keys( $reports ),
+	);
 }
 
 /**
@@ -1872,8 +2095,10 @@ function hcwa_seed_settings( array $site, array $pages ): void {
  * @param array  $fixtures   Seeded test objects: 'refused_photo' => attachment ID.
  */
 function hcwa_seed_write_manifest( string $file, array $pages, array $centers, array $programs, array $posts, array $categories, array $scopes, array $fixtures = array() ): void {
-	$urls = array();
-	$add  = static function ( string $id, string $kind, array $pair, callable $link, bool $figures = false, array $expected = array() ) use ( &$urls ) {
+	$urls          = array();
+	$parity        = (array) ( $fixtures['parity'] ?? array() );
+	$parity_routes = (array) ( $parity['routes'] ?? array() );
+	$add           = static function ( string $id, string $kind, array $pair, callable $link, bool $figures = false, array $expected = array() ) use ( &$urls, $parity_routes ) {
 		$paths = array();
 		foreach ( $pair as $lang => $object_id ) {
 			$url = $link( (int) $object_id, $lang );
@@ -1887,7 +2112,7 @@ function hcwa_seed_write_manifest( string $file, array $pages, array $centers, a
 			}
 		}
 		foreach ( $paths as $lang => $path ) {
-			$urls[] = array(
+			$entry = array(
 				'id'          => $id,
 				'kind'        => $kind,
 				'lang'        => $lang,
@@ -1895,6 +2120,11 @@ function hcwa_seed_write_manifest( string $file, array $pages, array $centers, a
 				'translation' => $paths[ 'vi' === $lang ? 'en' : 'vi' ] ?? '',
 				'figures'     => $figures,
 			);
+			// The parity driver's routes (scripts/wp-parity/routes.json) are marked, not repeated.
+			if ( in_array( $path, $parity_routes, true ) ) {
+				$entry['parity'] = true;
+			}
+			$urls[] = $entry;
 		}
 	};
 
@@ -1933,7 +2163,7 @@ function hcwa_seed_write_manifest( string $file, array $pages, array $centers, a
 			'refused_photo_file' => ! empty( $fixtures['refused_photo'] ) ? (string) pathinfo( (string) get_attached_file( (int) $fixtures['refused_photo'] ), PATHINFO_FILENAME ) : '',
 			'refused_photo_page' => ! empty( $fixtures['refused_photo'] ) ? hcwa_seed_path( (string) get_permalink( (int) $centers['little-rose']['vi'] ) ) : '',
 		),
-		// Paths that must answer 404, in each language.
+		// Paths that must answer 404, in each language; the parity driver's two 404 routes too.
 		'not_found'   => array(
 			array(
 				'lang' => 'vi',
@@ -1943,7 +2173,19 @@ function hcwa_seed_write_manifest( string $file, array $pages, array $centers, a
 				'lang' => 'en',
 				'path' => '/en/no-such-page-hcwa-smoke/',
 			),
+			array(
+				'lang' => 'vi',
+				'path' => '/404.html',
+				'kind' => 'parity',
+			),
+			array(
+				'lang' => 'en',
+				'path' => '/en/404.html',
+				'kind' => 'parity',
+			),
 		),
+		// Units, routes and the expected beat count for the parity driver and the smoke test.
+		'parity'      => $parity,
 	);
 
 	$dir = dirname( $file );

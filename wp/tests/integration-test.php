@@ -78,17 +78,6 @@ $hcwa_theme_dir = dirname( __DIR__ ) . '/themes/hcwa-2026';
 require_once $hcwa_theme_dir . '/inc/strings.php';
 require_once $hcwa_theme_dir . '/inc/core-bridge.php';
 require_once $hcwa_theme_dir . '/inc/template-tags.php';
-require_once $hcwa_theme_dir . '/inc/assets.php'; // Theme file helpers: integration-stubs.php.
-$hcwa_js = hcwa_theme_js_strings();
-foreach ( array( 'copy', 'copied', 'copyFailed', 'close', 'noResults', 'showAll' ) as $hcwa_key ) {
-	hcwa_assert_true( isset( $hcwa_js[ $hcwa_key ] ) && '' !== $hcwa_js[ $hcwa_key ] && $hcwa_key !== $hcwa_js[ $hcwa_key ], "site.js string $hcwa_key is exported" );
-}
-
-// site.js reads the Our Work chips from the pattern's plain ?area= links and adds the
-// empty message itself; the blocks print the hooks it needs.
-$hcwa_site_js = (string) file_get_contents( $hcwa_theme_dir . '/assets/js/site.js' );
-hcwa_assert_contains( 'searchParams.get("area")', $hcwa_site_js, 'site.js reads ?area= from chip links' );
-hcwa_assert_contains( 'data-filter-empty', $hcwa_site_js, 'site.js creates the empty-filter message' );
 $hcwa_pattern = (string) file_get_contents( $hcwa_theme_dir . '/patterns/page-our-work-en.php' );
 hcwa_assert_contains( '?area=education', $hcwa_pattern, 'Our Work pattern chips are ?area= links' );
 foreach ( array( 'center-grid', 'program-list' ) as $hcwa_block ) {

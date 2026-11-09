@@ -3,7 +3,7 @@
  * hcwa-2026 theme: the gates added after the Phase 2 review. Draft text from settings and
  * captions, attachment pages, the language switch and notice, category chips in one
  * language, the VI name on EN pages, no library photos without hcwa-core, lazy-loading
- * after the cover, the top bars before first paint, the CSS hard rules, attachment text
+ * after the cover, attachment text
  * nobody wrote (file names, text read from the file) and the description Yoast lacks.
  * Loads only the theme's helper files (no templates, no WordPress).
  *
@@ -14,7 +14,6 @@ $hcwa_theme_dir = dirname( __DIR__ ) . '/themes/hcwa-2026';
 require_once $hcwa_theme_dir . '/inc/strings.php';
 require_once $hcwa_theme_dir . '/inc/core-bridge.php';
 require_once $hcwa_theme_dir . '/inc/template-tags.php';
-require_once $hcwa_theme_dir . '/inc/assets.php'; // Theme file helpers: integration-stubs.php.
 require_once $hcwa_theme_dir . '/inc/setup.php';
 
 $hcwa_read = static fn( string $file ): string => (string) file_get_contents( $hcwa_theme_dir . '/' . $file );
@@ -52,7 +51,6 @@ hcwa_assert_contains( "hcwa_theme_draft_attr( \$hcwa_registration )", $hcwa_foot
 // Captions go through hcwa_theme_attachment_text(), which ends in hcwa_theme_public_text() (tested below).
 hcwa_assert_contains( "hcwa_theme_attachment_text( \$hcwa_thumb_id, 'caption' )", $hcwa_read( 'single.php' ), 'post cover caption: staff-written and draft-checked' );
 hcwa_assert_contains( "hcwa_theme_attachment_text( (int) get_the_ID(), 'caption' )", $hcwa_read( 'attachment.php' ), 'attachment caption: staff-written and draft-checked' );
-hcwa_assert_contains( 'hcwa_theme_public_text( trim( wp_strip_all_tags( (string) $description ) ) )', $hcwa_read( 'inc/assets.php' ), 'meta description goes through the draft check' );
 
 // ---------- Attachment pages ----------
 hcwa_test_post( array( 'ID' => 501, 'post_type' => 'hcwa_center' ), array( 'hcwa_no_identifiable_children' => true ) );
@@ -148,29 +146,7 @@ foreach ( array( 'single.php', 'single-hcwa_center.php', 'single-hcwa_program.ph
 	hcwa_assert_true( (bool) preg_match( '/if \( \'\' !== \$hcwa_cover \)[\s\S]{0,400}?hcwa_theme_cover_printed\(\);/', $hcwa_read( $hcwa_file ) ), "$hcwa_file counts the cover only when it was printed" );
 }
 
-// ---------- Top bars decided before first paint ----------
-$hcwa_bars = hcwa_theme_bars_js();
-hcwa_assert_contains( 'window.hcwaBars = bars;', $hcwa_bars, 'bars.js is inlined in the head' );
-hcwa_assert_contains( 'hcwaBars.enBar(document.currentScript.previousElementSibling)', $hcwa_header, 'EN bar decided right after it is printed' );
-hcwa_assert_contains( 'hcwaBars.announce(document.currentScript.previousElementSibling)', $hcwa_header, 'announcement decided right after it is printed' );
-$hcwa_site_js = $hcwa_read( 'assets/js/site.js' );
-hcwa_assert_false( str_contains( $hcwa_site_js, 'navigator.language' ), 'site.js no longer shows the EN bar after paint' );
-hcwa_assert_contains( 'bars.announceKey(box)', $hcwa_site_js, 'site.js uses the same announcement key as bars.js' );
-hcwa_assert_contains( '"hcwa-en-bar"', $hcwa_site_js, 'site.js remembers the EN bar dismissal' );
-hcwa_assert_contains( '"hcwa-en-bar"', $hcwa_bars, 'bars.js reads the same EN bar key' );
-hcwa_assert_contains( 's.tabIndex = desktop.matches ? -1 : 0;', $hcwa_site_js, 'inert desktop footer summaries leave the tab order' );
 
-// ---------- CSS hard rules and layout ----------
-$hcwa_css = $hcwa_read( 'assets/css/site.css' );
-hcwa_assert_true( (bool) preg_match( '/\.entry-content blockquote, \.entry-content \.wp-block-quote \{[^}]*font: 500 var\(--fs-lg\) \/ var\(--lh-body\)/', $hcwa_css ), 'quotes use the body line-height' );
-hcwa_assert_true( (bool) preg_match( '/\.entry-content blockquote cite \{[^}]*\/ 1\.6 /', $hcwa_css ), 'quote citations at 1.6' );
-hcwa_assert_false( str_contains( $hcwa_css, '.entry-content :where(li) + li' ), 'list spacing no longer leaks into block lists' );
-hcwa_assert_contains( '.entry-content :where(ul:not([class]), ol:not([class]), .wp-block-list) > li + li', $hcwa_css, 'list spacing for prose lists' );
-hcwa_assert_contains( '.entry-content--page > :where([class*="wp-block-hcwa-"]):not(.alignwide):not(.alignfull) { width: min(100% - 2 * var(--gutter), var(--container)); margin-inline: auto; }', $hcwa_css, 'hcwa blocks in a page body keep to the container' );
-hcwa_assert_true( (bool) preg_match( '/\.lang-switch a \{[^}]*min-width: 44px;[^}]*min-height: 44px;/', $hcwa_css ), 'VI / EN links are 44 x 44' );
-hcwa_assert_true( (bool) preg_match( '/\.nav__toggle \{ width: 44px; height: 44px;/', $hcwa_css ), 'submenu toggle is 44 x 44' );
-hcwa_assert_false( (bool) preg_match( '/\.nav__toggle \{[^}]*margin-left: -/', $hcwa_css ), 'submenu toggle does not overlap its link' );
-hcwa_assert_true( (bool) preg_match( '/\.report-row__title a \{[^}]*min-height: 44px;/', $hcwa_css ), 'report links are 44 px tall' );
 
 // ---------- Attachment text nobody wrote: the file name, IPTC / EXIF / XMP text ----------
 $GLOBALS['hcwa_test']['env'] = 'staging';

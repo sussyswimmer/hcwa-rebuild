@@ -353,3 +353,200 @@ $hcwa_expect = array(
 foreach ( $hcwa_expect as $hcwa_name => $hcwa_want ) {
 	hcwa_assert_same( $hcwa_want, $hcwa_result['fails'][ $hcwa_name ] ?? null, "smoke gate: $hcwa_name" );
 }
+
+// ---------------------------------------------------------------- 11-WP-PORT.md harness (9 Nov)
+
+// The test harness itself: a separate process with or without hcwa-core.
+[ $hcwa_code, $hcwa_out ] = hcwa_test_isolated( "echo function_exists( 'hcwa_t' ) ? 'core' : 'none';", false );
+hcwa_assert_same( array( 0, 'none' ), array( $hcwa_code, trim( $hcwa_out ) ), 'hcwa_test_isolated() can load the stubs without hcwa-core' );
+[ $hcwa_code, $hcwa_out ] = hcwa_test_isolated( "echo function_exists( 'hcwa_t' ) ? 'core' : 'none';" );
+hcwa_assert_same( array( 0, 'core' ), array( $hcwa_code, trim( $hcwa_out ) ), 'hcwa_test_isolated() loads hcwa-core by default' );
+$hcwa_golden = hcwa_test_golden();
+hcwa_assert_true( null === $hcwa_golden || is_array( $hcwa_golden ), 'hcwa_test_golden(): the fixtures, or null before the export' );
+
+// Seed: header stills only where the prototype rendered one, never for a protected center.
+hcwa_seed_repo( $hcwa_repo );
+hcwa_assert_same( 'header-green-bamboo', hcwa_seed_header_still( 'green-bamboo' ), 'seed: Green Bamboo gets its header still' );
+hcwa_assert_same( 'header-thrive-together', hcwa_seed_header_still( 'thrive-together' ), 'seed: Thrive Together gets its header still' );
+hcwa_assert_same( '', hcwa_seed_header_still( 'cau-han' ), 'seed: no still rendered for Cau Han, so the placeholder' );
+hcwa_assert_same( '', hcwa_seed_header_still( 'little-rose', true ), 'seed: never a header still for a protected center' );
+hcwa_assert_true( function_exists( 'hcwa_seed_program_reports' ) && function_exists( 'hcwa_seed_parity' ), 'seed writes the program reports and the parity block' );
+
+// wp-local.sh: the parity command.
+if ( '' !== $hcwa_bash ) {
+	[ $hcwa_code, $hcwa_out ] = $hcwa_run( array( $hcwa_bash, '-c', 'source "$1"; declare -F cmd_parity >/dev/null && usage | grep -c "parity <name>"', 'hcwa-test', $hcwa_repo . '/scripts/wp-local.sh' ) );
+	hcwa_assert_same( array( 0, '1' ), array( $hcwa_code, trim( $hcwa_out ) ), 'wp-local.sh has the parity command and lists it' );
+	hcwa_assert_contains( 'parity) cmd_parity "$@" ;;', (string) file_get_contents( $hcwa_repo . '/scripts/wp-local.sh' ), 'wp-local.sh dispatches parity' );
+}
+
+// wp-smoke.py: the port checks of 11-WP-PORT.md 5.7 on synthetic pages (no browser).
+$hcwa_port_py = <<<'PY'
+import importlib.util, json, re, sys
+spec = importlib.util.spec_from_file_location("wp_smoke", sys.argv[1])
+smoke = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(smoke)
+H = "http://h"
+DIST = H + "/wp-content/themes/hcwa-2026/assets/dist/assets/"
+MODULE = DIST + "main-AAAAAAAA.js"
+html = '<html><head><script>h.setAttribute("data-tier", 1)</script><script>addEventListener("pagereveal", f)</script></head><body><p>Trang chủ</p></body></html>'
+good = {
+    "tier": "1", "motion": "on", "lit": True, "bodyClass": ["page-home", "hcwa-lang-vi"],
+    "bodyKids": ["a.skip-link", "div.proto-note", "div.header-slot.header-slot--over", "canvas#world.world-canvas", "main#main", "footer.site-footer", "dialog#menu-sheet.sheet"],
+    "i18n": {k: "x" for k in smoke.I18N_KEYS}, "hasI18nGlobal": False,
+    "langSwitch": [{"lang": "en", "href": H + "/en/"}], "menuLinks": [H + "/hoat-dong/"],
+    "litHead": False, "litHeadDay": False, "endsOnDusk": True, "beats": 3, "beatsOutside": 0, "hasCenters": True,
+    "centersTraces": True, "traces": 1,
+    "protectedFacts": [{"sig": "li.bay#center-little-rose", "where": False, "visit": False, "spill": False, "door": "closed", "unitVar": True}],
+    "chips": [{"unit": "little-rose", "door": True, "unitVar": True}], "nums": [{"text": "12", "anim": "none", "trans": "0s"}], "numsDCL": ["12"],
+    "forms": 1, "partners": 0, "danglingHash": [], "emptyContact": 0, "modules": [MODULE],
+    "runs": [{"text": "Trang chủ", "lang": "vi"}, {"text": "English version", "lang": "en"}],
+}
+requests = [{"url": DIST + "main-BBBBBBBB.css", "status": 200, "type": "stylesheet"}, {"url": MODULE, "status": 200, "type": "script"},
+            {"url": H + "/wp-content/themes/hcwa-2026/assets/dist/posters/hero-desk-base-1600.avif", "status": 200, "type": "image"}]
+guards = {"blockers": [{"re": re.compile(r">[^<]*\[[^\]<]{1,80}\][^<]*<"), "why": "bracket placeholder token in text"}, {"re": re.compile(r"data-draft"), "why": "draft text (data-draft)"}],
+          "door": re.compile(r"hub-doors-wide"), "footnote": re.compile(r"^\[\d+\]$"), "minPartnerLogos": 4}
+ctx = {"production": False, "lang": "vi", "expected_beats": 3, "protected": ["little-rose"], "listed_stills": ["passage-corridor"],
+       "guards": guards, "dicts": {"en_words": {"Cầu", "Hàn"}, "phrases": ["Read more"]}, "traces_enabled": True,
+       "link_status": lambda u: (200, "vi"), "chunk_imports": {DIST + "motion-CCCCCCCC.js": [MODULE]},
+       "hreflang": [{"lang": "en", "href": H + "/en/"}, {"lang": "vi", "href": H + "/"}]}
+t_vi = {"lang": "vi", "path": "/"}
+t_en = {"lang": "en", "path": "/en/"}
+def run(port=None, html_=html, req=None, **over):
+    p = dict(good, **(port or {}))
+    c = dict(ctx, **over)
+    return smoke.port_checks(c.pop("target", t_vi), html_, p, req if req is not None else requests, c)
+prod = {"production": True}
+cases = {
+    "good staging": run(),
+    "no head scripts": run(html_="<html><head></head><body></body></html>"),
+    "ver on dist": run(req=requests + [{"url": DIST + "main-BBBBBBBB.css?ver=1", "status": 200, "type": "stylesheet"}]),
+    "chunk imports another URL": run(chunk_imports={DIST + "motion-CCCCCCCC.js": [MODULE + "?ver=7"]}),
+    "body order": run({"bodyKids": ["main#main", "div.header-slot"]}),
+    "lit missing": run({"lit": False}),
+    "switch differs": run({"langSwitch": [{"lang": "en", "href": H + "/en/other/"}]}),
+    "menu link 404": run(link_status=lambda u: (404, "vi")),
+    "beat outside": run({"beatsOutside": 1, "beats": 4}),
+    "no traces off production": run({"centersTraces": False}),
+    "traces on production": run({"chips": [], "forms": 0}, **prod),
+    "little rose location": run({"protectedFacts": [dict(good["protectedFacts"][0], where=True, spill=True)]}),
+    "production door chip and still": run({"protectedFacts": [], "traces": 0, "forms": 0}, html_=html + '<img src="/posters/passage-corridor-1.avif">', **prod),
+    "production no stills.json": run({"protectedFacts": [], "chips": [], "traces": 0, "forms": 0}, listed_stills=None, **prod),
+    "production clean": run({"protectedFacts": [], "chips": [], "traces": 0, "forms": 0, "centersTraces": None}, html_=html.replace("</body>", "<p>Chú thích [1]</p><script>w[s]</script></body>"), **prod),
+    "production bracket token": run({"protectedFacts": [], "chips": [], "traces": 0, "forms": 0}, html_=html.replace("</body>", "<p>Đã giúp [N] trẻ</p></body>"), **prod),
+    "number counted up": run({"nums": [{"text": "12", "anim": "count", "trans": "0s"}], "numsDCL": ["0"]}),
+    "english phrase on vi": run({"runs": [{"text": "Read more about us", "lang": "vi"}]}),
+    "vi word on en": run({"runs": [{"text": "Trang chủ", "lang": "en"}]}, target=t_en, lang="en"),
+    "proper name on en": run({"runs": [{"text": "Cầu Hàn Project", "lang": "en"}]}, target=t_en, lang="en", link_status=lambda u: (200, "en")),
+    "broken poster": run(req=requests + [{"url": H + "/wp-content/themes/hcwa-2026/assets/dist/posters/x.avif", "status": 404, "type": "image"}]),
+}
+print(json.dumps({
+    "cases": cases,
+    "blockers": {
+        "footnote passes": smoke.blocker_hits("<p>Chú thích [1] và [12]</p>", guards),
+        "token fails": smoke.blocker_hits("<p>Đã giúp [N] trẻ</p>", guards),
+        "script ignored": smoke.blocker_hits('<script>var w = x[s]; /^[012]$/.test(q)</script><style>a[x]{}</style><p>ok</p>', guards),
+    },
+    "probes": [p["path"] for p in smoke.gate_probes([], {"refused_photo": 40})],
+    "unpublished": smoke.unpublished_probes(["http://h/cau-chuyen-mau/", "/en/sample-story/?x=1"]),
+}, ensure_ascii=False))
+PY;
+[ $hcwa_code, $hcwa_out, $hcwa_err ] = $hcwa_run( array( $hcwa_python, '-I', '-B', '-c', $hcwa_port_py, $hcwa_repo . '/scripts/wp-smoke.py' ) );
+hcwa_assert_same( 0, $hcwa_code, 'wp-smoke.py port checks run without Playwright' . ( '' !== $hcwa_err ? ': ' . trim( $hcwa_err ) : '' ) );
+$hcwa_result = (array) json_decode( $hcwa_out, true );
+$hcwa_port   = (array) ( $hcwa_result['cases'] ?? array() );
+$hcwa_has    = static fn( string $case, string $text ): bool => (bool) array_filter( (array) ( $hcwa_port[ $case ] ?? array() ), static fn( $f ) => str_contains( $f, $text ) );
+hcwa_assert_same( array(), $hcwa_port['good staging'] ?? null, 'port: a page as the spec describes passes' );
+hcwa_assert_true( $hcwa_has( 'no head scripts', 'head-inline' ) && $hcwa_has( 'no head scripts', 'pageReveal' ), 'port: head-inline and pageReveal first in <head>' );
+hcwa_assert_true( $hcwa_has( 'ver on dist', '?ver on assets/dist/' ), 'port: no ?ver on dist URLs' );
+hcwa_assert_true( $hcwa_has( 'chunk imports another URL', 'chunks import the entry from another URL' ), 'port: chunks import the entry from the module tag URL' );
+hcwa_assert_true( $hcwa_has( 'body order', 'out of the 2.2 order' ), 'port: body children in the 2.2 order' );
+hcwa_assert_true( $hcwa_has( 'lit missing', 'data-lit missing' ), 'port: data-lit on lit pages' );
+hcwa_assert_true( $hcwa_has( 'switch differs', 'hreflang says' ), 'port: language switch equals hreflang' );
+hcwa_assert_true( $hcwa_has( 'menu link 404', 'menu links not answering 200' ), 'port: menu links answer 200' );
+hcwa_assert_true( $hcwa_has( 'beat outside', 'outside #centers' ) && $hcwa_has( 'beat outside', '4 beats, expected 3' ), 'port: beats only in #centers, as many as centers' );
+hcwa_assert_true( $hcwa_has( 'no traces off production', 'no data-traces on #centers' ), 'port: traces on #centers off production' );
+hcwa_assert_true( $hcwa_has( 'traces on production', 'data-traces on production' ), 'port: never traces on production' );
+hcwa_assert_true( $hcwa_has( 'little rose location', 'a location line' ) && $hcwa_has( 'little rose location', 'unit-colour --spill' ), 'port: no location or unit-colour spill on a protected center' );
+hcwa_assert_true( $hcwa_has( 'production door chip and still', 'protected door chip' ) && $hcwa_has( 'production door chip and still', 'passage-corridor' ), 'port: production before approval: no door chip, no listed still' );
+hcwa_assert_true( $hcwa_has( 'production no stills.json', 'stills.json is missing' ), 'port: production fails closed without stills.json' );
+hcwa_assert_same( array(), $hcwa_port['production clean'] ?? null, 'port: production page with a footnote and a script bracket passes' );
+hcwa_assert_true( $hcwa_has( 'production bracket token', 'bracket placeholder token' ), 'port: production BLOCKERS scan' );
+hcwa_assert_true( $hcwa_has( 'number counted up', 'changed after DOMContentLoaded' ) && $hcwa_has( 'number counted up', 'animation or transition' ), 'port: impact numbers never count up' );
+hcwa_assert_true( $hcwa_has( 'english phrase on vi', 'English phrases on a Vietnamese page' ), 'port: no English UI phrase on a VI page' );
+hcwa_assert_true( $hcwa_has( 'vi word on en', 'Vietnamese words on an English page' ), 'port: no Vietnamese words on an EN page' );
+hcwa_assert_same( array(), $hcwa_port['proper name on en'] ?? null, 'port: proper names from content/draft pass on EN pages' );
+hcwa_assert_true( $hcwa_has( 'broken poster', 'did not answer 200' ), 'port: posters, svg, fonts and img answer 200' );
+hcwa_assert_same( array(), $hcwa_result['blockers']['footnote passes'] ?? null, 'BLOCKERS: a digit-only bracket is a footnote' );
+hcwa_assert_same( 1, count( (array) ( $hcwa_result['blockers']['token fails'] ?? array() ) ), 'BLOCKERS: [N] is a placeholder' );
+hcwa_assert_same( array(), $hcwa_result['blockers']['script ignored'] ?? null, 'BLOCKERS: scripts and styles are removed first' );
+hcwa_assert_same( array( '/wp-json/wp/v2/media', '/wp-json/wp/v2/MEDIA', '/wp-json/wp/v2/posts?_fields=id,yoast_head,yoast_head_json', '/wp-json/yoast/v1/get_head?url=%2F', '/post-sitemap.xml', '/?attachment_id=40', '/?p=40', '/?page_id=40' ), $hcwa_result['probes'] ?? null, 'probes: the refused attachment through attachment_id, p and page_id' );
+hcwa_assert_same( array( '/cau-chuyen-mau/', '/en/sample-story/?x=1' ), array_column( (array) ( $hcwa_result['unpublished'] ?? array() ), 'path' ), 'probes: --unpublished URLs must answer 404' );
+
+// The exported guards come from prototype/src/render.mjs (or guards.json), never re-typed.
+if ( '' !== $hcwa_which( 'node' ) ) {
+	$hcwa_guard_py = 'import importlib.util, json, sys' . "\n"
+		. 'spec = importlib.util.spec_from_file_location("wp_smoke", sys.argv[1]); smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)' . "\n"
+		. 'g = smoke.load_guards(); print(json.dumps({"source": g["source"], "why": [b["why"] for b in g["blockers"]], "door": g["door"].pattern, "min": g["minPartnerLogos"]}))';
+	[ $hcwa_code, $hcwa_out, $hcwa_err ] = $hcwa_run( array( $hcwa_python, '-I', '-B', '-c', $hcwa_guard_py, $hcwa_repo . '/scripts/wp-smoke.py' ) );
+	$hcwa_guards = (array) json_decode( $hcwa_out, true );
+	hcwa_assert_same( 0, $hcwa_code, 'smoke load_guards() runs' . ( '' !== $hcwa_err ? ': ' . trim( $hcwa_err ) : '' ) );
+	hcwa_assert_true( in_array( 'bracket placeholder token in text', (array) ( $hcwa_guards['why'] ?? array() ), true ), 'guards: the prototype BLOCKERS, bracket rule included' );
+	hcwa_assert_contains( 'hub-doors-wide', (string) ( $hcwa_guards['door'] ?? '' ), 'guards: the prototype LITTLE_ROSE_DOOR pattern' );
+	hcwa_assert_same( 4, $hcwa_guards['min'] ?? null, 'guards: MIN_PARTNER_LOGOS' );
+} else {
+	hcwa_test_skip( 'smoke load_guards(): node is not on PATH' );
+}
+
+// The parity driver's pure helpers (scripts/wp-parity/run.py), routes and allow lists.
+$hcwa_parity_py = <<<'PY'
+import importlib.util, json, sys
+spec = importlib.util.spec_from_file_location("parity", sys.argv[1])
+parity = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(parity)
+parity.ALLOW = [{"route": "*", "section": "#news", "kind": "text", "match": r"^\(externalPost\)", "reason": "local posts", "owner": "templates"}]
+proto = [{"ok": True, "text": "sun-in finished after ~2.3 s (2104 ms)", "key": parity.line_key("sun-in finished after ~2.3 s (2104 ms)")},
+         {"ok": True, "text": "vi-390-t0: three.js not requested", "key": parity.line_key("vi-390-t0: three.js not requested")},
+         {"ok": True, "text": "vi-390-t0: H1 2 lines", "key": parity.line_key("vi-390-t0: H1 2 lines")},
+         {"ok": False, "text": "vi-390-t0: header text contrast 6.1 >= 7", "key": parity.line_key("vi-390-t0: header text contrast 6.1 >= 7")}]
+wp = [{"ok": True, "text": "sun-in finished after ~2.5 s (2450 ms)", "key": parity.line_key("sun-in finished after ~2.5 s (2450 ms)")},
+      {"ok": False, "text": "vi-390-t0: H1 3 lines", "key": parity.line_key("vi-390-t0: H1 3 lines")}]
+cmp = parity.compare_lines(proto, wp)
+d1 = parity.diff_lists(["a", "(externalPost)", "b"], ["a", "b"], "text", "/", "#news")
+d2 = parity.diff_lists(["a", "x"], ["a", "y"], "text", "/", "#news")
+routes = parity.ROUTES["routes"]
+allow = {}
+for owner in ("assets", "templates"):
+    allow[owner] = json.load(open(str(parity.HERE / f"allow-{owner}.json")))
+print(json.dumps({
+    "key": parity.line_key("vi-1440-t2: drawing buffers ~33.4 MB <= 48 MB (D6.7)"),
+    "missing": [r["text"] for r in cmp["missing"]], "only": cmp["prototypeOnly"], "protoFails": cmp["protoFails"],
+    "allowed": [d1["pass"], d1["allowed"]], "plain": [d2["pass"], d2["changes"]],
+    "routes": len(routes), "paths": sorted({r["path"] for r in routes}), "widths": sorted(parity.ROUTES["widths"]),
+    "norm": parity.norm_url("http://h/wp-content/themes/hcwa-2026/assets/dist/assets/main-BwCzEVtk.js?ver=1"),
+    "allow": {k: v.get("entries") for k, v in allow.items()},
+}))
+PY;
+[ $hcwa_code, $hcwa_out, $hcwa_err ] = $hcwa_run( array( $hcwa_python, '-I', '-B', '-c', $hcwa_parity_py, $hcwa_repo . '/scripts/wp-parity/run.py' ) );
+hcwa_assert_same( 0, $hcwa_code, 'wp-parity/run.py helpers load without Playwright' . ( '' !== $hcwa_err ? ': ' . trim( $hcwa_err ) : '' ) );
+$hcwa_parity = (array) json_decode( $hcwa_out, true );
+hcwa_assert_same( 'vi-1440-t2: drawing buffers ~# MB <= # MB', $hcwa_parity['key'] ?? null, 'parity: a check line matches across sides without its numbers' );
+hcwa_assert_same( array( 'vi-390-t0: H1 2 lines' ), $hcwa_parity['missing'] ?? null, 'parity: a prototype PASS line failing on WordPress is reported, a timing value is not' );
+hcwa_assert_same( array( 'vi-390-t0: three.js not requested' ), $hcwa_parity['only'] ?? null, "parity: check-hero's three.js lines are prototype-only" );
+hcwa_assert_same( array( 'vi-390-t0: header text contrast 6.1 >= 7' ), $hcwa_parity['protoFails'] ?? null, 'parity: prototype FAIL lines are listed, not required' );
+hcwa_assert_same( array( true, 1 ), $hcwa_parity['allowed'] ?? null, 'parity: an allow entry drops the line it matches' );
+hcwa_assert_same( array( false, 2 ), $hcwa_parity['plain'] ?? null, 'parity: other differences stay' );
+hcwa_assert_same( 16, $hcwa_parity['routes'] ?? null, 'parity: 16 routes' );
+hcwa_assert_same( array( '1440', '390' ), $hcwa_parity['widths'] ?? null, 'parity: 390 and 1440' );
+hcwa_assert_true( in_array( '/en/404.html', (array) ( $hcwa_parity['paths'] ?? array() ), true ) && in_array( '/hoat-dong/co-so/tre-xanh/', (array) ( $hcwa_parity['paths'] ?? array() ), true ), 'parity: the 404 and Green Bamboo routes' );
+hcwa_assert_same( '/assets/main.js', $hcwa_parity['norm'] ?? null, 'parity: dist URLs compare as the prototype names them' );
+hcwa_assert_same( array( 'assets' => array(), 'templates' => array() ), $hcwa_parity['allow'] ?? null, 'parity: both allow lists start empty' );
+if ( '' !== $hcwa_which( 'node' ) ) {
+	foreach ( array( 'skeleton.js', 'gzip-proxy.mjs', 'lcp.cjs' ) as $hcwa_file ) {
+		[ $hcwa_code, , $hcwa_err ] = $hcwa_run( array( $hcwa_which( 'node' ), '--check', $hcwa_repo . '/scripts/wp-parity/' . $hcwa_file ) );
+		hcwa_assert_same( 0, $hcwa_code, "wp-parity/$hcwa_file parses" . ( '' !== $hcwa_err ? ': ' . trim( $hcwa_err ) : '' ) );
+	}
+}
+
+// The static check's port checks on fixture inputs (11-WP-PORT.md 6.1).
+[ $hcwa_code, $hcwa_out ] = $hcwa_run( array( $hcwa_python, '-I', '-B', $hcwa_repo . '/scripts/wp-static-check.py', '--self-test' ) );
+hcwa_assert_same( 0, $hcwa_code, 'wp-static-check.py --self-test passes: ' . trim( (string) preg_replace( '/^ok .*\n/m', '', $hcwa_out ) ) );

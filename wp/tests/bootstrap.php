@@ -7,6 +7,11 @@
  * area, create wp/tests/<area>-stubs.php: it is loaded after this file's stubs and
  * before the hcwa-core plugin, so it can also stub things the plugin calls at load time.
  *
+ * Set HCWA_TEST_NO_PLUGIN=1 in the environment to load the stubs without hcwa-core (a theme
+ * test proves the theme loads without the plugin through hcwa_test_isolated() in run.php).
+ * Generated fixtures from the prototype (wp/tests/fixtures/golden.json, written by
+ * `npm --prefix prototype run export:wp`) are read with hcwa_test_golden().
+ *
  * Test state lives in $GLOBALS['hcwa_test'] and is reset before each test file:
  *   options      get_option() values ('home' defaults to https://hcwa.test)
  *   env          wp_get_environment_type() ('staging' by default)
@@ -853,6 +858,30 @@ function hcwa_test_post( array $props, array $meta = array() ): WP_Post {
 	return $post;
 }
 
+/**
+ * The golden fixtures the prototype's own functions produced (docs/plan/11-WP-PORT.md 5.8), or
+ * null while the export has not written wp/tests/fixtures/golden.json yet. A test that needs
+ * them calls hcwa_test_skip() when this returns null.
+ *
+ * @param string $section Top-level key (e.g. 'splitWords'), or '' for the whole file.
+ * @return array|null
+ */
+function hcwa_test_golden( string $section = '' ): ?array {
+	static $golden = false;
+	if ( false === $golden ) {
+		$file   = __DIR__ . '/fixtures/golden.json';
+		$golden = is_readable( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null;
+		$golden = is_array( $golden ) ? $golden : null;
+	}
+	if ( null === $golden ) {
+		return null;
+	}
+	if ( '' === $section ) {
+		return $golden;
+	}
+	return isset( $golden[ $section ] ) && is_array( $golden[ $section ] ) ? $golden[ $section ] : null;
+}
+
 /* ---------- extra stubs from other areas, then the plugin ---------- */
 
 foreach ( glob( __DIR__ . '/*-stubs.php' ) as $hcwa_stub_file ) {
@@ -860,4 +889,6 @@ foreach ( glob( __DIR__ . '/*-stubs.php' ) as $hcwa_stub_file ) {
 }
 unset( $hcwa_stub_file );
 
-require_once dirname( __DIR__ ) . '/plugins/hcwa-core/hcwa-core.php';
+if ( '1' !== getenv( 'HCWA_TEST_NO_PLUGIN' ) ) {
+	require_once dirname( __DIR__ ) . '/plugins/hcwa-core/hcwa-core.php';
+}

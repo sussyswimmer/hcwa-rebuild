@@ -24,12 +24,28 @@ Checks (E = error, W = warning):
             blocks/blocks-manifest.php equals the block.json files.
   patterns  headers, slugs, VI/EN twins, referenced slugs, balanced block comments.
   pages     every page key passed to hcwa_page_url / hcwa_theme_url is known.
-  css       every class used in block markup, patterns and theme templates exists in
-            assets/css/site.css or patterns.css (wp-*, has-*, is-*, align* allowed;
-            classes only site.js uses are warnings).
-  meta      every meta key read or written is registered in includes/meta.php.
+  css       every class used in block markup, patterns and theme templates has a rule in
+            the bundle CSS (assets/generated/classes.json, every class selector of the
+            prototype's main, draft and motion CSS), assets/css/wp.css, or, while they still
+            exist, the old site.css and patterns.css (wp-*, has-*, is-*, align* allowed;
+            classes only site.js uses are warnings). Needs no dist: classes.json is committed.
+  meta      every meta key read or written is registered in includes/meta.php (keys the
+            port adds in 11-WP-PORT.md 3.2 and the seed already writes: one note until
+            hcwa-core registers them).
   text      no text-transform: uppercase, no emoji in templates or strings, no ALL CAPS
             Vietnamese; hard-coded visible text in theme templates (warning).
+  port      docs/plan/11-WP-PORT.md 6.1, each part switched on by the stream that delivers it:
+            generated  once assets/generated/ exists, every generated file is there
+                       (prototype-data.php and wp/tests/fixtures/golden.json too), and every
+                       prototype input in sources.json still has the recorded sha256; a
+                       missing or stale file is an error naming the export command. Before
+                       that, one note (--port-strict makes it an error).
+            blocks     once any new hcwa/* block of 4.1 exists, all of them exist and the
+                       deleted ones (center-grid) are gone. Before that, one note.
+            patterns   once scripts/build-wp-patterns.py exists, its --check passes.
+
+Notes (N) are printed but are neither errors nor warnings.
+    python3 scripts/wp-static-check.py --self-test   # the port checks on fixture inputs
 
 Only the Python standard library plus the php, node and bash binaries are used. Nothing
 is downloaded and WordPress is never loaded: PHP is used to tokenize files and to read
@@ -55,8 +71,32 @@ BLOCKS = CORE / "blocks"
 TESTS = WP / "tests"
 SEED = ROOT / "scripts" / "wp-seed.php"
 CONTRACT = WP / "CONTRACT.md"
+# The old theme CSS; read only while the files exist (the templates stream deletes them).
 CSS_FILES = [THEME / "assets" / "css" / "site.css", THEME / "assets" / "css" / "patterns.css"]
 SITE_JS = THEME / "assets" / "js" / "site.js"
+WP_CSS = THEME / "assets" / "css" / "wp.css"
+GENERATED = THEME / "assets" / "generated"
+DIST = THEME / "assets" / "dist"
+EXPORT_CMD = "npm --prefix prototype ci && npm --prefix prototype run export:wp"
+# Files the export writes and the repo commits (11-WP-PORT.md 1.3, 6.2).
+GENERATED_FILES = ("head-inline.staging.js", "head-inline.production.js", "page-reveal.js", "stills.json",
+                   "guards.json", "classes.json", "sources.json", "svg/gach-sprite.svg")
+GENERATED_ELSEWHERE = (CORE / "includes" / "prototype-data.php", TESTS / "fixtures" / "golden.json")
+# 11-WP-PORT.md 4.1: the blocks after the port, and the ones it deletes.
+PORT_BLOCKS_NEW = ("sections", "day", "lit-header", "sun-head", "dusk-band", "hero", "passage", "corridor",
+                   "work-sheet", "shutters", "help", "work-hub", "louvers", "faq", "gifts", "contact-reach",
+                   "contact-units")
+PORT_BLOCKS_KEPT = ("news-latest", "partner-wall", "donation-methods", "impact-strip", "program-list",
+                    "report-list", "announcement-bar", "language-notice")
+PORT_BLOCKS_DELETED = ("center-grid",)
+PATTERN_BUILDER = ROOT / "scripts" / "build-wp-patterns.py"
+# Meta keys 11-WP-PORT.md 3.2 adds, which the seed writes ahead of hcwa-core registering them.
+META_PLANNED = {
+    "hcwa_short_name", "hcwa_header_still", "hcwa_since_verified", "hcwa_story_title", "hcwa_figures_title",
+    "hcwa_help_title", "hcwa_needs", "hcwa_donate_label", "hcwa_visit_title", "hcwa_contact_note",
+    "hcwa_logo_alt", "hcwa_center_ids", "hcwa_full_name", "hcwa_years_label", "hcwa_focus",
+    "hcwa_runs_at_note", "hcwa_cta_title", "hcwa_partner_label", "hcwa_program_id",
+}
 
 # Functions whose first argument is a dictionary key.
 KEY_FUNCS = {"hcwa_t", "hcwa_t_in", "hcwa_theme_t", "hcwa_theme_t_in", "hcwa_theme_e", "hcwa_blocks_empty_note"}
@@ -142,13 +182,16 @@ class Report:
     def warn(self, check: str, where: str, msg: str) -> None:
         self.items.append(("W", check, where, msg))
 
+    def note(self, check: str, where: str, msg: str) -> None:
+        self.items.append(("N", check, where, msg))
+
     def count(self, level: str) -> int:
         return sum(1 for item in self.items if item[0] == level)
 
     def print(self, quiet: bool) -> None:
         seen = set()
         for level, check, where, msg in sorted(self.items, key=lambda i: (i[0], i[1], i[2])):
-            if quiet and level == "W":
+            if quiet and level in ("W", "N"):
                 continue
             line = f"{level} [{check}] {where}: {msg}"
             if line in seen:
@@ -183,11 +226,12 @@ def area_of(path: Path) -> str:
 
 def php_files() -> list[Path]:
     files = sorted(WP.rglob("*.php")) + sorted((ROOT / "scripts").glob("wp-*.php"))
-    return [f for f in files if ".wp-local" not in f.parts]
+    return [f for f in files if ".wp-local" not in f.parts and DIST not in f.parents]
 
 
 def js_files() -> list[Path]:
-    return sorted(WP.rglob("*.js"))
+    # The Vite build in assets/dist/ is generated and gitignored; its sources are checked in prototype/.
+    return [f for f in sorted(WP.rglob("*.js")) if DIST not in f.parents]
 
 
 def run(cmd: list[str], stdin: str | None = None) -> subprocess.CompletedProcess:
@@ -439,12 +483,14 @@ def check_lint(report: Report) -> None:
         res = run(["bash", "-n", str(f)])
         if res.returncode != 0:
             report.error("lint", rel(f), res.stderr.strip()[:300])
-    for f in sorted((ROOT / "scripts").glob("wp-*.py")):
+    for f in sorted((ROOT / "scripts").glob("wp-*.py")) + sorted((ROOT / "scripts" / "wp-parity").glob("*.py")):
         try:
             compile(read(f), str(f), "exec")
         except SyntaxError as exc:
             report.error("lint", rel(f), f"Python syntax error: {exc}")
-    for f in sorted(WP.rglob("*.json")):
+    for f in sorted(WP.rglob("*.json")) + sorted((ROOT / "scripts" / "wp-parity").glob("*.json")):
+        if DIST in f.parents:
+            continue
         try:
             json.loads(read(f))
         except json.JSONDecodeError as exc:
@@ -924,9 +970,20 @@ def check_pages(report: Report, dump: dict, tokens: dict[Path, dict]) -> None:
                 report.error("pages", f"{rel(path)} {func}", f"unknown page key '{m.group(1)}'")
 
 
-def css_classes() -> set[str]:
-    classes: set[str] = set()
-    for f in CSS_FILES:
+def generated_classes(generated: Path = GENERATED) -> set[str]:
+    """Class names from the committed classes.json (a list, or {"classes": [...]}), or none."""
+    f = generated / "classes.json"
+    if not f.exists():
+        return set()
+    data = json.loads(read(f))
+    items = data.get("classes", []) if isinstance(data, dict) else data
+    return {str(c).lstrip(".") for c in items if isinstance(c, str)}
+
+
+def css_classes(files: list[Path] | None = None, generated: Path = GENERATED) -> set[str]:
+    """Classes with a rule: the bundle CSS (classes.json), wp.css and any old CSS still there."""
+    classes: set[str] = generated_classes(generated)
+    for f in files if files is not None else CSS_FILES + [WP_CSS]:
         if not f.exists():
             continue
         text = re.sub(r"/\*.*?\*/", "", read(f), flags=re.S)
@@ -998,7 +1055,7 @@ def class_uses(text: str) -> list[tuple[str, int, bool]]:
 def check_css(report: Report) -> None:
     defined = css_classes()
     if not defined:
-        report.error("css", "assets/css", "no classes found in site.css / patterns.css")
+        report.error("css", "assets/css", "no classes found in classes.json, wp.css, site.css or patterns.css")
         return
     js = read(SITE_JS) if SITE_JS.exists() else ""
     js_classes = set(re.findall(r"""["'.\s]([a-z][\w-]*)""", js))
@@ -1014,7 +1071,7 @@ def check_css(report: Report) -> None:
             if is_prefix:
                 for value in expansions.get(cls, []):
                     if cls + value not in defined:
-                        report.error("css", where, f"class .{cls}{value} has no rule in site.css or patterns.css")
+                        report.error("css", where, f"class .{cls}{value} has no rule in the bundle CSS (classes.json) or wp.css")
                 if cls not in expansions and not any(d.startswith(cls) for d in defined):
                     report.error("css", where, f"no class in the CSS starts with .{cls}")
                 continue
@@ -1025,7 +1082,7 @@ def check_css(report: Report) -> None:
             if cls in js_classes:
                 report.warn("css", where, f".{cls} has no CSS rule (site.js hook)")
             else:
-                report.error("css", where, f"class .{cls} has no rule in site.css or patterns.css")
+                report.error("css", where, f"class .{cls} has no rule in the bundle CSS (classes.json) or wp.css")
 
 
 def check_meta(report: Report, dump: dict, tokens: dict[Path, dict]) -> None:
@@ -1035,9 +1092,13 @@ def check_meta(report: Report, dump: dict, tokens: dict[Path, dict]) -> None:
         return
 
     warned: set[str] = set()
+    planned: set[str] = set()
 
     def need(key: str, where: str) -> None:
         if key in registered:
+            return
+        if key in META_PLANNED:
+            planned.add(key)
             return
         if key in META_UNREGISTERED:
             if key not in warned:
@@ -1062,6 +1123,10 @@ def check_meta(report: Report, dump: dict, tokens: dict[Path, dict]) -> None:
     seed = read(SEED) if SEED.exists() else ""
     for m in re.finditer(r"'(hcwa_[a-z_]+)'\s*=>", seed):
         need(m.group(1), f"{rel(SEED)}:{seed.count(chr(10), 0, m.start()) + 1}")
+
+    if planned:
+        report.note("meta", "includes/meta.php", f"{len(planned)} meta keys of 11-WP-PORT.md 3.2 are written by the seed "
+                    f"but not registered yet (templates stream): {', '.join(sorted(planned))}")
 
     m = re.search(r"## Meta keys(.*?)\n## ", read(CONTRACT), re.S)
     if m:
@@ -1111,11 +1176,203 @@ def check_text(report: Report) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Port (docs/plan/11-WP-PORT.md 6.1)
+# ---------------------------------------------------------------------------
+
+def sha256_of(path: Path) -> str:
+    """sha256 of a file, or of a folder's file list (relative paths, sorted, one per line)."""
+    import hashlib
+    h = hashlib.sha256()
+    if path.is_dir():
+        names = sorted(str(f.relative_to(path)) for f in path.rglob("*") if f.is_file())
+        h.update("\n".join(names).encode("utf-8"))
+    else:
+        h.update(path.read_bytes())
+    return h.hexdigest()
+
+
+def check_generated(report: Report, generated: Path = GENERATED, root: Path = ROOT,
+                    elsewhere: tuple = GENERATED_ELSEWHERE, strict: bool = False) -> None:
+    """The committed export outputs exist and are fresh against their prototype inputs.
+
+    sources.json: {"inputs": {"<repo-relative path>": "<sha256>", ...}, "outputs": {...}?}. A
+    path ending in "/" is a folder whose sha256 is taken over its sorted file list. Outputs,
+    when listed (paths relative to the repo), must still have their recorded sha256 too, so a
+    hand edit of a generated file is caught."""
+    if not generated.exists():
+        msg = f"assets/generated/ does not exist yet (milestone A of the assets stream); run `{EXPORT_CMD}`"
+        (report.error if strict else report.note)("port", rel(generated), msg)
+        return
+    for name in GENERATED_FILES:
+        if not (generated / name).exists():
+            report.error("port", rel(generated / name), f"missing generated file; run `{EXPORT_CMD}`")
+    for f in elsewhere:
+        if not f.exists():
+            report.error("port", rel(f), f"missing generated file; run `{EXPORT_CMD}`")
+    sources = generated / "sources.json"
+    if not sources.exists():
+        return
+    try:
+        data = json.loads(read(sources))
+    except json.JSONDecodeError as exc:
+        report.error("port", rel(sources), f"invalid JSON ({exc}); run `{EXPORT_CMD}`")
+        return
+    inputs = data.get("inputs", data) if isinstance(data, dict) else {}
+    if not isinstance(inputs, dict) or not inputs:
+        report.error("port", rel(sources), f"lists no inputs; run `{EXPORT_CMD}`")
+        return
+    stale = []
+    for name, digest in sorted(inputs.items()):
+        if not isinstance(digest, str):
+            continue
+        path = root / name.rstrip("/")
+        if not path.exists():
+            stale.append(f"{name} (gone)")
+        elif sha256_of(path) != digest:
+            stale.append(name)
+    if stale:
+        report.error("port", rel(sources), f"generated files are stale: {', '.join(stale[:8])}"
+                     f"{' …' if len(stale) > 8 else ''} changed since the export; run `{EXPORT_CMD}`")
+    outputs = data.get("outputs", {}) if isinstance(data, dict) else {}
+    edited = [n for n, d in sorted(outputs.items()) if isinstance(d, str) and (root / n).is_file() and sha256_of(root / n) != d]
+    if edited:
+        report.error("port", rel(sources), f"generated files edited by hand: {', '.join(edited[:6])}; run `{EXPORT_CMD}`")
+
+
+def check_block_list(report: Report, blocks_dir: Path = BLOCKS) -> None:
+    """11-WP-PORT.md 4.1: once the templates stream adds a new block, the whole list must exist."""
+    have = {d.name for d in blocks_dir.iterdir() if d.is_dir()} if blocks_dir.exists() else set()
+    if not have & set(PORT_BLOCKS_NEW):
+        report.note("port", rel(blocks_dir), "none of the hcwa/* blocks of 11-WP-PORT.md 4.1 exist yet (templates stream)")
+        return
+    for name in PORT_BLOCKS_NEW + PORT_BLOCKS_KEPT:
+        if name not in have:
+            report.error("port", rel(blocks_dir / name), f"block hcwa/{name} of 11-WP-PORT.md 4.1 is missing")
+    for name in PORT_BLOCKS_DELETED:
+        if name in have:
+            report.error("port", rel(blocks_dir / name), f"block hcwa/{name} is replaced by the port (11-WP-PORT.md 4.1); delete it")
+
+
+def check_pattern_freshness(report: Report, builder: Path = PATTERN_BUILDER) -> None:
+    """The ten page patterns are generated from content/draft (11-WP-PORT.md 4.4)."""
+    if not builder.exists():
+        report.note("port", rel(builder), "the pattern builder does not exist yet (templates stream); pattern freshness not checked")
+        return
+    res = run([sys.executable, "-I", str(builder), "--check"])
+    if res.returncode != 0:
+        detail = " ".join((res.stdout + res.stderr).strip().splitlines()[-3:])[:300]
+        report.error("port", rel(PATTERNS), f"patterns are stale: run `python3 {rel(builder)}` ({detail})")
+
+
+def self_test() -> int:
+    """The port checks on fixture inputs in a temporary folder (no repo file is touched)."""
+    import tempfile
+    fails = []
+
+    def expect(name: str, report: Report, errors: int, notes: int = 0, text: str = "") -> None:
+        got_e, got_n = report.count("E"), report.count("N")
+        joined = " | ".join(i[3] for i in report.items)
+        ok = got_e == errors and got_n == notes and (not text or text in joined)
+        print(f"{'ok  ' if ok else 'FAIL'} {name}: {got_e} error(s), {got_n} note(s)" + ("" if ok else f" — {joined[:300]}"))
+        if not ok:
+            fails.append(name)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        gen = root / "gen"
+        proto = root / "prototype" / "src"
+        proto.mkdir(parents=True)
+        (proto / "head-inline.js").write_text("export const headInline = () => 1;\n", encoding="utf-8")
+        (root / "prototype" / "public" / "posters").mkdir(parents=True)
+        (root / "prototype" / "public" / "posters" / "dusk-desk-still-800.avif").write_bytes(b"x")
+        other = (root / "prototype-data.php", root / "golden.json")
+
+        r = Report(); check_generated(r, gen, root, other)
+        expect("no generated folder: one note", r, 0, 1, "milestone A")
+        r = Report(); check_generated(r, gen, root, other, strict=True)
+        expect("no generated folder, --port-strict: one error", r, 1, 0, EXPORT_CMD)
+
+        for name in GENERATED_FILES:
+            (gen / name).parent.mkdir(parents=True, exist_ok=True)
+            (gen / name).write_text("{}" if name.endswith(".json") else "x", encoding="utf-8")
+        for f in other:
+            f.write_text("x", encoding="utf-8")
+        inputs = {"prototype/src/head-inline.js": sha256_of(proto / "head-inline.js"),
+                  "prototype/public/posters/": sha256_of(root / "prototype" / "public" / "posters")}
+        (gen / "sources.json").write_text(json.dumps({"inputs": inputs, "outputs": {"gen/page-reveal.js": sha256_of(gen / "page-reveal.js")}}), encoding="utf-8")
+        r = Report(); check_generated(r, gen, root, other)
+        expect("fresh export: clean", r, 0, 0)
+
+        (proto / "head-inline.js").write_text("export const headInline = () => 2;\n", encoding="utf-8")
+        r = Report(); check_generated(r, gen, root, other)
+        expect("changed input: stale error with the export command", r, 1, 0, EXPORT_CMD)
+        (proto / "head-inline.js").write_text("export const headInline = () => 1;\n", encoding="utf-8")
+
+        (root / "prototype" / "public" / "posters" / "new-still-480.avif").write_bytes(b"y")
+        r = Report(); check_generated(r, gen, root, other)
+        expect("new poster file: stale error", r, 1, 0, "posters/")
+        (root / "prototype" / "public" / "posters" / "new-still-480.avif").unlink()
+
+        (gen / "page-reveal.js").write_text("edited", encoding="utf-8")
+        r = Report(); check_generated(r, gen, root, other)
+        expect("hand-edited output: error", r, 1, 0, "edited by hand")
+        (gen / "page-reveal.js").write_text("x", encoding="utf-8")
+
+        (gen / "guards.json").unlink()
+        other[1].unlink()
+        r = Report(); check_generated(r, gen, root, other)
+        expect("missing generated files: one error each", r, 2, 0, EXPORT_CMD)
+
+        (gen / "classes.json").write_text(json.dumps({"classes": ["hero", ".bays__glass"]}), encoding="utf-8")
+        css = root / "wp.css"
+        css.write_text(".entry-content p{line-height:1.7}.announce[data-x]{}", encoding="utf-8")
+        got = css_classes([css], gen)
+        ok = got == {"hero", "bays__glass", "entry-content", "announce"}
+        print(f"{'ok  ' if ok else 'FAIL'} classes from classes.json and wp.css: {sorted(got)}")
+        if not ok:
+            fails.append("classes")
+
+        blocks = root / "blocks"
+        (blocks / "center-grid").mkdir(parents=True)
+        r = Report(); check_block_list(r, blocks)
+        expect("old block set: one note", r, 0, 1, "templates stream")
+        for name in PORT_BLOCKS_NEW + PORT_BLOCKS_KEPT:
+            (blocks / name).mkdir(exist_ok=True)
+        r = Report(); check_block_list(r, blocks)
+        expect("new blocks with center-grid left: one error", r, 1, 0, "center-grid")
+        (blocks / "center-grid").rmdir()
+        (blocks / "faq").rmdir()
+        r = Report(); check_block_list(r, blocks)
+        expect("one new block missing: one error", r, 1, 0, "hcwa/faq")
+        (blocks / "faq").mkdir()
+        r = Report(); check_block_list(r, blocks)
+        expect("full new block list: clean", r, 0, 0)
+
+        builder = root / "build-wp-patterns.py"
+        r = Report(); check_pattern_freshness(r, builder)
+        expect("no pattern builder: one note", r, 0, 1)
+        builder.write_text("import sys\nsys.exit(0 if '--check' in sys.argv else 2)\n", encoding="utf-8")
+        r = Report(); check_pattern_freshness(r, builder)
+        expect("patterns fresh: clean", r, 0, 0)
+        builder.write_text("import sys\nprint('page-home-vi.php differs')\nsys.exit(1)\n", encoding="utf-8")
+        r = Report(); check_pattern_freshness(r, builder)
+        expect("patterns stale: error", r, 1, 0, "page-home-vi.php differs")
+
+    print(f"\nself-test: {'all passed' if not fails else str(len(fails)) + ' failed'}")
+    return 1 if fails else 0
+
+
+# ---------------------------------------------------------------------------
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--quiet", action="store_true", help="print errors only")
+    parser.add_argument("--port-strict", action="store_true",
+                        help="a missing assets/generated/ folder is an error (after milestone A of the port)")
+    parser.add_argument("--self-test", action="store_true", help="run the port checks on fixture inputs and exit")
     args = parser.parse_args()
+    if args.self_test:
+        return self_test()
 
     report = Report()
     check_lint(report)
@@ -1131,10 +1388,13 @@ def main() -> int:
     check_patterns(report, blocks, tokens, dump)
     check_css(report)
     check_text(report)
+    check_generated(report, strict=args.port_strict)
+    check_block_list(report)
+    check_pattern_freshness(report)
 
     report.print(args.quiet)
     errors, warnings = report.count("E"), report.count("W")
-    print(f"\nwp-static-check: {errors} error(s), {warnings} warning(s); "
+    print(f"\nwp-static-check: {errors} error(s), {warnings} warning(s), {report.count('N')} note(s); "
           f"{len(php_files())} PHP, {len(js_files())} JS, {len(list(PATTERNS.glob('*.php')))} patterns, "
           f"{len(dump.get('dict', {}))} strings, {len(blocks)} blocks checked.")
     return 1 if errors else 0

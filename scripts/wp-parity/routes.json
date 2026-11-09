@@ -1,0 +1,25 @@
+{
+  "_note": "Route pairs for the parity driver (docs/plan/11-WP-PORT.md 5.2). The path is the same on both sides. page is the prototype page class (body class page-<page>); lit says whether <html> carries data-lit; world marks the front page (canvas, Tier 1/2 checks); status is the expected document status (the two 404 paths answer 404 on WordPress and are exempt from the failed-request check on both sides).",
+  "widths": {
+    "390": { "viewport": { "width": 390, "height": 844 }, "isMobile": true, "hasTouch": true, "deviceScaleFactor": 1 },
+    "1440": { "viewport": { "width": 1440, "height": 900 }, "isMobile": false, "hasTouch": false, "deviceScaleFactor": 1 }
+  },
+  "routes": [
+    { "name": "home-vi", "path": "/", "lang": "vi", "page": "home", "lit": true, "world": true, "status": 200 },
+    { "name": "home-en", "path": "/en/", "lang": "en", "page": "home", "lit": true, "world": true, "status": 200 },
+    { "name": "work-vi", "path": "/hoat-dong/", "lang": "vi", "page": "work", "lit": true, "status": 200 },
+    { "name": "work-en", "path": "/en/our-work/", "lang": "en", "page": "work", "lit": true, "status": 200 },
+    { "name": "center-vi", "path": "/hoat-dong/co-so/tre-xanh/", "lang": "vi", "page": "center", "lit": true, "status": 200 },
+    { "name": "center-en", "path": "/en/our-work/centers/green-bamboo/", "lang": "en", "page": "center", "lit": true, "status": 200 },
+    { "name": "program-vi", "path": "/hoat-dong/du-an/cung-vuon-len/", "lang": "vi", "page": "program", "lit": true, "status": 200 },
+    { "name": "program-en", "path": "/en/our-work/programs/thrive-together/", "lang": "en", "page": "program", "lit": true, "status": 200 },
+    { "name": "involve-vi", "path": "/chung-tay/", "lang": "vi", "page": "involve", "lit": true, "status": 200 },
+    { "name": "involve-en", "path": "/en/get-involved/", "lang": "en", "page": "involve", "lit": true, "status": 200 },
+    { "name": "donate-vi", "path": "/chung-tay/ung-ho/", "lang": "vi", "page": "donate", "lit": false, "status": 200 },
+    { "name": "donate-en", "path": "/en/get-involved/donate/", "lang": "en", "page": "donate", "lit": false, "status": 200 },
+    { "name": "contact-vi", "path": "/lien-he/", "lang": "vi", "page": "contact", "lit": true, "status": 200 },
+    { "name": "contact-en", "path": "/en/contact/", "lang": "en", "page": "contact", "lit": true, "status": 200 },
+    { "name": "gap-vi", "path": "/404.html", "lang": "vi", "page": "gap", "lit": false, "status": 404 },
+    { "name": "gap-en", "path": "/en/404.html", "lang": "en", "page": "gap", "lit": false, "status": 404 }
+  ]
+}

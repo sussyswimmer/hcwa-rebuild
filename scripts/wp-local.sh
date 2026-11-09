@@ -60,6 +60,12 @@ Usage: scripts/wp-local.sh <command> [arguments]
                              again: seeded posts are updated, never duplicated.
   smoke <name> [-- args]     Browser check of every seeded URL at 390 and 1440 wide
                              (scripts/wp-smoke.py). Needs the instance running.
+  parity <name> [-- args]    The built prototype and this instance side by side
+                             (scripts/wp-parity/run.py): structure, text, links and
+                             screenshots per section, the prototype's own browser checks,
+                             world, budgets. Reads the instance, never changes it. Args:
+                             --quick, --full, --only home, --production-asserts.
+                             Report in qa/wp-port/parity/<date>-<time>/.
   env <name> <type>          Environment type: local, staging or production.
                              production hides unverified figures and pending chips.
   wp <name> -- <args>        Run WP-CLI against the instance, e.g.
@@ -699,6 +705,21 @@ cmd_smoke() {
 	"$(python_bin)" -I "$REPO/scripts/wp-smoke.py" "${args[@]}" "$@"
 }
 
+# The parity driver (docs/plan/11-WP-PORT.md section 5). It only reads the instance: the base URL,
+# seed-urls.json and logs/debug.log. It serves prototype/dist itself and stops that server by PID.
+cmd_parity() {
+	local name=${1:-}
+	check_name "$name"
+	shift
+	[[ "${1:-}" == "--" ]] && shift
+	require_instance "$name"
+	server_pid "$name" >/dev/null || die "'$name' is not running: scripts/wp-local.sh start $name"
+	if [[ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" && -d "$REPO/.playwright-browsers" ]]; then
+		export PLAYWRIGHT_BROWSERS_PATH="$REPO/.playwright-browsers"
+	fi
+	"$(python_bin)" -I "$REPO/scripts/wp-parity/run.py" --base "$(inst_url "$name")" --instance "$(inst_dir "$name")" "$@"
+}
+
 cmd_reset() {
 	local name=${1:-} yes=${2:-}
 	check_name "$name"
@@ -743,6 +764,7 @@ main() {
 		env) cmd_env "$@" ;;
 		seed) cmd_seed "$@" ;;
 		smoke) cmd_smoke "$@" ;;
+		parity) cmd_parity "$@" ;;
 		reset) cmd_reset "$@" ;;
 		list) cmd_list ;;
 		help | -h | --help) usage ;;

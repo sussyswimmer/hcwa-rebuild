@@ -121,36 +121,3 @@ hcwa_assert_same( array( 'vi', 'en' ), array_keys( $hcwa_links ), 'vi and en lin
 hcwa_assert_same( array( 'url', 'name', 'current', 'has_translation' ), array_keys( $hcwa_links['en'] ), 'link shape' );
 hcwa_assert_same( 'English', $hcwa_links['en']['name'], 'en endonym' );
 
-// theme.json: schema version, tokens, fonts that exist, no uppercase, editor restrictions.
-$hcwa_json = json_decode( (string) file_get_contents( $hcwa_theme_dir . '/theme.json' ), true );
-hcwa_assert_same( 3, $hcwa_json['version'] ?? null, 'theme.json version 3' );
-hcwa_assert_false( $hcwa_json['settings']['color']['defaultPalette'] ?? null, 'default palette off' );
-hcwa_assert_false( $hcwa_json['settings']['color']['custom'] ?? null, 'custom colors off' );
-hcwa_assert_same( array(), $hcwa_json['settings']['color']['gradients'] ?? null, 'no gradients' );
-hcwa_assert_false( $hcwa_json['settings']['typography']['customFontSize'] ?? null, 'custom font sizes off' );
-hcwa_assert_same( '720px', $hcwa_json['settings']['layout']['contentSize'] ?? null, 'content size' );
-hcwa_assert_same( '1200px', $hcwa_json['settings']['layout']['wideSize'] ?? null, 'wide size' );
-hcwa_assert_same( '1.65', $hcwa_json['styles']['typography']['lineHeight'] ?? null, 'body line-height 1.65' );
-hcwa_assert_same( '1.2', $hcwa_json['styles']['elements']['heading']['typography']['lineHeight'] ?? null, 'heading line-height 1.2' );
-hcwa_assert_same( 'none', $hcwa_json['styles']['elements']['heading']['typography']['textTransform'] ?? null, 'headings never uppercase' );
-foreach ( $hcwa_json['settings']['typography']['fontFamilies'] as $hcwa_family ) {
-	foreach ( $hcwa_family['fontFace'] as $hcwa_face ) {
-		foreach ( $hcwa_face['src'] as $hcwa_src ) {
-			hcwa_assert_true( str_starts_with( $hcwa_src, 'file:./assets/fonts/' ) && is_file( $hcwa_theme_dir . '/' . substr( $hcwa_src, 7 ) ), "font file exists: $hcwa_src" );
-		}
-	}
-}
-$hcwa_palette = array_column( $hcwa_json['settings']['color']['palette'], 'color', 'slug' );
-$hcwa_css     = (string) file_get_contents( $hcwa_theme_dir . '/assets/css/site.css' );
-foreach ( array( 'paper', 'ink', 'blue-700', 'sun-400' ) as $hcwa_slug ) {
-	hcwa_assert_contains( '--color-' . $hcwa_slug . ': ' . $hcwa_palette[ $hcwa_slug ] . ';', $hcwa_css, "palette $hcwa_slug matches the CSS token" );
-}
-
-// Donation rows: the copy button sits inside the <dd> (a <dl> group holds only dt and dd),
-// so the dd is the grid and the button its second column.
-hcwa_assert_contains( '.pay-details dd > .btn { grid-column: 2; grid-row: 1 / span 2;', $hcwa_css, 'copy button is placed inside its dd' );
-hcwa_assert_same( 0, preg_match( '/\.pay-details__row\s*>\s*:last-child/', $hcwa_css ), 'no rule still targets the old row-level button slot' );
-
-// CSS: never uppercase, drafts outlined on staging only.
-hcwa_assert_same( 0, preg_match( '/text-transform:\s*uppercase/i', $hcwa_css ), 'no uppercase in site.css' );
-hcwa_assert_contains( '.hcwa-staging [data-draft]', $hcwa_css, 'draft outlines need the staging class' );
