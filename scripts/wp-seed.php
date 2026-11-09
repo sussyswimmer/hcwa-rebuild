@@ -1322,8 +1322,10 @@ function hcwa_seed_news_tags( array $work, array $centers ): array {
 /**
  * The unit logos the prototype has (prototype/public/img/unit-<id>.png: today only Green
  * Bamboo's), uploaded once as each center's hcwa_logo_id, which the center page's lit header
- * prints (11-WP-PORT.md 2.5 P2). A logo is not a photo of a child; it is printed without the
- * photo approval, like partner logos (contract rule 5).
+ * prints (11-WP-PORT.md 2.5 P2). The logo is center media, so it passes the photo gate
+ * (contract rule 2, hcwa_center_header_html()): the seed marks these files approved for web,
+ * because each is the prototype's own drawn emblem, not a photo. Any other upload staff pick
+ * as a unit logo needs the approval like every photo.
  *
  * @param array $centers hcwa_seed_centers() result.
  */
@@ -1368,6 +1370,14 @@ function hcwa_seed_unit_logos( array $centers ): void {
 			$logo = (int) $logo;
 			hcwa_seed_meta( $logo, array( '_hcwa_seed_id' => $seed_id ) );
 		}
+		// The prototype's drawn emblem, not a photo: approved for web, never identifiable.
+		hcwa_seed_meta(
+			$logo,
+			array(
+				'hcwa_approved_for_web'   => true,
+				'hcwa_identifiable_child' => false,
+			)
+		);
 		foreach ( $pair as $post_id ) {
 			hcwa_seed_meta( (int) $post_id, array( 'hcwa_logo_id' => $logo ) );
 		}

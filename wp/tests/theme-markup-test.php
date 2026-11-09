@@ -284,6 +284,11 @@ foreach ( $GLOBALS['hcwa_test']['hooks']['redirect_canonical'] ?? array() as $hc
 hcwa_assert_true( $hcwa_hooked, 'redirect: the filter is on redirect_canonical' );
 
 // ---------- A refused photo shown by a post_type query (fix round 1) ----------
+$hcwa_theme_dir = dirname( __DIR__ ) . '/themes/hcwa-2026';
+require_once $hcwa_theme_dir . '/inc/strings.php';
+require_once $hcwa_theme_dir . '/inc/core-bridge.php';
+require_once $hcwa_theme_dir . '/inc/template-tags.php';
+require_once $hcwa_theme_dir . '/inc/setup.php';
 // ?post_type=attachment&p=40 (and page_id, name, post_type[]) makes WP_Query set is_single,
 // not is_attachment; the refusal reads the queried object, so each one is a 404 too.
 $hcwa_404_query = static function () {
@@ -334,3 +339,138 @@ hcwa_assert_true( $hcwa_refuse_hook, 'the attachment template filter is on singl
 $GLOBALS['hcwa_test']['is']         = $hcwa_saved_is;
 $GLOBALS['hcwa_test']['query_vars'] = array();
 unset( $GLOBALS['hcwa_test']['queried'], $GLOBALS['wp_query'], $GLOBALS['hcwa_test']['status'] );
+
+// ---------- The center logo goes through the photo gate (contract rule 2, fix round 1) ----------
+hcwa_test_post( array( 'ID' => 375, 'post_type' => 'attachment', 'post_mime_type' => 'image/png' ), array() );
+hcwa_test_post( array( 'ID' => 376, 'post_type' => 'attachment', 'post_mime_type' => 'image/png' ), array( 'hcwa_approved_for_web' => '1' ) );
+hcwa_test_post( array( 'ID' => 377, 'post_type' => 'attachment', 'post_mime_type' => 'image/png' ), array( 'hcwa_approved_for_web' => '1', 'hcwa_identifiable_child' => '1' ) );
+$hcwa_logo_center = static function ( int $id, int $logo, string $unit = 'green-bamboo', bool $protected = false ): WP_Post {
+	return hcwa_test_post(
+		array( 'ID' => $id, 'post_type' => 'hcwa_center', 'post_title' => 'Center ' . $id ),
+		array(
+			'hcwa_logo_id'      => $logo,
+			'hcwa_accent'       => $unit,
+			'hcwa_no_identifiable_children' => $protected ? '1' : '',
+			'hcwa_logo_alt'     => 'Logo',
+		)
+	);
+};
+hcwa_assert_same( '', hcwa_center_logo_html( $hcwa_logo_center( 380, 375 ) ), 'logo: an upload that is not approved for web prints nothing' );
+hcwa_assert_same( '', hcwa_center_logo_html( $hcwa_logo_center( 381, 0 ) ), 'logo: no logo, nothing' );
+hcwa_assert_same( '', hcwa_center_logo_html( $hcwa_logo_center( 382, 9999 ) ), 'logo: a missing file, nothing' );
+$hcwa_logo = hcwa_center_logo_html( $hcwa_logo_center( 383, 376 ) );
+hcwa_assert_same( 1, preg_match( '#^<img class="lit-head__logo" src="https://hcwa\.test/wp-content/uploads/logo-376\.png" width="56" height="56" alt="[^"]*">$#', $hcwa_logo ), 'logo: an approved logo prints the prototype\'s plain img' );
+hcwa_assert_same( '', hcwa_center_logo_html( $hcwa_logo_center( 384, 377, 'little-rose', true ) ), 'logo: a file marked identifiable never prints on a protected center' );
+hcwa_assert_same( '', hcwa_center_logo_html( $hcwa_logo_center( 385, 377, 'little-rose', false ) ), 'logo: the Little Rose unit counts as protected even without its flag (fails closed)' );
+hcwa_assert_contains( 'lit-head__logo', hcwa_center_logo_html( $hcwa_logo_center( 386, 377, 'cau-han', false ) ), 'logo: an identifiable but approved file prints on an ordinary center (rule 2)' );
+// A program is protected when any of its centers is, read from hcwa_center_ids (fix round 1:
+// the old one-item hcwa_center_id named only the first center, Green Bamboo for Thrive Together).
+hcwa_test_post( array( 'ID' => 390, 'post_type' => 'hcwa_program' ), array( 'hcwa_center_ids' => array( 383, 385 ), 'hcwa_center_id' => 383 ) );
+hcwa_test_post( array( 'ID' => 391, 'post_type' => 'hcwa_program' ), array( 'hcwa_center_ids' => array( 383 ) ) );
+hcwa_assert_true( hcwa_image_context_no_identifiable( 390 ), 'program context: run at Little Rose (second in hcwa_center_ids) is protected' );
+hcwa_assert_false( hcwa_image_context_no_identifiable( 391 ), 'program context: run only at an ordinary center is not' );
+$hcwa_sections_src = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks-sections.php' );
+$hcwa_header_src   = substr( $hcwa_sections_src, (int) strpos( $hcwa_sections_src, 'function hcwa_center_header_html' ), 900 );
+hcwa_assert_contains( 'hcwa_center_logo_html( $center )', $hcwa_header_src, 'logo: the center header prints the logo only through the gated helper' );
+hcwa_assert_false( str_contains( $hcwa_header_src, 'wp_get_attachment_image_src' ), 'logo: the header no longer reads the file past the gate' );
+
+// ---------- Links only to pages visitors can open (hcwa_page_url_live(), fix round 1) ----------
+$hcwa_saved_env      = $GLOBALS['hcwa_test']['env'];
+$hcwa_saved_settings = $GLOBALS['hcwa_test']['options']['hcwa_settings'] ?? null;
+hcwa_test_post( array( 'ID' => 600, 'post_type' => 'page', 'post_name' => 'tinh-nguyen', 'post_status' => 'draft' ) );
+hcwa_test_post( array( 'ID' => 601, 'post_type' => 'page', 'post_name' => 'hien-vat', 'post_status' => 'publish' ) );
+hcwa_test_post( array( 'ID' => 602, 'post_type' => 'page', 'post_name' => 'chinh-sach', 'post_status' => 'publish', 'post_password' => 'x' ) );
+$GLOBALS['hcwa_test']['options']['hcwa_settings'] = array( 'page_map' => array( 'volunteer' => 600 ) );
+$GLOBALS['hcwa_test']['page_paths']               = array(
+	'chung-tay/hien-vat'   => 601,
+	've-chung-toi/chinh-sach' => 602,
+);
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_page_url_live( 'volunteer', 'vi' ), 'live URL: a mapped page that is a draft gives no link on production' );
+hcwa_assert_same( hcwa_page_url( 'bakery', 'vi' ), hcwa_page_url_live( 'bakery', 'vi' ), 'live URL: a published page at the default path keeps its link (anchor included)' );
+hcwa_assert_same( '', hcwa_page_url_live( 'safeguarding', 'vi' ), 'live URL: a password-protected page is not linked' );
+hcwa_assert_same( '', hcwa_page_url_live( 'impact', 'vi' ), 'live URL: no page at the default path, no link' );
+hcwa_assert_same( '', hcwa_page_url_live( 'reports', 'vi' ), 'live URL: an anchor key follows its page (Impact)' );
+hcwa_assert_true( '' !== hcwa_page_url_live( 'home', 'vi' ), 'live URL: home is always linked' );
+hcwa_assert_same( '', hcwa_text_link_html( '', 'x' ), 'text link: no target, no link' );
+$hcwa_louver = hcwa_louver_html( array( 'id' => 'volunteer', 'title' => 'Tình nguyện', 'text' => 'x' ) );
+hcwa_assert_false( str_contains( $hcwa_louver, '<a ' ), 'louver: an unpublished way keeps its words without a link' );
+hcwa_assert_false( str_contains( $hcwa_louver, 'louver__go' ), 'louver: and without the arrow that promises one' );
+hcwa_assert_contains( 'Tình nguyện', $hcwa_louver, 'louver: the label stays' );
+hcwa_assert_contains( 'louver__extra', hcwa_louver_html( array( 'id' => 'in-kind', 'title' => 'Hiện vật', 'text' => 'x' ) ), 'louver: the bakery link stays while In-kind is published' );
+$hcwa_dusk = hcwa_dusk_actions_html( array( 'volunteer', 'partner' ) );
+hcwa_assert_same( '', $hcwa_dusk, 'dusk: no button for pages that are not published' );
+hcwa_assert_false( str_contains( hcwa_partners_links_html(), 'href' ), 'partners: no link to unpublished partner pages' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+hcwa_assert_same( hcwa_page_url( 'volunteer', 'vi' ), hcwa_page_url_live( 'volunteer', 'vi' ), 'live URL: staging links every page, as the prototype' );
+hcwa_assert_contains( 'louver__go', hcwa_louver_html( array( 'id' => 'volunteer', 'title' => 'Tình nguyện', 'text' => 'x' ) ), 'louver: staging keeps the link and arrow' );
+$GLOBALS['hcwa_test']['env'] = $hcwa_saved_env;
+if ( null === $hcwa_saved_settings ) {
+	unset( $GLOBALS['hcwa_test']['options']['hcwa_settings'] );
+} else {
+	$GLOBALS['hcwa_test']['options']['hcwa_settings'] = $hcwa_saved_settings;
+}
+unset( $GLOBALS['hcwa_test']['page_paths'] );
+
+// ---------- 2.1 rule 10: the center plate is left out when nothing is left under its heading ----------
+$hcwa_saved_env = $GLOBALS['hcwa_test']['env'];
+$hcwa_plate_c   = hcwa_test_post(
+	array( 'ID' => 620, 'post_type' => 'hcwa_center', 'post_title' => 'Cơ sở X', 'post_status' => 'publish' ),
+	array(
+		'hcwa_accent'       => 'cau-han',
+		'hcwa_who_we_serve' => '[DRAFT: Trẻ em]',
+		'hcwa_what_we_do'   => "[DRAFT: Học]\n[DRAFT: Chơi]",
+		'hcwa_location'     => '[DRAFT: Quận 1]',
+	)
+);
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_center_plate_html( $hcwa_plate_c ), 'plate: production with only draft facts, serves and activities prints no section (no lone heading)' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+// hcwa_center_view() caches per center and request: a second post for the staging view.
+$hcwa_plate = hcwa_center_plate_html( hcwa_test_post( array_merge( (array) $hcwa_plate_c, array( 'ID' => 621 ) ), $GLOBALS['hcwa_test']['post_meta'][620] ) );
+hcwa_assert_contains( '<section class="plate container" aria-labelledby="glance-title">', $hcwa_plate, 'plate: staging prints the section with its draft lines' );
+hcwa_assert_contains( 'plate__statement', $hcwa_plate, 'plate: staging prints the serves line' );
+$GLOBALS['hcwa_test']['env'] = $hcwa_saved_env;
+
+// ---------- 2.1 rule 10: a sun head whose title is left out keeps one H1 ----------
+$hcwa_sun = hcwa_sun_head_html(
+	array(
+		'title' => '',
+		'trail' => array( array( 'Tin tức', 'https://hcwa.test/tin-tuc/' ), array( '' ) ),
+	)
+);
+hcwa_assert_false( str_contains( $hcwa_sun, '<h1 class="sun-head__title"></h1>' ), 'sun head: no empty H1 when the title is left out' );
+hcwa_assert_same( 1, preg_match_all( '#<h1 class="sr-only">[^<]+</h1>#', $hcwa_sun ), 'sun head: one sr-only H1 with the site name instead' );
+hcwa_assert_false( str_contains( $hcwa_sun, 'aria-current' ), 'sun head: the breadcrumb has no empty last item and marks no parent as the current page' );
+hcwa_assert_contains( '<a href="https://hcwa.test/tin-tuc/">Tin tức</a>', $hcwa_sun, 'sun head: the parent stays a link' );
+hcwa_assert_contains( '<h1 class="sun-head__title">Tin tức</h1>', hcwa_sun_head_html( array( 'title' => 'Tin tức' ) ), 'sun head: a title prints as before' );
+
+// ---------- A page's own description (prototype layout() description, fix round 1) ----------
+$hcwa_saved_env = $GLOBALS['hcwa_test']['env'];
+$hcwa_desc_page = hcwa_test_post(
+	array(
+		'ID'           => 630,
+		'post_type'    => 'page',
+		'post_content' => '<!-- wp:hcwa/sections {"lock":{"move":true,"remove":true}} --><!-- wp:hcwa/lit-header {"intro":"[DRAFT: HCWA runs long-term centers &amp; projects.]"} /--><!-- wp:hcwa/day {"variant":"hub"} --><!-- wp:hcwa/work-hub /--><!-- /wp:hcwa/day --><!-- /wp:hcwa/sections -->',
+	)
+);
+$GLOBALS['hcwa_test']['env'] = 'staging';
+hcwa_assert_same( array( 'text' => 'HCWA runs long-term centers & projects.', 'draft' => true ), hcwa_page_description( $hcwa_desc_page ), 'description: staging prints the intro without the draft brackets, entities decoded' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_page_description( $hcwa_desc_page )['text'], 'description: production leaves a draft intro out' );
+hcwa_assert_same( 'Ready intro.', hcwa_page_description( hcwa_test_post( array( 'ID' => 631, 'post_type' => 'page', 'post_content' => '<!-- wp:hcwa/sections --><!-- wp:hcwa/sun-head {"intro":"Ready intro."} /--><!-- /wp:hcwa/sections -->' ) ) )['text'], 'description: a sun head intro that is ready prints on production' );
+hcwa_assert_same( 'Trẻ em', hcwa_page_description( hcwa_test_post( array( 'ID' => 632, 'post_type' => 'hcwa_center' ), array( 'hcwa_who_we_serve' => 'Trẻ em' ) ) )['text'], 'description: a center describes whom it serves' );
+hcwa_assert_same( 'A program.', hcwa_page_description( hcwa_test_post( array( 'ID' => 633, 'post_type' => 'hcwa_program' ), array( 'hcwa_summary' => 'A program.' ) ) )['text'], 'description: a program prints its summary' );
+hcwa_assert_same( '', hcwa_page_description( hcwa_test_post( array( 'ID' => 634, 'post_type' => 'page', 'post_content' => '<!-- wp:paragraph --><p>About</p><!-- /wp:paragraph -->' ) ) )['text'], 'description: an ordinary page has none of its own here (the theme uses its excerpt)' );
+hcwa_assert_same( '', hcwa_page_description( 9999 )['text'], 'description: no post, none' );
+$GLOBALS['hcwa_test']['env'] = $hcwa_saved_env;
+$hcwa_saved_is                  = $GLOBALS['hcwa_test']['is'] ?? array();
+$GLOBALS['hcwa_test']['env']     = 'staging';
+$GLOBALS['hcwa_test']['is']      = array( 'is_singular' => true );
+$GLOBALS['hcwa_test']['queried'] = $hcwa_desc_page;
+hcwa_assert_same( 'HCWA runs long-term centers & projects.', hcwa_theme_own_description(), 'theme description: the queried sections page\'s intro' );
+$GLOBALS['hcwa_test']['is'] = array( 'is_404' => true );
+hcwa_assert_same( hcwa_theme_t( 'nf_text' ), hcwa_theme_own_description(), 'theme description: the 404 text on the not-found page (prototype nf_text)' );
+$GLOBALS['hcwa_test']['is'] = $hcwa_saved_is;
+$GLOBALS['hcwa_test']['env'] = $hcwa_saved_env;
+unset( $GLOBALS['hcwa_test']['queried'] );

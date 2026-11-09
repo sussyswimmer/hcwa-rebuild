@@ -59,7 +59,7 @@ Port checks (docs/plan/11-WP-PORT.md 5.7), on every seeded view unless --legacy:
     section, no # link without its target, no empty tel: or mailto: link
   - not production: the Contact form submitted without JavaScript answers 200 on the same
     path with no query string
-  - --unpublished <file>: every URL listed answers 404
+  - --unpublished <file>: every URL listed answers 404 (and is dropped from the pages checked)
   - the refused Little Rose photo: /?attachment_id=, /?p= and /?page_id= with its id, the
     same through post_type=attachment (p, page_id, name, and post_type[]), and /?attachment=
     with its slug all answer 404 with no Location header
@@ -809,6 +809,13 @@ def unpublished_probes(paths: list[str]) -> list[dict]:
     return out
 
 
+def without_unpublished(targets: list[dict], gone: list[dict]) -> list[dict]:
+    """The seeded pages minus the ones the production procedure unpublished (5.9 step 2): those
+    must answer 404 now (their probes check it), so they are no longer pages to render."""
+    paths = {g["path"] for g in gone}
+    return [t for t in targets if t["path"] not in paths]
+
+
 def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
     """HTTP-only checks built from the seed's URL list: embeds off, the media REST route
     closed to visitors (core routes REST case-insensitively, so an upper-case variant
@@ -1080,7 +1087,9 @@ def main() -> int:
     if args.unpublished:
         listed = json.loads(args.unpublished.read_text(encoding="utf-8"))
         listed = listed.get("urls", []) if isinstance(listed, dict) else listed
-        probes += unpublished_probes([str(u) for u in listed])
+        gone = unpublished_probes([str(u) for u in listed])
+        probes += gone
+        targets = without_unpublished(targets, gone)
     if args.only:
         targets = [t for t in targets if any(o in str(t.get("id", "")) or o in t["path"] for o in args.only)]
         probes = [p for p in probes if any(o in p["id"] or o in p["path"] for o in args.only)]

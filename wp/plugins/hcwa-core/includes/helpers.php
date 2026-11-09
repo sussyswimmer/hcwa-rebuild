@@ -322,6 +322,59 @@ function hcwa_page_url( string $key, ?string $lang = null ): string {
 }
 
 /**
+ * Whether a logical page is published in a language: the page chosen in Settings → HCWA
+ * (followed to its translation), else a published page at the default path. The home page
+ * always is. A password counts as not published. (get_page_by_path() caches its lookup.)
+ *
+ * @param string      $key  Logical page key (see hcwa_page_paths()).
+ * @param string|null $lang 'vi' or 'en'; defaults to the current language.
+ */
+function hcwa_page_is_published( string $key, ?string $lang = null ): bool {
+	$lang  = hcwa_normalize_lang( $lang ?? hcwa_lang() );
+	$paths = hcwa_page_paths();
+	if ( ! isset( $paths[ $key ] ) ) {
+		return false;
+	}
+	$base_key = $paths[ $key ]['base'] ?? $key;
+	if ( 'home' === $base_key ) {
+		return true;
+	}
+
+	$map     = hcwa_setting( 'page_map', array() );
+	$page_id = is_array( $map ) ? absint( $map[ $base_key ] ?? 0 ) : 0;
+	if ( ! $page_id && 'news' === $base_key ) {
+		$page_id = (int) get_option( 'page_for_posts' );
+	}
+	if ( $page_id ) {
+		$target = hcwa_translation_id( $page_id, $lang );
+		$live   = $target > 0 && 'publish' === get_post_status( $target ) && '' === (string) get_post_field( 'post_password', $target );
+	} else {
+		$path = trim( (string) $paths[ $base_key ][ $lang ], '/' );
+		$path = 'en' === $lang ? (string) preg_replace( '#^en(?:/|$)#', '', $path ) : $path;
+		$page = '' !== $path ? get_page_by_path( $path, OBJECT, 'page' ) : null;
+		$live = $page instanceof WP_Post && 'publish' === $page->post_status && '' === (string) get_post_field( 'post_password', $page );
+	}
+	return $live;
+}
+
+/**
+ * hcwa_page_url() for links that may only point at a page visitors can open: on the live
+ * site '' when the page is not published (the 11-WP-PORT.md 5.9 procedure unpublishes the
+ * pages whose own text is still draft, such as Volunteer, Partner, In-kind, Impact and
+ * Policies), so callers leave the link out or print its label unlinked. Off production it
+ * is hcwa_page_url(): staging links every page, as the prototype does.
+ *
+ * @param string      $key  Logical page key (see hcwa_page_paths()).
+ * @param string|null $lang 'vi' or 'en'; defaults to the current language.
+ */
+function hcwa_page_url_live( string $key, ?string $lang = null ): string {
+	if ( hcwa_is_production() && ! hcwa_page_is_published( $key, $lang ) ) {
+		return '';
+	}
+	return hcwa_page_url( $key, $lang );
+}
+
+/**
  * The 'hcwa_lang_notice' query argument set by the language switch on an untranslated
  * news post: the language the visitor asked for ('vi' or 'en'), or ''.
  */

@@ -114,7 +114,7 @@ function hcwa_render_corridor( array $a ): string {
 		$c = hcwa_center_view( $post );
 		if ( $c['protected'] && ! $allowed ) {
 			$words .= "\n          " . '<p class="bay__note"' . hcwa_draft_attr( $c['name']['draft'] || $note['draft'] ) . '>' . esc_html( trim( $c['name']['text'] . '. ' . $note['text'] ) ) . '</p>'
-				. "\n          " . '<p class="bay__links">' . hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>';
+				. "\n          " . '<p class="bay__links">' . hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url_live( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>';
 			continue;
 		}
 		$bays[] = $c;
@@ -127,7 +127,7 @@ function hcwa_render_corridor( array $a ): string {
 		$spill  = $lr ? 'var(--color-sun-100)' : $c['color'];
 		$still  = $allowed ? 'bay-' . $c['key'] : 'door-' . $c['key'];
 		$links  = $lr
-			? hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url( 'bakery' ), hcwa_t( 'bakery' ) )
+			? hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url_live( 'bakery' ), hcwa_t( 'bakery' ) )
 			: hcwa_text_link_html( $c['url'], hcwa_t( 'visitCenter' ) );
 		$since  = null !== $c['since'] ? '<p class="bay__since"' . hcwa_draft_attr( $c['since']['draft'] ) . '>' . esc_html( $c['since']['text'] ) . '</p>' : '';
 		$serves = '' !== $c['serves']['text'] ? '<p class="bay__serves"' . hcwa_draft_attr( $c['serves']['draft'] ) . '>' . esc_html( $c['serves']['text'] ) . '</p>' : '';
@@ -218,7 +218,7 @@ function hcwa_plaques_html(): string {
 	}
 	return '<div class="plaques" role="group" aria-label="' . esc_attr( hcwa_t( 'impact' ) ) . '">' . "\n    "
 		. '<ul class="plaques__row">' . $items . '</ul>' . "\n    "
-		. '<a class="plaques__link text-link" href="' . esc_url( hcwa_page_url( 'impact' ) ) . '"><span>' . esc_html( hcwa_t( 'seeImpact' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>' . "\n  "
+		. ( '' !== hcwa_page_url_live( 'impact' ) ? '<a class="plaques__link text-link" href="' . esc_url( hcwa_page_url_live( 'impact' ) ) . '"><span>' . esc_html( hcwa_t( 'seeImpact' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>' : '' ) . "\n  "
 		. '</div>';
 }
 
@@ -374,7 +374,7 @@ function hcwa_render_news_latest( array $a ): string {
 		. '<div class="news__list" data-reveal>' . "\n      "
 		. '<h2 class="wall__title" id="latest-title">' . esc_html( hcwa_vi_keep( hcwa_t( 'latest' ) ) ) . '</h2>' . "\n      "
 		. '<ol class="dated-list">' . $rows . '</ol>' . "\n      "
-		. '<a class="news__all text-link" href="' . esc_url( hcwa_page_url( 'news' ) ) . '"><span>' . esc_html( hcwa_t( 'allNews' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>' . "\n    "
+		. ( '' !== hcwa_page_url_live( 'news' ) ? '<a class="news__all text-link" href="' . esc_url( hcwa_page_url_live( 'news' ) ) . '"><span>' . esc_html( hcwa_t( 'allNews' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>' : '' ) . "\n    "
 		. '</div>' . "\n    "
 		. $story . "\n  "
 		. '</div>' . "\n"
@@ -504,12 +504,22 @@ function hcwa_render_partner_wall( array $a ): string {
 		. '<div class="container partners__inner" data-reveal>' . "\n    "
 		. $h2 . "\n    "
 		. $body . "\n    "
-		. '<p class="partners__links">' . "\n    "
-		. hcwa_text_link_html( hcwa_page_url( 'partners' ), hcwa_t( 'partners' ) ) . "\n    "
-		. hcwa_text_link_html( hcwa_page_url( 'partner' ), hcwa_t( 'becomePartner' ) ) . "\n  "
-		. '</p>' . "\n  "
+		. hcwa_partners_links_html() . "\n  "
 		. '</div>' . "\n"
 		. '</section>';
+}
+
+/**
+ * p.partners__links: the partners page and the partner page, each only when visitors can
+ * open it (hcwa_page_url_live()); '' when neither is published.
+ */
+function hcwa_partners_links_html(): string {
+	$links = hcwa_text_link_html( hcwa_page_url_live( 'partners' ), hcwa_t( 'partners' ) );
+	$more  = hcwa_text_link_html( hcwa_page_url_live( 'partner' ), hcwa_t( 'becomePartner' ) );
+	if ( '' === $links . $more ) {
+		return '';
+	}
+	return '<p class="partners__links">' . "\n    " . $links . "\n    " . $more . "\n  " . '</p>';
 }
 
 /**
@@ -527,16 +537,18 @@ function hcwa_dusk_actions_html( array $actions, string $partner_label = '' ): s
 				$buttons[] = array( hcwa_page_url( 'donate' ), hcwa_t( 'donate' ), 'primary' );
 				break;
 			case 'volunteer':
-				$buttons[] = array( hcwa_page_url( 'volunteer' ), hcwa_t( 'volunteer' ), 'on-dusk' );
+				$buttons[] = array( hcwa_page_url_live( 'volunteer' ), hcwa_t( 'volunteer' ), 'on-dusk' );
 				break;
 			case 'partner':
-				$buttons[] = array( hcwa_page_url( 'partner' ), '' !== $partner_label ? $partner_label : hcwa_t( 'partnerWithUs' ), 'on-dusk' );
+				$buttons[] = array( hcwa_page_url_live( 'partner' ), '' !== $partner_label ? $partner_label : hcwa_t( 'partnerWithUs' ), 'on-dusk' );
 				break;
 			case 'contact':
 				$buttons[] = array( hcwa_page_url( 'contact' ), hcwa_t( 'contactUs' ), 'on-dusk' );
 				break;
 		}
 	}
+	// A page that is not published on the live site gets no button (hcwa_page_url_live()).
+	$buttons = array_values( array_filter( $buttons, static fn( array $b ): bool => '' !== $b[0] ) );
 	if ( ! $buttons ) {
 		return '';
 	}
@@ -802,7 +814,7 @@ function hcwa_door_html( array $c, string $still, string $sizes ): string {
 		. ( ! $lr && '' !== $c['location']['text'] ? '<p class="door__where"' . hcwa_draft_attr( $c['location']['draft'] ) . '>' . hcwa_icon( 'pin', 'icon door__pin' ) . esc_html( $c['location']['text'] ) . '</p>' : '' ) . "\n    "
 		. ( $lr && '' !== $note['text'] ? '<p class="door__note"' . hcwa_draft_attr( $note['draft'] ) . '>' . esc_html( $note['text'] ) . '</p>' : '' ) . "\n    "
 		. '<p class="door__go" aria-hidden="true"><span>' . esc_html( hcwa_t( $lr ? 'aboutShelter' : 'visitCenter' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</p>' . "\n    "
-		. ( $lr ? '<p class="door__extra">' . hcwa_text_link_html( hcwa_page_url( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>' : '' ) . "\n  "
+		. ( $lr && '' !== hcwa_page_url_live( 'bakery' ) ? '<p class="door__extra">' . hcwa_text_link_html( hcwa_page_url_live( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>' : '' ) . "\n  "
 		. '</div>' . "\n"
 		. '</li>';
 }
@@ -848,7 +860,7 @@ function hcwa_render_work_hub( array $a ): string {
 		if ( $c['protected'] && ! $allowed ) {
 			$note   = hcwa_little_rose_note();
 			$words .= "\n      " . '<p class="places__lead"' . hcwa_draft_attr( $c['name']['draft'] || $note['draft'] ) . '>' . esc_html( trim( $c['name']['text'] . '. ' . $note['text'] ) ) . '</p>'
-				. "\n      " . '<p class="door__extra">' . hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>';
+				. "\n      " . '<p class="door__extra">' . hcwa_text_link_html( $c['url'], hcwa_t( 'aboutShelter' ) ) . hcwa_text_link_html( hcwa_page_url_live( 'bakery' ), hcwa_t( 'bakery' ) ) . '</p>';
 			continue;
 		}
 		$centers[] = $c;
@@ -1162,12 +1174,17 @@ function hcwa_render_donation_methods( array $a ): string {
 	if ( '' !== $grid ) {
 		$out .= "\n  " . '<div class="give-grid container">' . $grid . "\n  </div>";
 	}
+	// Each trust item links only when visitors can open its page (hcwa_page_url_live()); on
+	// the live site an unpublished one keeps its words without a link, so the list Donate
+	// shows on production (11-WP-PORT.md 3.5) never points at a 404.
+	$trust = '';
+	foreach ( array( 'reports' => 'annualReports', 'safeguarding' => 'safeguarding', 'privacy' => 'privacy' ) as $key => $label ) {
+		$link   = hcwa_text_link_html( hcwa_page_url_live( $key ), hcwa_t( $label ) );
+		$trust .= "\n      " . '<li>' . ( '' !== $link ? $link : '<span>' . esc_html( hcwa_t( $label ) ) . '</span>' ) . '</li>';
+	}
 	$out .= "\n  " . '<nav class="trust container" aria-labelledby="trust-title">' . "\n    "
 		. '<h2 class="trust__title" id="trust-title">' . esc_html( hcwa_t( 'trust' ) ) . '</h2>' . "\n    "
-		. '<ul class="trust__list">' . "\n      "
-		. '<li>' . hcwa_text_link_html( hcwa_page_url( 'reports' ), hcwa_t( 'annualReports' ) ) . '</li>' . "\n      "
-		. '<li>' . hcwa_text_link_html( hcwa_page_url( 'safeguarding' ), hcwa_t( 'safeguarding' ) ) . '</li>' . "\n      "
-		. '<li>' . hcwa_text_link_html( hcwa_page_url( 'privacy' ), hcwa_t( 'privacy' ) ) . '</li>' . "\n    "
+		. '<ul class="trust__list">' . $trust . "\n    "
 		. '</ul>' . "\n  "
 		. '</nav>';
 	return $out;
@@ -1525,7 +1542,7 @@ function hcwa_related_news_html( int $post_id, string $id ): string {
 	return '<section class="related container" aria-labelledby="' . esc_attr( $id ) . '">' . "\n  "
 		. '<h2 class="related__title" id="' . esc_attr( $id ) . '" data-reveal="rise"><span>' . esc_html( hcwa_t( 'relatedNews' ) ) . '</span></h2>' . "\n  "
 		. '<ol class="dated-list related__list" data-reveal="stagger">' . implode( '', array_map( 'hcwa_dated_post_html', $posts ) ) . '</ol>' . "\n  "
-		. '<p class="related__all">' . hcwa_text_link_html( hcwa_page_url( 'news' ), hcwa_t( 'allNews' ) ) . '</p>' . "\n"
+		. '<p class="related__all">' . hcwa_text_link_html( hcwa_page_url_live( 'news' ), hcwa_t( 'allNews' ) ) . '</p>' . "\n"
 		. '</section>';
 }
 
@@ -1582,27 +1599,49 @@ function hcwa_center_contact_printable( int $center_id, array $text ): bool {
 }
 
 /**
+ * The center's logo in its lit header (img.lit-head__logo, 56 by 56, as the prototype).
+ * The logo is center media (contract rule 2, hcwa_center_media_ids()), so it prints only
+ * when the photo gate allows it in the center's context: approved for web, and on a
+ * protected center not marked as showing an identifiable child. The markup stays the
+ * prototype's plain <img> (no srcset or loading attributes), with the current language's
+ * translation of the file when Polylang has one. '' when there is none or it is refused.
+ *
+ * @param WP_Post $center Center.
+ */
+function hcwa_center_logo_html( WP_Post $center ): string {
+	$logo_id = (int) get_post_meta( $center->ID, 'hcwa_logo_id', true );
+	if ( $logo_id <= 0 || ! hcwa_image_allowed( $logo_id, $center ) ) {
+		return '';
+	}
+	$display_id = $logo_id;
+	if ( function_exists( 'pll_get_post' ) ) {
+		$translated = (int) pll_get_post( $logo_id, hcwa_lang() );
+		$display_id = $translated > 0 ? $translated : $logo_id;
+	}
+	$src = wp_get_attachment_image_src( $display_id, 'full' );
+	if ( ! is_array( $src ) || '' === (string) ( $src[0] ?? '' ) ) {
+		return '';
+	}
+	$alt = hcwa_meta_text( $center->ID, 'hcwa_logo_alt' );
+	return '<img class="lit-head__logo" src="' . esc_url( (string) $src[0] ) . '" width="56" height="56" alt="' . esc_attr( $alt['text'] ) . '">';
+}
+
+/**
  * The lit header of a center page.
  *
  * @param WP_Post $center Center.
  */
 function hcwa_center_header_html( WP_Post $center ): string {
 	$c     = hcwa_center_view( $center );
-	$logo  = '';
-	$logo_id = (int) get_post_meta( $center->ID, 'hcwa_logo_id', true );
-	$src   = $logo_id > 0 ? wp_get_attachment_image_src( $logo_id, 'full' ) : false;
-	if ( is_array( $src ) ) {
-		$alt  = hcwa_meta_text( $center->ID, 'hcwa_logo_alt' );
-		$logo = '<img class="lit-head__logo" src="' . esc_url( (string) $src[0] ) . '" width="56" height="56" alt="' . esc_attr( $alt['text'] ) . '">';
-	}
 	$facts = '';
+	$meta  = hcwa_center_logo_html( $center );
 	if ( null !== $c['since'] ) {
 		$facts .= "\n      " . '<span' . hcwa_draft_attr( $c['since']['draft'] ) . '>' . esc_html( $c['since']['text'] ) . '</span>';
 	}
 	if ( ! $c['protected'] && '' !== $c['location']['text'] ) {
 		$facts .= "\n      " . '<span' . hcwa_draft_attr( $c['location']['draft'] ) . '>' . hcwa_icon( 'pin' ) . esc_html( $c['location']['text'] ) . '</span>';
 	}
-	$meta = $logo . ( '' !== $facts ? "\n    " . '<p class="lit-head__facts">' . $facts . "\n    </p>" : '' );
+	$meta .= '' !== $facts ? "\n    " . '<p class="lit-head__facts">' . $facts . "\n    </p>" : '';
 	return hcwa_lit_header_html(
 		array(
 			'still'      => (string) get_post_meta( $center->ID, 'hcwa_header_still', true ),
@@ -1637,6 +1676,11 @@ function hcwa_center_plate_html( WP_Post $center ): string {
 	$does = '';
 	foreach ( hcwa_meta_text_lines( $center->ID, 'hcwa_what_we_do' ) as $line ) {
 		$does .= '<li' . hcwa_draft_attr( $line['draft'] ) . '>' . esc_html( $line['text'] ) . '</li>';
+	}
+	// 2.1 rule 10: a section left with nothing under its heading is left out (on production
+	// every seeded fact, the serves line and the activities are draft).
+	if ( '' === $facts && '' === $c['serves']['text'] && '' === $does ) {
+		return '';
 	}
 	return '<section class="plate container" aria-labelledby="glance-title">' . "\n    "
 		. '<h2 class="plate__title" id="glance-title">' . esc_html( hcwa_t( 'glance' ) ) . '</h2>' . "\n    "
@@ -1862,7 +1906,7 @@ function hcwa_center_give_html( WP_Post $center ): string {
 		. ( '' !== $needs ? '<ul class="give__needs" data-reveal="stagger">' . $needs . '</ul>' : '' ) . "\n    "
 		. '<div class="give__act">' . "\n      "
 		. hcwa_button_html( add_query_arg( 'center', $c['key'], hcwa_page_url( 'donate' ) ), '' !== $label['text'] ? $label['text'] : hcwa_t( 'donate' ), 'primary', '', 'give__btn' ) . "\n      "
-		. hcwa_text_link_html( hcwa_page_url( 'volunteer' ), hcwa_t( 'volunteer' ) ) . "\n    "
+		. hcwa_text_link_html( hcwa_page_url_live( 'volunteer' ), hcwa_t( 'volunteer' ) ) . "\n    "
 		. '</div>' . "\n  "
 		. '</section>';
 }
@@ -2119,7 +2163,7 @@ function hcwa_program_docs_html( WP_Post $program ): string {
 	}
 	$body = '' !== $rows
 		? '<ul class="docs__list">' . $rows . '</ul>'
-		: '<p class="docs__empty">' . esc_html( hcwa_t( 'noDocuments' ) ) . ' ' . hcwa_text_link_html( hcwa_page_url( 'reports' ), hcwa_t( 'annualReports' ) ) . '</p>';
+		: '<p class="docs__empty">' . esc_html( hcwa_t( 'noDocuments' ) ) . ' ' . hcwa_text_link_html( hcwa_page_url_live( 'reports' ), hcwa_t( 'annualReports' ) ) . '</p>';
 	return '<section class="docs container" aria-labelledby="program-docs">' . "\n    "
 		. '<h2 class="docs__title" id="program-docs" data-reveal="rise"><span>' . esc_html( hcwa_t( 'documents' ) ) . '</span></h2>' . "\n    "
 		. $body . "\n  "

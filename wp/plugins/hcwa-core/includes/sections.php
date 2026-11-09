@@ -350,3 +350,43 @@ function hcwa_render_sections( WP_Post $post ): string {
 function hcwa_is_sections_page( ?WP_Post $post ): bool {
 	return $post instanceof WP_Post && false !== strpos( (string) $post->post_content, '<!-- wp:hcwa/sections' );
 }
+
+/**
+ * A page's own description, as the prototype's layout() prints it in <meta name=description>
+ * and og:description: a sections page's intro (the first hcwa/hero, hcwa/lit-header or
+ * hcwa/sun-head in its hcwa/sections block), a center's "who we serve" line, a program's
+ * summary. Through hcwa_attr_text() and hcwa_draft_text(): off production the inner text of
+ * a draft marker (no "[DRAFT: ]" brackets, as visible text), on production '' while draft.
+ * ['text' => '', 'draft' => false] for anything else.
+ *
+ * @param WP_Post|int|null $post Post (defaults to the current post).
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_page_description( $post = null ): array {
+	$none = array(
+		'text'  => '',
+		'draft' => false,
+	);
+	$post = get_post( $post );
+	if ( ! $post instanceof WP_Post ) {
+		return $none;
+	}
+	$raw = '';
+	if ( 'hcwa_center' === $post->post_type ) {
+		$raw = (string) get_post_meta( $post->ID, 'hcwa_who_we_serve', true );
+	} elseif ( 'hcwa_program' === $post->post_type ) {
+		$raw = (string) get_post_meta( $post->ID, 'hcwa_summary', true );
+	} elseif ( hcwa_is_sections_page( $post ) ) {
+		$sections = hcwa_sections_find( parse_blocks( (string) $post->post_content ) );
+		foreach ( (array) ( $sections['innerBlocks'] ?? array() ) as $block ) {
+			if ( in_array( $block['blockName'] ?? '', array( 'hcwa/hero', 'hcwa/lit-header', 'hcwa/sun-head' ), true ) ) {
+				$raw = is_scalar( $block['attrs']['intro'] ?? null ) ? (string) $block['attrs']['intro'] : '';
+				break;
+			}
+		}
+	}
+	if ( '' === trim( $raw ) ) {
+		return $none;
+	}
+	return hcwa_draft_text( hcwa_attr_text( $raw ) );
+}

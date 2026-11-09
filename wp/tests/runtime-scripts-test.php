@@ -449,6 +449,8 @@ print(json.dumps({
     "probes": [p["path"] for p in smoke.gate_probes([], {"refused_photo": 40})],
     "probesSlug": [p for p in smoke.gate_probes([], {"refused_photo": 40, "refused_photo_file": "hcwa-20261109-v1lzeuoz"}) if "name" in p["id"]],
     "unpublished": smoke.unpublished_probes(["http://h/cau-chuyen-mau/", "/en/sample-story/?x=1"]),
+    "kept": [t["path"] for t in smoke.without_unpublished([{"path": "/"}, {"path": "/cau-chuyen-mau/"}, {"path": "/en/sample-story/"}],
+                                                            smoke.unpublished_probes(["http://h/cau-chuyen-mau/", "/en/sample-story/?x=1"]))],
 }, ensure_ascii=False))
 PY;
 [ $hcwa_code, $hcwa_out, $hcwa_err ] = $hcwa_run( array( $hcwa_python, '-I', '-B', '-c', $hcwa_port_py, $hcwa_repo . '/scripts/wp-smoke.py' ) );
@@ -486,6 +488,7 @@ foreach ( (array) ( $hcwa_result['probesSlug'] ?? array() ) as $hcwa_probe ) {
 	hcwa_assert_same( array( 404, true ), array( $hcwa_probe['status'] ?? null, $hcwa_probe['no_location'] ?? null ), 'probe ' . ( $hcwa_probe['id'] ?? '?' ) . ': 404 with no Location' );
 }
 hcwa_assert_same( array( '/cau-chuyen-mau/', '/en/sample-story/?x=1' ), array_column( (array) ( $hcwa_result['unpublished'] ?? array() ), 'path' ), 'probes: --unpublished URLs must answer 404' );
+hcwa_assert_same( array( '/', '/en/sample-story/' ), $hcwa_result['kept'] ?? null, 'smoke: an unpublished URL is no longer a page to render (the path with a query string is a different URL)' );
 
 // The exported guards come from guards.json once the export has written it, until then from
 // prototype/src/render.mjs through node (which needs prototype/node_modules: render.mjs reaches
@@ -541,7 +544,17 @@ bad = {
 shape = {"good": parity.allow_entry_problems(good, "templates"),
          "pixels empty match": parity.allow_entry_problems(dict(good, kind="pixels", match="", width=["390"], mode="reduced"), "templates"),
          "bad": {k: len(parity.allow_entry_problems(v, "templates")) for k, v in bad.items()}}
+# Frame strips (5.5): positions anchored to section tops; hard lines (7.14) placed in sections.
+pb = [{"key": "main>section#hero.hero", "top": 0, "height": 900}, {"key": "main>section#news.wall", "top": 900, "height": 600},
+      {"key": "main>section#help.wall", "top": 1500, "height": 800}, {"key": "footer", "top": 2300, "height": 500}]
+wb = [{"key": "main>section#hero.hero", "top": 0, "height": 900}, {"key": "main>section#news.wall", "top": 900, "height": 571},
+      {"key": "main>section#help.wall", "top": 1471, "height": 800}, {"key": "footer", "top": 2271, "height": 500}]
+mapped = parity.map_positions(pb, wb, [0, 450, 1000, 1499, 1600, 2300, 3000])
+pl = parity.place_lines([{"y": 900}, {"y": 1450}, {"y": 1500}], pb)
+wl = parity.place_lines([{"y": 900}, {"y": 1421}, {"y": 1471}, {"y": 1800}], wb)
+lines = {"wpOnly": [l["y"] for l in parity.wp_only_lines(pl, wl)], "placed": [[l["section"], l["offset"], l["offsetEnd"]] for l in wl]}
 print(json.dumps({
+    "mapped": mapped, "lines": lines,
     "key": parity.line_key("vi-1440-t2: drawing buffers ~33.4 MB <= 48 MB (D6.7)"),
     "missing": [r["text"] for r in cmp["missing"]], "only": cmp["prototypeOnly"], "protoFails": cmp["protoFails"],
     "allowed": [d1["pass"], d1["allowed"]], "plain": [d2["pass"], d2["changes"]],
@@ -562,6 +575,9 @@ hcwa_assert_same( array( 'vi-390-t0: header text contrast 6.1 >= 7' ), $hcwa_par
 hcwa_assert_same( array( true, 1 ), $hcwa_parity['allowed'] ?? null, 'parity: an allow entry drops the line it matches' );
 hcwa_assert_same( array( false, 2 ), $hcwa_parity['plain'] ?? null, 'parity: other differences stay' );
 hcwa_assert_same( 16, $hcwa_parity['routes'] ?? null, 'parity: 16 routes' );
+hcwa_assert_same( array( 0, 450, 1000, 1470, 1571, 2271, 3000 ), $hcwa_parity['mapped'] ?? null, 'parity strips: WordPress frames sit at the same offset into the same section, capped at a shorter section' );
+hcwa_assert_same( array( 1800 ), $hcwa_parity['lines']['wpOnly'] ?? null, 'parity 7.14: a hard line only WordPress has is reported; lines at the same offset from the section top or bottom are not' );
+hcwa_assert_same( array( array( 'main>section#news.wall', 0, 571 ), array( 'main>section#news.wall', 521, 50 ), array( 'main>section#help.wall', 0, 800 ), array( 'main>section#help.wall', 329, 471 ) ), $hcwa_parity['lines']['placed'] ?? null, 'parity 7.14: lines placed by section, offset and distance to the section end' );
 hcwa_assert_same( array( '1440', '390' ), $hcwa_parity['widths'] ?? null, 'parity: 390 and 1440' );
 hcwa_assert_true( in_array( '/en/404.html', (array) ( $hcwa_parity['paths'] ?? array() ), true ) && in_array( '/hoat-dong/co-so/tre-xanh/', (array) ( $hcwa_parity['paths'] ?? array() ), true ), 'parity: the 404 and Green Bamboo routes' );
 hcwa_assert_same( '/assets/main.js', $hcwa_parity['norm'] ?? null, 'parity: dist URLs compare as the prototype names them' );

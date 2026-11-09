@@ -24,7 +24,17 @@ What it does, in order:
     carries ?ver; the same script and style requests as the prototype; no jQuery, Elementor, emoji,
     embed, global-styles or block-library assets.
  5. --full only: frame strips of home (5.5) and mobile LCP through the gzip proxy (5.5, gate 7.11).
+    Strip frames: 24 prototype positions to its footer, and on WordPress the same offsets into the
+    same sections; each shot waits for in-view reveals and transitions to finish; each frame's pixel
+    difference between the sides is recorded and gated at STRIP_SHARE (sections with a pixel allow
+    entry for that route and width excepted).
  6. debug.log of the instance: no new warning, notice or deprecation naming hcwa-2026 or hcwa-core.
+ 7. Gate 7.14 "no hard line between sections" (05-DESIGN 0.5): in the reduced mode the driver also
+    takes a full-page capture of each side and scans it row by row (hard_lines: the colour steps by
+    more than HARD_STEP across HARD_SPAN of the width); a line WordPress has at an offset into a
+    section where the prototype has none fails the view.
+Allow entries (allow-assets.json, allow-templates.json, 5.4) may be scoped with "width" and "mode";
+the driver refuses to start when an entry is malformed (allow_entry_problems).
 Writes report.json, report.html, shots/, strips/ and logs/ to qa/wp-port/parity/<date>-<time>/ and
 exits 1 when any gate fails. At most 2 headless browsers run at a time.
 
@@ -110,6 +120,13 @@ HASHED = re.compile(r"-[A-Za-z0-9_-]{8}(?=\.(?:js|css)$)")
 PIXEL_FAR = 24        # a pixel differs when one channel is off by more than this (0-255)
 PIXEL_SHARE = 1.0     # percent of differing pixels a section may have
 HEIGHT_SLACK = 2      # px
+STRIP_SHARE = 1.0     # percent of differing pixels a home strip frame may have between sides (5.5)
+HARD_STEP = 10.0      # a "hard line" (05-DESIGN 0.5, gate 7.14): rows whose colour steps by more than this
+HARD_SPAN = 0.9       # ... across at least this share of the width, between the 3 rows above and the 3 below
+SECTION_BOXES_JS = """() => [...document.querySelectorAll('[data-parity-section]')].map(e => {
+    const r = e.getBoundingClientRect();
+    return { i: +e.dataset.paritySection, top: Math.round(r.top + scrollY), height: Math.round(r.height) };
+})"""
 BUDGET = {"home_requests": 15, "home_kb": 300, "home_html_gz_kb": 15.5, "head_style_bytes": 1024,
           "world_kb": 190, "home_total_kb": 1024, "inner_requests": 12}
 
@@ -316,6 +333,10 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
                 pass
         data = page.evaluate(SKELETON)
         out.update(data)
+        keys = {sec["index"]: sec["key"] for sec in data.get("sections", [])}
+        out["sectionBoxes"] = [{"key": keys.get(b["i"]), "top": b["top"], "height": b["height"]}
+                               for b in page.evaluate(SECTION_BOXES_JS) if b["height"] > 0 and keys.get(b["i"]) != "menu-sheet"]
+
         out["perf"] = page.evaluate("""() => {
             const nav = performance.getEntriesByType('navigation')[0];
             const load = nav ? nav.loadEventStart : 0;
@@ -323,6 +344,17 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
         }""")
         if shot_dir is not None:
             out["shots"] = shoot_sections(page, data["sections"], shot_dir)
+        if mode == "reduced" and shot_dir is not None:
+            # Gate 7.14 "no hard line between sections": one full page at rest, scanned row by row.
+            # Taken after the section shots: a full-page capture resizes the layout for a moment,
+            # which can flip the header's compact state (header.js's scroll sentinel) before the
+            # header shot. shoot_sections() has hidden the header by now; it is fixed, not a seam.
+            page.evaluate("window.scrollTo(0, 0)")
+            page.wait_for_timeout(300)
+            full = shot_dir / "full-page.png"
+            page.screenshot(path=str(full), full_page=True, animations="disabled", scale="css")
+            out["fullShot"] = str(full)
+            out["hardLines"] = hard_lines(full)
         if mode == "reduced" and width == "390":
             page.set_viewport_size({"width": 320, "height": 640})
             page.wait_for_timeout(400)
@@ -533,6 +565,99 @@ def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str,
     return res
 
 
+def pixel_share(a: str, b: str) -> float | None:
+    """Percent of pixels differing by more than PIXEL_FAR in a channel, over the common area."""
+    if Image is None:
+        return None
+    A, B = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
+    w, h = min(A.width, B.width), min(A.height, B.height)
+    if not w or not h:
+        return 100.0
+    r, g, bl = ImageChops.difference(A.crop((0, 0, w, h)), B.crop((0, 0, w, h))).split()
+    mask = ImageChops.lighter(ImageChops.lighter(r, g), bl).point(lambda v: 255 if v > PIXEL_FAR else 0)
+    return round(100 * mask.histogram()[255] / (w * h), 2)
+
+
+def hard_lines(path, min_step: float = HARD_STEP, span: float = HARD_SPAN) -> list[dict] | None:
+    """Rows of a full-page capture where at least `span` of the columns step by more than
+    `min_step` levels (max channel) between the 3 rows above and the 3 rows below: a straight
+    edge across the page (05-DESIGN 0.5). None without numpy or Pillow."""
+    try:
+        import numpy as np
+    except ImportError:
+        return None
+    if Image is None:
+        return None
+    im = Image.open(path).convert("RGB")
+    W, H = im.size
+    if H < 8:
+        return []
+    a = np.asarray(im.resize((max(1, W // 4), H)), dtype=np.float32)  # columns in groups of 4, rows exact
+    c = np.cumsum(np.pad(a, ((1, 0), (0, 0), (0, 0))), axis=0)
+    ys = np.arange(3, H - 3)
+    step = np.abs((c[ys] - c[ys - 3]) / 3 - (c[ys + 3] - c[ys]) / 3).max(axis=2)
+    share = (step > min_step).mean(axis=1)
+    found, last = [], -10
+    for idx in np.nonzero(share >= span)[0]:
+        y = int(ys[idx])
+        if y - last > 4:
+            found.append({"y": y, "cols": round(float(share[idx]), 2), "step": round(float(np.median(step[idx])), 1)})
+            last = y
+    return found
+
+
+def section_at(y: float, boxes: list[dict]) -> dict | None:
+    """The innermost section box (smallest height) that holds page position y."""
+    inside = [b for b in boxes if b["top"] <= y < b["top"] + b["height"]]
+    return min(inside, key=lambda b: b["height"]) if inside else None
+
+
+def place_lines(lines: list[dict], boxes: list[dict]) -> list[dict]:
+    """Each line with the section it falls in, its offset from that section's top and its
+    distance to that section's bottom."""
+    out = []
+    for ln in lines or []:
+        box = section_at(ln["y"], boxes)
+        out.append(dict(ln, section=box["key"] if box else None,
+                        offset=(ln["y"] - box["top"]) if box else None,
+                        offsetEnd=(box["top"] + box["height"] - ln["y"]) if box else None))
+    return out
+
+
+def wp_only_lines(proto: list[dict], wp: list[dict], tol: int = 3) -> list[dict]:
+    """Lines WordPress has that the prototype does not: no prototype line in the same section at
+    the same offset from its top or from its bottom (a section whose content is a few px shorter
+    above the line, an allowed 2.8 difference, keeps the line's distance to the section's end), or,
+    outside sections, at the same page position; all within tol px."""
+    only = []
+    for w in wp:
+        same = any(
+            (w["section"] is not None and p["section"] == w["section"]
+             and (abs(p["offset"] - w["offset"]) <= tol
+                  or abs(p.get("offsetEnd", 10 ** 9) - w.get("offsetEnd", -10 ** 9)) <= tol))
+            or abs(p["y"] - w["y"]) <= tol
+            for p in proto)
+        if not same:
+            only.append(w)
+    return only
+
+
+def map_positions(proto_boxes: list[dict], wp_boxes: list[dict], ys: list[int]) -> list[int]:
+    """The prototype's strip positions on WordPress: the same offset into the same section, so
+    a section that is a few px taller on one side does not shift every later frame (5.5).
+    A position outside every section, or in a section WordPress lacks, stays where it is."""
+    wp = {b["key"]: b for b in wp_boxes}
+    out = []
+    for y in ys:
+        box = section_at(y, proto_boxes)
+        w = wp.get(box["key"]) if box else None
+        if not box or not w:
+            out.append(int(y))
+            continue
+        out.append(int(round(w["top"] + min(y - box["top"], max(0, w["height"] - 1)))))
+    return out
+
+
 def page_checks(route: dict, mode: str, page: dict, three: dict) -> list[str]:
     """Failures of one side's page view that do not need the other side."""
     fails = []
@@ -638,6 +763,12 @@ def compare_view(route: dict, width: str, mode: str, pages: dict, shot_root: Pat
     if a.get("loadError") or b.get("loadError"):
         view["sections"].append({"key": "page", "structure": {"pass": False, "diff": ["load failed"]}})
         return view
+    if a.get("hardLines") is not None and b.get("hardLines") is not None:
+        pl = place_lines(a["hardLines"], a.get("sectionBoxes", []))
+        wl = place_lines(b["hardLines"], b.get("sectionBoxes", []))
+        only = wp_only_lines(pl, wl)
+        view["hardLines"] = {"proto": len(pl), "wp": len(wl), "wpOnly": only, "pass": not only,
+                             "protoShot": a.get("fullShot"), "wpShot": b.get("fullShot")}
     rkey = route["path"]
     shell = diff_lists(a.get("shell", []), b.get("shell", []), "structure", rkey, "body", width, mode)
     view["sections"].append({"key": "body", "structure": shell})
@@ -907,52 +1038,108 @@ def world_and_budgets(browsers, out: Path, full: bool) -> dict:
     return res
 
 
+STRIP_GEO_JS = """() => {
+    const beats = [...document.querySelectorAll('[data-beat]')];
+    const last = beats.length ? beats[beats.length - 1].getBoundingClientRect().top + scrollY : null;
+    const h2 = document.querySelector('#work h2');
+    const foot = document.querySelector('footer');
+    // Section boxes named as skeleton.js names them (main > * and the footer; home has no .day).
+    const skip = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'META']);
+    const seen = new Map(), boxes = [];
+    const keyOf = (el) => {
+        const first = [...el.classList].filter((c) => !c.startsWith('wp-'))[0];
+        let key = 'main>' + el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (first ? '.' + first : '');
+        const n = (seen.get(key) || 0) + 1; seen.set(key, n);
+        return n > 1 ? key + '~' + n : key;
+    };
+    const box = (key, el) => { const r = el.getBoundingClientRect(); boxes.push({ key, top: Math.round(r.top + scrollY), height: Math.round(r.height) }); };
+    const main = document.querySelector('main');
+    for (const child of main ? main.children : []) if (!skip.has(child.tagName)) box(keyOf(child), child);
+    if (foot) box('footer', foot);
+    return { last, h2: h2 ? h2.getBoundingClientRect().top + scrollY : null, vh: innerHeight, boxes,
+             end: foot ? foot.getBoundingClientRect().top + scrollY : document.documentElement.scrollHeight };
+}"""
+
+# Waits until no element still waiting for its reveal is in view and no CSS transition runs
+# (reveals.js: IntersectionObserver plus a 520 ms fade), at most maxMs.
+STRIP_SETTLE_JS = """async (maxMs) => {
+    const t0 = performance.now();
+    const pending = () => [...document.querySelectorAll('.reveal-pending')].some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.bottom > 0 && r.top < innerHeight;
+    });
+    const moving = () => document.getAnimations().some((a) => a.playState === 'running' && typeof CSSTransition !== 'undefined' && a instanceof CSSTransition);
+    await new Promise((r) => setTimeout(r, 250));
+    while (performance.now() - t0 < maxMs && (pending() || moving())) await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return Math.round(performance.now() - t0);
+}"""
+
+
 def frame_strips(browser, out: Path) -> dict:
-    """24 viewport frames from the hero to the footer, paused after world-live, both sides."""
+    """24 viewport frames from the hero to the footer, paused after world-live, both sides (5.5).
+
+    The prototype is captured first at 24 positions spread to its footer top. WordPress is then
+    captured at the same offsets into the same sections (map_positions), so a section that is a
+    few px taller on one side does not shift every later frame. Before each shot the driver waits
+    until no reveal is pending in view and no transition runs (at most 1.5 s). Each frame's pixel
+    share between the sides is recorded; a frame over STRIP_SHARE fails its strip's gate unless
+    its section has a pixel allow entry for that route and width."""
     out.mkdir(parents=True, exist_ok=True)
     res = {"strips": [], "gates": {}}
     for path in ("/", "/en/"):
         for width, tier in (("390", 1), ("1440", 2)):
             frames = {}
             meta = {}
+            ys: dict[str, list[int]] = {}
             for side in SIDES:
                 load = world_load(browser, side, path, width, f"?tier={tier}")
                 page = load.get("page")
                 frames[side], meta[side] = [], {"live": load.get("live")}
                 if not page:
+                    meta[side]["loadError"] = load.get("loadError")
                     continue
                 try:
                     page.locator("[data-motion-toggle]").first.click(timeout=3000)
                 except PlaywrightError:
                     pass
-                geo = page.evaluate("""() => {
-                    const beats = [...document.querySelectorAll('[data-beat]')];
-                    const last = beats.length ? beats[beats.length - 1].getBoundingClientRect().top + scrollY : null;
-                    const h2 = document.querySelector('#work h2');
-                    const foot = document.querySelector('footer');
-                    return { last, h2: h2 ? h2.getBoundingClientRect().top + scrollY : null, vh: innerHeight,
-                             end: foot ? foot.getBoundingClientRect().top + scrollY : document.documentElement.scrollHeight };
-                }""")
+                geo = page.evaluate(STRIP_GEO_JS)
                 meta[side]["geo"] = geo
-                for i in range(24):
-                    y = round(geo["end"] * i / 23)
+                if side == "proto" or "proto" not in ys:
+                    ys[side] = [round(geo["end"] * i / 23) for i in range(24)]
+                else:
+                    ys[side] = map_positions(meta["proto"]["geo"]["boxes"], geo["boxes"], ys["proto"])
+                for i, y in enumerate(ys[side]):
                     page.evaluate(f"window.scrollTo({{top: {y}, behavior: 'instant'}})")
-                    page.wait_for_timeout(500)
+                    waited = page.evaluate(STRIP_SETTLE_JS, 1500)
                     shot = out / f"{slug(path)}-{width}-{side}-{i:02d}.png"
                     page.screenshot(path=str(shot))
-                    frames[side].append({"y": y, "file": str(shot), "nonBackground": non_background(shot)})
+                    frames[side].append({"y": y, "scrollY": page.evaluate("Math.round(scrollY)"), "settleMs": waited,
+                                         "file": str(shot), "nonBackground": non_background(shot)})
                 close_load(load)
             name = f"{'vi' if path == '/' else 'en'}-{width}-t{tier}"
             strip = out / f"strip-{name}.png"
             compose_strip(frames, strip, width)
-            res["strips"].append({"name": name, "file": str(strip), "meta": meta,
-                                  "frames": {s: [{"y": f["y"], "nonBackground": f["nonBackground"]} for f in frames[s]] for s in SIDES}})
+            shares = []
+            boxes = ((meta.get("proto") or {}).get("geo") or {}).get("boxes", [])
+            for i in range(min(len(frames["proto"]), len(frames["wp"]))):
+                a, b = frames["proto"][i], frames["wp"][i]
+                box = section_at(a["y"], boxes)
+                key = box["key"] if box else None
+                share = pixel_share(a["file"], b["file"])
+                accepted = bool(key and allowed("pixels", path, key, width, None))
+                shares.append({"i": i, "yProto": a["y"], "yWp": b["y"], "section": key, "share": share, "allowed": accepted,
+                               "pass": share is not None and (share <= STRIP_SHARE or accepted)})
+            res["strips"].append({"name": name, "file": str(strip), "meta": meta, "frameShares": shares,
+                                  "frames": {s: [{k: f[k] for k in ("y", "scrollY", "settleMs", "nonBackground")} for f in frames[s]] for s in SIDES}})
             for side in SIDES:
                 g = meta[side].get("geo") or {}
                 lo, hi = g.get("last"), (g.get("h2") or 0) - (g.get("vh") or 0)
                 thin = [f for f in frames[side] if lo is not None and lo <= f["y"] <= hi and f["nonBackground"] < 15]
                 res["gates"][f"strip {name} {SIDE_NAME[side]}: world-live"] = bool(meta[side].get("live"))
                 res["gates"][f"strip {name} {SIDE_NAME[side]}: no frame under 15% non-background between the last door and the H2"] = lo is not None and not thin
+            res["gates"][f"strip {name}: 24 frames within {STRIP_SHARE}% between sides (outside allowed sections)"] = (
+                len(shares) == 24 and all(r["pass"] for r in shares))
     return res
 
 
@@ -1203,6 +1390,9 @@ def gate_summary(report: dict) -> dict:
     for side in SIDES:
         n = sum(1 for v in views if v["checks"][side])
         g[f"page checks {SIDE_NAME[side]}"] = {"pass": len(views) - n, "fail": n}
+    lines = [v["hardLines"] for v in views if "hardLines" in v]
+    if lines:
+        g["7.14 no hard line WordPress adds"] = {"pass": sum(r["pass"] for r in lines), "fail": sum(not r["pass"] for r in lines)}
     if "behaviour" in report:
         b = report["behaviour"]
         g["7.10 behaviour lines"] = {"pass": sum(1 for v in b.values() if v["pass"]), "fail": sum(1 for v in b.values() if not v["pass"]),
@@ -1241,6 +1431,11 @@ def write_html(report: dict, out: Path) -> None:
         parts.append("<h2>World and budgets</h2><pre>" + esc(json.dumps({"gates": report["world"]["gates"], "loads": report["world"]["loads"], "entryInstances": report["world"].get("entryInstances")}, indent=1, ensure_ascii=False)) + "</pre>")
         for s in report["world"].get("strips", {}).get("strips", []):
             parts.append(f"<h3>Strip {esc(s['name'])} (prototype left, WordPress right)</h3><img src='{esc(rel(s['file']))}' style='max-width:96vw'>")
+            rows = "".join(f"<tr><td>{r['i']}</td><td>{r['yProto']}</td><td>{r['yWp']}</td><td>{esc(str(r['section']))}</td>"
+                           f"<td class={'ok' if r['pass'] else 'no'}>{r['share']}%{' (allowed)' if r['allowed'] else ''}</td></tr>"
+                           for r in s.get("frameShares", []))
+            parts.append(f"<details><summary>per-frame difference (limit {STRIP_SHARE}%)</summary><table><tr><th>frame</th><th>y prototype</th>"
+                         f"<th>y WordPress</th><th>section</th><th>differing pixels</th></tr>{rows}</table></details>")
     if report.get("lcp"):
         parts.append("<h2>LCP</h2><pre>" + esc(json.dumps(report["lcp"], indent=1)) + "</pre>")
     if report.get("debugLog"):
@@ -1253,6 +1448,11 @@ def write_html(report: dict, out: Path) -> None:
         parts.append(f"<details><summary>{esc(head)}: {len(bad)} of {len(v['sections'])} sections differ; {sum(len(v['checks'][s]) for s in SIDES)} page check failures</summary>")
         if checks:
             parts.append(f"<ul>{checks}</ul>")
+        hl = v.get("hardLines")
+        if hl:
+            only = ", ".join(f"y {l['y']} ({esc(str(l['section']))} +{l['offset']})" for l in hl["wpOnly"][:12])
+            parts.append(f"<p>Hard lines (7.14): prototype {hl['proto']}, WordPress {hl['wp']}; "
+                         + (f"<span class=no>only on WordPress: {only}</span>" if hl["wpOnly"] else "<span class=ok>none only on WordPress</span>") + "</p>")
         parts.append("<table><tr><th>section</th><th>structure</th><th>text</th><th>links</th><th>pixels</th></tr>")
         for s in v["sections"]:
             cells = []

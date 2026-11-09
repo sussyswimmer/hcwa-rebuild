@@ -513,13 +513,17 @@ function hcwa_button_html( string $href, string $label, string $kind = 'primary'
 }
 
 /**
- * Text link with arrow (prototype textLink()).
+ * Text link with arrow (prototype textLink()); '' when the target is '' (a page that is not
+ * published on the live site, hcwa_page_url_live()).
  *
  * @param string $href  Link target.
  * @param string $label Visible text (plain).
  * @param string $attrs Extra attributes, already escaped.
  */
 function hcwa_text_link_html( string $href, string $label, string $attrs = '' ): string {
+	if ( '' === $href ) {
+		return ''; // A page that is not published (hcwa_page_url_live()): no link at all.
+	}
 	return '<a class="text-link" href="' . esc_url( $href ) . '"' . ( '' !== $attrs ? ' ' . ltrim( $attrs ) : '' ) . '><span>' . esc_html( $label ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>';
 }
 
@@ -543,10 +547,12 @@ function hcwa_status_pill_html( string $status ): string {
  * Breadcrumb (prototype breadcrumb()): Home, then the trail; the last item is the page.
  *
  * @param array<int, array{0: string, 1?: string}> $trail [label, url] pairs, the last without url.
+ * @param bool  $last_is_page Whether the last item is the current page (false when the
+ *                           page's own title is left out, so no parent is marked current).
  */
-function hcwa_breadcrumb_html( array $trail ): string {
+function hcwa_breadcrumb_html( array $trail, bool $last_is_page = true ): string {
 	$items = '';
-	$last  = count( $trail ) - 1;
+	$last  = $last_is_page ? count( $trail ) - 1 : -1;
 	foreach ( array_values( $trail ) as $i => $step ) {
 		$label  = (string) ( $step[0] ?? '' );
 		$items .= '<li>' . ( $i === $last || empty( $step[1] ) ? '<span aria-current="page">' . esc_html( $label ) . '</span>' : '<a href="' . esc_url( (string) $step[1] ) . '">' . esc_html( $label ) . '</a>' ) . '</li>';
@@ -1076,11 +1082,19 @@ function hcwa_sun_head_html( array $a ): string {
 		}
 		$side .= "\n      </ul>";
 	}
+	// 2.1 rule 10, as hcwa/hero: a title left out (draft on production) still leaves one H1,
+	// the site name for screen readers, and the breadcrumb loses its empty last item.
+	if ( '' === trim( $title ) ) {
+		$trail = array_values( array_filter( $trail, static fn( $item ): bool => '' !== trim( (string) ( ( (array) $item )[0] ?? '' ) ) ) );
+		$h1    = '<h1 class="sr-only">' . esc_html( hcwa_attr_text( (string) get_bloginfo( 'name' ) ) ) . '</h1>';
+	} else {
+		$h1 = '<h1 class="sun-head__title"' . hcwa_draft_attr( ! empty( $a['title_draft'] ) ) . '>' . esc_html( hcwa_vi_keep( $title ) ) . '</h1>';
+	}
 	return '<header class="sun-head">' . "\n  "
 		. '<span class="sun-layer sun-layer--donate" aria-hidden="true"></span>' . "\n  "
 		. '<div class="container sun-head__inner">' . "\n    "
-		. hcwa_breadcrumb_html( $trail ) . "\n    "
-		. '<h1 class="sun-head__title"' . hcwa_draft_attr( ! empty( $a['title_draft'] ) ) . '>' . esc_html( hcwa_vi_keep( $title ) ) . '</h1>' . "\n    "
+		. hcwa_breadcrumb_html( $trail, '' !== trim( $title ) ) . "\n    "
+		. $h1 . "\n    "
 		. ( '' !== $side ? '<div class="sun-head__side">' . $side . "\n    </div>" : '' ) . "\n  "
 		. '</div>' . "\n"
 		. '</header>';
@@ -1153,16 +1167,20 @@ function hcwa_louver_html( array $w, int $level = 3 ): string {
 	if ( $donate ) {
 		$extra = hcwa_button_html( hcwa_page_url( 'donate' ), hcwa_t( 'donate' ), 'primary', '', 'louver__btn' );
 	} elseif ( 'in-kind' === $id ) {
-		$extra = '<a class="text-link louver__extra" href="' . esc_url( hcwa_page_url( 'bakery' ) ) . '"><span>' . esc_html( hcwa_t( 'bakery' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>';
+		$bakery = hcwa_page_url_live( 'bakery' );
+		$extra  = '' !== $bakery ? '<a class="text-link louver__extra" href="' . esc_url( $bakery ) . '"><span>' . esc_html( hcwa_t( 'bakery' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>' : '';
 	}
+	// A way whose page is not published on the live site keeps its words, without the link
+	// and without the arrow that promises one.
+	$href = ! $donate && isset( $routes[ $id ] ) ? hcwa_page_url_live( $routes[ $id ] ) : '';
 	return '<li class="louver' . ( $donate ? ' louver--donate' : '' ) . '" data-way="' . esc_attr( $id ) . '">' . "\n    "
 		. '<span class="louver__face" aria-hidden="true"></span>' . "\n    "
-		. '<' . $h . ' class="louver__title">' . ( $donate || ! isset( $routes[ $id ] ) ? $label : '<a href="' . esc_url( hcwa_page_url( $routes[ $id ] ) ) . '">' . $label . '</a>' ) . '</' . $h . '>' . "\n    "
+		. '<' . $h . ' class="louver__title">' . ( '' === $href ? $label : '<a href="' . esc_url( $href ) . '">' . $label . '</a>' ) . '</' . $h . '>' . "\n    "
 		. '<div class="louver__body">' . "\n      "
 		. ( '' !== $text['text'] ? '<p class="louver__text"' . hcwa_draft_attr( $text['draft'] ) . '>' . esc_html( $text['text'] ) . '</p>' : '' ) . "\n      "
 		. $extra . "\n    "
 		. '</div>' . "\n    "
-		. ( $donate ? '' : hcwa_icon( 'arrow', 'icon louver__go' ) ) . "\n  "
+		. ( '' === $href ? '' : hcwa_icon( 'arrow', 'icon louver__go' ) ) . "\n  "
 		. '</li>';
 }
 

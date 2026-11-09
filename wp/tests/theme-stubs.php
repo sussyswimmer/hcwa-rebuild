@@ -19,6 +19,11 @@ if ( ! function_exists( 'is_tax' ) ) {
 		return hcwa_test_is( 'is_tax' );
 	}
 }
+if ( ! function_exists( 'is_search' ) ) {
+	function is_search() {
+		return hcwa_test_is( 'is_search' );
+	}
+}
 if ( ! function_exists( 'term_description' ) ) {
 	function term_description( $term = 0, $deprecated = null ) {
 		return '';

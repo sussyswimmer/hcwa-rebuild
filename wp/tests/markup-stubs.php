@@ -167,3 +167,28 @@ if ( ! function_exists( 'get_the_password_form' ) ) {
 		return '<form class="post-password-form"></form>';
 	}
 }
+
+if ( ! function_exists( 'wp_get_attachment_image_src' ) ) {
+	/** [url, width, height, resized] for an attachment in the test posts, else false. */
+	function wp_get_attachment_image_src( $attachment_id, $size = 'thumbnail', $icon = false ) {
+		$post = get_post( $attachment_id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return false;
+		}
+		return array( 'https://hcwa.test/wp-content/uploads/logo-' . (int) $post->ID . '.png', 56, 56, false );
+	}
+}
+
+if ( ! function_exists( 'get_page_by_path' ) ) {
+	/** The test post registered for a path in $GLOBALS['hcwa_test']['page_paths'], else null. */
+	function get_page_by_path( $page_path, $output = 'OBJECT', $post_type = 'page' ) {
+		$id = $GLOBALS['hcwa_test']['page_paths'][ trim( (string) $page_path, '/' ) ] ?? 0;
+		return $id ? get_post( $id ) : null;
+	}
+}
+if ( ! function_exists( 'get_post_field' ) ) {
+	function get_post_field( $field, $post = null, $context = 'display' ) {
+		$post = get_post( $post );
+		return $post && isset( $post->$field ) ? $post->$field : '';
+	}
+}

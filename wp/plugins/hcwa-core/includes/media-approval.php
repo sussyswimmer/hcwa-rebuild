@@ -93,13 +93,18 @@ function hcwa_image_context_no_identifiable( $context ): bool {
 	$result = false;
 
 	if ( 'hcwa_center' === $post->post_type ) {
-		$result = hcwa_meta_flag_any( $post->ID, 'hcwa_no_identifiable_children' );
+		$result = hcwa_center_no_identifiable( $post->ID );
 	} elseif ( 'hcwa_program' === $post->post_type ) {
+		// Every center the program runs at (hcwa_center_ids, else the old hcwa_center_id), in
+		// any language and whatever its status: one protected center makes it protected.
 		foreach ( hcwa_post_translation_ids( $post->ID ) as $program_id ) {
-			$center = (int) get_post_meta( $program_id, 'hcwa_center_id', true );
-			if ( $center && hcwa_meta_flag_any( $center, 'hcwa_no_identifiable_children' ) ) {
-				$result = true;
-				break;
+			$centers   = hcwa_id_list( get_post_meta( $program_id, 'hcwa_center_ids', true ) );
+			$centers[] = (int) get_post_meta( $program_id, 'hcwa_center_id', true );
+			foreach ( array_filter( $centers ) as $center ) {
+				if ( hcwa_center_no_identifiable( (int) $center ) ) {
+					$result = true;
+					break 2;
+				}
 			}
 		}
 	} elseif ( 'post' === $post->post_type ) {
@@ -113,6 +118,23 @@ function hcwa_image_context_no_identifiable( $context ): bool {
 	 * @param WP_Post $post   Context post.
 	 */
 	return (bool) apply_filters( 'hcwa_no_identifiable_context', $result, $post );
+}
+
+/**
+ * Whether a center is a no-identifiable-children context: its "No identifiable children"
+ * flag on any translation, or its unit key is little-rose (hcwa_center_is_protected(), which
+ * fails closed when the flag was never ticked).
+ *
+ * @param int $center_id Center ID (any language).
+ */
+function hcwa_center_no_identifiable( int $center_id ): bool {
+	if ( $center_id <= 0 ) {
+		return false;
+	}
+	if ( function_exists( 'hcwa_center_is_protected' ) ) {
+		return hcwa_center_is_protected( $center_id );
+	}
+	return hcwa_meta_flag_any( $center_id, 'hcwa_no_identifiable_children' );
 }
 
 /**

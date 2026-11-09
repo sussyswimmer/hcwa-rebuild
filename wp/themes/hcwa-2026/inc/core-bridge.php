@@ -233,6 +233,31 @@ function hcwa_theme_public_text( string $text ): string {
 }
 
 /**
+ * The current page's own description for <meta name=description> and og:description, as
+ * the prototype prints it: the intro of a sections page (the front page included), a
+ * center's "who we serve", a program's summary (hcwa-core hcwa_page_description()), and the
+ * 404 text on the not-found page. Plain text, without draft brackets off production and ''
+ * on production while draft. '' for other pages and without hcwa-core.
+ */
+function hcwa_theme_own_description(): string {
+	if ( is_404() ) {
+		return hcwa_theme_t( 'nf_text' );
+	}
+	if ( ! function_exists( 'hcwa_page_description' ) ) {
+		return '';
+	}
+	$post = is_singular() || is_front_page() ? get_queried_object() : null;
+	if ( ! $post instanceof WP_Post && is_front_page() ) {
+		$post = get_post( (int) get_option( 'page_on_front' ) ); // Polylang gives the page in the current language.
+	}
+	if ( ! $post instanceof WP_Post ) {
+		return '';
+	}
+	$description = hcwa_page_description( $post );
+	return trim( (string) ( $description['text'] ?? '' ) );
+}
+
+/**
  * ' data-draft' for an element whose text holds a draft marker (staging outline), else ''.
  *
  * @param string $text Text the element prints.

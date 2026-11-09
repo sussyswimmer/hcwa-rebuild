@@ -21,7 +21,7 @@ while ( have_posts() ) :
 	echo hcwa_theme_sun_head( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 		array(
 			'title'       => $hcwa_title['text'],
-		'title_draft' => $hcwa_title['draft'],
+			'title_draft' => $hcwa_title['draft'],
 			'trail'       => array(
 				array( hcwa_theme_t( 'impact' ), hcwa_theme_url( 'impact' ) ),
 				array( hcwa_theme_t( 'reportsTitle' ), '' !== $hcwa_archive ? $hcwa_archive : hcwa_theme_url( 'reports' ) ),
