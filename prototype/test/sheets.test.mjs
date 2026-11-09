@@ -28,9 +28,9 @@ test("public/svg matches the block SDF numbers (run npm run svg)", () => {
   assert.match(holes("hoaThi"), new RegExp(`^M${r} ${-r}A${r} ${r} `), "quatrefoil lobes use HOA_THI.r");
   assert.match(generate()["face-hoa-thi.svg"], new RegExp(`viewBox="${(-BLOCK / 2) * 1000} ${(-BLOCK / 2) * 1000} ${BLOCK * 1000} ${BLOCK * 1000}"`));
   for (const kind of Object.values(AREA_BLOCK)) assert.ok(KINDS.includes(kind), `${kind} has an SDF`);
-  // The floor's sunlight: the Hoa thị holes under the floor projection, crisp (no blur) and repeating in x.
+  // The floor's sunlight: the Hoa thị holes under the floor projection, crisp (no blur), repeating in x and y.
   const sun = generate()["sun-hoa-thi.svg"];
-  assert.match(sun, /<g transform="skewX\(-14\) scale\(1 1\.1\)">/);
+  assert.match(sun, /<path id="h" transform="matrix\(0\.6767 0 -0\.1046 0\.7444 0 0\)"/, "0.6 of a cell, leaning 8°, stretched 1.1");
   assert.ok(sun.includes(`d="${holes("hoaThi")}"`), "the same quatrefoil as the screen");
   assert.doesNotMatch(sun, /filter|blur|Gaussian/i);
 });
@@ -142,22 +142,70 @@ test("our work sheet, fix r1: each patch is one laid floor, with a crisp light l
   }
   // the CSS sun layer is gone from the sheet (the tile light carries it); nothing else reaches the plaster
   assert.doesNotMatch(stage, /sun-layer--work/);
-  // the light lattice never repeats inside the tallest patch (2 tiles at a 0.42-tile block: 1650 units is 2.3 tiles)
   const files = generate();
-  assert.match(files["sun-hoa-thi.svg"], /viewBox="0 0 300 1650"/);
   // the cement ground's speckle: the tiles' own wear noise, seamless, alpha only (no colour in the file)
   const cement = files["cement.svg"];
   assert.match(cement, /<feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" stitchTiles="stitch"\/>/);
   assert.match(stage, /<feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7"/, "the same speckle as the tiles' wear");
   assert.doesNotMatch(cement, /#[0-9a-f]{3,6}\b|rgb\(/i);
-  // pages.css: the light's numbers from the fix (mask 0.42 T, band 2 T, 10% fades, lit wear 0.16), the rise
+  // pages.css: the band (2 T, 10% fades) and the rise under the corridor
   const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8");
-  assert.match(css, /url\("\/svg\/sun-hoa-thi\.svg"\) 0 0 \/ calc\(0\.42 \* var\(--T\)\) auto repeat, linear-gradient\(to right, transparent, black 10%, black 90%, transparent\)/);
   assert.match(css, /--band: calc\(2 \* var\(--T\)\)/);
-  assert.match(css, /\.gach__lit \{[^}]*--wear: 0\.16/);
   assert.match(css, /#centers \+ #work \{ --rise: calc\(var\(--section-y\) - var\(--s-8\)\); margin-top: calc\(-1 \* var\(--rise\)\); padding-top: clamp\(24px, 3vw, 48px\);/);
-  assert.match(css, /html\.stages #centers\.is-stage \+ #work \{ --rise: 24svh; \}/);
   assert.match(css, /@media \(max-width: 599px\) \{ html\.stages #centers\.is-stage \+ #work \{ --rise: 16svh; \} \}/);
+});
+
+test("our work sheet, fix r2: isolated quatrefoils, a sheet that lays no lace over the corridor, a floor of plain tiles", () => {
+  const files = generate(), sun = files["sun-hoa-thi.svg"];
+  // three rows to a 990-unit repeat, each a third of a cell further along: seamless in x and y
+  assert.match(sun, /viewBox="0 0 300 990"/);
+  const at = [...sun.matchAll(/<use href="#h" x="(-?[\d.]+)" y="([\d.]+)"\/>/g)].map((m) => [+m[1], +m[2]]);
+  const rows = [...new Set(at.map(([, y]) => y))].sort((a, b) => a - b);
+  assert.deepEqual(rows, [165, 495, 825], "three rows, 330 units apart");
+  rows.forEach((y, j) => assert.ok(at.some(([x, yy]) => yy === y && (((x - (150 - 100 * j)) % 300) + 300) % 300 === 0), `row ${j} on the lattice`));
+  assert.equal((((150 - 100 * 3) % 300) + 300) % 300, 150, "the fourth row would land on the first: the y repeat is seamless");
+  // each hole is 0.6 of its cell (pips included): 0.4 of a cell of tile between neighbours, in x and in y
+  const reach = (HOA_THI.pipAt + HOA_THI.pipR) * 1000, s = 0.6767;
+  assert.ok(Math.abs((2 * reach * s) / 300 - 0.6) < 0.001, "a hole is 0.6 of its cell");
+  assert.ok(300 - 2 * reach * s >= 0.4 * 300 - 0.5, "0.4 of a cell between two holes in a row");
+  assert.ok(330 - 1.1 * 2 * reach * s >= 0.4 * 330 - 0.5, "and between rows");
+  const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8");
+  // the light: a 0.54-tile cell (two whole rows on one tile), centred on the tile; crisp wear
+  assert.match(css, /--sun: calc\(0\.54 \* var\(--T\)\)/);
+  assert.match(css, /url\("\/svg\/sun-hoa-thi\.svg"\) 0 calc\(0\.5 \* var\(--T\) - 1\.1 \* var\(--sun\)\) \/ var\(--sun\) auto repeat, linear-gradient\(to right, transparent, black 10%, black 90%, transparent\)/);
+  assert.match(css, /:is\(\.gach, \.gach-strip\) \{[^}]*--wear: 0\.22/);
+  assert.match(css, /\.gach__lit \{[^}]*--cream: var\(--color-sun-200\)[^}]*--wear: 0\.08/);
+  // over the live corridor the sheet has no bông gió row and is plaster from its top (the canvas fades itself)
+  assert.match(css, /html\.stages #centers\.is-stage \+ #work \{ --rise: 24svh; background: var\(--wall\); \}/);
+  assert.match(css, /html\.stages #centers\.is-stage \+ #work::before \{ display: none; \}/);
+  // the plain floor: 1.5 px joints (half on each side of a tile's edge) at exactly --T, in whole pixels
+  assert.match(css, /--joint: color-mix\(in oklab, var\(--color-tile-cream\), var\(--color-ink-700\) 10%\)/);
+  assert.match(css, /--jx: linear-gradient\(to right, var\(--joint\) 0\.75px, transparent 0\.75px calc\(100% - 0\.75px\), var\(--joint\) 0\)/);
+  assert.match(css, /--T: round\(down, min\(clamp\(136px, 11\.7vw, 176px\), 100cqi \/ 8\), 1px\)/, "desktop: eight tiles across the container");
+  assert.match(css, /grid-template-columns: repeat\(4, calc\(2 \* var\(--T\)\)\)/, "desktop columns are two tiles each, no gaps");
+});
+
+test("programs, fix r2: each row carries its areas as gạch tiles from the page's one sprite", () => {
+  const byId = Object.fromEntries(content.work.programs.map((p) => [p.id, p]));
+  for (const lang of ["vi", "en"]) {
+    // a row on its own (Our Work, the components page) brings the sprite; a second row on the same page does not
+    const c = ctx(lang, "ourWork", false);
+    const first = str(programRow(c, byId["thrive-together"])), second = str(programRow(c, byId["disability-pilot"]));
+    assert.equal((first.match(/class="gach-sprite"/g) ?? []).length, 1);
+    assert.doesNotMatch(second, /gach-sprite/);
+    for (const [row, p] of [[first, byId["thrive-together"]], [second, byId["disability-pilot"]]]) {
+      const strip = row.match(/<span class="program-row__floor" aria-hidden="true">[\s\S]*?<svg class="gach-strip program-row__tiles" viewBox="0 0 (\d+) 200"[^>]*>([\s\S]*?)<\/svg>/);
+      assert.ok(strip, `${p.id}: a decorative strip of tiles`);
+      assert.equal(+strip[1], 200 * p.areas.length, "one whole tile per area, never scaled per row");
+      assert.deepEqual([...strip[2].matchAll(/<use href="#gach-(\w+)" class="pig--(\w+)"/g)].map((m) => [m[1], m[2]]), p.areas.map((a) => [AREA_BLOCK[a], a]));
+      assert.doesNotMatch(strip[2], /rotate\(/, "never turned");
+    }
+    // the home sheet: one sprite, before the rows (never inside one, which a filter may hide)
+    const home = str(workSheet(ctx(lang, "home", false)));
+    assert.equal((home.match(/class="gach-sprite"/g) ?? []).length, 1);
+    assert.ok(home.indexOf('class="gach-sprite"') < home.indexOf('class="program-row"'));
+    assert.equal((home.match(/class="gach-strip program-row__tiles"/g) ?? []).length, Math.min(4, content.work.programs.filter((p) => p.areas.length).length));
+  }
 });
 
 test("footer: dusk on every page, a link to Facebook and never an embed", () => {
