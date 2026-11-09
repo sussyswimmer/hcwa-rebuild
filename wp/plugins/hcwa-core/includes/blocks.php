@@ -1053,7 +1053,7 @@ function hcwa_lit_header_html( array $a ): string {
  * Sun head (prototype donate header, 2.5 P5). Jump links are printed only when their target
  * is (2.1 rule 11): pass them only for printed panels.
  *
- * @param array $a title, trail (defaults to the title alone), intro, intro_draft, go
+ * @param array $a title, title_draft, trail (defaults to the title alone), intro, intro_draft, go
  *                 (['href', 'label'] or null), jumps ([href, label] pairs).
  */
 function hcwa_sun_head_html( array $a ): string {
@@ -1080,7 +1080,7 @@ function hcwa_sun_head_html( array $a ): string {
 		. '<span class="sun-layer sun-layer--donate" aria-hidden="true"></span>' . "\n  "
 		. '<div class="container sun-head__inner">' . "\n    "
 		. hcwa_breadcrumb_html( $trail ) . "\n    "
-		. '<h1 class="sun-head__title">' . esc_html( hcwa_vi_keep( $title ) ) . '</h1>' . "\n    "
+		. '<h1 class="sun-head__title"' . hcwa_draft_attr( ! empty( $a['title_draft'] ) ) . '>' . esc_html( hcwa_vi_keep( $title ) ) . '</h1>' . "\n    "
 		. ( '' !== $side ? '<div class="sun-head__side">' . $side . "\n    </div>" : '' ) . "\n  "
 		. '</div>' . "\n"
 		. '</header>';

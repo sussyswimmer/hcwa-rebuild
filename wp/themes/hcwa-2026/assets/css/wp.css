@@ -11,6 +11,10 @@
  * day's gradient (05-DESIGN 0.5).
  */
 
+/* ---------- The page's last light: the day--donate gradient ends in sun-100, so the footer's
+   evening sky starts from it (the prototype's --day-end, as on Contact), with no seam. ---------- */
+.page-wp { --day-end: var(--color-sun-100); }
+
 /* ---------- The sun head on long WordPress titles ---------- */
 .page-wp .sun-head__title { font-size: var(--fs-h1); max-inline-size: 22ch; }
 .page-wp .sun-head__intro { font-size: var(--fs-lg); line-height: var(--lh-lead); max-width: 52ch; color: var(--color-ink-700); }

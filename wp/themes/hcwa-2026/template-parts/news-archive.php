@@ -39,6 +39,7 @@ $hcwa_intro = hcwa_theme_draft_text( trim( $hcwa_intro ) );
 echo hcwa_theme_sun_head( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	array(
 		'title'       => $hcwa_title['text'],
+		'title_draft' => $hcwa_title['draft'],
 		'trail'       => $hcwa_trail,
 		'intro'       => $hcwa_intro['text'],
 		'intro_draft' => $hcwa_intro['draft'],
