@@ -73,6 +73,9 @@ that needs a browser wait on running WordPress, which needs Maxwell's permission
 build environment (`scripts/wp-local.sh`, `wp/README.md`). Open questions and what is
 still unverified: `wp/CONTRACT.md` Status.
 
+Status 9 Nov 2026: the theme and plugin are stale against the rebuilt prototype (Bông gió). Their port,
+checked against a real local WordPress (Maxwell's permission, 9 Nov), follows `11-WP-PORT.md`.
+
 | # | Task | Done when |
 |---|---|---|
 | 2.1 | Spike (half a day): in `wp-env`, install Polylang free and test (a) a block theme with translated header/footer template parts and (b) the hybrid approach (PHP header/footer + block patterns). Pick one, write the reason in `03-STRATEGY-AND-DECISIONS.md`. | Decision recorded |

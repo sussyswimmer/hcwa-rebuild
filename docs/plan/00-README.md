@@ -21,6 +21,7 @@ brief (2 pages), a review of the live site, and a look at peer child-welfare NGO
 | `08-BUILD-PLAN.md` | Phased tasks with acceptance criteria | Claude Code |
 | `09-QA-CHECKLIST.md` | Gates every page must pass before launch | Claude Code |
 | `10-ASSET-REQUEST.md` | Visuals list with sizes, ratios and placement for HCWA's design agency | HCWA design agency |
+| `11-WP-PORT.md` | Spec for porting the Bông gió prototype to the WordPress theme and plugin: build export, markup contract, data mapping, parity checks, build streams, gates | Claude Code |
 
 ## How to run it with Claude Code
 
