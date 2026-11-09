@@ -1042,6 +1042,8 @@ def main() -> int:
         ap.error(f"no manifest at {args.manifest}")
     if sync_playwright is None:
         ap.error("Playwright is not installed for this Python: use the repo's .venv (see wp/README.md)")
+    if args.legacy and args.production:
+        ap.error("--legacy cannot be combined with --production: the production guard scans always run (11-WP-PORT.md 5.7)")
 
     urls, not_found = load_targets(args.manifest)
     targets = urls + [dict(nf, id="not-found", kind=nf.get("kind", "404"), expect=404) for nf in not_found]

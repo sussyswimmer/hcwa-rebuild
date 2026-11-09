@@ -324,6 +324,7 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
             page.wait_for_timeout(400)
             out["sideways320"] = page.evaluate("Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)")
         out["php"] = php_errors(body)
+        out["html"] = body
         out["headStyleBytes"] = data.get("headInlineStyleBytes", 0)
         out["htmlBytes"] = len(body.encode("utf-8"))
     except PlaywrightError as exc:
@@ -499,7 +500,19 @@ def wp_only_checks(route: dict, mode: str, pages: dict) -> list[str]:
         ver = sorted({norm_url(r["url"]) for r in p.get("requests", []) if "/assets/dist/" in r["url"] and "ver=" in r["url"]})
         if ver:
             fails.append("?ver on dist URLs: " + ", ".join(ver[:4]))
+        bad = forbidden_assets(p.get("html", ""), p.get("requests", []))
+        if bad:
+            fails.append("assets the prototype never loads: " + ", ".join(bad))
     return fails
+
+
+def forbidden_assets(html: str, requests: list[dict]) -> list[str]:
+    """jQuery, Elementor, emoji, embed, global-styles or block-library assets: in the request log
+    or in the id, src and href attributes of the HTML (not in body classes such as
+    wp-embed-responsive, which load nothing)."""
+    attrs = " ".join(re.findall(r"""\b(?:id|src|href)=["']([^"']*)""", html))
+    urls = " ".join(r["url"] for r in requests)
+    return sorted(k for k, rx in FORBIDDEN.items() if rx.search(attrs) or rx.search(urls))
 
 
 def three_requested(requests: list[dict], three: dict) -> str:
@@ -766,7 +779,7 @@ def world_and_budgets(browsers, out: Path, full: bool) -> dict:
                 _, html_bytes, _ = http_get(BASES[side] + "/?tier=2")
                 row["budgets"] = budgets(load, html_bytes)
                 row["distVer"] = sorted({norm_url(r["url"]) for r in load["requests"] if "/assets/dist/" in r["url"] and "ver=" in r["url"]})
-                row["forbidden"] = sorted({k for k, rx in FORBIDDEN.items() if rx.search(html_bytes.decode("utf-8", "replace")) or any(rx.search(r["url"]) for r in load["requests"])})
+                row["forbidden"] = forbidden_assets(html_bytes.decode("utf-8", "replace"), load["requests"])
             close_load(load)
             loads.append(load)
             res["loads"].append(row)

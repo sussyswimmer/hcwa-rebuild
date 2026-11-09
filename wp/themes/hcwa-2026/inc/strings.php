@@ -58,6 +58,8 @@ function hcwa_theme_strings(): array {
 
 		// Program page.
 		'whereAndWho'      => array( 'vi' => 'Nơi thực hiện và nhà tài trợ', 'en' => 'Where it runs and who funds it' ),
+		// The old program page's labels. ui.json now owns runsAt ('Thực hiện tại' / 'Runs at') and
+		// fundedBy ('Tài trợ' / 'Funded by') for the port's program rows, so these got their own keys.
 		'programCenter'    => array( 'vi' => 'Cơ sở', 'en' => 'Center' ),
 		'programFunders'   => array( 'vi' => 'Nhà tài trợ', 'en' => 'Funded by' ),
 		'supportWork'      => array( 'vi' => 'Đồng hành cùng những dự án như thế này', 'en' => 'Support work like this' ),
