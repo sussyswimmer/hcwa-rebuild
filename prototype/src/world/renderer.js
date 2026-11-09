@@ -52,12 +52,15 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   // picture fades to the wash's color over the hem above that top, whatever the sweep is doing, on eased stops
   // (0.11 at an eighth of the hem, 0.51 at half: no 40 px band of it moves the frame's mean by more than about 12
   // levels over the corridor's darkest floor), so the sheet never cuts the corridor at full strength. Hem and
-  // sweep multiply (their masks intersect). The canvas fades; the page's text never does.
-  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, hemU = { value: new Vector4() }, light = tok("wash");
+  // sweep multiply (their masks intersect). The canvas fades; the page's text never does. The hem fades to its own color
+  // (uHemC, the plaster), which is the wash's on the walk; while no corridor is built yet (a jump straight to the sheet)
+  // the frame is the light and the hem still takes it to the plaster, so the sheet's solid top never cuts a frame of
+  // light (final m3 recheck). Blended over the frame: C·A + dst·(1 − A), A = 1 − v(1 − a), C = (hemC(1 − v) + col·a·v) / A.
+  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, hemU = { value: new Vector4() }, light = tok("wash"), hemC = { value: light.clone() };
   const wash = new ShaderMaterial({
-    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU, uSweep: sweepU, uHem: hemU },
+    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU, uSweep: sweepU, uHem: hemU, uHemC: hemC },
     vertexShader: SCREEN_VERT,
-    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim; uniform vec4 uFlare, uHole, uSweep, uHem; varying vec2 vU;
+    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim, uHemC; uniform vec4 uFlare, uHole, uSweep, uHem; varying vec2 vU;
       ${DITHER}
       float h12(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float lobes(vec2 p, float r){ return min(min(length(p - vec2(r, 0.)), length(p + vec2(r, 0.))), min(length(p - vec2(0., r)), length(p + vec2(0., r)))) - r; }
@@ -87,7 +90,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         if (uHem.x > 0.) {
           float h = clamp((vU.y - uHem.y) / uHem.z, 0., 1.);
           float v = h < .125 ? .88 * h : h < .5 ? .11 + (h - .125) * 1.0667 : .51 + (h - .5) * .98;
-          a = 1. - (1. - a) * v;
+          float A = 1. - (1. - a) * v;
+          col = (uHemC * (1. - v) + col * a * v) / max(A, 1e-4);
+          a = A;
         }
         gl_FragColor = vec4(col, max(a, f));
       #include <colorspace_fragment>
@@ -129,8 +134,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
     // scene + passes (shafts) unless the wash covers everything. flare: a Vector4 (see the wash); hole: a
     // Vector4 (amount, drift x, drift y), the passage's inside of the hole; color: the wash's (default the light);
     // sweep: a Vector4 (on, feather, foot) for a wash from the top of the frame down; hem: a Vector4 (on, the next
-    // sheet's top, the hem's height) for the fade above that sheet (see the wash).
-    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null, sweep = null, hem = null) {
+    // sheet's top, the hem's height) for the fade above that sheet (see the wash); hemColor: what the hem fades to
+    // (default the wash's color).
+    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null, sweep = null, hem = null, hemColor = null) {
       renderer.info.reset();
       renderer.setRenderTarget(null);
       const c = color ?? light;
@@ -145,7 +151,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         for (const p of passes) p.render(camera);
       }
       const flaring = flare && flare.w > 0, holing = hole && hole.x > 0 && washAmount > 0, hemming = hem && hem.x > 0;
-      if ((washAmount < 1 && (washAmount > 0 || flaring || hemming)) || holing) {
+      const hc = hemColor ?? c;
+      if (hemming && !hemC.value.equals(hc)) hemC.value.copy(hc);
+      if ((washAmount < 1 && (washAmount > 0 || flaring || hemming)) || holing || (hemming && !hc.equals(c))) {
         wash.uniforms.uWash.value = washAmount;
         if (flaring) flareU.value.copy(flare); else flareU.value.w = 0;
         if (holing) holeU.value.copy(hole); else holeU.value.x = 0;

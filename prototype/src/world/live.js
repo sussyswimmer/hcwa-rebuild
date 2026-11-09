@@ -33,6 +33,7 @@ import { worldOff } from "./index.js";
 const SPRING = 6; // rad/s: the pointer sun and the camera's parallax (D5.1)
 const CANOPY_IN = 2.5; // s of world time for the canopy to fade in after the handoff (glsl LEAF)
 const PLASTER = tok("lime-100"); // the corridor's way out washes to the plaster under the stage (stages.css)
+const LIGHT = tok("wash"); // the passage's light, which the frame holds while the corridor is not built yet
 const CLOUD = { dip: 0.82, down: 1600, up: 2400, min: 14000, max: 22000, first: [3500, 5000] };
 // The sun clock along the scroll (D6.4): the hero scrolling out 0.08 → 0.14, the approach to the hole
 // 0.14 → 0.20; the corridor stands at 0.25 when the camera comes out into it.
@@ -185,7 +186,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // The corridor's way out: its wash from the top of the frame down (renderer.js sweep), eased --ease-in-out.
   const sweep = new Vector4(), EDGE = 28;
   // And its hem (critique r2): the picture already fading to that plaster over the frame above the next sheet's top.
-  const hem = new Vector4();
+  const hem = new Vector4(), held = LIGHT.clone();
   const s3Cam = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 };
   let s3Last = -1, s3Sunt = -1, floodHold = null;
 
@@ -339,9 +340,22 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     const drift = (DUST * (y - span.passage.top)) / view.h;
     hole.set(!inS3 && p > 0 && p < 1 ? wash : 0, 0.25 * Math.sin(drift * 2.1), -11 * drift, 0);
     gate?.begin();
-    // No corridor yet (a fast scroll before it was built): the wash holds until it is.
+    // No corridor yet (a fast scroll or a jump before it was built): the wash holds the light until it is. On the way
+    // out it still becomes the plaster below, as the walk's own wash does (from the stage's end, eased), and over the hem
+    // above the next sheet's top, so the sheet's solid top never cuts a frame of light (D0.5; final m3 recheck: a jump to
+    // the work floor within a second of load showed a band of light ending in a straight line at the sheet's top).
     if (scene) gl.frame(scene, camera, passes, wash, glow, hole, washColor, !inS3 && !inRoom ? sweep : null, !inS3 && !inRoom ? hem : null);
-    else gl.frame(room.scene, cam, [], 1, null, inS3 ? null : hole.setX(1));
+    else if (inS3) gl.frame(room.scene, cam, [], 1, null, null);
+    else {
+      let out = 0, hemming = false;
+      if (walking && !inRoom && span.corridor.next > 0) {
+        const c = span.corridor, ws = washSpan(c.top + c.len, c.next, view.w, view.h);
+        out = inOut(clamp01((y - ws.y0) / ws.len));
+        hemming = hemSpan(c.next - y, view.w, view.h, hem);
+      }
+      held.copy(LIGHT).lerp(PLASTER, out);
+      gl.frame(room.scene, cam, [], 1, null, hole.setX(1 - out), held, null, hemming ? hem : null, PLASTER);
+    }
     gate?.end(now);
   };
 
