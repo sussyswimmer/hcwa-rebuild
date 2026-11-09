@@ -796,7 +796,10 @@ critique's items; where the build differs, and what it supersedes above:
    is plaster from its top, not see-through: the corridor's wash now runs from the frame's top down
    (`WALK_OUT`), so a see-through lead would have set the H2 on the runner. Stacked (Tier 0, reduced motion,
    no JS) there is no picture and the corridor's list ends on the link to every center, so the sheet rises
-   only into the corridor's own foot, `--section-y − --s-8`, and keeps 64 px clear of that link.
+   only into the corridor's own foot, `--section-y − --s-8`, and keeps 64 px clear of that link. Where the
+   sheet follows the corridor its bông gió row tops out at 62% opacity and the sheet carries the same fade
+   on to solid over its first 24 px (above the H2): at full opacity the row read as a lace trim ending on a
+   line under its last pips, now that it passes over the live runner.
 2. **Light band** as the critique set it: Hoa thị blocks 0.42 of a tile, a band 2 tiles wide with 10% side
    fades, the lit copy at wear 0.16 (supersedes D0.6.3's "`--wear: 0` in the lit copy"). `sun-hoa-thi.svg`
    now holds five rows (1650 units, 2.3 tiles): the shear does not repeat in y, and three rows would have
@@ -824,7 +827,10 @@ critique's items; where the build differs, and what it supersedes above:
 8. Not done: the Our Work filter chips' tile swatches (could). `src/pages/work.mjs` has no owner in this round.
 9. `check:tiles` also walks the stage overlap at 390 and 1440 (Tier 1) in 40 px steps and fails when the
    sheet hides more than a third of a corridor line that can still be read, or when any sheet word or tile
-   touches one.
+   touches one. Open (corridor side): in EN at 390 the last card and its "All work" link sit in the frame's
+   bottom ~100 px, so for one 40 px step before the card leaves (stage 0.95) the sheet's bông gió row passes
+   over the link (VI and 1440 pass). The last card leaving a little earlier on phones, or sitting higher,
+   clears it; the 16svh rise is the critique's number and is kept.
 Budgets: home HTML +54 B gzip (VI and EN), main CSS +0.33 KB gzip (with the corridor's concurrent stages.css
 changes), `public/svg` 5.3 KB of 6. No JS. HCWA still approves the tile palette and the brick tile.
 

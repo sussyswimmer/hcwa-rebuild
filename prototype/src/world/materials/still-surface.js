@@ -43,7 +43,7 @@ float loCo(vec2 p){
   }
   if (p.y > 6. * S) d = min(d, abs(length(vec2(p.x, p.y - 6. * S)) - S * .5));
   float aa = max(fwidth(p.y), fwidth(p.x));
-  float stroke = 1. - smoothstep(.011 - aa, .011 + aa, d);
+  float stroke = 1. - smoothstep(.013 - aa, .013 + aa, d);
   // Chalk on cement: the stroke breaks where the tile's grain is low, and is a little worn all over.
   return stroke * smoothstep(.22, .55, vn(p * 46.)) * (.7 + .3 * vn(p * 9. + 3.1));
 }
@@ -103,7 +103,7 @@ export function stillSurface(U, lights, { contact = null, house = false } = {}) 
             vec2 q = abs(fract(vec2(s, vP.z) / T + .5) - .5) * T;
             float fw = max(fwidth(s), fwidth(vP.z));
             rel = vec3(1. - .11 * (1. - smoothstep(.0007, .0007 + 1.5 * fw, min(q.x, q.y))));
-            if (uTrace.w > .5) rel = mix(rel, uChalk, .85 * loCo(vec2(vP.x - uTrace.z, (vP.z - uTrace.x) * uTrace.y)));
+            if (uTrace.w > .5) rel = mix(rel, uChalk, .92 * loCo(vec2(vP.x - uTrace.z, (vP.z - uTrace.x) * uTrace.y)));
           }
           rel *= tone * (1. + mott * .3);
         } else if (k == 0) {

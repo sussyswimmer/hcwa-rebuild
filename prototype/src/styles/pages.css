@@ -51,7 +51,11 @@
    from its top, so no word of it ever stands on the corridor's picture. Stacked (Tier 0, reduced motion, no
    JS) there is no picture to fade under: the sheet rises into the corridor's own foot (its --section-y
    padding, stages.css) and keeps --s-8 clear of the link to every center. */
-#centers + #work { --rise: calc(var(--section-y) - var(--s-8)); margin-top: calc(-1 * var(--rise)); padding-top: clamp(24px, 3vw, 48px); }
+#centers + #work { --rise: calc(var(--section-y) - var(--s-8)); margin-top: calc(-1 * var(--rise)); padding-top: clamp(24px, 3vw, 48px);
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--wall) 62%, transparent), var(--wall) var(--s-5)); }
+/* Its bông gió row tops out at 62% and the sheet carries the same fade on to solid over its first 24 px (above
+   the H2), so the lattice dissolves into the plaster instead of ending on a line under its last pips. */
+#centers + #work::before { mask: url("/svg/face-hoa-thi.svg") 50% 100% / var(--edge-block) var(--edge-block) repeat-x, linear-gradient(to top, rgb(0 0 0 / 0.62), transparent); mask-composite: intersect; }
 html.stages #centers.is-stage + #work { --rise: 24svh; }
 @media (max-width: 599px) { html.stages #centers.is-stage + #work { --rise: 16svh; } }
 

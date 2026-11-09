@@ -5,8 +5,8 @@ import { DOOR } from "../objects/door.js";
 // The corridor's doors as one light (05-DESIGN D6.5): daylight from the rooms behind the door wall
 // (x = uDoorWall.x, facing −x) comes out through each transom, shaped by its unit's emblem, and, where a
 // door stands open, through the doorway past the leaf. One test for any number of doors: the ray toward
-// the light meets the wall once, and the door nearest that spot decides. Little Rose's transom lets out
-// plain, softened light (pattern 0): no motif. Needs BLOCKS before it.
+// the light meets the wall once, and the door nearest that spot decides. Little Rose's transom (pattern 0) casts
+// no light on the floor at all: no motif, no pool. Needs BLOCKS before it.
 export { MAX_DOORS };
 export const DOOR_PATTERN = { open: 0, dotTre: 1, vomCau: 2, hoaThi: 3 };
 
@@ -36,15 +36,19 @@ float doorsMask(vec3 P, vec3 L){
   if (k < 0) return 0.;
   vec4 D = uDoors[k];
   float w = 0.0025 + 0.0093 * t0 * 0.6;
-  // Transom: three blocks, two face tests through the block's depth.
+  // Transom: three blocks, two face tests through the block's depth. Its emblem lands on the plain threshold
+  // (critique r1): drawn crisper than the doorway's soft spill, so the slots and the arch read on the floor.
+  float wt = 0.0015 + 0.0035 * t0;
   float tr = 1.;
   for (int s = 0; s < 2; s++) {
     float t = (wx + float(s) * ${f(DEPTH)} - P.x) / L.x;
     vec3 R = P + L * t;
     vec2 uv = vec2(R.z - (D.x - ${f(1.5 * BLOCK)}), R.y - uDoorWall.y);
     float rect = sdBox2(uv - vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}), vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}));
-    if (D.y < 0.5) { float fe = 0.05 + w; tr *= smoothstep(fe, -fe, rect); }
-    else tr *= smoothstep(w, -w, max(rect, doorPat(D.y, mod(uv, ${f(BLOCK)}) - ${f(0.5 * BLOCK)})));
+    // Little Rose's (pattern 0): its transom glows with plain daylight on the wall, and casts nothing on its
+    // threshold, no pool of any kind (critique r1): its floor has only the corridor's untinted shade.
+    if (D.y < 0.5) tr = 0.;
+    else tr *= smoothstep(wt, -wt, max(rect, doorPat(D.y, mod(uv, ${f(BLOCK)}) - ${f(0.5 * BLOCK)})));
   }
   // Doorway, only while the door stands open, through the 14 cm reveal, past the leaf.
   float dw = 0.;

@@ -155,7 +155,7 @@ test("our work sheet, fix r1: each patch is one laid floor, with a crisp light l
   assert.match(css, /url\("\/svg\/sun-hoa-thi\.svg"\) 0 0 \/ calc\(0\.42 \* var\(--T\)\) auto repeat, linear-gradient\(to right, transparent, black 10%, black 90%, transparent\)/);
   assert.match(css, /--band: calc\(2 \* var\(--T\)\)/);
   assert.match(css, /\.gach__lit \{[^}]*--wear: 0\.16/);
-  assert.match(css, /#centers \+ #work \{ --rise: calc\(var\(--section-y\) - var\(--s-8\)\); margin-top: calc\(-1 \* var\(--rise\)\); padding-top: clamp\(24px, 3vw, 48px\); \}/);
+  assert.match(css, /#centers \+ #work \{ --rise: calc\(var\(--section-y\) - var\(--s-8\)\); margin-top: calc\(-1 \* var\(--rise\)\); padding-top: clamp\(24px, 3vw, 48px\);/);
   assert.match(css, /html\.stages #centers\.is-stage \+ #work \{ --rise: 24svh; \}/);
   assert.match(css, /@media \(max-width: 599px\) \{ html\.stages #centers\.is-stage \+ #work \{ --rise: 16svh; \} \}/);
 });

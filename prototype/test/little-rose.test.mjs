@@ -230,3 +230,109 @@ test("the house's door walls in the stills: Little Rose's door breaks the dado l
   const i = bay.specs.findIndex((d) => d.unit === "little-rose");
   assert.equal(bay.U.uDoors.value[i].z, 0);
 });
+
+// ---- Critique r1, fix round 1 ----
+// A leaflet hung beside Little Rose's door during its beat (EN 390 Tier 1): the props test above checks world-space
+// paths only. Now the camera's view: over the middle of its beat (u 0.05–0.95) every leaflet is faded out
+// (journey.js leafFade, scrubbed with the scroll), or else no point of any leaflet's whole drift is in the frame of
+// the dwell camera, at 390 × 844 and 1440 × 900, in three bay orders. And no leaflet flies on Tier 1 at all.
+test("no leaflet is seen while Little Rose's door is read, in any order, at 390 and 1440; none on Tier 1", async () => {
+  const { CORRIDOR, DOOR_FOCUS_Y, LEAF_FADE, VIEW, WALK, corridorLayout, leafFade, lensFor, walkPose, walkT } = await import("../src/world/journey.js");
+  const { buildProps, KIND, LEAFLET } = await import("../src/world/objects/props.js");
+  const { LEAFLETS } = await import("../src/world/sets/corridor.js");
+  const { PerspectiveCamera, Vector3 } = await import("three");
+  assert.equal(LEAFLETS[1], 0, "Tier 1 draws no leaflets (D0.6.2 ladder step 2)");
+  assert.ok(LEAF_FADE[0] <= 0.05 && LEAF_FADE[1] >= 0.95);
+  const FRAMINGS = [["side", 1440, 900, { x0: 0, x1: 940, y0: 64, y1: 900 }], ["below", 390, 844, { x0: 0, x1: 390, y0: 60, y1: 844 * 0.55 }]];
+  for (const units of ORDERS) {
+    const beats = beatsOf(units), lay = corridorLayout(beats), n = beats.length, lr = units.indexOf("little-rose");
+    const w = (WALK.beats[1] - WALK.beats[0]) / n;
+    const { geometry } = buildProps({ C: CORRIDOR, lay, leaflets: LEAFLETS[2] });
+    const piv = geometry.getAttribute("aPivot"), k = geometry.getAttribute("aK");
+    // Every point a leaflet can reach on its drift (objects/props.js vertex shader), with its own size around it.
+    const reach = [];
+    const r = LEAFLET.size[0], seen = new Set();
+    for (let i = 0; i < piv.count; i++) {
+      if (k.getX(i) !== KIND.leaflet) continue;
+      const key = `${piv.getX(i)},${piv.getY(i)},${piv.getZ(i)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      for (let a = 0; a <= 4; a++) for (let b = 0; b <= 4; b++) for (let c = 0; c <= 2; c++) {
+        reach.push(new Vector3(piv.getX(i) - 0.06 - r + (a / 4) * (LEAFLET.across[0] + LEAFLET.across[1] + 0.12 + 2 * r), (b / 4) * (piv.getY(i) + r), piv.getZ(i) + (c - 1) * (LEAFLET.sway + r)));
+      }
+    }
+    assert.ok(seen.size > 0 && seen.size <= LEAFLETS[2], `${units.join("/")}: ${seen.size} leaflets on Tier 2`);
+    for (const [name, W, H, free] of FRAMINGS) {
+      const v = VIEW[name], p1 = walkPose(1, name, lay);
+      const fx = (free.x0 + v.at[0] * (free.x1 - free.x0)) / W, fy = (free.y0 + v.at[1] * (free.y1 - free.y0)) / H;
+      const lens = lensFor(p1.pos, p1.yaw, [CORRIDOR.wallX, DOOR_FOCUS_Y, lay.doors[0].zc], p1.fov, W / H, fx, fy);
+      for (let s = 5; s <= 95; s++) {
+        const u = s / 100, q = WALK.beats[0] + (lr + u) * w;
+        if (leafFade(q, n, lr) === 0) continue;
+        const p = walkPose(walkT(q, n), name, lay), cam = new PerspectiveCamera(p.fov, W / H, 0.05, 60), y = (p.yaw * Math.PI) / 180;
+        cam.position.set(...p.pos);
+        cam.lookAt(p.pos[0] + Math.sin(y) * 10, 1.1, p.pos[2] - Math.cos(y) * 10);
+        cam.updateMatrixWorld();
+        cam.projectionMatrix.makePerspective(lens.l * cam.near, lens.r * cam.near, lens.t * cam.near, lens.b * cam.near, cam.near, cam.far);
+        for (const P of reach) {
+          const c = P.clone().project(cam);
+          assert.ok(!(c.z < 1 && Math.abs(c.x) <= 1 && Math.abs(c.y) <= 1), `${units.join("/")} ${name} u ${u.toFixed(2)}: a leaflet in the frame while Little Rose's door is read`);
+        }
+      }
+      // And the fade is the scroll's, never time's: 0 over the middle of its beat, 1 well before and after.
+      assert.equal(leafFade(WALK.beats[0] + (lr + 0.5) * w, n, lr), 0);
+      assert.equal(leafFade(WALK.beats[0] + (lr - 0.2) * w, n, lr), 1);
+      assert.equal(leafFade(WALK.beats[0] + (lr + 1.2) * w, n, lr), 1);
+    }
+  }
+});
+
+// The thresholds (critique r1): before every door, Little Rose's too, the runner gives way to the same plain cream,
+// one uniform for all of them, so its bay is never marked by a difference; the stills' runner has the same.
+test("every door has the same plain threshold, Little Rose's included, live and in the stills", async () => {
+  const { corridorScene } = await import("../src/world/sets/corridor.js");
+  const { HOUSE } = await import("../src/world/sets/common.js");
+  const { SHOTS } = await import("../src/world/sets/stills.js");
+  for (const units of ORDERS) {
+    const set = corridorScene({ beats: beatsOf(units), open: 72 });
+    assert.equal(set.U.uGachP.value.y, HOUSE.threshold);
+    assert.equal(Math.round(HOUSE.threshold / HOUSE.tile), 3, "six tiles, 1.2 m");
+    assert.ok(Math.abs(HOUSE.threshold - 3 * HOUSE.tile) < 1e-9);
+    assert.equal(set.U.uDoorN.value, units.length, "every door, Little Rose's in the list");
+  }
+  // Its threshold takes no pool of any kind: its plain transom casts nothing on the floor (glsl/doors.js).
+  const { DOORS } = await import("../src/world/glsl/doors.js");
+  assert.match(DOORS, /if \(D\.y < 0\.5\) tr = 0\.;/, "Little Rose's transom casts no pool");
+  for (const name of ["bay-green-bamboo", "bay-little-rose", "bay-cau-han", "passage-corridor"]) {
+    const s = SHOTS[name].scene({ lime: null, terr: null });
+    assert.equal(s.U.uGachP.value.y, HOUSE.threshold, name);
+    assert.equal(s.U.uTrace.value.w, 0, `${name}: no traces in any still`);
+  }
+});
+
+// Traces (D6.8, staging only): the chalk lò cò on the Tre Xanh bay's plain band, never in or near Little Rose's bay
+// (its whole length at least 1.5 m from it, or none), never in a still, and only when the page asks for it.
+test("the chalk lò cò stays in the Tre Xanh bay, far from Little Rose's, and only when traces are on", async () => {
+  const { LO_CO, corridorScene, loCoSpot } = await import("../src/world/sets/corridor.js");
+  const { CORRIDOR, corridorLayout } = await import("../src/world/journey.js");
+  for (const units of [...ORDERS, ["green-bamboo", "cau-han", "little-rose"], ["cau-han", "little-rose", "green-bamboo"]]) {
+    const lay = corridorLayout(beatsOf(units)), spot = loCoSpot(lay, CORRIDOR);
+    const lr = lay.doors.find((d) => d.unit === "little-rose").bay, tx = lay.doors.find((d) => d.unit === "green-bamboo");
+    if (spot) {
+      assert.ok(spot.z1 + LO_CO.clear <= lr[0] || spot.z0 - LO_CO.clear >= lr[1], `${units.join("/")}: the lò cò within ${LO_CO.clear} m of Little Rose's bay`);
+      assert.ok(spot.z0 >= tx.bay[0] && spot.z1 <= tx.bay[1], `${units.join("/")}: the lò cò in the Tre Xanh bay`);
+      assert.ok(spot.x > CORRIDOR.screenX + 1.6 && spot.x < CORRIDOR.wallX, "on the plain band");
+    }
+    assert.equal(corridorScene({ beats: beatsOf(units) }).U.uTrace.value.w, 0, "off unless asked");
+    const on = corridorScene({ beats: beatsOf(units), traces: true }).U.uTrace.value;
+    assert.equal(on.w, spot ? 1 : 0);
+  }
+  // The page asks only in staging while HCWA has not approved traces (pages/home/corridor.mjs).
+  const { ctx } = await import("../src/lib/ctx.mjs");
+  const { corridor } = await import("../src/pages/home/corridor.mjs");
+  const { str } = await import("../src/lib/html.mjs");
+  for (const lang of ["vi", "en"]) {
+    const c = ctx(lang, "home", true);
+    if (c.content.world?.traces?.approved !== true) assert.doesNotMatch(str(corridor(c)), /data-traces/, "never on a PROD page before approval");
+  }
+});

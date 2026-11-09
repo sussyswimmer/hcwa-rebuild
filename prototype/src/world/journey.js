@@ -96,9 +96,9 @@ export function beatAt(q, n) {
 }
 
 // The leaflets keep away from Little Rose's beat (05-DESIGN D0.6.4, critique r1): scrubbed with the scroll (never
-// time), their alpha and size go to 0 over the first 0.05 of its beat and come back over its last 0.05, so none
+// time), their alpha and size go to 0 over the first 0.04 of its beat and come back over its last 0.04, so none
 // is drawn anywhere in the frame while its door is read. lr: its index (−1: no Little Rose, always 1).
-export const LEAF_FADE = [0.05, 0.95];
+export const LEAF_FADE = [0.04, 0.96];
 export function leafFade(q, n, lr) {
   if (lr < 0 || n <= 0) return 1;
   const u = (q - WALK.beats[0]) / beatW(n) - lr;
@@ -155,7 +155,7 @@ export function walkZ(t, view, lay) {
 // part of the frame its card leaves free: just left of a card beside it, the label by the door.
 export const VIEW = {
   side: { x: 99.5, d: 4.4, yaw: 15, fov: 50, at: [0.8, 0.52] },
-  below: { x: 100.05, d: 4.4, yaw: 2, fov: 78, at: [0.64, 0.5] },
+  below: { x: 100.05, d: 4.4, yaw: 2, fov: 78, at: [0.64, 0.44] },
 };
 export const DOOR_FOCUS_Y = 1.3; // the door with its transom, seen as one thing
 

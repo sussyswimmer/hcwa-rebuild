@@ -52,7 +52,7 @@ export function houseUniforms({ gach = null, runnerX = 0, runner = HOUSE.runner,
     uGachP: { value: new Vector4(runnerX, threshold, HOUSE.tile, runner) },
     // The chalk lò cò (D6.8, staging only; sets/corridor.js): z of its first square's edge, the hop's direction
     // along z, x of the band's centre, on. Blue chalk, never pink near anyone's door.
-    uTrace: { value: new Vector4() }, uChalk: { value: vec(chalkRel()) },
+    uTrace: { value: new Vector4(0, 0, 0, 0) }, uChalk: { value: vec(chalkRel()) },
     uHouse: { value: new Vector4(HOUSE.dado, HOUSE.line, half + HOUSE.doorBreak, doorWall) },
     uWearP: { value: new Vector4(0, HOUSE.wear.sigma, HOUSE.wear.lift, HOUSE.loang) },
     uDadoShade: { value: vec(tok("dadoShade")) }, uDadoSun: { value: vec(dadoSun(sun, k)) },

@@ -19,7 +19,8 @@ export const FAN = { x: 99.75, y: 2.45, dz: -1.6, r: 0.7, hub: 0.13, blade: [0.1
 // passes `near` metres ahead of the camera's reading spot (journey.js VIEW.d before the door), so they read as
 // leaves (10–20 px) and never as specks down the corridor. An 18 s cycle: 15 s drifting down and across, 3 s at
 // rest on the tiles, the last of it fading.
-export const LEAFLET = { size: [0.068, 0.026], cycle: 18, drift: 15, clear: 0.8, sway: 0.3, across: [1.1, 0.7], top: [2.75, 0.25], read: 4.4, near: [1.7, 2.6], perBeat: 2 };
+// seen: drawn only between these distances from the camera (m), faded in and out over the next 0.4 m / 1 m.
+export const LEAFLET = { size: [0.068, 0.026], cycle: 18, drift: 15, clear: 0.8, sway: 0.3, across: [1.1, 0.7], top: [2.75, 0.25], read: 4.4, near: [1.7, 2.6], perBeat: 2, seen: [1.3, 3.6] };
 export const KIND = { solid: 0, fan: 1, leaflet: 2, rest: 3 };
 
 function rng(seed) {
@@ -227,8 +228,11 @@ vec3 c = aPivot + vec3((${L.across[0].toFixed(2)} + ${L.across[1].toFixed(2)} * 
 ${(L.sway * 0.9).toFixed(3)} * sin(f * 7. + sd) * (1. - .3 * f));
 float air = 1. - step(1., f);
 float a1 = (f * 38. + sd) * air + sd, a2 = f * 27. + sd * .7;
-p = c + rotY(rotX(position * uLeafFade, a2 * air), a1); n = rotY(rotX(normal, a2 * air), a1);
-vFade = smoothstep(0., .02, ph) * (1. - smoothstep(1. - ${(rest * 0.45).toFixed(4)}, 1., ph)) * uLeafFade;
+// Seen only where it reads as a leaf (critique r1): not as a speck down the corridor, not as a blob passing the lens.
+float dc = distance(cameraPosition, c), near = smoothstep(${(L.seen[0] - 0.4).toFixed(2)}, ${L.seen[0].toFixed(2)}, dc) * (1. - smoothstep(${L.seen[1].toFixed(2)}, ${(L.seen[1] + 1).toFixed(2)}, dc));
+float k = uLeafFade * near;
+p = c + rotY(rotX(position * k, a2 * air), a1); n = rotY(rotX(normal, a2 * air), a1);
+vFade = smoothstep(0., .02, ph) * (1. - smoothstep(1. - ${(rest * 0.45).toFixed(4)}, 1., ph)) * k;
 }
 vec4 w = modelMatrix * vec4(p, 1.);
 vP = w.xyz; vN = normalize(mat3(modelMatrix) * n); vCol = aCol; vUv = uv; vK = aK;

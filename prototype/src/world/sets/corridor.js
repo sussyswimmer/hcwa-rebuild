@@ -75,7 +75,9 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
 
   // Daylight from the rooms: untinted, the same for every door (Little Rose's never carries a color).
   const day = mixc(tok("sky"), tok("wallSun"), 0.45);
-  const spillT = [day, day.clone().multiplyScalar(0.86), day];
+  // On the floor the rooms' light is the day itself (it was 86% of it): the emblem pools on the plain thresholds
+  // reach a lit-to-shade ratio of 1.6 or more (D0.6.2's signature check, critique r1).
+  const spillT = [day, day.clone(), day];
   const U = {
     ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun: sun.color, shade: houseShade(), sunT: houseSun(sun.color), spillT, refs: [Math.abs(sun.dir.x), Li.y], lime, terr }),
     ...apertureUniforms(lights, [sun.dir, Li]),
@@ -86,7 +88,7 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     uFans: { value: Array.from({ length: Math.max(props.fans.length, 1) }, (_, i) => props.fans[i] ? new Vector4(lay.start - props.fans[i].z, FAN.x - C.screenX, props.fans[i].seed, shadows ? 1 : 0) : new Vector4()) },
     uFanA: { value: fanAngle },
   };
-  U.uI.value = [1, 0.9];
+  U.uI.value = [1, 1]; // the rooms' daylight at full strength: the emblem pools read on the thresholds (critique r1)
   const loCo = traces ? loCoSpot(lay, C) : null;
   if (loCo) U.uTrace.value.set(loCo.from, loCo.dir, loCo.x, 1);
 

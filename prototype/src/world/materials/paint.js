@@ -74,7 +74,7 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
         #ifdef LEAF_WEAR
         if (vL.y > -.5) {
           float az = abs(vL.z), d = min(min(vL.y, ${DOOR.h.toFixed(3)} - vL.y), min(az, ${DOOR.w.toFixed(3)} - az));
-          float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.2, .26, vL.y));
+          float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.02, .25, vL.y)); // edges; scuffs fading up the kick zone
           m = max(m, 1. - smoothstep(.085, .105, length(vec2(vL.y - 1.02, az - ${(DOOR.w - 0.08).toFixed(3)}))));
           wear = mix(min(uWear, .1), uWear, m);
           grain = vL.zy * 38. + vL.xx * 21.; // the chips stay on the leaf as it swings
