@@ -5,6 +5,9 @@
 	'use strict';
 
 	var __ = wp.i18n.__;
+	var reach = function ( a ) {
+		return 'reach' === a.actions;
+	};
 
 	hcwa.registerText( 'hcwa/lit-header', {
 		title: __( 'Lit header', 'hcwa' ),
@@ -12,8 +15,8 @@
 		fields: [
 			{ key: 'title', label: __( 'Title', 'hcwa' ) },
 			{ key: 'intro', label: __( 'Intro', 'hcwa' ) },
-			{ key: 'callUs', label: __( 'Call us', 'hcwa' ) },
-			{ key: 'writeUs', label: __( 'Write to us', 'hcwa' ) },
+			{ key: 'callUs', label: __( 'Call us', 'hcwa' ), when: reach },
+			{ key: 'writeUs', label: __( 'Write to us', 'hcwa' ), when: reach },
 		],
 	} );
 }( window.wp, window.hcwaBlocks ) );

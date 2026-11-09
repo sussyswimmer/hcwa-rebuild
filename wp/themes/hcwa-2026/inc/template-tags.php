@@ -586,64 +586,6 @@ function hcwa_theme_vi_name_of( ?WP_Post $vi, string $en_title ): string {
 }
 
 /**
- * Everything a report row or report page shows, from the contract meta.
- *
- * @param WP_Post $post Report.
- * @return array{file_url: string, size: string, format: string, year: int, type: string, type_label: string, doc_lang: string, meta: string}
- */
-function hcwa_theme_report_info( WP_Post $post ): array {
-	$file_id  = (int) get_post_meta( $post->ID, 'hcwa_file_id', true );
-	$file_url = $file_id > 0 ? (string) wp_get_attachment_url( $file_id ) : '';
-	// WordPress stores the size in the attachment metadata at upload, PDFs included
-	// (wp-admin/includes/image.php:735-736, 'filesize'), which the row's priming already
-	// loaded; stat the file only for older uploads without it. Same rule as hcwa-core's
-	// report rows (includes/blocks.php).
-	$meta     = $file_id > 0 ? wp_get_attachment_metadata( $file_id ) : false;
-	$bytes    = is_array( $meta ) && ! empty( $meta['filesize'] ) ? (int) $meta['filesize'] : 0;
-	if ( ! $bytes && $file_id > 0 ) {
-		$path  = get_attached_file( $file_id );
-		$bytes = ( $path && is_readable( $path ) ) ? (int) filesize( $path ) : 0;
-	}
-	$size     = $bytes > 0 ? (string) size_format( $bytes, 1 ) : '';
-	$format   = '' !== $file_url ? strtolower( pathinfo( (string) wp_parse_url( $file_url, PHP_URL_PATH ), PATHINFO_EXTENSION ) ) : '';
-	$year     = (int) get_post_meta( $post->ID, 'hcwa_year', true );
-	$type     = (string) get_post_meta( $post->ID, 'hcwa_report_type', true );
-	$type     = in_array( $type, hcwa_theme_report_types(), true ) ? $type : '';
-	$doc_lang = (string) get_post_meta( $post->ID, 'hcwa_doc_language', true );
-	$doc_lang = in_array( $doc_lang, array( 'vi', 'en', 'both' ), true ) ? $doc_lang : '';
-	$label    = '' !== $type ? hcwa_theme_t( 'rt_' . $type ) : '';
-
-	return array(
-		'file_url'   => $file_url,
-		'size'       => $size,
-		'format'     => '' !== $format ? $format : 'pdf',
-		'year'       => $year,
-		'type'       => $type,
-		'type_label' => $label,
-		'doc_lang'   => $doc_lang,
-		'meta'       => implode( ' · ', array_filter( array( $year > 0 ? (string) $year : '', $label ) ) ),
-	);
-}
-
-/**
- * Prints the document badge: "PDF · Tiếng Việt", each language name in its own language.
- *
- * @param array $info From hcwa_theme_report_info().
- */
-function hcwa_theme_report_badge( array $info ): void {
-	$names = array(
-		'vi' => 'Tiếng Việt',
-		'en' => 'English',
-	);
-	$langs = 'both' === $info['doc_lang'] ? array( 'vi', 'en' ) : array_filter( array( $info['doc_lang'] ) );
-	$parts = array();
-	foreach ( $langs as $lang ) {
-		$parts[] = '<span lang="' . esc_attr( $lang ) . '">' . esc_html( $names[ $lang ] ) . '</span>';
-	}
-	echo '<span class="badge">' . esc_html( strtoupper( $info['format'] ) ) . ( $parts ? ' · ' . implode( ', ', $parts ) : '' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- parts escaped above.
-}
-
-/**
  * Language the visitor asked for when the switch led to a post without a translation
  * (?hcwa_lang_notice=en). '' when the parameter is absent. Read-only display flag.
  */

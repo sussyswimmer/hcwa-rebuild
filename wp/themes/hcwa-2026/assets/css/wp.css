@@ -1,0 +1,73 @@
+/*
+ * hcwa-2026: the WordPress-only pages (docs/plan/11-WP-PORT.md 2.7) and the bars every page can
+ * carry (announcement, admin bar). The news hub, posts, reports, search, attachment pages and
+ * every page that is not built from sections reuse the prototype's components (sun head,
+ * day gradient, dated list, li.doc rows, breadcrumb, search form, footer); this file adds only
+ * what WordPress prints that the prototype has no page for: post bodies, the language notice,
+ * the announcement slot, pagination, share links and the empty state.
+ *
+ * Prototype tokens only (prototype/src/styles/tokens.css): no colour values of our own, no
+ * uppercase, running text at line-height 1.6 or more. No hard edges: surfaces blend into the
+ * day's gradient (05-DESIGN 0.5).
+ */
+
+/* ---------- The sun head on long WordPress titles ---------- */
+.page-wp .sun-head__title { font-size: var(--fs-h1); max-inline-size: 22ch; }
+.page-wp .sun-head__intro { font-size: var(--fs-lg); line-height: var(--lh-lead); max-width: 52ch; color: var(--color-ink-700); }
+
+/* ---------- Lists and bodies inside the day ---------- */
+.wp-list, .wp-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(24px, 3vw, 40px); padding-top: clamp(32px, 5vw, 72px); }
+/* Phones: the chip row scrolls inside itself (the prototype's filters rule), edge to edge. */
+@media (max-width: 599.98px) {
+  .wp-chips { margin-inline: calc(-1 * var(--gutter)); }
+}
+.wp-body { max-width: min(100% - 2 * var(--gutter), 46rem); }
+.wp-chips .filters__list { margin: 0; }
+.wp-empty { max-width: 52ch; padding: 20px 24px; border-radius: var(--r-md); background: color-mix(in srgb, var(--color-lime-50) 70%, transparent); color: var(--color-ink-700); line-height: var(--lh-body); }
+.wp-note { max-width: 60ch; line-height: var(--lh-body); }
+.wp-results { margin: 0; }
+
+/* ---------- Post bodies (the_content) ---------- */
+.entry-content { font-size: var(--fs-base); line-height: var(--lh-body); color: var(--color-ink-900); overflow-wrap: anywhere; }
+.entry-content > * + * { margin-top: 1.1em; }
+.entry-content > :where(h2, h3, h4) { margin-top: 1.6em; }
+.entry-content h2 { font-size: var(--fs-h3); line-height: var(--lh-h3); }
+.entry-content h3 { font-size: var(--fs-h4); line-height: var(--lh-h3); }
+.entry-content p, .entry-content li, .entry-content dd, .entry-content figcaption { line-height: var(--lh-body); }
+.entry-content :where(ul, ol) { padding-left: 1.4em; }
+.entry-content li + li { margin-top: 0.4em; }
+.entry-content blockquote { margin-inline: 0; padding: 4px 0 4px 20px; box-shadow: inset 3px 0 0 var(--color-sun-400); font-size: var(--fs-lg); line-height: var(--lh-lead); }
+.entry-content :where(img, video) { max-width: 100%; height: auto; border-radius: var(--r-sm); }
+.entry-content figure { margin-inline: 0; }
+.entry-content figcaption, .wp-cover figcaption { margin-top: 8px; font-size: var(--fs-sm); line-height: var(--lh-body); color: var(--color-ink-700); }
+.entry-content table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); line-height: var(--lh-body); }
+.entry-content :where(th, td) { padding: 8px 10px; text-align: left; vertical-align: top; box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--color-border) 45%, transparent); }
+.entry-content .post-password-form { display: grid; gap: 12px; max-width: 480px; }
+.entry-content .post-password-form input { min-height: 48px; padding: 0 14px; border: 1.5px solid var(--color-border); border-radius: var(--r-sm); font: inherit; }
+.wp-cover { margin: 0; }
+.wp-cover__img { display: block; width: 100%; height: auto; border-radius: var(--r-md); }
+
+/* ---------- Language notice (hcwa/language-notice) ---------- */
+.lang-notice { display: flex; gap: 12px; align-items: flex-start; padding: 16px 20px; border-radius: var(--r-md); background: color-mix(in srgb, var(--color-sun-200) 55%, transparent); line-height: var(--lh-body); }
+.lang-notice .icon { flex: none; color: var(--color-blue-700); }
+.lang-notice__links { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 6px; }
+
+/* ---------- Announcement slot above the header ---------- */
+.announce-slot { position: relative; z-index: 3; background: linear-gradient(to bottom, var(--color-sun-200), color-mix(in srgb, var(--color-sun-200) 0%, transparent)); line-height: var(--lh-body); }
+
+/* ---------- Share links ---------- */
+.share { display: grid; gap: 10px; padding-top: 8px; }
+.share__title { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.share__list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* ---------- Pagination ---------- */
+.pagination ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pagination :where(a, span).page-numbers { display: inline-flex; align-items: center; gap: 6px; min-width: 48px; min-height: 48px; justify-content: center; padding: 0 14px; border-radius: var(--r-pill); color: var(--color-ink-900); text-decoration: none; }
+.pagination a.page-numbers { background: color-mix(in srgb, var(--color-lime-50) 82%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-border) 55%, transparent); }
+.pagination a.page-numbers:hover { color: var(--color-blue-700); box-shadow: inset 0 0 0 1.5px var(--color-blue-700); }
+.pagination .page-numbers.current { background: var(--color-blue-700); color: var(--color-on-dusk); }
+.pagination .page-numbers.dots { min-width: 0; padding: 0 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pagination a.page-numbers { transition: none; }
+}

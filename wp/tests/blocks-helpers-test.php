@@ -33,6 +33,7 @@ $GLOBALS['hcwa_test']['env'] = 'production';
 $hcwa_prod = hcwa_blocks_text( array( 'intro' => '[DRAFT: Lời chào]' ), 'intro' );
 hcwa_assert_same( '', $hcwa_prod['text'], 'text attr: draft prints nothing on production' );
 hcwa_assert_same( '', hcwa_pending_chip_html(), 'pending chip: none on production' );
+hcwa_assert_same( '', hcwa_draft_attr( true ), 'draft attr: never on production (7.7), even when a caller asks for it' );
 $GLOBALS['hcwa_test']['env'] = 'staging';
 
 // Context post: global post, else 0 outside a request.

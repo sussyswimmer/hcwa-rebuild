@@ -484,12 +484,14 @@ function hcwa_blocks_title( WP_Post $post ): string {
  * ---------------------------------------------------------------------- */
 
 /**
- * ' data-draft' when the flag is set, else ''.
+ * ' data-draft' when the flag is set, else ''. Never on production (7.7: no data-draft there),
+ * whatever the caller decided: a draft text prints nothing on production, but a line built
+ * from a confirmed part and a draft part must not carry the outline either.
  *
  * @param bool $draft Whether the element carries draft text.
  */
 function hcwa_draft_attr( bool $draft ): string {
-	return $draft ? ' data-draft' : '';
+	return $draft && ! hcwa_is_production() ? ' data-draft' : '';
 }
 
 /**

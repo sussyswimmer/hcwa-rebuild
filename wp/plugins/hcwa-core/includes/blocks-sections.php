@@ -1992,7 +1992,7 @@ function hcwa_program_span_html( WP_Post $program ): string {
 	$s = hcwa_program_span( $p );
 	return '<section class="span container" aria-labelledby="program-span">' . "\n  "
 		. '<h2 class="sr-only" id="program-span">' . esc_html( hcwa_t( 'years' ) ) . '</h2>' . "\n  "
-		. '<div class="timeband timeband--' . esc_attr( $p['status'] ) . '" style="--at:' . esc_attr( $s['at'] ) . '"' . ( $s['known'] ? '' : ' data-draft' ) . ">\n    "
+		. '<div class="timeband timeband--' . esc_attr( $p['status'] ) . '" style="--at:' . esc_attr( $s['at'] ) . '"' . hcwa_draft_attr( ! $s['known'] ) . ">\n    "
 		. '<p class="timeband__end timeband__end--start">' . esc_html( $s['start'] ) . '</p>' . "\n    "
 		. '<p class="timeband__bar"><span class="timeband__lit" aria-hidden="true"></span><span class="timeband__today">' . esc_html( hcwa_t( 'today' ) ) . '</span></p>' . "\n    "
 		. '<p class="timeband__end">' . esc_html( $s['end'] ) . '</p>' . "\n  "
@@ -2152,7 +2152,7 @@ function hcwa_doc_placeholder_or_row( array $r, bool $placeholder ): string {
 			$r['size'] > 0 ? esc_html( size_format( $r['size'] ) ) : '[KB]',
 		)
 	);
-	return '<li class="doc" data-draft>' . "\n        "
+	return '<li class="doc"' . hcwa_draft_attr( true ) . '>' . "\n        "
 		. hcwa_icon( 'file', 'icon doc__icon' ) . "\n        "
 		. '<p class="doc__title">' . esc_html( $r['title']['text'] ) . '</p>' . "\n        "
 		. '<p class="doc__meta">' . $meta . '</p>' . "\n      "

@@ -179,12 +179,16 @@
 	 * whose items keep their order and count (the pattern sets them; staff change words only).
 	 *
 	 * @param {Object} props  Block props.
-	 * @param {Array}  fields [{ key, label }] or [{ key, label, list: [{ key, label }] }].
+	 * @param {Array}  fields [{ key, label, when? }] or [{ key, label, list: [{ key, label }] }].
 	 * @return {Array} Elements.
 	 */
 	function textFields( props, fields ) {
 		var a = props.attributes;
-		return fields.map( function ( field ) {
+		// A field with `when` shows only while the block prints it (Call us and Write to us
+		// belong to the Contact header).
+		return fields.filter( function ( field ) {
+			return ! field.when || field.when( a );
+		} ).map( function ( field ) {
 			if ( ! field.list ) {
 				return el( TextField, {
 					key: field.key,

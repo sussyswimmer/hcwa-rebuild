@@ -293,7 +293,7 @@ function hcwa_theme_menu_fallback( array $args ) {
 			$items[] = hcwa_theme_fake_menu_item( ++$next, $parent_id, $child[0], $child[1], count( $items ) + 1 );
 		}
 	}
-	$items = hcwa_theme_mark_current( $items );
+	$items = hcwa_theme_mark_current( hcwa_theme_drop_unpublished_items( $items ) );
 
 	$walk_args = (object) $args;
 	$html      = walk_nav_menu_tree( $items, (int) ( $args['depth'] ?? 0 ), $walk_args );
@@ -338,7 +338,65 @@ function hcwa_theme_fake_menu_item( int $id, int $parent_id, string $url_key, st
 	);
 }
 
+add_filter( 'wp_nav_menu_objects', 'hcwa_theme_drop_unpublished_items', 5 );
 add_filter( 'wp_nav_menu_objects', 'hcwa_theme_mark_current' );
+
+/**
+ * Leaves out menu items whose page, post or term is not public (2.1 rule 11: no link to a
+ * target that is not printed). WordPress keeps a menu item when its page goes back to draft,
+ * which the production procedure does with every page that still holds draft text
+ * (11-WP-PORT.md 5.9), and get_permalink() then gives a ?page_id= link that answers 404.
+ * Children of a dropped item go with it.
+ *
+ * @param array $items Menu items (WP_Post objects set up by wp_setup_nav_menu_item()).
+ * @return array
+ */
+function hcwa_theme_drop_unpublished_items( array $items ): array {
+	$dropped = array();
+	$kept    = array();
+	foreach ( $items as $item ) {
+		$id     = (int) ( $item->ID ?? 0 );
+		$parent = (int) ( $item->menu_item_parent ?? 0 );
+		$hidden = $parent && isset( $dropped[ $parent ] );
+		if ( ! $hidden && 'post_type' === ( $item->type ?? '' ) ) {
+			$hidden = 'publish' !== get_post_status( (int) ( $item->object_id ?? 0 ) );
+		} elseif ( ! $hidden ) {
+			// A custom link or a fallback item to one of our own pages (Polylang keeps the
+			// language prefix out of the page path).
+			$target = hcwa_theme_link_post_id( (string) ( $item->url ?? '' ) );
+			$hidden = $target > 0 && 'publish' !== get_post_status( $target );
+		}
+		if ( $hidden ) {
+			$dropped[ $id ] = true;
+			continue;
+		}
+		$kept[] = $item;
+	}
+	return $kept;
+}
+
+/**
+ * The post an internal link points at, or 0 (external links, anchors only, archives).
+ *
+ * @param string $url Link.
+ */
+function hcwa_theme_link_post_id( string $url ): int {
+	static $cache = array();
+	$home = (string) wp_parse_url( (string) get_option( 'home' ), PHP_URL_HOST );
+	$host = (string) wp_parse_url( $url, PHP_URL_HOST );
+	if ( '' === $url || ( '' !== $host && $host !== $home ) ) {
+		return 0;
+	}
+	$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+	if ( '' === $path ) {
+		return 0;
+	}
+	if ( ! isset( $cache[ $path ] ) ) {
+		$page           = get_page_by_path( (string) preg_replace( '#^en/#', '', $path ), OBJECT, 'page' );
+		$cache[ $path ] = $page instanceof WP_Post ? (int) $page->ID : 0;
+	}
+	return $cache[ $path ];
+}
 
 /**
  * Marks the menu item for the current section by URL, for pages WordPress cannot relate to
