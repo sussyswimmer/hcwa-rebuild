@@ -186,8 +186,12 @@ wpcli() {
 	local name=$1
 	shift
 	[[ -f "$CACHE_DIR/wp-cli.phar" ]] || die "WP-CLI is not downloaded yet: scripts/wp-local.sh setup $name"
+	# Cloud build containers only have root. The instance is local, on 127.0.0.1, and runs only this
+	# repo's code plus the pinned downloads, so WP-CLI's root warning does not apply there.
+	local root_flag=()
+	[[ "$(id -u)" == 0 ]] && root_flag=(--allow-root)
 	HCWA_WP_URL="$(inst_url "$name")" "$PHP_BIN" -d memory_limit=512M "$CACHE_DIR/wp-cli.phar" \
-		--path="$(docroot "$name")" "$@"
+		"${root_flag[@]}" --path="$(docroot "$name")" "$@"
 }
 
 python_bin() {
