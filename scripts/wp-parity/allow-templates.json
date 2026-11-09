@@ -184,6 +184,22 @@
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
       "owner": "templates"
+    },
+    {
+      "route": "/hoat-dong/co-so/tre-xanh/",
+      "section": "main>header.lit-head",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The center logo comes from the media library (the center's logo field, 3.2), and the driver blurs every /wp-content/uploads/ image as the smoke test does (run.py new_context; this repo is public), where the prototype serves the same PNG from /img/. Same file, same 56 px box; the blurred logo is a larger share of the header at 390.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/our-work/centers/green-bamboo/",
+      "section": "main>header.lit-head",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The center logo comes from the media library (the center's logo field, 3.2), and the driver blurs every /wp-content/uploads/ image as the smoke test does (run.py new_context; this repo is public), where the prototype serves the same PNG from /img/. Same file, same 56 px box; the blurred logo is a larger share of the header at 390.",
+      "owner": "templates"
     }
   ]
 }

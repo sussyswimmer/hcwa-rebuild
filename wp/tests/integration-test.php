@@ -79,16 +79,17 @@ require_once $hcwa_theme_dir . '/inc/strings.php';
 require_once $hcwa_theme_dir . '/inc/core-bridge.php';
 require_once $hcwa_theme_dir . '/inc/template-tags.php';
 $hcwa_pattern = (string) file_get_contents( $hcwa_theme_dir . '/patterns/page-our-work-en.php' );
-hcwa_assert_contains( '?area=education', $hcwa_pattern, 'Our Work pattern chips are ?area= links' );
-foreach ( array( 'center-grid', 'program-list' ) as $hcwa_block ) {
-	$hcwa_render = (string) file_get_contents( dirname( __DIR__ ) . "/plugins/hcwa-core/blocks/$hcwa_block/render.php" );
-	hcwa_assert_contains( "'data-filter-group' => ''", $hcwa_render, "$hcwa_block marks its root as a filter group" );
-}
+hcwa_assert_contains( '<!-- wp:hcwa/work-hub ', $hcwa_pattern, 'Our Work pattern holds the work hub (its ?area= chips are printed by hcwa_render_work_hub())' );
+$hcwa_hub = hcwa_render_work_hub( array( 'centersLead' => 'Cơ sở', 'programsLead' => 'Dự án' ) );
+hcwa_assert_contains( '<a class="chip chip--all" href="./" data-area="">', $hcwa_hub, 'work hub: the "all" chip works without JS' );
+hcwa_assert_same( 2, substr_count( $hcwa_hub, 'data-filter-group' ), 'work hub: places and times are filter groups' );
+hcwa_assert_contains( 'data-filter-status aria-live="polite"', $hcwa_hub, 'work hub: the filter status is announced' );
 
-// Partner logos: the program page uses the same rule-5 gate as hcwa/partner-wall.
+// Partner logos: only hcwa/partner-wall prints them, through the rule-5 gate; the program
+// page names its funders as text (2.5 P3), as the prototype does.
 $hcwa_program = (string) file_get_contents( $hcwa_theme_dir . '/single-hcwa_program.php' );
-hcwa_assert_contains( 'hcwa_partner_logo_allowed(', $hcwa_program, 'program page gates partner logos with hcwa_partner_logo_allowed()' );
-hcwa_assert_false( (bool) preg_match( "/get_post_meta\([^)]*'hcwa_logo_permission'/", $hcwa_program ), 'program page does not read the permission flag itself' );
+hcwa_assert_false( str_contains( $hcwa_program, 'wp_get_attachment_image' ) || str_contains( $hcwa_program, 'hcwa_logo_permission' ), 'program page prints no partner logo' );
+hcwa_assert_contains( 'hcwa_partner_logo_allowed(', (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks-sections.php' ), 'the partner wall gates logos with hcwa_partner_logo_allowed()' );
 
 // Rule 2 for photos placed in content (core/image blocks, classic HTML, cover, media-text).
 hcwa_assert_true( hcwa_content_image_decision( 0, true, false ), 'not a library photo (printed by gated code, or a theme file): left alone' );
@@ -120,13 +121,14 @@ hcwa_assert_same( 'x', hcwa_gate_image_block( 'x', array( 'attrs' => array() ) )
 // One category map in core (hcwa_category_slugs()): the theme's chips and labels, the
 // blocks' card labels and `wp hcwa coverage` read it. Legacy story categories count as
 // stories, so the "names changed" note and the story photo gate always agree.
-hcwa_assert_same( hcwa_category_slugs(), hcwa_blocks_category_slugs(), 'blocks read the core category map' );
 hcwa_assert_same( array( 'news', 'stories', 'events', 'announcements' ), array_keys( hcwa_category_slugs() ), 'four sections' );
 hcwa_assert_same( 'stories', hcwa_category_key( array( 'our-stories' ) ), 'legacy English story category is a story' );
 hcwa_assert_same( 'stories', hcwa_category_key( array( 'chuyen-cua-chung-toi-vi' ) ), 'legacy Vietnamese story category, suffixed' );
 hcwa_assert_same( 'events', hcwa_category_key( array( 'other', 'su-kien-vi' ) ), 'seeded section through a translation slug' );
 hcwa_assert_same( '', hcwa_category_key( array( 'uncategorized' ) ), 'not a section' );
-hcwa_assert_same( 'stories', hcwa_blocks_category_key( array( 'our-stories' ) ), 'news-latest labels legacy stories as stories' );
+hcwa_test_post( array( 'ID' => 306, 'post_type' => 'post' ) );
+$GLOBALS['hcwa_test']['terms'][306]['category'] = array( new WP_Term( array( 'term_id' => 4, 'slug' => 'our-stories', 'taxonomy' => 'category', 'name' => 'Our stories' ) ) );
+hcwa_assert_same( hcwa_t( 'cat_story' ), hcwa_post_category_label( get_post( 306 ) ), 'news lists label legacy stories as stories (core category map)' );
 
 hcwa_assert_same( hcwa_category_slugs(), hcwa_theme_category_slugs(), 'theme reads the core category map' );
 hcwa_assert_same( 'stories', hcwa_theme_category_key( new WP_Term( array( 'term_id' => 9310, 'slug' => 'our-stories', 'taxonomy' => 'category' ) ) ), 'theme card label: legacy story category is a story' );

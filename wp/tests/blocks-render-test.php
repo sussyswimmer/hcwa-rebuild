@@ -19,26 +19,65 @@ $hcwa_render = static function ( string $name, array $attributes = array() ): st
 	} )();
 };
 
-// Empty states: nothing on production, a short note on staging (data-draft outline).
+// Lists with nothing to show print nothing, on staging and production alike (the prototype
+// prints no empty state); the partner wall shows its pending note on staging only.
 $hcwa_empty = array(
 	'impact-strip' => array( 'scopeType' => 'organization' ),
-	'center-grid'  => array( 'limit' => 3 ),
 	'program-list' => array( 'status' => 'any' ),
 	'report-list'  => array( 'reportType' => 'any' ),
-	'partner-wall' => array( 'homeOnly' => true ),
 	'news-latest'  => array( 'featured' => true ),
 );
 foreach ( $hcwa_empty as $hcwa_name => $hcwa_attrs ) {
-	$GLOBALS['hcwa_test']['env'] = 'production';
-	hcwa_assert_same( '', $hcwa_render( $hcwa_name, $hcwa_attrs ), "$hcwa_name: nothing on production when empty" );
-	$GLOBALS['hcwa_test']['env'] = 'staging';
-	$hcwa_html = $hcwa_render( $hcwa_name, $hcwa_attrs );
-	hcwa_assert_contains( '<p class="wp-block-hcwa-test empty-state" data-draft="">', $hcwa_html, "$hcwa_name: staging note" );
+	foreach ( array( 'production', 'staging' ) as $hcwa_env ) {
+		$GLOBALS['hcwa_test']['env'] = $hcwa_env;
+		hcwa_assert_same( '', $hcwa_render( $hcwa_name, $hcwa_attrs ), "$hcwa_name: nothing on $hcwa_env when empty" );
+	}
 }
-// Same for the center and program scopes of the impact strip outside a center page.
-hcwa_assert_contains( 'empty-state', $hcwa_render( 'impact-strip', array( 'scopeType' => 'center', 'scopeId' => 0 ) ), 'impact strip: center scope without a page' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', $hcwa_render( 'partner-wall', array( 'homeOnly' => true ) ), 'partner wall: nothing on production below the minimum' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+$hcwa_html = $hcwa_render( 'partner-wall', array( 'homeOnly' => true, 'title' => 'Đối tác' ) );
+hcwa_assert_contains( 'data-partners-pending', $hcwa_html, 'partner wall: pending wall on staging' );
+hcwa_assert_contains( 'data-draft', $hcwa_html, 'partner wall: the pending note is outlined' );
 // Rendering twice must work: render.php is required on every render (no function declarations).
-hcwa_assert_contains( 'empty-state', $hcwa_render( 'center-grid' ), 'center grid renders a second time' );
+hcwa_assert_same( '', $hcwa_render( 'program-list' ), 'program list renders a second time' );
+
+// No wrapper markup: each block prints the prototype's own element first.
+$hcwa_first = array(
+	'hero'      => array( array( 'title' => 'Xin chào', 'intro' => 'Lời mở đầu' ), '<section class="hero' ),
+	'passage'   => array( array( 'title' => 'Lối sáng', 'statement' => 'Một câu' ), '<section class="passage"' ),
+	'corridor'  => array( array( 'intro' => 'Các cơ sở' ), '<section class="bays-section"' ),
+	'shutters'  => array( array(), '<section class="shutters"' ),
+	'help'      => array( array( 'title' => 'Cách giúp' ), '<section class="wall wall--light help"' ),
+	'dusk-band' => array( array( 'title' => 'Liên hệ', 'titleId' => 'contact-title', 'actions' => array( 'contact' ) ), '<section class="dusk"' ),
+	'work-hub'  => array( array( 'centersLead' => 'Cơ sở', 'programsLead' => 'Dự án' ), '<nav class="filters container"' ),
+	'gifts'     => array( array( 'title' => 'Ví dụ', 'gifts' => array( array( 'amount' => '[DRAFT: 200.000 đ]', 'text' => '[DRAFT: Sách vở]' ) ) ), '<section class="gifts container"' ),
+);
+foreach ( $hcwa_first as $hcwa_name => $hcwa_case ) {
+	$hcwa_html = $hcwa_render( $hcwa_name, $hcwa_case[0] );
+	hcwa_assert_same( 0, strpos( $hcwa_html, $hcwa_case[1] ), "$hcwa_name: starts with the prototype's element" );
+	hcwa_assert_false( str_contains( $hcwa_html, 'wp-block-hcwa' ), "$hcwa_name: no block wrapper class" );
+}
+$hcwa_html = $hcwa_render( 'dusk-band', array( 'title' => 'Liên hệ', 'titleId' => 'contact-title', 'anchor' => 'contact', 'actions' => array( 'contact' ) ) );
+hcwa_assert_contains( '<section class="dusk" id="contact" aria-labelledby="contact-title">', $hcwa_html, 'dusk band: anchor and labelled by its title' );
+hcwa_assert_contains( '<h2 class="dusk__title" id="contact-title">Liên hệ</h2>', $hcwa_html, 'dusk band: title' );
+hcwa_assert_false( str_contains( $hcwa_render( 'dusk-band', array( 'titleId' => 'x' ) ), 'aria-labelledby' ), 'dusk band: no title, no aria-labelledby' );
+
+// Gift examples (P5): staging only, the amounts are HCWA's to confirm.
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', $hcwa_render( 'gifts', $hcwa_first['gifts'][0] ), 'gifts: never on production' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
+hcwa_assert_contains( 'Sách vở', $hcwa_render( 'gifts', $hcwa_first['gifts'][0] ), 'gifts: shown on staging with the draft unwrapped' );
+
+// Draft text attributes: unwrapped and outlined on staging, left out on production.
+$hcwa_html = $hcwa_render( 'passage', array( 'title' => '[DRAFT: Lối sáng]', 'statement' => 'Một câu' ) );
+hcwa_assert_contains( 'Lối sáng', $hcwa_html, 'draft attr: the inner text on staging' );
+hcwa_assert_false( str_contains( $hcwa_html, '[DRAFT' ), 'draft attr: no marker printed' );
+hcwa_assert_contains( 'data-draft', $hcwa_html, 'draft attr: outlined on staging' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+$hcwa_html = $hcwa_render( 'passage', array( 'title' => '[DRAFT: Lối sáng]', 'statement' => 'Một câu' ) );
+hcwa_assert_false( str_contains( $hcwa_html, 'Lối sáng' ) || str_contains( $hcwa_html, 'data-draft' ), 'draft attr: neither the text nor data-draft on production' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
 
 // Announcement bar: off, on, per language, draft text on production.
 hcwa_assert_same( '', $hcwa_render( 'announcement-bar' ), 'announcement: off by default' );
@@ -52,10 +91,10 @@ update_option(
 	)
 );
 $hcwa_html = $hcwa_render( 'announcement-bar' );
-hcwa_assert_contains( 'class="wp-block-hcwa-test announce" data-announce="Hội chợ Tết: gửi hiện vật trước ngày 15/1 &lt;b&gt;ngay&lt;/b&gt;"', $hcwa_html, 'announcement: wrapper keyed by its text' );
+hcwa_assert_contains( '<div class="announce" data-announce="Hội chợ Tết: gửi hiện vật trước ngày 15/1 ngay">', $hcwa_html, 'announcement: keyed by its plain text' );
 hcwa_assert_contains( '<a href="https://hcwa.test/chung-tay/hien-vat/">Đọc thêm</a>', $hcwa_html, 'announcement: read more link in vi' );
 hcwa_assert_contains( 'data-dismiss-announce aria-label="Ẩn thông báo"', $hcwa_html, 'announcement: labelled close button' );
-hcwa_assert_false( str_contains( $hcwa_html, '<b>' ), 'announcement: text escaped' );
+hcwa_assert_false( str_contains( $hcwa_html, '<b>' ), 'announcement: no markup from the setting' );
 update_option(
 	'hcwa_settings',
 	array(
@@ -63,21 +102,40 @@ update_option(
 		'announcement_text_vi' => '[DRAFT: Hội chợ Tết]',
 	)
 );
-hcwa_assert_contains( '<p data-draft>', $hcwa_render( 'announcement-bar' ), 'announcement: draft text outlined on staging' );
+hcwa_assert_contains( '<p data-draft>Hội chợ Tết', $hcwa_render( 'announcement-bar' ), 'announcement: draft text outlined on staging' );
 $GLOBALS['hcwa_test']['env'] = 'production';
 hcwa_assert_same( '', $hcwa_render( 'announcement-bar' ), 'announcement: draft text never on production' );
 $GLOBALS['hcwa_test']['env'] = 'staging';
 
 // Donation methods (contract gating rule 3).
+$hcwa_pay = array(
+	'howTitle'      => 'Cách ủng hộ',
+	'tabsLabel'     => 'Cách chuyển',
+	'inVietnam'     => 'Trong nước',
+	'fromAbroad'    => 'Từ nước ngoài',
+	'qr'            => 'Mã QR',
+	'pendingNote'   => '[DRAFT: Chờ bộ phận tài chính xác nhận]',
+	'toCenterTitle' => 'Ủng hộ một cơ sở',
+	'tellTitle'     => 'Báo cho Hội',
+	'bankFields'    => array(
+		array( 'id' => 'bank', 'label' => 'Ngân hàng', 'copy' => false ),
+		array( 'id' => 'account', 'label' => 'Số tài khoản', 'copy' => true ),
+	),
+);
 update_option( 'hcwa_settings', array( 'donation_account' => '0123456789', 'donation_bank_vi' => 'Ngân hàng X' ) );
 $GLOBALS['hcwa_test']['env'] = 'production';
-hcwa_assert_same( '', $hcwa_render( 'donation-methods' ), 'donation: unconfirmed details never on production' );
+$hcwa_html                   = $hcwa_render( 'donation-methods', $hcwa_pay );
+hcwa_assert_false( str_contains( $hcwa_html, 'class="slip"' ) || str_contains( $hcwa_html, '0123456789' ), 'donation: no slip and no unconfirmed details on production' );
+hcwa_assert_false( str_contains( $hcwa_html, 'data-form' ), 'donation: no form on production without a handler' );
+hcwa_assert_contains( '<nav class="trust container"', $hcwa_html, 'donation: the trust links stay' );
 $GLOBALS['hcwa_test']['env'] = 'staging';
-$hcwa_html = $hcwa_render( 'donation-methods' );
-hcwa_assert_contains( '<div class="wp-block-hcwa-test methods">', $hcwa_html, 'donation: methods wrapper' );
+$hcwa_html = $hcwa_render( 'donation-methods', $hcwa_pay );
+hcwa_assert_same( 0, strpos( $hcwa_html, '<div class="give-grid container">' ), 'donation: the give grid' );
 hcwa_assert_contains( 'data-donation-placeholder', $hcwa_html, 'donation: staging shows the labelled placeholder' );
 hcwa_assert_false( str_contains( $hcwa_html, '0123456789' ), 'donation: unconfirmed account number never printed, even on staging' );
-hcwa_assert_contains( 'aria-live="polite" data-live', $hcwa_html, 'donation: live region for the copy buttons' );
+hcwa_assert_contains( 'aria-describedby="pay-note"', $hcwa_html, 'donation: copy buttons described by the pending note' );
+hcwa_assert_contains( '<p class="slip__note" id="pay-note" data-draft>', $hcwa_html, 'donation: the pending note' );
+hcwa_assert_contains( 'data-form', $hcwa_html, 'donation: the tell form on staging' );
 update_option(
 	'hcwa_settings',
 	array(
@@ -89,14 +147,12 @@ update_option(
 	)
 );
 $GLOBALS['hcwa_test']['env'] = 'production';
-$hcwa_html                   = $hcwa_render( 'donation-methods' );
+$hcwa_html                   = $hcwa_render( 'donation-methods', $hcwa_pay );
 hcwa_assert_contains( 'data-copy="0123456789"', $hcwa_html, 'donation: confirmed account with copy button on production' );
-hcwa_assert_contains( 'class="pay__qr" alt="Mã VietQR để chuyển khoản"', $hcwa_html, 'donation: VietQR image with alt text' );
-hcwa_assert_false( str_contains( $hcwa_html, 'data-donation-placeholder' ), 'donation: no placeholder once confirmed' );
-update_option( 'hcwa_settings', array( 'donation_confirmed_by' => 'Kế toán', 'donation_confirmed_date' => '2026-11-01' ) );
-hcwa_assert_same( '', $hcwa_render( 'donation-methods' ), 'donation: confirmed but empty prints nothing on production' );
+hcwa_assert_contains( 'alt="Mã QR"', $hcwa_html, 'donation: VietQR image with alt text' );
+hcwa_assert_false( str_contains( $hcwa_html, 'data-donation-placeholder' ) || str_contains( $hcwa_html, 'data-draft' ), 'donation: no placeholder and no draft outline once confirmed' );
+hcwa_assert_false( str_contains( $hcwa_html, 'pay-note' ), 'donation: a draft note is left out on production, and nothing points at it' );
 $GLOBALS['hcwa_test']['env'] = 'staging';
-hcwa_assert_contains( 'empty-state', $hcwa_render( 'donation-methods' ), 'donation: confirmed but empty shows a note on staging' );
 
 // Language notice (07-BILINGUAL): only when asked for, in the language asked for, once
 // per page, and only while the post has no published translation in that language.

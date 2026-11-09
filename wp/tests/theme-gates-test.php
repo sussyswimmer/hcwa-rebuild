@@ -15,6 +15,7 @@ require_once $hcwa_theme_dir . '/inc/strings.php';
 require_once $hcwa_theme_dir . '/inc/core-bridge.php';
 require_once $hcwa_theme_dir . '/inc/template-tags.php';
 require_once $hcwa_theme_dir . '/inc/setup.php';
+require_once $hcwa_theme_dir . '/inc/assets.php';
 
 $hcwa_read = static fn( string $file ): string => (string) file_get_contents( $hcwa_theme_dir . '/' . $file );
 
@@ -46,8 +47,11 @@ hcwa_assert_same( 'https://www.facebook.com/hcwa', hcwa_theme_setting( 'facebook
 $GLOBALS['hcwa_test']['env'] = 'staging';
 
 $hcwa_footer = $hcwa_read( 'footer.php' );
-hcwa_assert_contains( "hcwa_theme_public_text( wp_strip_all_tags( get_bloginfo( 'description' ) ) )", $hcwa_footer, 'footer tagline goes through the draft check' );
-hcwa_assert_contains( "hcwa_theme_draft_attr( \$hcwa_registration )", $hcwa_footer, 'footer marks a draft registration line on staging' );
+hcwa_assert_contains( "hcwa_theme_draft_text( (string) get_bloginfo( 'description' ) )", $hcwa_footer, 'footer tagline goes through the draft rule' );
+hcwa_assert_contains( "<p class=\"foot-brand__reg\"<?php echo \$hcwa_registration['draft'] ? ' data-draft' : ''; ?>>", $hcwa_footer, 'footer marks a draft registration line on staging' );
+$GLOBALS['hcwa_test']['env'] = 'production';
+hcwa_assert_same( '', hcwa_theme_draft_text( $hcwa_draft )['text'], 'production: a draft registration line prints nothing' );
+$GLOBALS['hcwa_test']['env'] = 'staging';
 // Captions go through hcwa_theme_attachment_text(), which ends in hcwa_theme_public_text() (tested below).
 hcwa_assert_contains( "hcwa_theme_attachment_text( \$hcwa_thumb_id, 'caption' )", $hcwa_read( 'single.php' ), 'post cover caption: staff-written and draft-checked' );
 hcwa_assert_contains( "hcwa_theme_attachment_text( (int) get_the_ID(), 'caption' )", $hcwa_read( 'attachment.php' ), 'attachment caption: staff-written and draft-checked' );
@@ -142,8 +146,12 @@ hcwa_assert_same( array(), $hcwa_no_core_hooks, 'with hcwa-core active the theme
 $hcwa_before = wp_increase_content_media_count( 0 );
 hcwa_theme_cover_printed();
 hcwa_assert_same( $hcwa_before + 3, wp_increase_content_media_count( 0 ), 'the cover uses up the eager allowance, so body images are lazy' );
-foreach ( array( 'single.php', 'single-hcwa_center.php', 'single-hcwa_program.php' ) as $hcwa_file ) {
+foreach ( array( 'single.php' ) as $hcwa_file ) {
 	hcwa_assert_true( (bool) preg_match( '/if \( \'\' !== \$hcwa_cover \)[\s\S]{0,400}?hcwa_theme_cover_printed\(\);/', $hcwa_read( $hcwa_file ) ), "$hcwa_file counts the cover only when it was printed" );
+}
+// Center and program pages print no cover photo (2.5: the lit header carries the page).
+foreach ( array( 'single-hcwa_center.php', 'single-hcwa_program.php' ) as $hcwa_file ) {
+	hcwa_assert_false( str_contains( $hcwa_read( $hcwa_file ), 'get_post_thumbnail_id' ), "$hcwa_file prints no cover photo" );
 }
 
 
@@ -210,7 +218,8 @@ hcwa_assert_same( 'lop-hoc', hcwa_theme_file_name_key( 'lop-hoc-e1730000000000' 
 $hcwa_attachment_tpl = $hcwa_read( 'attachment.php' );
 hcwa_assert_contains( 'hcwa_theme_attachment_heading( (int) get_the_ID() )', $hcwa_attachment_tpl, 'attachment page heading never prints the file name' );
 hcwa_assert_false( str_contains( $hcwa_attachment_tpl, 'get_the_title() )' ), 'attachment page no longer prints its raw title' );
-hcwa_assert_contains( "hcwa_theme_attachment_text( \$hcwa_att, 'alt' )", $hcwa_read( 'single-hcwa_center.php' ), 'center gallery labels use alt text staff wrote' );
+$hcwa_core_sections = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks-sections.php' );
+hcwa_assert_contains( 'hcwa_image(', substr( $hcwa_core_sections, (int) strpos( $hcwa_core_sections, 'function hcwa_center_photos' ), 1200 ), 'center gallery photos go through hcwa_image() (alt only as staff wrote it, core filter)' );
 
 // Browser title of an attachment page.
 hcwa_assert_same( array( 'title' => 'Tin tức' ), hcwa_theme_attachment_document_title( array( 'title' => 'Tin tức' ) ), 'other pages keep their browser title' );
@@ -272,7 +281,11 @@ $GLOBALS['hcwa_test']['post_meta'][9101] = array( 'hcwa_no_identifiable_children
 $GLOBALS['hcwa_test']['post_meta'][9102] = array( 'hcwa_location' => 'Phường Y, TP. Hồ Chí Minh' );
 hcwa_assert_true( hcwa_theme_center_is_protected( 9101 ), 'a center flagged no-identifiable is protected' );
 hcwa_assert_false( hcwa_theme_center_is_protected( 9102 ), 'an ordinary center is not protected' );
-$hcwa_center_tpl = $hcwa_read( 'single-hcwa_center.php' );
-hcwa_assert_contains( "\$hcwa_protected ? '' : (string) get_post_meta( \$hcwa_id, 'hcwa_location'", $hcwa_center_tpl, 'protected centers print no location' );
-hcwa_assert_contains( "\$hcwa_protected\n\t\t\t\t? hcwa_theme_t( 'supportTitle'", $hcwa_center_tpl, 'protected centers do not invite visits' );
+// The center page markup is built in hcwa-core (11-WP-PORT.md 2.5 P2).
+hcwa_test_post( array( 'ID' => 9101, 'post_type' => 'hcwa_center', 'post_title' => 'Mái ấm Hoa Hồng Nhỏ' ) );
+hcwa_test_post( array( 'ID' => 9102, 'post_type' => 'hcwa_center', 'post_title' => 'Tre Xanh' ) );
+hcwa_assert_same( '', hcwa_center_view( get_post( 9101 ) )['location']['text'], 'protected centers print no location' );
+hcwa_assert_same( 'Phường Y, TP. Hồ Chí Minh', hcwa_center_view( get_post( 9102 ) )['location']['text'], 'an ordinary center prints its location' );
+$hcwa_core_sections = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks-sections.php' );
+hcwa_assert_contains( "\$c['protected'] ? 'supportTitle' : 'visitTitle'", $hcwa_core_sections, 'protected centers do not invite visits' );
 

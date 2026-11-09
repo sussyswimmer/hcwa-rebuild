@@ -1,7 +1,8 @@
 <?php
 /**
- * Search results in the page language (Polylang filters the query), with the search form
- * on top, compact result rows and pagination.
+ * Search results in the page language (Polylang filters the query; 11-WP-PORT.md 2.7): the
+ * sun head, the prototype's search form, the results as a dated list, pagination or the
+ * empty state.
  *
  * @package hcwa-2026
  */
@@ -13,42 +14,30 @@ get_header();
 $hcwa_query = trim( get_search_query( false ) );
 $hcwa_title = '' !== $hcwa_query ? hcwa_theme_t( 'searchResults', array( 'q' => $hcwa_query ) ) : hcwa_theme_t( 'searchTitle' );
 
-get_template_part(
-	'template-parts/page-header',
-	null,
+echo hcwa_theme_sun_head( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 	array(
-		'trail' => array( array( hcwa_theme_t( 'searchTitle' ) ) ),
 		'title' => $hcwa_title,
+		'trail' => array( array( hcwa_theme_t( 'searchTitle' ) ) ),
 	)
 );
 ?>
-<div class="section section--tight">
-	<div class="container search-page">
-		<?php get_search_form(); ?>
-
-		<?php if ( have_posts() ) : ?>
-			<ul class="news-list search-results">
-				<?php
-				while ( have_posts() ) {
-					the_post();
-					get_template_part(
-						'template-parts/card',
-						null,
-						array(
-							'post'    => get_post(),
-							'variant' => 'item',
-							'heading' => 'h2',
-							'excerpt' => true,
-						)
-					);
-				}
-				?>
-			</ul>
-			<?php get_template_part( 'template-parts/pagination' ); ?>
-		<?php else : ?>
-			<p class="empty-state"><?php hcwa_theme_e( 'searchEmpty' ); ?></p>
-		<?php endif; ?>
-	</div>
+<div class="day day--donate">
+  <div class="container wp-list">
+	<?php get_search_form(); ?>
+	<?php if ( have_posts() ) : ?>
+	<ol class="dated-list wp-results">
+		<?php
+		while ( have_posts() ) {
+			the_post();
+			echo hcwa_theme_dated_post( get_post() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+		}
+		?>
+	</ol>
+		<?php get_template_part( 'template-parts/pagination' ); ?>
+	<?php else : ?>
+	<p class="wp-empty"><?php hcwa_theme_e( 'searchEmpty' ); ?></p>
+	<?php endif; ?>
+  </div>
 </div>
 <?php
 get_footer();

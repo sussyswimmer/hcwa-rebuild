@@ -9,40 +9,126 @@
 
 $hcwa_blocks_dir = dirname( __DIR__ ) . '/plugins/hcwa-core/blocks';
 
-// Contract: block => attribute => [type, default, enum or null].
+// Contract (docs/plan/11-WP-PORT.md 4.1): block => attribute => [type, default, enum or null, role].
+// Text attributes carry "role": "content" so a contentOnly container keeps them editable (4.2).
+$hcwa_text = static fn(): array => array( 'string', '', null, 'content' );
+$hcwa_list = static fn(): array => array( 'array', array(), null, 'content' );
 $hcwa_contract = array(
-	'impact-strip'     => array(
-		'scopeType' => array( 'string', 'organization', array( 'organization', 'center', 'program' ) ),
-		'scopeId'   => array( 'integer', 0, null ),
-		'limit'     => array( 'integer', 4, null ),
-		'showLink'  => array( 'boolean', true, null ),
+	'sections'         => array(
+		'templateLock' => array( 'string', 'contentOnly', array( 'all', 'contentOnly' ), null ),
 	),
-	'center-grid'      => array(
-		'limit' => array( 'integer', 3, null ),
+	'day'              => array(
+		'variant'      => array( 'string', 'involve', array( 'hub', 'involve', 'donate', 'contact', 'gap' ), null ),
+		'templateLock' => array( 'string', 'contentOnly', array( 'all', 'contentOnly' ), null ),
 	),
-	'program-list'     => array(
-		'status'   => array( 'string', 'any', array( 'any', 'active', 'completed' ) ),
-		'limit'    => array( 'integer', 4, null ),
-		'centerId' => array( 'integer', 0, null ),
+	'lit-header'       => array(
+		'still'   => array( 'string', '', null, null ),
+		'size'    => array( 'string', '', array( '', 'display', 'program' ), null ),
+		'title'   => $hcwa_text(),
+		'intro'   => $hcwa_text(),
+		'actions' => array( 'string', '', array( '', 'reach' ), null ),
+		'callUs'  => $hcwa_text(),
+		'writeUs' => $hcwa_text(),
 	),
-	'report-list'      => array(
-		'reportType' => array( 'string', 'any', array( 'any', 'annual', 'financial', 'program', 'policy' ) ),
-		'limit'      => array( 'integer', 6, null ),
+	'sun-head'         => array(
+		'intro'      => $hcwa_text(),
+		'go'         => $hcwa_text(),
+		'jumpAbroad' => $hcwa_text(),
+		'jumpTell'   => $hcwa_text(),
 	),
-	'partner-wall'     => array(
-		'homeOnly' => array( 'boolean', true, null ),
-		'limit'    => array( 'integer', 12, null ),
+	'dusk-band'        => array(
+		'anchor'  => array( 'string', '', null, null ),
+		'titleId' => array( 'string', '', null, null ),
+		'title'   => $hcwa_text(),
+		'lines'   => array( 'array', array(), null, null ),
+		'actions' => array( 'array', array(), null, null ),
+		'note'    => $hcwa_text(),
+	),
+	'hero'             => array(
+		'title' => $hcwa_text(),
+		'intro' => $hcwa_text(),
+	),
+	'passage'          => array(
+		'title'     => $hcwa_text(),
+		'statement' => $hcwa_text(),
+	),
+	'corridor'         => array(
+		'intro' => $hcwa_text(),
+	),
+	'work-sheet'       => array(
+		'focusTitle' => $hcwa_text(),
+	),
+	'shutters'         => array(),
+	'help'             => array(
+		'title' => $hcwa_text(),
+		'ways'  => $hcwa_list(),
+	),
+	'work-hub'         => array(
+		'centersLead'  => $hcwa_text(),
+		'programsLead' => $hcwa_text(),
+	),
+	'louvers'          => array(
+		'ways' => $hcwa_list(),
+	),
+	'faq'              => array(
+		'title'  => $hcwa_text(),
+		'faq'    => $hcwa_list(),
+		'answer' => $hcwa_text(),
+	),
+	'gifts'            => array(
+		'title' => $hcwa_text(),
+		'gifts' => $hcwa_list(),
+	),
+	'contact-reach'    => array(
+		'formTitle'   => $hcwa_text(),
+		'officeTitle' => $hcwa_text(),
+		'chat'        => $hcwa_text(),
+		'chatPending' => $hcwa_text(),
+	),
+	'contact-units'    => array(
+		'littleRose'    => $hcwa_text(),
+		'centerPending' => $hcwa_text(),
 	),
 	'news-latest'      => array(
-		'featured' => array( 'boolean', true, null ),
-		'limit'    => array( 'integer', 3, null ),
+		'featured' => array( 'boolean', true, null, null ),
+		'limit'    => array( 'integer', 3, null, null ),
 	),
-	'language-notice'  => array(
-		'forceLang' => array( 'string', '', array( '', 'vi', 'en' ) ),
+	'partner-wall'     => array(
+		'title'    => $hcwa_text(),
+		'homeOnly' => array( 'boolean', true, null, null ),
+		'limit'    => array( 'integer', 12, null, null ),
 	),
-	'donation-methods' => array(),
+	'donation-methods' => array_merge(
+		array_fill_keys( array( 'howTitle', 'tabsLabel', 'inVietnam', 'inVietnamShort', 'fromAbroad', 'fromAbroadShort', 'qr', 'pendingNote', 'paypal', 'toCenterTitle', 'toCenter', 'tellTitle', 'tellLead', 'amount', 'amountError', 'giftFor', 'giftForAny', 'thanks' ), $hcwa_text() ),
+		array(
+			'bankFields'   => $hcwa_list(),
+			'abroadFields' => $hcwa_list(),
+		)
+	),
+	'impact-strip'     => array(
+		'scopeType' => array( 'string', 'organization', array( 'organization', 'center', 'program' ), null ),
+		'scopeId'   => array( 'integer', 0, null, null ),
+		'limit'     => array( 'integer', 4, null, null ),
+		'showLink'  => array( 'boolean', true, null, null ),
+		'title'     => $hcwa_text(),
+	),
+	'program-list'     => array(
+		'status'   => array( 'string', 'any', array( 'any', 'active', 'completed' ), null ),
+		'limit'    => array( 'integer', 4, null, null ),
+		'centerId' => array( 'integer', 0, null, null ),
+	),
+	'report-list'      => array(
+		'reportType' => array( 'string', 'any', array( 'any', 'annual', 'financial', 'program', 'policy' ), null ),
+		'limit'      => array( 'integer', 6, null, null ),
+		'programId'  => array( 'integer', 0, null, null ),
+	),
 	'announcement-bar' => array(),
+	'language-notice'  => array(
+		'forceLang' => array( 'string', '', array( '', 'vi', 'en' ), null ),
+	),
 );
+// center-grid is gone (4.1: replaced by hcwa/corridor and hcwa/work-hub).
+hcwa_assert_false( is_dir( "$hcwa_blocks_dir/center-grid" ), 'hcwa/center-grid is deleted' );
 
 $hcwa_names = array_keys( $hcwa_contract );
 sort( $hcwa_names );
@@ -91,8 +177,10 @@ foreach ( $hcwa_contract as $hcwa_name => $hcwa_attrs ) {
 		hcwa_assert_same( $hcwa_spec[0], $hcwa_json_attrs[ $hcwa_attr ]['type'] ?? null, "$hcwa_name.$hcwa_attr type" );
 		hcwa_assert_same( $hcwa_spec[1], $hcwa_json_attrs[ $hcwa_attr ]['default'] ?? null, "$hcwa_name.$hcwa_attr default" );
 		if ( null !== $hcwa_spec[2] ) {
-			hcwa_assert_same( $hcwa_spec[2], $hcwa_json_attrs[ $hcwa_attr ]['enum'] ?? null, "$hcwa_name.$hcwa_attr allowed values" );
+			$hcwa_enum = $hcwa_json_attrs[ $hcwa_attr ]['enum'] ?? null;
+			hcwa_assert_same( $hcwa_spec[2], $hcwa_enum, "$hcwa_name.$hcwa_attr allowed values" );
 		}
+		hcwa_assert_same( $hcwa_spec[3], $hcwa_json_attrs[ $hcwa_attr ]['role'] ?? null, "$hcwa_name.$hcwa_attr role" );
 	}
 
 	// index.asset.php: what register_block_script_handle() reads.
@@ -116,74 +204,63 @@ foreach ( $hcwa_contract as $hcwa_name => $hcwa_attrs ) {
 	}
 	hcwa_assert_false( $hcwa_decl, "$hcwa_name: render.php declares no functions" );
 	hcwa_assert_contains( "defined( 'ABSPATH' ) || exit;", $hcwa_source, "$hcwa_name: render.php has the direct-access guard" );
-	hcwa_assert_contains( 'get_block_wrapper_attributes(', $hcwa_source, "$hcwa_name: render.php uses the block wrapper attributes" );
+	// The prototype's markup, no wrapper classes (2.1): only the kept language notice has one.
+	hcwa_assert_same( 'language-notice' === $hcwa_name, str_contains( $hcwa_source, 'get_block_wrapper_attributes(' ), "$hcwa_name: block wrapper attributes only on the language notice" );
 	hcwa_assert_false( (bool) preg_match( '/<iframe|facebook\.com\/plugins|instagram\.com\/embed/i', $hcwa_source ), "$hcwa_name: no social feed embeds" );
 
 	$hcwa_js = (string) file_get_contents( "$hcwa_dir/index.js" );
-	hcwa_assert_contains( "hcwa.register( 'hcwa/$hcwa_name'", $hcwa_js, "$hcwa_name: index.js registers the block" );
+	hcwa_assert_true( (bool) preg_match( "#hcwa\\.register(?:Text|Container)?\\( 'hcwa/" . preg_quote( $hcwa_name, '#' ) . "'#", $hcwa_js ), "$hcwa_name: index.js registers the block" );
 }
 
-// Gating calls stay in the templates that need them (contract gating rules).
-$hcwa_src = static fn( string $name ): string => (string) file_get_contents( "$hcwa_blocks_dir/$name/render.php" );
-hcwa_assert_contains( 'hcwa_get_impact_figures(', $hcwa_src( 'impact-strip' ), 'impact strip reads gated figures' );
-hcwa_assert_contains( 'hcwa_impact_strip_visible(', $hcwa_src( 'impact-strip' ), 'impact strip applies the 2-figure rule' );
-hcwa_assert_contains( 'hcwa_donation_details()', $hcwa_src( 'donation-methods' ), 'donation reads finance-confirmed details only' );
-hcwa_assert_contains( 'hcwa_announcement()', $hcwa_src( 'announcement-bar' ), 'announcement reads the gated setting' );
+// Gating calls stay where the contract needs them.
+$hcwa_src      = static fn( string $name ): string => (string) file_get_contents( "$hcwa_blocks_dir/$name/render.php" );
+$hcwa_core_src = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks.php' )
+	. (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks-sections.php' );
+hcwa_assert_contains( 'hcwa_get_impact_figures(', $hcwa_core_src, 'impact strip reads gated figures' );
+hcwa_assert_contains( 'hcwa_impact_strip_visible(', $hcwa_core_src, 'impact strip applies the 2-figure rule' );
+hcwa_assert_contains( 'hcwa_donation_details()', $hcwa_core_src, 'donation reads finance-confirmed details only' );
+hcwa_assert_contains( 'hcwa_announcement()', $hcwa_core_src, 'announcement reads the gated setting' );
 hcwa_assert_contains( 'hcwa_lang_notice_request()', $hcwa_src( 'language-notice' ), 'language notice reads the switch request' );
-$hcwa_core_src = (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/blocks.php' );
 hcwa_assert_contains( 'hcwa_partner_logo_allowed(', $hcwa_core_src, 'partner logos check permission' );
-$hcwa_calls = 0;
-$hcwa_toks  = token_get_all( $hcwa_core_src );
-foreach ( $hcwa_toks as $hcwa_i => $hcwa_token ) {
-	if ( is_array( $hcwa_token ) && T_STRING === $hcwa_token[0] && 'hcwa_image' === $hcwa_token[1] && '(' === ( $hcwa_toks[ $hcwa_i + 1 ] ?? '' ) ) {
-		++$hcwa_calls;
-	}
-}
-hcwa_assert_same( 3, $hcwa_calls, 'center, report and news photos go through hcwa_image()' );
+hcwa_assert_contains( 'hcwa_little_rose_door_allowed(', $hcwa_core_src, 'door chips and doors check the Little Rose approval' );
+hcwa_assert_contains( 'hcwa_traces_on(', $hcwa_core_src, 'corridor traces are switched by the setting and never on production' );
+hcwa_assert_contains( 'hcwa_forms_enabled()', $hcwa_core_src, 'forms are off on production without a handler' );
 hcwa_assert_false( str_contains( $hcwa_core_src, 'wp_get_attachment_image( (int) get_post_thumbnail_id' ), 'no ungated thumbnails' );
+hcwa_assert_false( (bool) preg_match( '/<iframe|facebook\.com\/plugins|instagram\.com\/embed/i', $hcwa_core_src ), 'no social feed embeds in the block markup' );
+hcwa_assert_false( (bool) preg_match( '/text-transform\s*:\s*uppercase/i', $hcwa_core_src ), 'no uppercase in inline styles' );
 
-// Front-end strings: every key the blocks use exists in vi and en.
+// Front-end strings: every key the blocks use exists in vi and en; every block string is used.
 $hcwa_dict = hcwa_blocks_add_strings( hcwa_strings() );
 $hcwa_used = array();
-$hcwa_php  = array( $hcwa_core_src );
-foreach ( $hcwa_contract as $hcwa_name => $hcwa_attrs ) {
+$hcwa_php  = array( $hcwa_core_src, (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/sections.php' ) );
+foreach ( array_keys( $hcwa_contract ) as $hcwa_name ) {
 	$hcwa_php[] = $hcwa_src( $hcwa_name );
 }
-foreach ( $hcwa_php as $hcwa_code ) {
-	preg_match_all( "/(?:hcwa_t|hcwa_t_in|hcwa_blocks_empty_note)\(\s*'([A-Za-z_]+)'\s*[,)]/", $hcwa_code, $hcwa_m );
-	foreach ( $hcwa_m[1] as $hcwa_key ) {
-		$hcwa_used[ $hcwa_key ] = true;
-	}
-}
-// Keys built at runtime: status pills, report types, category labels, placeholder rows.
-foreach ( array( 'status_active', 'status_completed', 'status_planned' ) as $hcwa_key ) {
+$hcwa_all_php = implode( "\n", $hcwa_php );
+preg_match_all( "/(?:hcwa_t|hcwa_t_in)\(\s*'([A-Za-z_]+)'\s*[,)]/", $hcwa_all_php, $hcwa_m );
+foreach ( $hcwa_m[1] as $hcwa_key ) {
 	$hcwa_used[ $hcwa_key ] = true;
 }
-foreach ( hcwa_blocks_report_types() as $hcwa_type ) {
-	$hcwa_used[ 'blk_type_' . $hcwa_type ] = true;
-}
-foreach ( array_keys( hcwa_blocks_category_slugs() ) as $hcwa_cat ) {
-	$hcwa_used[ hcwa_blocks_category_label_key( $hcwa_cat ) ] = true;
-}
-foreach ( array( 'pay_bank', 'pay_account', 'pay_holder', 'pay_note', 'pay_noteHint', 'pay_swift', 'pay_accountAbroad' ) as $hcwa_key ) {
+// Keys built at runtime: status pills, report types.
+foreach ( array( 'status_active', 'status_completed', 'status_planned', 'blk_type_annual', 'blk_type_financial', 'blk_type_program', 'blk_type_policy' ) as $hcwa_key ) {
 	$hcwa_used[ $hcwa_key ] = true;
 }
-hcwa_assert_true( count( $hcwa_used ) > 30, 'found the block string keys' );
+hcwa_assert_true( count( $hcwa_used ) > 30, 'found the block string keys (' . count( $hcwa_used ) . ')' );
 foreach ( array_keys( $hcwa_used ) as $hcwa_key ) {
 	$hcwa_ok = '' !== trim( (string) ( $hcwa_dict[ $hcwa_key ]['vi'] ?? '' ) ) && '' !== trim( (string) ( $hcwa_dict[ $hcwa_key ]['en'] ?? '' ) );
 	hcwa_assert_true( $hcwa_ok, "string $hcwa_key exists in vi and en" );
 }
 foreach ( hcwa_blocks_strings() as $hcwa_key => $hcwa_entry ) {
-	hcwa_assert_true( isset( $hcwa_used[ $hcwa_key ] ), "block string $hcwa_key is used" );
+	hcwa_assert_true( str_contains( $hcwa_all_php, "'$hcwa_key'" ) || isset( $hcwa_used[ $hcwa_key ] ), "block string $hcwa_key is used" );
 	hcwa_assert_false( array_key_exists( $hcwa_key, hcwa_strings() ), "block string $hcwa_key does not redefine a core key" );
 	$hcwa_vi = (string) $hcwa_entry['vi'];
 	hcwa_assert_same( 0, preg_match( '/\b(?!(?:VI|EN|HCWA|PDF|TP)\b)\p{Lu}{2,}\b/u', $hcwa_vi ), "block string $hcwa_key: no capitalised Vietnamese words" );
 	hcwa_assert_same( 0, preg_match( '/[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $hcwa_vi . $hcwa_entry['en'] ), "block string $hcwa_key: no emoji" );
 	hcwa_assert_false( str_contains( $hcwa_vi . $hcwa_entry['en'], '[DRAFT' ), "block string $hcwa_key: no draft marker" );
 }
-$hcwa_merged = hcwa_blocks_add_strings( array( 'pending' => array( 'vi' => 'X', 'en' => 'Y' ) ) );
-hcwa_assert_same( 'X', $hcwa_merged['pending']['vi'], 'strings filter keeps existing keys' );
-hcwa_assert_true( isset( $hcwa_merged['blk_noFigures'] ), 'strings filter adds block keys' );
+$hcwa_merged = hcwa_blocks_add_strings( array( 'since' => array( 'vi' => 'X', 'en' => 'Y' ) ) );
+hcwa_assert_same( 'X', $hcwa_merged['since']['vi'], 'strings filter keeps existing keys' );
+hcwa_assert_true( isset( $hcwa_merged['blk_yearToken'] ), 'strings filter adds block keys' );
 
 // Editor labels: every __( '…', 'hcwa' ) in the block scripts has a Vietnamese entry, and
 // every entry is used.
@@ -199,7 +276,7 @@ foreach ( $hcwa_js_files as $hcwa_file ) {
 		$hcwa_labels[ str_replace( "\\'", "'", $hcwa_label ) ] = true;
 	}
 }
-hcwa_assert_true( count( $hcwa_labels ) > 40, 'found the editor labels' );
+hcwa_assert_true( count( $hcwa_labels ) > 60, 'found the editor labels (' . count( $hcwa_labels ) . ')' );
 foreach ( array_keys( $hcwa_labels ) as $hcwa_label ) {
 	hcwa_assert_true( '' !== trim( $hcwa_vi_labels[ $hcwa_label ] ?? '' ), "editor label has Vietnamese: $hcwa_label" );
 }

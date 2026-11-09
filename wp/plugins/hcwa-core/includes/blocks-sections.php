@@ -61,7 +61,7 @@ function hcwa_render_hero( array $a ): string {
 function hcwa_render_passage( array $a ): string {
 	$title = hcwa_blocks_text( $a, 'title' );
 	$text  = hcwa_blocks_text( $a, 'statement' );
-	$h2    = '' !== $title['text'] ? '<h2 class="passage__title" id="what-title">' . esc_html( hcwa_vi_keep( $title['text'] ) ) . '</h2>' : '';
+	$h2    = '' !== $title['text'] ? '<h2 class="passage__title" id="what-title"' . hcwa_draft_attr( $title['draft'] ) . '>' . esc_html( hcwa_vi_keep( $title['text'] ) ) . '</h2>' : '';
 	$p     = '';
 	if ( '' !== $text['text'] ) {
 		$words = hcwa_split_words( $text['text'] );
@@ -1063,6 +1063,8 @@ function hcwa_render_donation_methods( array $a ): string {
 	$grid    = '';
 
 	if ( $parts['slip'] ) {
+		$pending = $t( 'pendingNote' );
+		$note_id = '' !== $pending['text'] ? $note_id : '';
 		$rows    = hcwa_slip_rows( $a, $details );
 		$how     = $t( 'howTitle' );
 		$tabs    = '';
@@ -1085,12 +1087,11 @@ function hcwa_render_donation_methods( array $a ): string {
 		}
 		$paypal_label = $t( 'paypal' );
 		if ( null === $details ) {
-			$paypal = '<p class="slip__alt">' . esc_html( $paypal_label['text'] ) . ' <button class="btn btn--secondary btn--small" type="button" disabled aria-describedby="' . $note_id . '" data-donation-placeholder>PayPal</button></p>';
+			$paypal = '<p class="slip__alt">' . esc_html( $paypal_label['text'] ) . ' <button class="btn btn--secondary btn--small" type="button" disabled' . ( '' !== $note_id ? ' aria-describedby="' . $note_id . '"' : '' ) . ' data-donation-placeholder>PayPal</button></p>';
 		} else {
 			$url    = (string) ( $details['paypal_url'] ?? '' );
 			$paypal = '' !== $url ? '<p class="slip__alt">' . esc_html( $paypal_label['text'] ) . ' <a class="btn btn--secondary btn--small" href="' . esc_url( $url ) . '">PayPal</a></p>' : '';
 		}
-		$pending  = $t( 'pendingNote' );
 		$to_title = $t( 'toCenterTitle' );
 		$to       = $t( 'toCenter' );
 		$grid    .= "\n    " . '<section class="slip" aria-labelledby="how-title" data-tabs>' . "\n      "
@@ -1109,11 +1110,11 @@ function hcwa_render_donation_methods( array $a ): string {
 			. $paypal . "\n        "
 			. '</section>' . "\n      "
 			. '</div>' . "\n      "
-			. '<p class="slip__note" id="' . $note_id . '"' . hcwa_draft_attr( $pending['draft'] ) . '>' . hcwa_icon( 'info' ) . '<span>' . esc_html( $pending['text'] ) . '</span></p>' . "\n      "
-			. '<div class="slip__center">' . "\n        "
-			. '<h3 class="slip__center-title">' . esc_html( $to_title['text'] ) . '</h3>' . "\n        "
+			. ( '' !== $note_id ? '<p class="slip__note" id="' . $note_id . '"' . hcwa_draft_attr( $pending['draft'] ) . '>' . hcwa_icon( 'info' ) . '<span>' . esc_html( $pending['text'] ) . '</span></p>' : '' ) . "\n      "
+			. ( '' !== $to_title['text'] || '' !== $to['text'] ? '<div class="slip__center">' . "\n        "
+			. ( '' !== $to_title['text'] ? '<h3 class="slip__center-title">' . esc_html( $to_title['text'] ) . '</h3>' : '' ) . "\n        "
 			. ( '' !== $to['text'] ? '<p' . hcwa_draft_attr( $to['draft'] ) . '>' . esc_html( $to['text'] ) . '</p>' : '' ) . "\n      "
-			. '</div>' . "\n    "
+			. '</div>' : '' ) . "\n    "
 			. '</section>';
 	}
 

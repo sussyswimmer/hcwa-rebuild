@@ -109,8 +109,6 @@ function hcwa_blocks_strings(): array {
 		// center is supported, never visited (moved here from the theme, which no longer prints it).
 		'visitTitle'          => array( 'vi' => 'Muốn đến thăm {name}?', 'en' => 'Want to visit {name}?' ),
 		'supportTitle'        => array( 'vi' => 'Muốn hỗ trợ {name}?', 'en' => 'Want to support {name}?' ),
-		// The heading of a page's password form.
-		'blk_protected'       => array( 'vi' => 'Trang này được bảo vệ bằng mật khẩu.', 'en' => 'This page is protected by a password.' ),
 
 		// Card labels. The theme has keys with the same text (cat_announcement, rt_*); these
 		// have their own names so neither side silently overrides the other.
@@ -145,7 +143,6 @@ function hcwa_blocks_editor_vi(): array {
 		// Shared.
 		'Settings'                                    => 'Cài đặt',
 		'This page'                                   => 'Trang này',
-		'Words'                                       => 'Nội dung chữ',
 		'Heading'                                     => 'Tiêu đề',
 		'Intro'                                       => 'Giới thiệu',
 		'Text'                                        => 'Nội dung',
@@ -154,6 +151,8 @@ function hcwa_blocks_editor_vi(): array {
 		'Question'                                    => 'Câu hỏi',
 		'Amount'                                      => 'Số tiền',
 		'Little Rose'                                 => 'Hoa Hồng Nhỏ',
+		'Open Settings → HCWA'                        => 'Mở Cài đặt → HCWA',
+		'Show the link to the impact page'            => 'Hiện liên kết đến trang Tác động',
 		'Draft text shows only on staging. On the live site it is left out.' => 'Nội dung nháp chỉ hiện trên bản thử. Trên website chính thức, nội dung này được bỏ đi.',
 
 		// Containers.
@@ -203,11 +202,9 @@ function hcwa_blocks_editor_vi(): array {
 		'Ways to help'                                => 'Các cách giúp đỡ',
 		'Questions'                                   => 'Câu hỏi',
 		'Common questions with one answer each.'      => 'Các câu hỏi thường gặp, mỗi câu một câu trả lời.',
-		'Question %d'                                 => 'Câu hỏi %d',
 		'Answer'                                      => 'Câu trả lời',
 		'Gift examples'                               => 'Ví dụ khoản ủng hộ',
 		'What a gift does. Staging only until HCWA sets the amounts.' => 'Khoản ủng hộ giúp được gì. Chỉ hiện trên bản thử cho tới khi HCWA quyết định số tiền.',
-		'Amount %d'                                   => 'Số tiền %d',
 		'Donation methods'                            => 'Cách ủng hộ',
 		'The transfer slip and the "tell us you gave" form. Only details HCWA finance has confirmed ever show.' => 'Phiếu chuyển khoản và biểu mẫu báo cho Hội. Chỉ thông tin đã được bộ phận tài chính của Hội xác nhận mới được hiện.',
 		'Contact form and office'                     => 'Biểu mẫu liên hệ và văn phòng',

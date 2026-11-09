@@ -1,6 +1,8 @@
 <?php
 /**
- * One report: header with year, type and language badge, summary, body, download button.
+ * One report (11-WP-PORT.md 2.7): the sun head with its summary, then in the day's gradient
+ * the document row (the file, its year, type, language and size) and the body through
+ * the_content.
  *
  * @package hcwa-2026
  */
@@ -12,67 +14,34 @@ get_header();
 while ( have_posts() ) :
 	the_post();
 	$hcwa_post    = get_post();
-	$hcwa_info    = hcwa_theme_report_info( $hcwa_post );
-	$hcwa_title   = hcwa_theme_clean_title( wp_strip_all_tags( get_the_title() ) );
-	$hcwa_summary = (string) get_post_meta( $hcwa_post->ID, 'hcwa_summary', true );
+	$hcwa_title   = hcwa_theme_draft_text( hcwa_theme_clean_title( wp_strip_all_tags( (string) get_the_title() ) ) );
+	$hcwa_summary = hcwa_theme_draft_text( wp_strip_all_tags( (string) get_post_meta( $hcwa_post->ID, 'hcwa_summary', true ) ) );
 	$hcwa_archive = (string) get_post_type_archive_link( 'hcwa_report' );
 
-	get_template_part(
-		'template-parts/page-header',
-		null,
+	echo hcwa_theme_sun_head( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 		array(
-			'trail' => array(
+			'title'       => $hcwa_title['text'],
+			'trail'       => array(
 				array( hcwa_theme_t( 'impact' ), hcwa_theme_url( 'impact' ) ),
 				array( hcwa_theme_t( 'reportsTitle' ), '' !== $hcwa_archive ? $hcwa_archive : hcwa_theme_url( 'reports' ) ),
-				array( $hcwa_title ),
+				array( $hcwa_title['text'] ),
 			),
-			'title' => $hcwa_title,
-			'intro' => $hcwa_summary,
-			'meta'  => static function () use ( $hcwa_info ): void {
-				if ( '' === $hcwa_info['meta'] ) {
-					return;
-				}
-				?>
-				<div class="page-header__meta">
-					<p><span><?php echo esc_html( $hcwa_info['meta'] ); ?></span></p>
-				</div>
-				<?php
-			},
+			'intro'       => $hcwa_summary['text'],
+			'intro_draft' => $hcwa_summary['draft'],
 		)
 	);
-
-	$hcwa_cover = hcwa_theme_image(
-		(int) get_post_thumbnail_id(),
-		'medium',
-		array(
-			'class' => 'report-cover',
-			'alt'   => '',
-		),
-		$hcwa_post
-	);
+	$hcwa_row = hcwa_theme_doc_row( $hcwa_post );
 	?>
-	<div class="container article-grid article-grid--wide">
-		<div class="prose">
-			<div class="entry-content entry-content--prose">
-				<?php the_content(); ?>
-			</div>
-			<?php if ( '' !== $hcwa_info['file_url'] ) : ?>
-				<p class="stack">
-					<a class="btn btn--primary" href="<?php echo esc_url( $hcwa_info['file_url'] ); ?>" download>
-						<?php echo hcwa_theme_icon( 'download' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
-						<span><?php hcwa_theme_e( 'download' ); ?></span>
-					</a>
-					<?php hcwa_theme_report_badge( $hcwa_info ); ?>
-					<?php if ( '' !== $hcwa_info['size'] ) : ?>
-						<span class="report-row__size"><?php echo esc_html( $hcwa_info['size'] ); ?></span>
-					<?php endif; ?>
-				</p>
-			<?php endif; ?>
-		</div>
-		<?php if ( '' !== $hcwa_cover ) : ?>
-			<div class="report-cover-wrap"><?php echo $hcwa_cover; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by hcwa_image(). ?></div>
-		<?php endif; ?>
+<div class="day day--donate">
+  <div class="container wp-body">
+	<?php if ( '' !== $hcwa_row ) : ?>
+	<ul class="docs__list"><?php echo $hcwa_row; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?></ul>
+	<?php endif; ?>
+	<div class="entry-content">
+		<?php the_content(); ?>
 	</div>
+  </div>
+</div>
 	<?php
 endwhile;
 
