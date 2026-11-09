@@ -28,6 +28,10 @@ What it does, in order:
 Writes report.json, report.html, shots/, strips/ and logs/ to qa/wp-port/parity/<date>-<time>/ and
 exits 1 when any gate fails. At most 2 headless browsers run at a time.
 
+--self-test serves prototype/dist a second time and compares the prototype with itself: every
+section must come out identical, which proves the driver itself adds no differences (the
+9 Nov 2026 run had 0 differing sections in all 128 views).
+
 --production-asserts runs only the explicit production assertions of gate 7.7 against --base (the
 throwaway production instance of 5.9), with no prototype. It reads guards.json and stills.json from
 wp/themes/hcwa-2026/assets/generated/ (the guards fall back to prototype/src/render.mjs through node
@@ -1185,7 +1189,8 @@ ALLOW: list = []
 def main() -> int:
     global SMOKE, THREE, ALLOW
     ap = argparse.ArgumentParser(description="Parity driver: prototype and WordPress side by side (11-WP-PORT.md 5).")
-    ap.add_argument("--base", required=True, help="WordPress root, e.g. http://127.0.0.1:8881")
+    ap.add_argument("--base", help="WordPress root, e.g. http://127.0.0.1:8881")
+    ap.add_argument("--self-test", action="store_true", help="compare the prototype with itself (the driver's noise floor)")
     ap.add_argument("--instance", type=Path, help="the instance folder (.wp-local/<name>): debug.log and seed-urls.json")
     ap.add_argument("--out", type=Path, help="report folder (default qa/wp-port/parity/<date>-<time>)")
     speed = ap.add_mutually_exclusive_group()
@@ -1200,11 +1205,13 @@ def main() -> int:
     args = ap.parse_args()
     if sync_playwright is None:
         ap.error("Playwright is not installed for this Python: use the repo's .venv")
+    if not args.base and not args.self_test:
+        ap.error("--base is required (or --self-test)")
 
     started = datetime.datetime.now()
     out = args.out or REPO / "qa" / "wp-port" / "parity" / started.strftime("%Y-%m-%d-%H%M%S")
     out.mkdir(parents=True, exist_ok=True)
-    BASES["wp"] = args.base.rstrip("/")
+    BASES["wp"] = (args.base or "").rstrip("/")
     SMOKE = load_smoke()
     signal.signal(signal.SIGTERM, lambda *a: (PROCS.stop_all(), sys.exit(143)))
 
@@ -1227,6 +1234,8 @@ def main() -> int:
     try:
         ensure_dist(args.build, out / "logs" / "build.log")
         BASES["proto"], _ = start_preview(args.port, out / "logs" / "vite-preview.log")
+        if args.self_test:
+            BASES["wp"], _ = start_preview(args.port + 1, out / "logs" / "vite-preview-second.log")
         print(f"Prototype at {BASES['proto']}, WordPress at {BASES['wp']}; report in {out}", flush=True)
 
         with sync_playwright() as p:
