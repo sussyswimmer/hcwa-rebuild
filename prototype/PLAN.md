@@ -915,7 +915,8 @@ supersedes above (item 6 of "H4 corridor" and items 5 and 10 of the richness pas
    `journey.js` `washSpan`). The runner is the last thing seen, fading just above the work sheet's bông gió
    row as its tiles rise (the sheet's 24svh / 16svh rise is the focus engineer's). Seam scan, the critique's
    method (a frame every 40 px from stage 0.86 to the H2 at 0.3 of the screen; background = within 10 levels of
-   lime-100, the header left out): SEAM_RESULT
+   lime-100, the header left out), VI and EN, 390 and 1440, Tier 1 and 2: the
+   emptiest frame holds 27.3% non-background, 0 frames under 15%, no frame whose only content is a link.
 2. **Leaflets.** Tier 1 draws none (D0.6.2 ladder step 2 taken now; `LEAFLETS`). Tier 2: two a beat, 8 at
    most (was 32), released where their drift passes 1.7-2.6 m ahead of each door's reading spot and drawn only
    1.3-3.6 m from the camera (faded and shrunk outside it), 68 × 26 mm with a tapered tip and a midrib,
@@ -931,7 +932,9 @@ supersedes above (item 6 of "H4 corridor" and items 5 and 10 of the richness pas
    was 0.0025 + 0.0056·d), the rooms' daylight on the floor is the day colour itself (was 86% of it) at full
    strength (`uI[1]` 1, was 0.9), and on phones the door's centre sits at 0.44 of the free frame (was 0.5),
    which puts the threshold above the card panel's feather. Signature check (rooms' light on and off, the
-   pixels it brightens inside each pool's floor quad, `pool.cjs`): POOL_RESULT The medians carry the
+   pixels it brightens inside each pool's floor quad, `pool.cjs`): at 390 Tier 1 Đốt tre 1.77 at the
+   slots' core (90th percentile) and 1.51 median, Vòm cầu 1.72 / 1.54; at 1440 Tier 2 1.73 / 1.49 and
+   1.66 / 1.34. The medians carry the
    antialiased edges of 2-3 px slots; the slots themselves pass 1.6. **Little Rose's threshold has no pool**:
    its plain transom glows on the wall and casts nothing on the floor (`glsl/doors.js`), so its floor has only
    the corridor's untinted shade.
@@ -964,4 +967,10 @@ Stills re-rendered and re-encoded within `encode-posters.py`'s budgets: `bay-*` 
 `gallery-wall` and `header-green-bamboo` (wear, ceiling). `light-contrast.mjs`: 212 lines, 0 below.
 Budgets: corridor chunk 10.40 KB gzip (10.05; limit 10.5), live chunk 16.19 KB (15.98); fewer leaflet
 triangles; per frame still no allocation (`uLeafFade` is written only when it changes). GPU on a real phone:
-still not measured on device. QA_RESULT
+still not measured on device. `npm test` 101/101 (beats: the way out's span and pitch, the link in the panel;
+little-rose: leaflets out of frame during its beat, the same threshold for every door, no pool at its door, the
+lò cò). The 20-frame strips (passage → corridor → work sheet; VI and EN, 390 and 1440, Tier 1 and 2): 0 console
+errors, no frame with two headings above 10%. The matrix (home corridor, Our Work, Green Bamboo; VI/EN; 390/1440;
+Tier 1/2, reduced, Tier 0, no JS; 320): 56 views, 0 console errors, 0 overflow. `check:tiles` passes, its stage
+overlap included (the EN 390 open item of the focus round is closed: the link now shares the last card's links
+row). Tastegate passes on home, VI and EN. Captures: `qa/m3/fix-r1-corridor/`.
