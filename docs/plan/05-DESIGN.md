@@ -197,13 +197,13 @@ and lit transom.
 | Doors | Unit paint and wear unchanged; no surround. Little Rose's leaf and frame keep wear 0.3. |
 
 **Objects and motion.** The objects are fans and leaflets, nothing else (pots, plants and blossoms are
-cut, decision 1).
+cut, decision 1). **As built, the leaflets are cut too (0.6.7): fans are the only props.**
 
 | Object | Spec | Motion |
 |---|---|---|
 | *Quạt trần* (ceiling fan) | One per bay **except Little Rose's**, at bay centre −1.6 m, x 99.75 (`FAN` in the proposal). A 0.6 m rod from the 3.1 m ceiling, hub at 2.45 m. Body `tile-jade`; three pitched blades in `tile-cream` with rounded tips; a 16-segment motor housing. | 2.1 rad/s, one turn every 3 s, so no strobing at 30 fps. Tier 2 turns on the clock and with the scroll; Tier 1 only with the scroll. Frozen while paused. |
 | Fan shadows | The blades block the sun in the surfaces and shafts (the `fans` pattern in `glsl/apertures.js`). | **Tier 2 only.** On every tier they took the proxy to +80% at 1440 (the blade test runs in every sun lookup). Phones turn the fans but cast nothing. |
-| *Lá me* (tamarind leaflets) | 16 on Tier 1, 32 on Tier 2. Each is 34 × 13 mm, `mixc(sun-400, tile-jade, 0.3)`, released from the screen's top course. | Drift down and across over 15 s, tumble and glint, rest on the tiles 3 s, fade. Same clock rules as the fans. **No spawn run and no drift path within 0.8 m of Little Rose's bay.** |
+| *Lá me* (tamarind leaflets) | **Cut on every tier and from the stills (0.6.7).** Kept here only as the record of what was tried. 16 on Tier 1, 32 on Tier 2. Each is 34 × 13 mm, `mixc(sun-400, tile-jade, 0.3)`, released from the screen's top course. | Drift down and across over 15 s, tumble and glint, rest on the tiles 3 s, fade. Same clock rules as the fans. **No spawn run and no drift path within 0.8 m of Little Rose's bay.** |
 | Tamarinds outside | unchanged | sway on Tier 1 too, driven by the scroll (`sway(propT)`) |
 
 `live.js` runs one props clock: `propT = tier >= 2 ? time + scrollY/300 : scrollY/300`, frozen while
@@ -398,6 +398,59 @@ logs departures in PLAN section 9 under their own heading.
 | | `pages/home/work-sheet.mjs` `gach()` | **with changes:** whole-area link and words beside or under kept; patches of 4 / 2 / 1 / 1; the H2 inside the subgrid |
 | | `styles/pages.css` `.gach__name`, `__text`, `__go`, hover and focus rules | as is. **Delete** `.floor__sun`: the screen blend and the radial pool are what the judges read as smudges and blobs |
 | colour-light | the view-timeline brightness ramp | the idea only (0.6.3). `glassArt` and the glass CSS are **not** ported |
+
+### 0.6.7 As built after two critic rounds (9 Nov 2026: binding, overrides 0.6.1 to 0.6.5 where they differ)
+
+Two taste critics judged the build against Maxwell's words ("so bland and all white", "just a plain white
+wall") and both streams were changed to answer them. The lead signed off every change below. Measurements
+and reasons are in PLAN section 9 ("H4 corridor, fix round 1/2", "H5a focus floor, fix round 1/2",
+"Final recheck, m3"); review captures are in `qa/m3-review/`.
+
+**Corridor**
+- **Leaflets are cut** on every tier and from the stills. On phones they were specks or frozen blobs, and
+  one hung beside Little Rose's door. The fans are the only props.
+- **Open doors swing into their rooms** to 96°, hinged on the jamb nearer the camera, not out into the
+  corridor (6.3, 6.4's 72° outward swing is superseded). Corridor paint and walls nearer than 1.4 m to the
+  lens fade out with a dither. Little Rose's door is unchanged: shut.
+- **Thresholds:** in front of every door the runner stops for 6 plain cream tiles (1.2 m), its border
+  turning the corner, so each bay has its own rug and the transom emblem lands on plain cream (pool core
+  ≥ 1.6:1 lit to unlit, drawn 1.5× its first size). Little Rose's rug is identical and gets plain daylight
+  with no pool.
+- **Pane:** masked to its content and tinted `lime-50` + 60% `world-vang-sun`; between cards it eases back
+  to the door index. `.bays__intro` is ink-900.
+- **Exit and seam (D0.5):** the "all work" link lives in the last card's link row, never alone on plaster.
+  Over stage 0.92–1.0 the camera tilts 14° down to the runner, then the picture fades to lime-100 from the
+  top down (at least 24svh, 16svh on phones) and over a hem 0.38 of a screen (0.36 on phones) above the
+  work sheet's top, inside the wash shader. Gate: no 40 px band at the seam moves more than 12 levels and
+  no frame between the last door and the H2 is under 15% non-background.
+- At 1440 the dwell takes a 3° downward lens shift (verticals stay vertical).
+- Door wear sits only at the edges, the kick zone and the handle, as an older coat of the same paint.
+
+**"Lĩnh vực hoạt động"**
+- Over the live corridor the sheet rises 24svh (16svh on phones), is solid plaster from its top and has no
+  bông gió row; the stacked fallback keeps the row.
+- **Sun on the tiles:** the Hoa thị mask cell is 0.54 of a tile (not 0.62), each hole 0.6 of its cell and
+  leaning 8° (not 14°), three rows to a seamless repeat; the lit cream is `sun-200`. Each quatrefoil reads
+  on its own instead of merging into blots.
+- **The floor is laid:** the pigment patches sit in a lattice of plain cement tiles (1.5 px joints, 0–4.5%
+  tone variation). Area words may cross plain joints; they never sit on a pigment tile (this is what 0.6.3's
+  "text never sits on a tile" now means).
+- Layouts follow the floor's container in rem (`@container` 33rem / 56rem), so 200% text steps down a
+  layout instead of pushing words onto tiles.
+- Each program row carries a strip of its areas' gạch tiles (44 px, 48 px from 1024) on home and Our Work.
+  Row hover light stays sunlight, never the area pigment (kính màu stays declined).
+- Our Work's area chips carry a 26 px gạch tile in their area's pigment instead of the navy block icon.
+
+**Large text (WCAG 1.4.4)**
+- The footer's columns go two by two under 58rem of `.site-footer__cols`; the hero pause toggle moves under
+  the buttons under 56rem of `.hero__inner`. Nothing changes at the default text size.
+
+**Still open** (not blocking the review build): the Đốt tre pool still reads as short dashes at 1440; the
+programs list after the floor is mostly cream apart from its tile strips; the passage room (S2's start)
+is still pale; `check-sun-crisp` skips the corridor set; the first-10-second long task (210–332 ms) and
+the 1.8 s LCP goal; `check-hero`'s ambient-motion check at 390 Tier 1 depends on when the first touch
+cloud arrives. HCWA still approves everything in 0.6.4 plus the doors opening into their rooms, the
+plain-tile floor, the program-row strips and the chips.
 
 ## 1. Color tokens
 
