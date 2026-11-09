@@ -1074,3 +1074,29 @@ Budgets: corridor chunk 9.18 KB gzip (10.40), live chunk 16.21 KB (16.19); per f
 0.38 screen of scroll. `npm test` 103/103; build, `PROD=1` (blocked only on drafts and guards), `build:pages`. Strips,
 matrix (72 views, 0 console errors, 0 overflow, plus the stage after a lost GPU context), live probe, seam scan and
 tastegate (home, VI and EN, pass): `qa/m3/fix-r2-corridor/`.
+
+**Final recheck, m3 (9 Nov 2026; integration).** Maxwell: "the Linh vuc hoat dong section is so bland and all white
+and the hallway section is so boring its jst a plain white wall". The two streams' work is in; this pass took the
+cross-stream needs and re-ran every gate on one final build.
+1. **A jump straight to the floor (focus need).** If the corridor was not built yet (a jump within a second of load,
+   or a slow phone), the canvas held the passage's light at full strength and the sheet's solid top cut it in a
+   straight line (`qa/m3/final/evidence/jump-slow-before-after-390.png`, the corridor chunk held back 4 s). The wash
+   pass now fades its hem to its own colour (`renderer.js` `uHemC`, `frame(..., hemColor)`; blended as C·A + dst·(1−A),
+   A = 1 − v(1 − a), so the walk's own hem, where the hem colour is the wash's, is unchanged). The fallback in
+   `live.js` holds the light, but on the way out it turns to the plaster as the walk's wash does (from the stage's
+   end, eased, the passage's hole fading with it) and fades to the plaster over the hem above the next sheet's top.
+   Same frame after: no step at the sheet's top (row means 229.2 → 229.0 at 390, 227.8 → 227.4 at 1440 Tier 2).
+   No allocation per frame (`held` is a reused colour). A corridor that is built but one frame behind a jump still
+   shows that frame for about 100 ms (soft, no hard line); not changed.
+2. **Our Work area chips (critique r1/r2 could; `src/pages/work.mjs` had no owner).** Each area chip carries one
+   26 px gạch tile of its area (`gachStrip([area], "gach-strip chip__tile")`, the home floor's pigments, decoration
+   only, never scaled per chip), from the page's one sprite, which the filters now bring (before every program row,
+   never inside one a filter may hide). Chosen (JS or `:target`), the chip turns logo blue and its tile keeps its
+   pigment inside a 1.5 px lime-50 rim. The components page shows the same chip. The navy screen-block icons are
+   gone from the filter (`.chip__icon`, `.block-art__sky` rules removed). Test: `work-pages.test.mjs`.
+3. **200% text (focus need, pre-existing).** At 1024-1100 px with the root at 200%, the footer's four columns ran
+   146 px (EN) off the screen and the hero's pause toggle 56 px (VI). Both now step down on their container's width in
+   rem, so nothing changes at normal text size from 1024 px up (measured, 100%: same positions): the footer columns go
+   two by two under 58rem of `.site-footer__cols` (a new wrapper, `container-type: inline-size`); the toggle sits under
+   the buttons under 56rem of `.hero__inner`. 200%, 1024/1100/1280/1440, VI and EN, home, Our Work, Contact: no
+   sideways scroll (`qa/m3/final/evidence/footer-1024-en-text100-text200.png`).
