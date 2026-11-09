@@ -65,11 +65,24 @@ export function corridorLayout(beats) {
 // from the same numbers (test/beats.test.mjs keeps them equal and checks every card against the camera):
 // motion/ never imports world/.
 export const WALK = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOut: 0.97, release: 0.95, swing: [0.1, 0.45], sun: [0.25, 0.45] };
-// The way out (live.js): from `release` the camera walks on past the last door (sine-in, `leave` bays of walk)
-// over the stage's last 0.05 and `wash` screens beyond it, while the frame washes to the plaster below (lime-100,
-// eased), so the corridor is gone before the link under the stage comes up. No hard cut, no double exposure.
-export const WALK_OUT = { leave: 0.45, wash: 0.2 };
+// The way out (live.js, critique r1 fix round 1): from `release` the camera walks on past the last door (sine-in,
+// `leave` bays of walk) and, scrubbed over the stage's `tilt`, pitches `pitch`° down to the floor, so the gạch
+// runner fills the frame as the pane lets go. From the stage's end the frame washes to the plaster below (lime-100,
+// --ease-in-out) from the top of the frame down (renderer.js sweep, `feather` of the frame): ceiling and walls
+// first, the runner last, still fading just above the work sheet while its tiles rise over it. The wash lasts
+// until the sheet's top is `end` of a screen from the frame's top, and never less than `wash` screens (`washPhone`
+// under 600 px wide; 05-DESIGN D0.5: 24svh / 16svh at least). No hard cut, no double exposure, no bare plaster.
+export const WALK_OUT = { leave: 0.45, wash: 0.24, washPhone: 0.16, end: 0.12, feather: 0.6, pitch: 14, tilt: [0.92, 1] };
 export const walkLeave = (x) => WALK_OUT.leave * sineIn(clamp01(x));
+const sineInOut = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
+// Degrees the camera looks down at stage progress q (0 until 0.92, 14 from the stage's end on).
+export const walkPitch = (q) => WALK_OUT.pitch * sineInOut(clamp01((q - WALK_OUT.tilt[0]) / (WALK_OUT.tilt[1] - WALK_OUT.tilt[0])));
+// The wash's scroll span: from the stage's end (stageEnd, page px) until the next sheet's top (next) is `end` of a
+// screen (h) from the top of the frame, at least the D0.5 minimum for the screen's width w.
+export function washSpan(stageEnd, next, w, h) {
+  const min = (w < 600 ? WALK_OUT.washPhone : WALK_OUT.wash) * h;
+  return { y0: stageEnd, len: Math.max(next - WALK_OUT.end * h - stageEnd, min) };
+}
 
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 
@@ -80,6 +93,16 @@ const beatI = (q, n) => Math.min(Math.max(Math.floor((q - WALK.beats[0]) / beatW
 export function beatAt(q, n) {
   const w = beatW(n), i = beatI(q, n);
   return { i, u: (q - WALK.beats[0]) / w - i, w };
+}
+
+// The leaflets keep away from Little Rose's beat (05-DESIGN D0.6.4, critique r1): scrubbed with the scroll (never
+// time), their alpha and size go to 0 over the first 0.05 of its beat and come back over its last 0.05, so none
+// is drawn anywhere in the frame while its door is read. lr: its index (−1: no Little Rose, always 1).
+export const LEAF_FADE = [0.05, 0.95];
+export function leafFade(q, n, lr) {
+  if (lr < 0 || n <= 0) return 1;
+  const u = (q - WALK.beats[0]) / beatW(n) - lr;
+  return 1 - smooth(0, LEAF_FADE[0], u) + smooth(LEAF_FADE[1], 1, u);
 }
 
 // An open door's angle at q, in degrees: shut until its beat, 72° from 0.45 of it on (the door stays open

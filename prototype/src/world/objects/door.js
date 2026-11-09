@@ -1,5 +1,4 @@
-import { BoxGeometry, Group, Mesh, PlaneGeometry } from "three";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { BoxGeometry, BufferAttribute, BufferGeometry, Group, Mesh, PlaneGeometry } from "three";
 import { BLOCK } from "../glsl/blocks.js";
 
 // A unit's door in a wall at x = wx that faces −x (05-DESIGN D6.3, D6.5): frame (two jambs and a
@@ -36,11 +35,26 @@ export function doorSpec({ wx, zc, unit, open = 72, hinge = 1, inward = false })
   };
 }
 
+// Leaf-local coordinates for the paint's wear (paint.js leafWear): hinge space (y up from the foot, z along the leaf
+// from its hinge), each part's own offset in it added; a frame carries y −1 and keeps its chipped edge band.
+export function leafCoords(geo, off = [0, 0, 0]) {
+  const p = geo.getAttribute("position"), a = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) { a[i * 3] = p.getX(i) + off[0]; a[i * 3 + 1] = p.getY(i) + off[1]; a[i * 3 + 2] = p.getZ(i) + off[2]; }
+  geo.setAttribute("aLeafP", new BufferAttribute(a, 3));
+  return geo;
+}
+export function frameCoords(geo) {
+  const n = geo.getAttribute("position").count, a = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) a[i * 3 + 1] = -1;
+  geo.setAttribute("aLeafP", new BufferAttribute(a, 3));
+  return geo;
+}
+
 // Meshes: frame and leaf take the paint material, the doorway its glow (only when open).
 export function doorMeshes(spec, { paint, frame = paint, panel = paint, glow }) {
   const { wx, zc } = spec, half = DOOR.w / 2, f = DOOR.frame, R = DOOR.reveal;
   const g = new Group();
-  const box = (w, h, d, x, y, z, mat) => { const m = new Mesh(new BoxGeometry(w, h, d), mat); m.position.set(x, y, z); g.add(m); return m; };
+  const box = (w, h, d, x, y, z, mat) => { const m = new Mesh(frameCoords(new BoxGeometry(w, h, d)), mat); m.position.set(x, y, z); g.add(m); return m; };
   // Jambs and head sit in the opening and stand 2 cm proud of the wall.
   box(R, DOOR.h + f, f, wx + R / 2 - 0.02, (DOOR.h + f) / 2, zc - half - f / 2, frame);
   box(R, DOOR.h + f, f, wx + R / 2 - 0.02, (DOOR.h + f) / 2, zc + half + f / 2, frame);
@@ -49,12 +63,13 @@ export function doorMeshes(spec, { paint, frame = paint, panel = paint, glow }) 
   const leaf = new Group();
   leaf.position.set(wx + 0.03, 0, zc + h * half);
   leaf.rotation.y = (h * (spec.swing ?? 1) * spec.open * Math.PI) / 180;
-  const slab = new Mesh(new BoxGeometry(DOOR.t, DOOR.h, DOOR.w), paint);
+  const slab = new Mesh(leafCoords(new BoxGeometry(DOOR.t, DOOR.h, DOOR.w), [0, DOOR.h / 2, -h * half]), paint);
   slab.position.set(0, DOOR.h / 2, -h * half);
   leaf.add(slab);
   for (const side of [-1, 1]) for (const [y, ph] of [[0.12 + 0.42, 0.84], [1.12 + 0.48, 0.96]]) for (const dz of [-0.24, 0.24]) {
-    const p = new Mesh(new BoxGeometry(0.012, ph, 0.34), panel);
-    p.position.set(side * (DOOR.t / 2 + 0.004), y, -h * half + dz);
+    const at = [side * (DOOR.t / 2 + 0.004), y, -h * half + dz];
+    const p = new Mesh(leafCoords(new BoxGeometry(0.012, ph, 0.34), at), panel);
+    p.position.set(...at);
     leaf.add(p);
   }
   g.add(leaf);
@@ -67,23 +82,42 @@ export function doorMeshes(spec, { paint, frame = paint, panel = paint, glow }) 
   return g;
 }
 
+// Indexed geometries with the same attributes as one (three's BufferGeometryUtils, cut to what the corridor's
+// doors need, so its chunk does not carry the whole helper).
+export function mergeGeometries(geos) {
+  const out = new BufferGeometry(), names = Object.keys(geos[0].attributes), idx = [];
+  let base = 0;
+  for (const g of geos) {
+    for (const i of g.index.array) idx.push(i + base);
+    base += g.attributes.position.count;
+  }
+  for (const n of names) {
+    const size = geos[0].attributes[n].itemSize, arr = new Float32Array(base * size);
+    let o = 0;
+    for (const g of geos) { arr.set(g.attributes[n].array, o); o += g.attributes[n].array.length; }
+    out.setAttribute(n, new BufferAttribute(arr, size));
+  }
+  out.setIndex(idx);
+  return out;
+}
+
 // The same door as three merged geometries for the live corridor, two draws a door: the frame in world
 // space, the leaf (slab and its raised panels) in hinge space, so turning one group swings it.
 export function doorGeometries(spec) {
   const { wx, zc } = spec, half = DOOR.w / 2, f = DOOR.frame, R = DOOR.reveal;
   const box = (w, h, d, x, y, z) => new BoxGeometry(w, h, d).translate(x, y, z);
-  const frame = mergeGeometries([
+  const frame = frameCoords(mergeGeometries([
     box(R, DOOR.h + f, f, wx + R / 2 - 0.02, (DOOR.h + f) / 2, zc - half - f / 2),
     box(R, DOOR.h + f, f, wx + R / 2 - 0.02, (DOOR.h + f) / 2, zc + half + f / 2),
     box(R, f, DOOR.w + 2 * f, wx + R / 2 - 0.02, DOOR.h + f / 2, zc),
-  ]);
+  ]));
   const hs = spec.hinge ?? 1;
   const parts = [box(DOOR.t, DOOR.h, DOOR.w, 0, DOOR.h / 2, -hs * half)];
   for (const side of [-1, 1]) for (const [y, h] of [[0.12 + 0.42, 0.84], [1.12 + 0.48, 0.96]]) for (const dz of [-0.24, 0.24]) {
     parts.push(box(0.012, h, 0.34, side * (DOOR.t / 2 + 0.004), y, -hs * half + dz));
   }
-  // Turn the hinge group by hinge × angle to open it.
-  return { frame, leaf: mergeGeometries(parts), hinge: [wx + 0.03, 0, zc + hs * half], side: hs };
+  // Turn the hinge group by hinge × angle to open it. The parts are already in hinge space: their wear coordinates.
+  return { frame, leaf: leafCoords(mergeGeometries(parts)), hinge: [wx + 0.03, 0, zc + hs * half], side: hs };
 }
 
 // The leaf as seen by the light (an occluder with no holes), for the doorway's spill.

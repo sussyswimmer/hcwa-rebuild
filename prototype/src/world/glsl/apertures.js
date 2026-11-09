@@ -25,6 +25,8 @@ const PATTERNS = {
   dotTre: "return sdDotTre(mod(uv, B) - 0.5 * B);",
   vomCau: "return sdVomCau(mod(uv, B) - 0.5 * B);",
   open: "return -1.;",
+  // The corridor's ceiling fans (objects/props.js fansGLSL): the blades block the sun.
+  fans: "return -fanBlades(uv);",
   solid: "return 1.;",
   // Louver gaps along V: p.x pitch, p.y open fraction.
   slats: "float h = 0.5 * p.x; return abs(mod(uv.y, p.x) - h) - h * p.y;",
@@ -60,7 +62,7 @@ float ap${i}(vec3 P, vec3 L){
   if (abs(ln) < 1e-4 || pn * side > -0.001) return 1.;
   vec2 size = uApS[${i}].xy;
   float m = 1.;
-  for (int f = 0; f < 2; f++) {
+  for (int f = 0; f < ${a.thin ? 1 : 2}; f++) {
     float t = (float(f) * uApS[${i}].z * side - pn) / ln;
     vec3 Q = P + L * t;
     vec2 uv = vec2(dot(Q - C, U), dot(Q - C, V));

@@ -14,3 +14,6 @@ qa/m1/**
 # Round-2 build QA working captures (frame sequences, critic evidence, matrices): local only.
 # A curated review set lives in qa/m2-review/.
 qa/m2/
+# Richness-pass QA working captures (strips, critic evidence, matrices): local only, about 365 MB.
+# A curated review set is committed separately once the pass is final.
+qa/m3/

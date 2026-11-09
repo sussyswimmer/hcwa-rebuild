@@ -40,97 +40,139 @@
 }
 @keyframes light-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
 @supports (animation-timeline: view()) {
-  html[data-motion="on"] :is(.sun-layer, .tile__light, .lit-wall__light, .lam)::before { animation: light-drift linear both; animation-timeline: view(); }
+  html[data-motion="on"] :is(.sun-layer, .lit-wall__light, .lam)::before { animation: light-drift linear both; animation-timeline: view(); }
 }
 
 /* ---------- H5 our work sheet ---------- */
-.sun-layer--work { top: 0; right: -6vw; width: min(62vw, 860px); height: clamp(420px, 44vw, 640px); }
+/* D0.5, fix r1: the sheet comes in under the corridor's exit, not after it. On the stage it rises 24svh
+   (16svh on phones) over the corridor's last frame with a 24-48 px lead, so "Lĩnh vực hoạt động" and the
+   first patch arrive in the lower half of the screen while the runner is still fading above the sheet's
+   bông gió row (the live wash runs from the frame's top down, world/journey.js WALK_OUT). The sheet is plaster
+   from its top, so no word of it ever stands on the corridor's picture. Stacked (Tier 0, reduced motion, no
+   JS) there is no picture to fade under: the sheet rises into the corridor's own foot (its --section-y
+   padding, stages.css) and keeps --s-8 clear of the link to every center. */
+#centers + #work { --rise: calc(var(--section-y) - var(--s-8)); margin-top: calc(-1 * var(--rise)); padding-top: clamp(24px, 3vw, 48px); }
+html.stages #centers.is-stage + #work { --rise: 24svh; }
+@media (max-width: 599px) { html.stages #centers.is-stage + #work { --rise: 16svh; } }
 
-/* The focus areas as one wall: 4 columns with Education 2 × 2, Protection 2 × 1, Family and Policy 1 × 1 =
-   8 of 8 cells; 2 columns = 6 of 6. No mortar lines and no outline (D0.5): each area is a pool of cool
-   shade under its block, feathered into the plaster, and the narrow sunlit valleys between the pools are
-   what separate them. */
-.bento { list-style: none; padding: 0; margin: clamp(40px, 5vw, 72px) 0 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(6px, 0.9vw, 14px); }
-@media (min-width: 600px) {
-  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; }
-  .tile--education, .tile--protection { grid-column: span 2; }
-}
-@media (min-width: 1024px) {
-  .bento { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(clamp(300px, 24vw, 360px), auto); }
-  .tile--education { grid-row: span 2; }
-}
-.tile--education { --hole: url("/svg/hole-hoa-thi.svg"); --pitch: 72px; --art: 58%; }
-.tile--protection { --hole: url("/svg/hole-mat-cao.svg"); --pitch: 56px; --art: 40%; }
-.tile--family { --hole: url("/svg/hole-vong-tron.svg"); --pitch: 56px; --art: 70%; }
-.tile--policy { --hole: url("/svg/hole-bac-thang.svg"); --pitch: 56px; --art: 70%; }
+/* H5a, "Lĩnh vực hoạt động": a floor of gạch bông (05-DESIGN 0.6.3). The four areas are patches of 20 cm
+   cement tiles, the corridor's runner seen from above (blocks.mjs gachArt): Giáo dục 2 × 2, Bảo vệ 2 × 1,
+   Gia đình and Vận động one each, so the hierarchy is the number of tiles and a tile (--T) is never scaled.
+   The words stand beside or under their patch, never on a tile. No line is drawn between areas (D0.5). */
+.floor { --T: clamp(88px, 30vw, 128px); position: relative; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--s-7); }
+.floor__title, .floor__areas { position: relative; z-index: 1; }
+.floor__areas { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-7); }
+/* The ground (fix r1): the patches are laid in a cement floor, not stuck on a wall. One decorative layer
+   of tile-cream cement and one of its speckle (cement.svg, the tiles' own wear filter), both under a soft
+   ellipse whose feather is at least 96 px, so the floor has no edge (D0.5). The speckle is why the lines
+   are ink-900 here: ink-700 fell under 7:1 on its darkest grains (D0.6.3 departure, PLAN section 9). */
+.floor::before, .floor::after { content: ""; position: absolute; z-index: 0; inset: calc(-1 * var(--s-7)) calc(-1 * var(--gutter)) calc(-1 * var(--s-7)); pointer-events: none;
+  --ground: radial-gradient(ellipse 58% 56% at 50% 52%, black 46%, rgb(0 0 0 / 0.55) 72%, transparent 100%); }
+.floor::before { background: var(--color-tile-cream); mask: var(--ground); }
+.floor::after { background: color-mix(in oklab, var(--color-tile-cream), var(--color-ink-700) 44%); opacity: 0.28;
+  mask: url("/svg/cement.svg") 0 0 / 240px 240px repeat, var(--ground); mask-composite: intersect; }
 
-/* Two rows: the block's light in the first, the words in the second, so the heading never meets the art. */
-.tile { --f: clamp(18px, 2.4vw, 36px); --pad: clamp(24px, 2.6vw, 40px); position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-rows: 1fr auto; row-gap: 16px; min-height: 300px; padding: var(--pad); padding-right: 64px; }
-/* A pool of shade under the block, no rectangle: an ellipse that reaches zero before every edge of the
-   tile (closest-side), so neighbouring pools never meet in a straight line. */
-.tile::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background: radial-gradient(closest-side at 60% 46%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent);
-}
-/* The block drawn in light, not ink (D7): its edges and holes as warm lines that read on plaster at both
-   sizes, the sun coming through the holes. It sits 6 px inside the tile's top-right corner and fades out
-   toward the top and the right before the tile's edge (and away from the corner below), so the tile never
-   cuts a line straight. */
-.tile__art { grid-row: 1; justify-self: end; align-self: start; position: relative; z-index: 0; display: block; width: var(--art); height: auto; margin: calc(-1 * var(--pad) + 6px) calc(-64px + 6px) 0 0;
-  mask-image: linear-gradient(to left, transparent, black 24%), linear-gradient(to bottom, transparent, black 24%), radial-gradient(farthest-corner at 100% 0, black 34%, transparent 80%);
+.gach { --c: 1; --r: 1; --vc: 1; --vr: 1; --cream: var(--color-tile-cream); --wear: 0.32;
+  --grout: color-mix(in oklab, var(--color-tile-cream), var(--color-ink-700) 14%);
+  position: relative; display: grid; grid-template-columns: calc(var(--vc) * var(--T)) minmax(0, 1fr); gap: var(--s-4) var(--s-5); align-items: start; align-content: start; }
+.gach--education { --c: 2; --r: 2; --pig: var(--color-tile-ochre); --acc: var(--color-tile-indigo); --pig-lit: var(--color-tile-ochre-lit); --acc-lit: var(--color-tile-indigo-lit); }
+.gach--protection { --c: 2; --pig: var(--color-tile-indigo); --acc: var(--color-tile-ochre); --pig-lit: var(--color-tile-indigo-lit); --acc-lit: var(--color-tile-ochre-lit); }
+.gach--family { --pig: var(--color-tile-jade); --acc: var(--color-tile-ochre); --pig-lit: var(--color-tile-jade-lit); --acc-lit: var(--color-tile-ochre-lit); }
+.gach--policy { --pig: var(--color-tile-brick); --acc: var(--color-tile-indigo); --pig-lit: var(--color-tile-brick-lit); --acc-lit: var(--color-tile-indigo-lit); }
+
+/* The patch: --vc × --vr tiles of it are seen (always whole tiles, at full scale). */
+.gach__floor { --w: calc(var(--vc) * var(--T)); --band: calc(2 * var(--T)); --at: calc(0.55 * (var(--w) + var(--band)) - var(--band));
+  position: relative; inline-size: var(--w); block-size: calc(var(--vr) * var(--T)); overflow: clip; view-timeline-name: --gach; }
+.gach__art, .gach__lit { display: block; inline-size: calc(var(--c) * var(--T)); block-size: calc(var(--r) * var(--T)); max-inline-size: none; }
+/* The light: a band of the house's Hoa thị sunlight (sun-hoa-thi.svg, the floor's projection, crisp), two
+   tiles wide with 10% side fades, its blocks 0.42 of a tile, so a row of 3-4 whole quatrefoils with their
+   pips crosses a patch: the breeze block's rhythm, not a stain. Inside it the same tiles in their sunlit
+   pigments, counter-moved so they stay registered with the floor: the sun lands only on the tiles, never on
+   the plaster. Transform and opacity only, no blend mode. At rest it stands at 55% of its travel. */
+.gach__light { position: absolute; inset: 0 auto 0 0; inline-size: var(--band); pointer-events: none; opacity: 0.9; translate: var(--at) 0;
+  mask: url("/svg/sun-hoa-thi.svg") 0 0 / calc(0.42 * var(--T)) auto repeat, linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   mask-composite: intersect; }
-.block-light__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 35%, transparent); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.block-light__core { stop-color: var(--color-sun-200); }
-.block-light__edge { stop-color: var(--color-sun-200); stop-opacity: 0.12; }
+/* The lit copy keeps half the speckle, so the cement grain runs on through the light. */
+.gach__lit { --cream: var(--color-sun-100); --pig: var(--pig-lit); --acc: var(--acc-lit); --wear: 0.16;
+  --grout: color-mix(in oklab, var(--color-sun-100), var(--color-ink-700) 12%);
+  position: absolute; inset: 0 auto auto 0; translate: calc(-1 * var(--at)) 0; opacity: 0.9; transition: opacity var(--d-hover) var(--ease-hover); }
+@keyframes gach-band { from { translate: calc(-1 * var(--band)) 0; opacity: 0.55; } 50% { opacity: 1; } to { translate: var(--w) 0; opacity: 0.55; } }
+@keyframes gach-lit { from { translate: var(--band) 0; } to { translate: calc(-1 * var(--w)) 0; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"]:not([data-tier="0"]) .gach__light { animation: gach-band linear both; animation-timeline: --gach; animation-range: cover 12% cover 88%; }
+  html[data-motion="on"]:not([data-tier="0"]) .gach__lit { animation: gach-lit linear both; animation-timeline: --gach; animation-range: cover 12% cover 88%; }
+}
+
+.gach__body { display: grid; gap: var(--s-2); align-content: start; max-inline-size: 34ch; }
+.gach__name { font-size: var(--fs-h3); text-wrap: balance; }
+.gach--education .gach__name { font-size: clamp(2rem, 1.2rem + 2vw, 3.25rem); font-weight: 620; }
+/* The whole area is the link (::after); the arrow keeps to the name's last word (a word joiner). */
+.gach__name a { color: var(--color-ink-900); text-decoration: none; }
+.gach__name a::after { content: ""; position: absolute; inset: 0; z-index: 2; }
+.gach__go { display: inline-block; inline-size: 0.8em; block-size: 0.8em; margin-inline-start: 0.3em; vertical-align: -0.06em; color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-hover); }
+.gach__text { color: var(--color-ink-900); }
+.gach--education .gach__text { font-size: var(--fs-lg); line-height: var(--lh-lead); }
+@media (hover: hover) {
+  .gach:hover .gach__lit { opacity: 1; }
+  .gach:hover .gach__name a span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
+  .gach:hover .gach__go { translate: 3px 0; }
+}
+.gach:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 8px; border-radius: var(--r-sm); }
+.gach a:focus-visible { outline: none; }
+.gach-sprite { position: absolute; inline-size: 0; block-size: 0; overflow: hidden; }
+
+/* Phones (< 600): one column. Giáo dục shows its whole 2 × 2 patch and Bảo vệ its 2 × 1, above their words,
+   so the tile count is still the hierarchy here (fix r1); Gia đình and Vận động keep one tile beside
+   their words. A tile is never scaled. */
+@media (max-width: 599px) {
+  .floor__areas { gap: var(--s-6); }
+  .gach__body { padding-block-start: 2px; }
+  .gach--education, .gach--protection { --vc: var(--c); --vr: var(--r); grid-template-columns: minmax(0, 1fr); }
+  .gach--education .gach__body, .gach--protection .gach__body { padding-block-start: 0; }
+}
+/* Tablets: two columns. Giáo dục and Bảo vệ take a row each, patch with its words beside; Gia đình and
+   Vận động sit side by side, tile with its words under. */
+@media (min-width: 600px) {
+  .floor { --T: clamp(112px, 13vw, 136px); }
+  .floor__areas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-7) var(--s-5); }
+  .gach { --vc: var(--c); --vr: var(--r); }
+  .gach--education, .gach--protection { grid-column: 1 / -1; align-items: center; }
+  .gach--family, .gach--policy { grid-template-columns: minmax(0, 1fr); }
+}
+/* Desktop: one 4-column floor with the H2 in it. Bảo vệ fills the top right beside the H2, Giáo dục the
+   two columns under it, Gia đình and Vận động one column each. The middle row is 1fr, so the two-row areas
+   grow it and the H2's row stays the H2's height. Giáo dục's words follow its patch straight away (fix r1:
+   at the cell's foot they left a plaster hole between the patch and its name). */
+@media (min-width: 1024px) {
+  .floor { --T: clamp(136px, 11.7vw, 176px); grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto 1fr auto; gap: var(--s-6) var(--s-5); }
+  .floor__title { grid-area: 1 / 1 / 2 / 3; }
+  .floor__areas { grid-area: 1 / 1 / 4 / 5; grid-template-columns: subgrid; grid-template-rows: subgrid; gap: normal; }
+  .gach { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; }
+  .gach--protection { grid-area: 1 / 3 / 3 / 5; }
+  .gach--education { grid-area: 2 / 1 / 4 / 3; }
+  .gach--family { grid-area: 3 / 3 / 4 / 4; }
+  .gach--policy { grid-area: 3 / 4 / 4 / 5; }
+  /* Wide screens: the two-tile areas have room for their words beside the patch. Bảo vệ's stand at its
+     foot; Giáo dục's beside its first row (fix r1), so no plaster hole opens above them under the H2. */
+  @media (min-width: 1280px) {
+    .gach--education, .gach--protection { grid-template-columns: calc(var(--c) * var(--T)) minmax(0, 1fr); grid-template-rows: auto; align-items: end; align-self: start; }
+    .gach--education .gach__body { align-self: start; }
+  }
+  @supports not (grid-template-rows: subgrid) {
+    .floor { grid-template-rows: auto auto; }
+    .floor__title { grid-column: 1 / -1; }
+    .floor__areas { grid-area: 2 / 1 / 3 / 5; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto; gap: var(--s-6) var(--s-5); }
+    .gach--education { grid-area: 1 / 1 / 3 / 3; }
+    .gach--protection { grid-area: 1 / 3 / 2 / 5; }
+    .gach--family { grid-area: 2 / 3 / 3 / 4; }
+    .gach--policy { grid-area: 2 / 4 / 3 / 5; }
+  }
+}
+
+/* The screen's block art (blocks.mjs screenArt: filter chips, the corridor's rail, the components page). */
 .block-art__sky { fill: var(--color-sun-100); }
 .block-art__face { fill: var(--color-blue-700); }
 .block-art__joint { fill: none; stroke: var(--color-blue-900); stroke-width: 3; }
-/* The light that block throws: one slanted fall from the art toward the bottom-left, fading long before
-   the text. */
-.tile__light {
-  --fall: linear-gradient(205deg, black 12%, transparent 46%);
-  position: absolute; inset: 0; z-index: 0; transition: translate 280ms var(--ease-out);
-  mask: var(--fall), linear-gradient(to right, transparent, black var(--f), black calc(100% - var(--f)), transparent), linear-gradient(to bottom, transparent, black var(--f), black calc(100% - var(--f)), transparent);
-  mask-composite: intersect;
-}
-.tile__light::before {
-  content: ""; position: absolute; inset: -30%; background: var(--color-sun-200); opacity: 0.38;
-  mask: var(--hole) 0 0 / var(--pitch) var(--pitch) repeat;
-  transform: rotate(-4deg) skewX(-18deg) scaleY(1.2);
-}
-.tile__body { grid-row: 2; position: relative; z-index: 1; display: grid; gap: 10px; max-width: 36ch; }
-.tile__name { font-size: var(--fs-h3); }
-.tile--education .tile__name { font-size: clamp(2.5rem, 1.2rem + 3.6vw, 4.75rem); line-height: var(--lh-h1); }
-.tile--protection .tile__name { font-size: clamp(1.75rem, 1.1rem + 1.6vw, 2.75rem); }
-/* The whole tile is the link (::after); the name itself is a 44 px tall target too. */
-.tile__name a { display: inline-block; padding-block: 10px; margin-block: -10px; color: var(--color-ink-900); text-decoration: none; }
-.tile__name a::after { content: ""; position: absolute; inset: 0; z-index: 3; }
-.tile__text { color: var(--color-ink-700); }
-.tile--education .tile__text { font-size: var(--fs-lg); line-height: var(--lh-lead); }
-.tile__go { position: absolute; z-index: 2; right: clamp(20px, 2vw, 32px); bottom: clamp(24px, 2.6vw, 40px); color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
-/* Hover: the sun moves 6 px and the light shifts with it (D5.7 bento tile). The wall itself never lifts:
-   the tiles share their mortar. */
-@media (hover: hover) {
-  .tile:hover .tile__light { translate: -6px 6px; }
-  .tile:hover .tile__name a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
-  .tile:hover .tile__go { translate: 3px 0; }
-}
-.tile:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: -3px; }
-.tile a:focus-visible { outline: none; }
-/* Phones: one column, the block art 96 px beside the title (PLAN H5a), its holes lit so it reads at that
-   size; the light falls from it down to the right. */
-@media (max-width: 599px) {
-  .tile { --pad: 24px; min-height: 0; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: auto; align-items: start; gap: 16px; padding: 24px 16px 28px 8px; }
-  .tile::before { background: radial-gradient(closest-side at 40% 50%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent); }
-  .tile__name { padding-right: 32px; }
-  .tile__art { grid-row: 1; grid-column: 1; width: 96px; height: 96px; margin: 0; mask-image: radial-gradient(closest-side, black 70%, transparent); }
-  .tile__art .block-light__sun { fill: color-mix(in srgb, var(--color-sun-200) 70%, transparent); }
-  .tile__body { grid-row: 1; grid-column: 2; }
-  .tile__light { --fall: linear-gradient(155deg, black 10%, transparent 42%); }
-  .tile--education .tile__name, .tile--protection .tile__name { font-size: var(--fs-h3); }
-  .tile--education .tile__text { font-size: var(--fs-base); line-height: var(--lh-body); }
-  .tile__go { right: 16px; bottom: auto; top: 28px; }
-}
 
 /* Plaques (H5b): the organization figures on the wall's base course, one unboxed row, 64 px apart, each
    label under its number. Never animated; staging only until two are verified. */
@@ -264,9 +306,9 @@
 
 /* Reduced motion and pause: the light holds still; hover colours stay. */
 @media (prefers-reduced-motion: reduce) {
-  .tile__light, .tile__go, .lit-wall__light, .louver::before, .louver__label::after, .louver__go, .program-row::before, .program-more__link .icon, .dated__ext { transition: none; }
+  .gach__lit, .gach__go, .lit-wall__light, .louver::before, .louver__label::after, .louver__go, .program-row::before, .program-more__link .icon, .dated__ext { transition: none; }
 }
-html[data-motion="off"] :is(.tile__light, .lit-wall__light) { transition: none; }
+html[data-motion="off"] :is(.gach__lit, .lit-wall__light) { transition: none; }
 
 /* =====================================================================================================
    Inner pages: Our Work hub, a center, a program (PLAN P1-P3). One stretch of the day per page (05-DESIGN

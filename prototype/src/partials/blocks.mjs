@@ -98,20 +98,6 @@ export function screenArt(kind, { cols = 1, rows = 1, cls = "block-art" } = {}) 
   return svg(`0 0 ${cols * S} ${rows * S}`, `<rect class="block-art__sky" width="${cols * S}" height="${rows * S}"/>${blocks.join("")}${joints.length ? `<path class="block-art__joint" d="${joints.join("")}"/>` : ""}`, cls);
 }
 
-// The same piece of screen drawn in light instead of ink (D7, the work sheet's tiles): every edge and hole
-// as a 1.5 px lime-300 line, the sun coming through each block's holes (sun-200 fading out from the
-// centre). Colours from pages.css; one gradient per kind on a page.
-export function lightArt(kind, { cols = 1, rows = 1, cls = "block-light" } = {}) {
-  const S = SIZE, f = face(kind), h = holes(kind), id = `bl-${kind}`;
-  const blocks = [];
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-    const t = `translate(${c * S + S / 2} ${r * S + S / 2})`;
-    blocks.push(`<path class="block-light__sun" fill="url(#${id})" transform="${t}" d="${h}"/><path class="block-light__line" fill-rule="evenodd" transform="${t}" d="${f}"/>`);
-  }
-  const defs = `<defs><radialGradient id="${id}" r="0.62"><stop offset="0" class="block-light__core"/><stop offset="1" class="block-light__edge"/></radialGradient></defs>`;
-  return svg(`0 0 ${cols * S} ${rows * S}`, defs + blocks.join(""), cls);
-}
-
 // Mortar-free single block in line work (filter chips, icons): edge and holes stroked, holes lit.
 export function blockIcon(kind, cls = "block-icon") {
   return svg(`${-H - 6} ${-H - 6} ${SIZE + 12} ${SIZE + 12}`, `<path class="block-icon__light" d="${holes(kind)}"/><path class="block-icon__line" fill="none" d="${face(kind)}"/>`, cls);
@@ -123,3 +109,135 @@ export const maskFile = (kind, part) => {
   const d = part === "face" ? face(kind) : holes(kind);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-H} ${-H} ${SIZE} ${SIZE}"><path fill-rule="evenodd" d="${d}"/></svg>\n`;
 };
+
+// ---------- Gạch bông: the focus areas as cement tiles (05-DESIGN 0.6.3, PLAN H5a) ----------
+// The house's blocks turned into a floor: one 20 cm encaustic tile per <symbol>, in millimetres (200 = one
+// tile), inlaid with its block from the same SDF numbers as the light. One hidden sprite per page holds the
+// four symbols, the one wear filter and the corner clip; each area is one <svg> of n <use>s at a 200 mm
+// pitch. Colours are custom properties from pages.css (--cream, --pig, --acc, --wear, --grout) that inherit
+// into <use>, so the sunlit copy (.gach__lit) is the same symbols in the *-lit pigments.
+// Fix r1 (9 Nov): a patch is one piece of laid floor, not a set of stickers. Each tile is a square of cement
+// (--cream) with its pigment medallion 2 mm in (was 7, which left a 10 px plaster gutter at 1440); the
+// corner motifs run to the tile's own edge, and the tiles meet at a 1.5 px grout joint (gachArt), so four
+// quarter-discs close into one rosette where four tiles meet.
+export const TILE = 200;
+const MED = 2, MED_R = 1.5; // pigment medallion: inset and corner radius (a square tile)
+const FRAME = 15, FRAME_W = 2.5, FRAME_R = 1; // the cream frame line
+const DOT_R = 2.2, DOT_AT = (MED + FRAME - FRAME_W / 2) / 2; // accent dots centred in the border band
+const CORNER_R = 38, LOBE = 13; // corner quarter-motif: an accent disc carrying a cream quarter Hoa thị
+const INLAY = 0.82; // the 2 × 2 blocks, scaled inside the frame so they stay clear of the corner motifs
+export const GROUT_PX = 1.5; // the joint between two tiles of a patch, in screen pixels at any tile size
+
+// Tiles per area, cols × rows. The hierarchy is the number of tiles, never their size.
+export const AREA_PATCH = { education: [2, 2], protection: [2, 1], family: [1, 1], policy: [1, 1] };
+
+const style = (prop, v) => ` style="${prop}:var(--${v})"`;
+const med = (inset, r) => `x="${inset}" y="${inset}" width="${TILE - 2 * inset}" height="${TILE - 2 * inset}" rx="${r}"`;
+const CORNERS = [[0, 0], [TILE, 0], [0, TILE], [TILE, TILE]];
+
+// Bậc thang, redrawn as one rising stair: a cream band (tread and riser) from the bottom-left corner motif
+// to the top-right one in 6 equal steps, as thick as the block's slot is to its step, an accent dot at every
+// nosing. The stubs at each end tuck under the corner discs. It rises left to right in both languages.
+const STEP = 24;
+const stair = () => {
+  const c = TILE / 2, s = STEP, d = [`M${c - 3.5 * s} ${c + 3 * s}`], nosings = [];
+  for (let k = 1; k <= 6; k++) {
+    const x = c - 3.5 * s + k * s, y = c + 3 * s - k * s;
+    d.push(`H${x}V${y}`);
+    nosings.push(circle(x, y, 3.4));
+  }
+  d.push(`H${c + 3.5 * s}`);
+  const w = n((s * BAC_THANG.w) / BAC_THANG.step);
+  return `<path fill="none" stroke-width="${w}" stroke-linejoin="miter"${style("stroke", "cream")} d="${d.join("")}"/><path${style("fill", "acc")} d="${nosings.join("")}"/>`;
+};
+
+// At a tile's scale the Mắt cáo lattice keeps only its whole diamonds: the slivers its frame cuts at the
+// block's edge would read as grit at 88 px.
+const INLAY_HOLES = {
+  matCao: () => {
+    const c = mm(MAT_CAO.cell), h = mm(MAT_CAO.half), out = [];
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) out.push(poly([[i * c - h, j * c], [i * c, j * c - h], [i * c + h, j * c], [i * c, j * c + h]]));
+    return out.join("");
+  },
+};
+
+// The area's block inlaid in cream, 2 × 2, with an accent heart at each block centre.
+const inlay = (kind) => {
+  if (kind === "bacThang") return stair();
+  const cell = ((TILE - 2 * (FRAME + FRAME_W / 2)) * INLAY) / 2, s = (cell / SIZE).toFixed(4);
+  const at = [TILE / 2 - cell / 2, TILE / 2 + cell / 2].map(n);
+  const blocks = [], hearts = [];
+  for (const y of at) for (const x of at) {
+    blocks.push(`<use href="#gach-b-${kind}" transform="translate(${x} ${y}) scale(${s})"/>`);
+    hearts.push(circle(x, y, kind === "matCao" ? 3.4 : 5.6));
+  }
+  return `<g stroke-width="3.5" style="fill:var(--cream);stroke:var(--cream)">${blocks.join("")}</g><path${style("fill", "acc")} d="${hearts.join("")}"/>`;
+};
+
+const symbol = (kind) => {
+  // the band's dots, every 20 mm between the corner motifs: a dotted stroke (round caps on zero dashes)
+  const a = n(DOT_AT), b = n(TILE - DOT_AT), dots = `M50 ${a}H150M50 ${b}H150M${a} 50V150M${b} 50V150`;
+  const discs = CORNERS.map(([x, y]) => circle(x, y, CORNER_R)).join("");
+  const lobes = CORNERS.map(([x, y]) => circle(x + (x ? -LOBE : LOBE), y, LOBE) + circle(x, y + (y ? -LOBE : LOBE), LOBE)).join("");
+  return `<symbol id="gach-${kind}">`
+    + `<rect width="${TILE}" height="${TILE}"${style("fill", "cream")}/>`
+    + `<rect ${med(MED, MED_R)}${style("fill", "pig")}/>`
+    + `<rect ${med(FRAME, FRAME_R)} fill="none" stroke-width="${FRAME_W}"${style("stroke", "cream")}/>`
+    + `<path fill="none" stroke-width="${2 * DOT_R}" stroke-linecap="round" stroke-dasharray="0 20"${style("stroke", "acc")} d="${dots}"/>`
+    + inlay(kind)
+    + `<g clip-path="url(#gach-clip)"><path${style("fill", "acc")} d="${discs}"/><path${style("fill", "cream")} d="${lobes}"/></g>`
+    + `<rect ${med(MED, MED_R)} filter="url(#gach-wear)" style="fill:var(--cream);opacity:var(--wear)"/>`
+    + `</symbol>`;
+};
+
+// The page's one sprite. The wear (worn pigment and cement speckle) is one feTurbulence, rasterised once
+// with the tile and never animated; the lit copy keeps half of it (--wear 0.16), so the speckle runs on
+// through the light instead of leaving a smooth wet-looking patch.
+export function gachSprite() {
+  const wear = `<filter id="gach-wear" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 -4.1" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/></filter>`;
+  // The corner motifs are clipped to the tile's own square, so they run to the joint and close into one
+  // rosette with the three tiles that meet them.
+  const clip = `<clipPath id="gach-clip"><rect width="${TILE}" height="${TILE}"/></clipPath>`;
+  const kinds = Object.values(AREA_BLOCK), blocks = kinds.filter((k) => k !== "bacThang").map((k) => `<path id="gach-b-${k}" d="${(INLAY_HOLES[k] ?? holes)(k)}"/>`);
+  return raw(`<svg class="gach-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs>${wear}${clip}${blocks.join("")}${kinds.map(symbol).join("")}</defs></svg>`);
+}
+
+// One area's patch: cols × rows tiles at a 200 mm pitch. Symmetric tiles are laid at quarter turns, as a
+// real floor is, so the wear never repeats; the stair always rises left to right. The joints are one
+// non-scaling 1.5 px grout stroke (--grout), drawn only between tiles: the patch's outer edge is the
+// tiles' own cement, square.
+export function gachArt(kind, [cols, rows], cls = "gach__art") {
+  const uses = [], joints = [];
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const tx = x * TILE, ty = y * TILE, turn = kind === "bacThang" ? 0 : ((x * 3 + y * 5) % 4) * 90;
+    uses.push(`<use href="#gach-${kind}"${tx || ty ? ` x="${tx}" y="${ty}"` : ""}${turn ? ` transform="rotate(${turn} ${tx + TILE / 2} ${ty + TILE / 2})"` : ""}/>`);
+  }
+  for (let x = 1; x < cols; x++) joints.push(`M${x * TILE} 0V${rows * TILE}`);
+  for (let y = 1; y < rows; y++) joints.push(`M0 ${y * TILE}H${cols * TILE}`);
+  const grout = joints.length ? `<path fill="none" stroke-width="${GROUT_PX}" vector-effect="non-scaling-stroke" style="stroke:var(--grout)" d="${joints.join("")}"/>` : "";
+  return raw(`<svg class="${cls}" viewBox="0 0 ${cols * TILE} ${rows * TILE}" aria-hidden="true" focusable="false">${uses.join("")}${grout}</svg>`);
+}
+
+// The sun through the house's Hoa thị screen as it lands on the floor (a CSS mask, public/svg/sun-hoa-thi.svg):
+// the holes under the floor's projection, skewX(-14°) scale(1, 1.1), crisp, no blur. One block is 300 units
+// wide and repeats exactly in x. The shear does not repeat in y, so the file holds enough rows that it never
+// has to: five rows (1650 units) are 2.3 tiles at the band's 0.42-tile block, more than the tallest patch.
+export function sunMaskFile() {
+  const k = Math.tan((14 * Math.PI) / 180) * 1.1, W = SIZE, rows = 5, x0 = W / 2 + (k * W) / 2, uses = [];
+  for (let j = 0; j < rows; j++) {
+    const yp = W / 2 + j * W;
+    for (let i = -2; i <= 4; i++) {
+      const xp = x0 + i * W, xs = xp - k * yp; // the sheared centre; a block reaches 170 either side of it
+      if (xs > -170 && xs < W + 170) uses.push(`<use href="#h" x="${n(xp)}" y="${yp}"/>`);
+    }
+  }
+  const h = n(W * 1.1 * rows);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${h}" width="${W}" height="${h}"><defs><path id="h" d="${holes("hoaThi")}"/></defs><g transform="skewX(-14) scale(1 1.1)">${uses.join("")}</g></svg>\n`;
+}
+
+// The cement ground the patches are laid in (pages.css .floor::after): the tiles' own wear speckle (the same
+// fractal noise, frequency and threshold as #gach-wear, here one per CSS pixel) as a seamless 240 px alpha
+// mask. A mask reads alpha only, so it carries no colour; it is rasterised once and never animated.
+export function cementMaskFile() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240"><filter id="w" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 -4.1"/></filter><rect width="240" height="240" filter="url(#w)"/></svg>\n`;
+}

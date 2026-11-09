@@ -109,6 +109,296 @@ The whole site is **one journey through one day**, and nothing in it has a hard 
 - **Review rule:** any visible hard line between two parts of the site is a must-fix in
   every critique, at 390 and 1440, in both languages.
 
+## 0.6 Richness pass (9 Nov 2026: binding, overrides any section below where they conflict)
+
+> Maxwell, on the live site: "i like it but the Linh vuc hoat dong section is so bland and all white
+> and the hallway section is so boring its jst a plain white wall"
+
+Two proposals were built and judged (craft and fit): **Saigon home** (`docs/design/proposals-2/saigon-home.md`,
+corridor 8 / 7.5, focus 7 / 8) and **Colour and light / kính màu** (`colour-light.md`, corridor 6.5 / 6,
+focus 6.5 / 5.5). **Saigon home wins both sections.** Grafts from colour-light and every judge must-fix are
+folded in below, together with five lead-designer changes:
+
+1. **No pots, plants or fallen flowers in the corridor.** Section 10 bans plants in the world and `open.md`
+   8.3 names them as café drift. Both judges also flagged the near pots and snake plants as low-poly and the
+   390 frame as busy. Fans, drifting tamarind leaflets and the colour now carry the life. Hoa sứ goes with
+   them: some families link it with pagodas and graves.
+2. **The dado is 0.90 m, not 1.12 m** (a graft from colour-light). It is the height of the parapet under the
+   screen, so one mint band runs round the whole corridor, and its painted line sits below the 1.10 m eye.
+   At 1.12 m the line was a level horizon across the frame, running behind the card's meta line at 1440.
+3. **No door surrounds. Instead, the dado stops 10 cm short of every door frame, Little Rose's included.**
+   The doors are lost against the mint (on `dado-shade`, green 1.14, blue 1.17, pink 1.02). On the yellow
+   wash they read (2.28, 2.32, 2.03). One identical treatment for all three doors also means no bay is
+   marked by something missing.
+4. **A calmer runner, and no brick in the corridor.** The field disc shrinks, the brick rings go, and the
+   solid indigo border becomes a light chain. That answers "the indigo border pulls hard" without a second
+   review. Brick appears only on the Vận động tile in the work sheet.
+5. **Transom glass (colour-light's optional graft) is declined.** Capped at the 6.5 rule of ≤ 15% unit
+   tint it barely shows. Uncapped, it breaks that rule. Either way, coloured pools on cream lower the
+   luminance contrast of the Đốt tre and Vòm cầu shapes, and it would leave Little Rose's as the only white
+   transom light. The clerestory, the end window and the coloured terrazzo are not taken either.
+
+### 0.6.1 Colour tokens (landed 9 Nov with this section)
+
+The `tile-*` pigments are in the D1 block (section 1) and `prototype/src/styles/tokens.css`. The corridor's
+shader targets are in the world-only block of `tokens.css`. `src/world/tokens.js` has been regenerated.
+`npm test` passes 91/91 and `npm run build` succeeds. **Engineers do not add these tokens again.**
+`tile-mint` from the proposal is dropped because nothing uses it.
+
+| Token | Hex | Where |
+|---|---|---|
+| `tile-cream` | `#F3E9D6` | cement ground and inlays of every tile |
+| `tile-ochre` | `#C4861C` | Giáo dục; the runner's quatrefoils. Not `sun-400`, so Donate stays the only sun fill |
+| `tile-indigo` | `#2C3584` | Bảo vệ trẻ em; the runner's discs and border chain |
+| `tile-jade` | `#176F5E` | Gia đình và cộng đồng; the runner's leaves; fan bodies |
+| `tile-brick` | `#A5472A` | Vận động chính sách only, never in the corridor |
+| `tile-ochre-lit` · `-indigo-lit` · `-jade-lit` · `-brick-lit` | `#F0B13F` · `#4265C2` · `#449C80` · `#D7703B` | each pigment in a sun patch on the focus floor: OKLCH L +0.14, chroma ×1.08. The indigo hue moves toward the logo blue (266°), never toward lavender. Cream in the sun is `sun-100` |
+| `world-vang-shade` · `-sun` | `#D5BB7E` · `#FFE09A` | Saigon yellow lime wash (*vôi vàng*) above the dado |
+| `world-dado-shade` · `-sun` · `-line` | `#5B8F78` · `#A2D4B6` · `#1C5A4C` | mint oil-paint dado to 0.90 m on every wall, the parapet included, with a 3.5 cm line on top |
+| `world-gach-shade` | `#BDAF93` | the tiles' cream ground in the corridor's shade (the floor's shade target) |
+| `world-ceiling-warm` | `#DDD5C4` | the corridor ceiling: white lime wash with warm bounce |
+
+**Measured** with `design-token-contrast` (`contraste.mjs --tokens prototype/src/styles/tokens.css --pares
+qa/contrast-pairs.json`): 77 pairs, all pass. These 10 pairs are new in `qa/contrast-pairs.json`:
+
+| Pair | Ratio | Use |
+|---|---|---|
+| ink-900 on world-vang-shade · vang-sun · gach-shade · ceiling-warm | 8.55 · 12.47 · 7.39 · 10.95 | shader targets behind the corridor's text panes |
+| tile-cream on tile-indigo · jade · brick (3:1) | 8.94 · 5.02 · 4.93 | inlays read on their pigment |
+| tile-indigo · jade · brick on lime-100 (3:1) | 8.78 · 4.93 · 4.84 | a tile's shape on the plaster |
+
+**Measured failures that are rules:**
+
+| Pair | Ratio | Rule |
+|---|---|---|
+| ink-900 / ink-700 on world-dado-shade | 4.30 / 2.44 | Text never sits on the bare dado. Corridor text is always on its pane. |
+| tile-cream on tile-ochre; tile-ochre on lime-100 / lime-50 | 2.57; 2.53 / 2.78 | The tiles are decorative and `aria-hidden`. The link is the words. Indigo hearts carry the Giáo dục motif. |
+| unit doors on world-dado-shade | green 1.14 · blue 1.17 · pink 1.02 | This is why the dado breaks at every door. On vang-shade the doors read at 2.28 · 2.32 · 2.03. |
+| each `*-lit` on its pigment | ochre 1.63 · indigo 1.99 · jade 1.82 · brick 1.77 | This is light, not a graphic. The world's own patches sit in the same range (vang 1.46, the old floor 1.93). |
+
+**Text over the corridor, by token math** (the render gate is the authority). The phone pane is 96%
+lime-50 over the darkest new colour (dado line or indigo): ink-900 13.8 and ink-700 7.9. The Tier 2 pane
+is 92%: ink-700 7.6. **The pane stays at 96% (Tier 1) and 92% (Tier 2); the proposal's 97.5% is not
+taken.** The 13 px rail labels and the stacked cards' meta lines (`.bay__since`, `.bay__where`,
+`.bay__note`) move from ink-700 to ink-900, a graft from colour-light, which measured 6.2–6.7 for them
+over darker stills. Size and weight keep the hierarchy, and the active rail item keeps its unit underline
+and lit transom.
+
+### 0.6.2 The corridor: a Saigon *mái ấm*
+
+**Materials**
+
+| Surface | Spec |
+|---|---|
+| Walls above the dado | `vang-shade` / `vang-sun` lime wash. *Loang* (metre-wide patches of aged lime, ±6% luminance) come from the lime texture's **alpha channel** (colour-light's `bakeLimeWash` change: A = 0.7·lattice(3) + 0.3·lattice(7)), so there is no extra fetch. The room never reads A. |
+| Dado | Every wall below 0.90 m, the parapet under the screen and the bay piers included: `dado-shade` / `dado-sun`, with lime mottle at 30%. A 3.5 cm `dado-line` on top with 3 mm soft edges, never a cut. **On the door wall the dado stops 10 cm before each door frame's outer edge, for every door (Little Rose's too)**, using `uDoors` and `uDoorN`, which are already in the uniforms. The frame stands on yellow wash. |
+| Floor | A *gạch bông* runner on the screen side: a border row, 6 field rows and a border row (8 × 20 cm = 1.6 m). From there to the door wall (0.8 m), plain cream tiles with analytic hairline joints, ≤ 11% darker. That is where the sun and the emblem light land. **Field tile:** at the corners where four tiles meet, an indigo disc of r 0.27 tile with a cream Hoa thị quatrefoil (lobe 0.105); an ochre quatrefoil (0.085) in the middle of each tile; jade leaves to the edge midpoints. No brick rings. Pigment covers ≤ 38% of the field texture. **Border tile:** cream ground, a chain of indigo lozenges (half-diagonal 0.22 tile) with ochre cores (0.08), and a 0.03-tile jade line along each edge. Pigment covers ≤ 30%. **Wear:** quintic-interpolated value noise in 3 octaves, plus 1 px speckle at 3%. It lifts pigment toward cream by up to 18%, most along the runner's centre line (foot traffic, Gaussian σ 0.35 m). No axis-aligned or blocky feature may show at 2× zoom; the proof texture failed this. Per-tile tone ±2.5%; grout 1.2 px at 512, ≤ 14% darker. |
+| Ceiling | `ceiling-warm`, corner AO as today. |
+| Doors | Unit paint and wear unchanged; no surround. Little Rose's leaf and frame keep wear 0.3. |
+
+**Objects and motion.** The objects are fans and leaflets, nothing else (pots, plants and blossoms are
+cut, decision 1).
+
+| Object | Spec | Motion |
+|---|---|---|
+| *Quạt trần* (ceiling fan) | One per bay **except Little Rose's**, at bay centre −1.6 m, x 99.75 (`FAN` in the proposal). A 0.6 m rod from the 3.1 m ceiling, hub at 2.45 m. Body `tile-jade`; three pitched blades in `tile-cream` with rounded tips; a 16-segment motor housing. | 2.1 rad/s, one turn every 3 s, so no strobing at 30 fps. Tier 2 turns on the clock and with the scroll; Tier 1 only with the scroll. Frozen while paused. |
+| Fan shadows | The blades block the sun in the surfaces and shafts (the `fans` pattern in `glsl/apertures.js`). | **Tier 2 only.** On every tier they took the proxy to +80% at 1440 (the blade test runs in every sun lookup). Phones turn the fans but cast nothing. |
+| *Lá me* (tamarind leaflets) | 16 on Tier 1, 32 on Tier 2. Each is 34 × 13 mm, `mixc(sun-400, tile-jade, 0.3)`, released from the screen's top course. | Drift down and across over 15 s, tumble and glint, rest on the tiles 3 s, fade. Same clock rules as the fans. **No spawn run and no drift path within 0.8 m of Little Rose's bay.** |
+| Tamarinds outside | unchanged | sway on Tier 1 too, driven by the scroll (`sway(propT)`) |
+
+`live.js` runs one props clock: `propT = tier >= 2 ? time + scrollY/300 : scrollY/300`, frozen while
+paused. Tier 2 idle frames use the existing 30 fps idle cadence, and only while the corridor intersects
+the viewport, the tab is visible, motion is on and the menu dialog is closed. Tier 1 draws nothing new
+while the page is still. Everything moves in the vertex shader from two uniforms, with no per-frame
+allocation. *Optional, judge in the strip:* during the end wash (stage 0.95–1.0) the camera pitches down
+4°, scrubbed, so the runner is the last thing seen before the plaster and the focus floor. Drop it if it
+reads as a nod.
+
+**Build** (port list at the end of 0.6). `bakeGachBong()` bakes the field (2 × 2 tiles) and the border
+(2 × 1) as `DataTexture`s: 256 px per pair on Tier 1 (anisotropy 2), 512 on Tier 2 (anisotropy 4), with
+mips. The bake starts when the corridor starts building (1.5 viewports ahead) and yields every 8 rows on
+Tier 1 and every 16 on Tier 2. If any slice is over 16 ms on the 4× CPU throttle trace, or INP passes 200
+ms while it runs, the bake moves to a module worker; it is pure maths into a transferable `Uint8Array`.
+The `house` option in `still-surface.js` draws the floor, the dado with its door breaks and the loang.
+`objects/props.js` draws fans and leaflets as one merged geometry and one draw, lit by the same analytic
+sun. **The door frames of every unit, plus Little Rose's static leaf (a graft from colour-light), are one
+draw**: `vertexPaint` in `paint.js`, with `aPaint` as a vec4 holding rgb and wear.
+
+**Budgets (05-DESIGN 6.7, Tier 1, worst corridor frame, bay 1 with the door open)**
+
+| | Before | Target |
+|---|---|---|
+| Draw calls | 14 | ≤ 12 (+1 props, −2 frames merged, −1 Little Rose leaf merged) |
+| Triangles | 560 | ≤ 2.5k (the proposal had 4.4k with the pots and plants) |
+| GPU memory | | +0.5 MB on Tier 1, +2.1 MB on Tier 2, geometry < 0.1 MB |
+| Lazy JS, gzip | corridor 6.7 KB | ≤ 10.5 KB; world total ≤ +6 KB |
+| JS per frame | | two uniform writes, no allocations |
+| GPU frame | | ≤ 12 ms at 390 × 844 on a real A15-class phone (timer query) |
+
+The SwiftShader proxy showed +20–30% with the props. Without pots and plants, expect about +15–25%. **This
+is not a measurement.** The live gate (Tier 1 > 14 ms → lite) protects visitors at runtime. If the phone
+misses, apply in order: floor anisotropy 1; no leaflets on Tier 1; props shaded without the sun lookup on
+Tier 1; then the existing G1 fallback (mobile corridor as stills), which now carries the colour. Until a
+phone is found (question 13.3), staging records "not measured on device" in PLAN section 9 and ships with
+the gate.
+
+**Stills: every fallback carries the colour** (a graft from colour-light; the must-fix of both judges).
+`buildStill` bakes the gạch textures (`slice: false`, 512) and passes them to every corridor-scene shot:
+`bay-green-bamboo`, `bay-little-rose`, `bay-cau-han` and `passage-corridor`. In stills the fans stop at a
+fixed angle. Leaflets are built resting on the tiles only (a `leaflets: "rest"` build option, ≤ 6 per frame,
+none mid-air within 1.5 m of the camera, none in Little Rose's bay). Our Work's wall of doors and Green
+Bamboo's gallery (`hub-doors-wide`, `hub-door-*`, `door-*`, `gallery-wall`) get the same house: wash, dado
+with door breaks, warm ceiling, plain cream tiles with no runner, no fans. That keeps 6.1's "one world, one
+light". Every still is re-encoded within the existing `encode-posters.py` budgets. If the patterned floor
+pushes a file over, raise the encoder effort before touching the art. The lit-header fades on those pages
+are re-measured.
+
+**Verification.** `light-contrast.mjs` sweeps the stills (every stage point, VI and EN, 390 and 1440), and
+the live probe covers Tier 1 **and Tier 2** at stage 0.04, 0.17, 0.22, 0.50 and 0.78. Gate: H ≥ 4.5 and
+running text ≥ 7 over the darkest 1%; 0 lines below. `check-sun-crisp` passes. **Signature check:** at 390
+the Đốt tre and Vòm cầu pools on the plain band reach a lit-to-shade luminance ratio ≥ 1.6 and the bông
+gió patches on the door wall stay crisp; the runner never reaches under them. Re-capture 1440 bay 1 on
+Tier 1: the proof caught "Cơ sở trực thuộc" ghosting under the Tre Xanh title. Then the beats test plus a
+strip check: no dwell frame may show two headings each above 10% opacity. LCP with `lcp.cjs`, median of 3,
+world on and off: ≤ 2.5 s, target 1.8. Walk the whole 16-frame strip at 390 and 1440, Tier 1 and 2, and
+answer the tastegate questions "could this be a café?", "does it read as a place for children?" and "does
+anything move?". If it is busy, simplify the field tile to indigo on cream first.
+
+### 0.6.3 "Lĩnh vực hoạt động": a floor of gạch bông
+
+The four areas become cement tiles: the corridor's floor seen from above. The hierarchy of H5a stays, but
+it is set by **the number of tiles, not their size**. A 20 cm tile is always a 20 cm tile; larger areas
+crop more floor and never scale a tile. Giáo dục is a 2 × 2 patch, Bảo vệ trẻ em 2 × 1, Gia đình và cộng
+đồng 1 tile, Vận động chính sách 1 tile: 8 tiles, the bento's 8 cells. Text never sits on a tile. Names and
+lines stay ink-900 / ink-700 on lime-100 (13.02 / 7.41). There are no new strings.
+
+**Layout**
+
+| Width | `--T` (one tile) | Arrangement |
+|---|---|---|
+| ≥ 1024 | `clamp(136px, 11.7vw, 176px)`: 168 at 1440 | `.floor` is a 4-column grid with 3 auto rows. The H2 sits at columns 1–2, row 1. The `ul` spans everything with `grid-template: subgrid / subgrid`, so: **Bảo vệ** at columns 3–4, rows 1–2 (fills the top right beside the H2: patch, words under); **Giáo dục** at columns 1–2, rows 2–3 (patch at the top, words at the cell's foot); **Gia đình** at column 3, row 3 and **Vận động** at column 4, row 3 (tile, words under). Column gap `--s-5`, row gap `--s-6`. All four names fit in one 1440 × 900 viewport. Without subgrid, the H2 goes above and the same placement shifts down one row. |
+| 600–1023 | `clamp(112px, 13vw, 136px)` | Two columns. Giáo dục is a full row (2 × 2 patch, words beside), then Bảo vệ (2 × 1, words beside), then Gia đình and Vận động side by side (tile, words under). |
+| < 600 | `clamp(88px, 30vw, 128px)` | One column. Each area is one tile beside its words. A patch's box is one tile square and crops the patch's first tile at full scale. Order: Giáo dục, Bảo vệ, Gia đình, Vận động. |
+
+Giáo dục's name is `clamp(2rem, 1.2rem + 2vw, 3.25rem)` Archivo 620 and its line is `--fs-lg`. The others
+use `--fs-h3` and `--fs-base`. Line-height ≥ 1.6, and words measure ≤ 34ch. **The whole area (tile and
+words) is the link**: the `a` sits in the H3 with an `::after` overlay, the arrow sits beside the name, and
+the focus ring goes round the `li`. The work sheet's CSS sun layer (`.sun-layer--work`) moves to the left
+margin behind the H2 and never overlaps a tile or body text. **No line is drawn between areas** (D0.5):
+the joints are the page's own plaster. A medallion has edges, like a door, and is an object rather than a
+seam. Keep a one-line feather-mask variant ready in case Maxwell reads them as hard lines.
+
+**Tile art** (`partials/blocks.mjs`, from the shader's SDF numbers; viewBox in mm, a tile is 200)
+
+- One hidden sprite per page holds 4 `<symbol>`s (`gach-hoaThi`, `-matCao`, `-vongTron`, `-bacThang`) and
+  the one shared `feTurbulence` wear filter. Each area is one `<svg>` with n `<use>`s at a 200 mm pitch.
+  Fills are custom properties (`--cream`, `--pig`, `--acc`, `--wear`), which inherit into `<use>`, so the
+  lit copy reuses the symbols.
+- Every tile has: a pigment medallion (inset 7, rx 14); a border band between the medallion edge and a
+  2.5 mm cream frame line at inset 15, with accent dots of r 2.2 every 20 mm; **corner quarter-motifs** (an
+  accent disc of r 38 centred on the tile corner and clipped by the medallion, carrying a cream quarter
+  Hoa thị of lobe 13), so where tiles meet in a patch the quarters close into one rosette broken only by
+  the plaster joint; the area's block inlaid in cream, 2 × 2 blocks scaled 0.82 inside the frame and clear
+  of the corner motifs; accent hearts at block centres.
+- Pigment and accent: Giáo dục ochre and indigo; Bảo vệ indigo and ochre; Gia đình jade and ochre (its ring
+  closes in the middle); Vận động brick and indigo.
+- **Bậc thang, redrawn:** one continuous stepped band of cream (tread and riser), climbing from the
+  bottom-left corner motif to the top-right one in 6 equal steps, with the band as thick as `BAC_THANG.w`
+  relative to `BAC_THANG.step`. An indigo dot sits at every nosing. It rises left to right in both
+  languages and must read as steps at 88 px.
+- Wear: the filter at 32% on the base art only (`--wear: 0` in the lit copy). It is rasterised once and
+  never animated.
+
+**Light (CSS only, transform and opacity only, no blend modes, nothing on the plaster)**
+
+- A new mask, `public/svg/sun-hoa-thi.svg`, is written by `scripts/blocks-svg.mjs`: the Hoa thị holes as the
+  floor's projection (`skewX(-14°) scale(1, 1.1)`), repeatable, crisp, with no blur.
+- Each area holds `.gach__light`, a band `calc(var(--T) * 1.25)` wide, masked by that pattern (tile size
+  `0.75 × --T`) intersected with a horizontal fade over 22% at each side. Inside it sits `.gach__lit`, the
+  same `<svg>` in the lit palette (`--cream: sun-100`, `--pig` / `--acc`: the `-lit` tokens). **The light
+  is the tile itself in its sunlit colours, so a patch on indigo is a brighter logo blue and a patch on
+  jade is a brighter jade, never a whitish film. Light exists only where pigment and inlay exist, so
+  nothing lands on the plaster.**
+- On a named view timeline per area (`view-timeline-name: --gach`, range `cover 12% cover 88%`), the band
+  translates from `-band` to `+w`, where w = n × `--T`. The lit art counter-translates by the same amount, so
+  it stays registered with the base while the quatrefoils slide across the tile. Band opacity goes 0.55 → 1
+  (mid-screen) → 0.55. This is the brightness graft. Areas in the same row sweep together.
+- Hover: lit art opacity 0.9 → 1 (180 ms `--ease-hover`), the name underlines (2 px), the arrow moves 3 px.
+  The `stagger-cascade` reveal is kept.
+- **Rest** (reduced motion, `data-motion="off"`, no JS, no `animation-timeline` support, Tier 0): no
+  animation. The band rests at 55% of its travel at opacity 0.9: 2–3 crisp quatrefoils across each area's
+  right half. Screenshot it; it must look deliberate.
+
+**Budgets:** no JS, no images. HTML ≤ +1.5 KB gzip on home. CSS ≤ +0.6 KB gzip **net**: the dead `.bento`,
+`.tile*` and `lightArt` code is deleted (nothing else uses them). The light layers are 8 small composited
+layers.
+
+### 0.6.4 Safeguarding and HCWA approvals
+
+- **Little Rose's bay is unchanged in kind.** The door stays shut (`setDoor`). Its transom is the house's
+  Hoa thị with plain, untinted light (`transomPattern: "open"`). No corridor sun reaches it (`bayFree`). It
+  shares exactly the floor, dado (with the same door break), wash and ceiling every bay has. It has **no
+  fan, no fan-shadow disc, no leaflet spawn or drift, and no surround**, whatever the DOM says. No brick
+  is in the corridor, and no light anywhere near the bay leans red or pink.
+- Tests added to `test/little-rose.test.mjs`. The proposal's `lr-props-check`, kept at
+  `docs/design/proposals-2/saigon-home/lr-props-check.mjs`, becomes a test over three bay orders: no prop
+  vertex within the bay ±0.3 m, no leaflet path within ±0.8 m, no fan disc (r + 0.1 m) touching it. Plus
+  colour-light's pattern: every colour the corridor uses as light (sun, spill, transom, leaflet glint) is
+  untinted or has g ≥ r, `tile-brick` is never referenced by the corridor's set or props, and the door
+  angle is 0 for `little-rose`.
+- **Traces stay unbuilt.** Rule 6.1.5 bans shoes even behind the flag. Only 6.8's chalk *lò cò* on the plain
+  band of the Tre Xanh bay may come later, behind `traces.enabled` + `approved` and the PROD guard, never in
+  or near Little Rose's bay.
+- **HCWA approves before production:** the yellow and mint paint (does it make any real centre
+  recognisable?), the fans, the leaflets, the tile palette and the brick tile on the work sheet. The
+  safeguarding lead sees `bay-little-rose` re-rendered. No photos, names, numbers or partners are added.
+
+### 0.6.5 What this supersedes
+
+- 6.2 / 6.5: the corridor's "lime wall" is the yellow wash over the mint dado above.
+- 6.3, Door row: there is no separate Tier 2 threshold *gạch bông* motif, because the floor carries the
+  tiles on every tier. `open.md` 8.3's "gạch bông only at door thresholds" is superseded for this one
+  runner. The rest of its café guard (no rattan, plants, neon, coffee) stands.
+- 4 "Ornament discipline": the block pattern also appears as tile pigment (focus floor, corridor runner).
+- 5.7 "Bento tile" and 7 "Bento tile": replaced by the gạch floor in 0.6.3.
+- 11.5: the focus areas are a floor of gạch bông tiles in the bento's hierarchy (by tile count).
+- PLAN section 9, "Continuity (D0.5) on the sheets": the sentence on the bento's shade pools is replaced.
+
+### 0.6.6 Port list and who owns what
+
+Two engineers work in parallel. Neither touches the other's files. Tokens are already landed. Each one
+logs departures in PLAN section 9 under their own heading.
+
+**Corridor engineer:** `src/world/**`, the corridor stills, `src/styles/stages.css`,
+`test/little-rose.test.mjs`, `test/beats.test.mjs`, `public/posters/*`.
+
+| From | File | Port |
+|---|---|---|
+| saigon-home (`docs/design/proposals-2/saigon-home/saigon-home.patch`; scratch copy `…/scratchpad/proposal-saigon-home/prototype`) | `world/textures.js` `bakeGachBong` | **with changes:** new field and border per 0.6.2, smooth wear, slices of 8 rows on Tier 1 |
+| | `materials/still-surface.js` `house` and `HOUSE_GLSL` | **with changes:** dado 0.90; the surround loop becomes the door-break loop over `uDoors` / `uDoorN`; loang from `lw.a`; drop `uSurround*` |
+| | `objects/props.js` | **fans and leaflets only:** delete `pot`, `plant`, the blossoms, glaze and terracotta, and their shader branches; leaflet colour per 0.6.2; add `leaflets: "rest"` for stills |
+| | `glsl/apertures.js` (`fans` pattern, `thin` flag) | as is |
+| | `materials/paint.js` `vertexPaint` | **with changes:** `aPaint` becomes a vec4 (rgb, wear); Little Rose's leaf merges into it |
+| | `sets/corridor.js` | **with changes:** gach and house wiring, merged frames, `animate()`, dado in `setSun`. No surrounds or pots. **Delete the `?house=` measurement flags** |
+| | `live.js` (props clock) | as is, inside the existing idle-cadence gating |
+| | `styles/stages.css` (97.5% pane) | **do not port** |
+| colour-light (`docs/design/proposals-2/colour-light/colour-light.patch`; scratch copy `…/scratchpad/proposal-colour-light/prototype`) | `world/textures.js` `bakeLimeWash` alpha | as is (the loang) |
+| | `sets/corridor.js` Little Rose leaf merge | the idea, into the merged frames draw |
+| | `sets/stills.js` `buildStill` baking and passing textures | the pattern, for `gach` |
+| | `styles/stages.css` meta lines to ink-900 | as is, plus the rail labels |
+| | `test/little-rose.test.mjs` "kính màu" test | the pattern (red/pink and distance checks), not the glass |
+| | `glsl/glass.js`, `objects/glass.js`, clerestory, end window, `rows: 5`, `bakeTerrazzoColour`, transom glass (`doors.js`, `lattice.js`), `GLASS_SHAFTS`, `?gl=`, `light-contrast-home.mjs` | **do not port** |
+
+**Focus engineer:** `src/pages/home/work-sheet.mjs`, `src/partials/blocks.mjs`, `src/styles/pages.css`,
+`scripts/blocks-svg.mjs` (the new mask), `scripts/check-tiles.cjs`, `test/sheets.test.mjs`.
+
+| From | File | Port |
+|---|---|---|
+| saigon-home | `partials/blocks.mjs` `gachTile` | **rewrite** to 0.6.3 (sprite, symbols, corner motifs, border band, the Bậc thang stair, lit copy). The proposal is only the starting point |
+| | `pages/home/work-sheet.mjs` `gach()` | **with changes:** whole-area link and words beside or under kept; patches of 4 / 2 / 1 / 1; the H2 inside the subgrid |
+| | `styles/pages.css` `.gach__name`, `__text`, `__go`, hover and focus rules | as is. **Delete** `.floor__sun`: the screen blend and the radial pool are what the judges read as smudges and blobs |
+| colour-light | the view-timeline brightness ramp | the idea only (0.6.3). `glassArt` and the glass CSS are **not** ported |
+
 ## 1. Color tokens
 
 Source of truth: the block below, copied verbatim into `prototype/src/styles/tokens.css`
@@ -167,6 +457,18 @@ shaders. `theme.json` slugs in `wp/themes/hcwa-2026` use the same names without 
   --color-world-floor-shade: #A5A9B1; /* terrazzo in shade */
   --color-world-screen-face: #3D4370; /* backlit block face: the logo-blue silhouette (holes 8.8:1 against it). Never behind text */
   --color-world-wash:        #FFF3D3; /* the light flood: equals sun-100 */
+  /* Gạch bông pigments (05-DESIGN 0.6): the focus-area tiles and the corridor floor. Decorative only:
+     never text, never a button, never behind running text. Brick never in the corridor. */
+  --color-tile-cream:  #F3E9D6; /* cement ground of every tile; the inlays */
+  --color-tile-ochre:  #C4861C; /* mustard: Giáo dục, the floor's quatrefoils (not sun-400: Donate stays the only sun fill) */
+  --color-tile-indigo: #2C3584; /* the logo blue as pigment: Bảo vệ trẻ em, the floor's discs */
+  --color-tile-jade:   #176F5E; /* xanh ngọc: Gia đình và cộng đồng, the floor's leaves, fan bodies */
+  --color-tile-brick:  #A5472A; /* đỏ gạch: Vận động chính sách only */
+  /* The same pigments in a sun patch (the focus floor's light); cream in the sun is sun-100 */
+  --color-tile-ochre-lit:  #F0B13F;
+  --color-tile-indigo-lit: #4265C2;
+  --color-tile-jade-lit:   #449C80;
+  --color-tile-brick-lit:  #D7703B;
   /* tokens:end */
 }
 ```
@@ -176,7 +478,8 @@ delivers SVGs (B6); re-run the pairs when they change.
 
 ### Measured pairs
 
-Measured 6 Nov 2026 with `design-token-contrast` (WCAG 2.x formula): 67 pairs, all pass.
+Measured 6 Nov 2026 with `design-token-contrast` (WCAG 2.x formula): 67 pairs, all pass (77 since
+the 0.6 tokens, 9 Nov; their pairs are in 0.6.1).
 The pair list is `qa/contrast-pairs.json`. Re-run after P0.1:
 `node contraste.mjs --tokens prototype/src/styles/tokens.css --pares qa/contrast-pairs.json`
 (the checker source is in the skill's `references/contraste-checker.md`).
@@ -784,7 +1087,7 @@ The analytic sun stays: any Blender screen must keep the SDF hole positions.
 | Statement | H2 + one paragraph at `--fs-statement`, sunlit reading, sun-100 halo (feathered `mask-image`) so it always sits on sun-100. |
 | Stage (sticky) | Skip link before it; index tabs (unit names, real anchor links, `aria-current` on the active beat); cards in DOM order, all present; `focusin` scrolls to the card's beat; a `ResizeObserver` stacks the stage when a card is taller than 44svh (< 600 px) or 70svh. |
 | Door card | lime-50 panel, 6 px unit band, unit name (Archivo 600 `--fs-h3`), who it serves, location line only where approved (never Little Rose), one link ("Xem cơ sở"; Little Rose: "Tìm hiểu về mái ấm" + "Tiệm bánh Hoa Hồng Nhỏ"). |
-| Bento tile | Gapless 4-column grid (dense), block art as lit SVG (lime-300 linework, sun-200 light through the holes), name, one line, link to `?area=`. |
+| Gạch floor (focus areas; was "bento tile") | Section 0.6.3: each area is a patch of 20 cm cement tiles (4 / 2 / 1 / 1) in its pigment with its block inlaid, words on the plaster beside or under it, a sunlit Hoa thị band crossing it with the scroll. Name, one line, link to `?area=`; the whole area is the link. |
 | Impact plaque | Archivo 640 `--fs-stat` tabular, label in BVP; staging shows `[N]` + "Đang xác minh" chip; PROD renders the row only when ≥ 2 figures are verified. Never counts up. |
 | Program row | Status pill (ok on ok-100 / ink-700 on shade-100), years token, name (Archivo 600), summary, partner names as text, arrow, lam stripes on hover. Rows, never cards. |
 | News list item | Big date (Archivo tnum), category label, title, external link to the live post. Featured story card: staging only until an approved story exists, with the "names changed" note. |
@@ -852,6 +1155,7 @@ news titles in templates).
 | Specific labels: "children in classes and clubs in [year]" | "Lives touched", counters that count up |
 | One tone partner logos, once 4 are approved | A one-logo partner row, a marquee |
 | Ask "could this be a café?" and "does it read as a place for children?" | Rattan, plants, coffee, furniture, signage in the world |
+| Saigon materials as paint and tile: yellow wash, mint dado, one *gạch bông* runner, ceiling fans, tamarind leaflets (0.6) | Pots, potted plants, fallen flowers, any prop a café would also buy |
 
 ## 11. Departures from 06-PAGES and 10-ASSET-REQUEST (HCWA decides)
 
@@ -863,7 +1167,8 @@ news titles in templates).
 3. The home hero is a 3D room, not a split layout with photo A2. A2 is retired from the home
    hero; approved photos go to inner pages and stories.
 4. Home centers appear one at a time in the corridor (all three in the DOM).
-5. Focus areas are a bento of block-art tiles (06 said a 2×2 list, not cards).
+5. Focus areas are a floor of *gạch bông* tiles in a bento's hierarchy, by tile count (0.6.3; 06 said a
+   2×2 list, not cards).
 6. Partners render only with ≥ 4 approved one-tone logos (06: up to 12 on home).
 7. The featured story is staging-only until an approved story exists.
 8. Ways to help are four full-width louver rows (06: a 4-column row).
@@ -899,3 +1204,7 @@ off before calling it done.
    add brotli and headers.
 8. A volunteer Blender artist for 6.11, if Maxwell wants hand-modeled assets later.
 9. promptkura.me/library, named by Maxwell, sits behind a sign-in and could not be consulted.
+10. HCWA (0.6.4): approve the corridor's yellow wash and mint dado (does either make a real centre
+    recognisable?), the ceiling fans, the tamarind leaflets and the tile palette. The safeguarding lead
+    sees the re-rendered `bay-little-rose` before anyone outside the review team does.
+11. Measure the corridor on a real A15-class phone (question 3) before the richness pass leaves staging.

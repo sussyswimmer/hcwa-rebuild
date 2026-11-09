@@ -4,9 +4,9 @@ import { tok } from "./colors.js";
 // Lime wash and terrazzo, baked once at startup (05-DESIGN D6.3) so every surface pays one
 // texture fetch, never per-pixel fbm. Baked in slices that yield to the main thread.
 const N = 512;
-const yieldNow = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
+export const yieldNow = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
 
-function rng(seed) {
+export function rng(seed) {
   let s = seed >>> 0;
   return () => ((s = (s + 0x6d2b79f5) >>> 0), (((s ^ (s >>> 15)) * (s | 1)) >>> 0) / 4294967296 + 0);
 }
@@ -24,8 +24,8 @@ function lattice(period, seed) {
   };
 }
 
-function texture(data) {
-  const t = new DataTexture(data, N, N, RGBAFormat, UnsignedByteType);
+export function texture(data, w = N, h = N) {
+  const t = new DataTexture(data, w, h, RGBAFormat, UnsignedByteType);
   t.wrapS = t.wrapT = RepeatWrapping;
   t.generateMipmaps = true;
   t.minFilter = LinearMipmapLinearFilter;
@@ -34,10 +34,12 @@ function texture(data) {
   return t;
 }
 
-// R: broad mottling, G: fine mottling, B: vertical brush direction. Covers 4 x 4 m.
+// R: broad mottling, G: fine mottling, B: vertical brush direction. A: the loang of an old lime wash
+// (05-DESIGN D0.6.2, colour-light's bakeLimeWash): metre-wide patches, read by the corridor's house in the
+// same fetch; the room never reads A. Covers 4 x 4 m.
 export async function bakeLimeWash({ slice = true } = {}) {
   const a = lattice(6, 11), b = lattice(14, 23), c = lattice(40, 37), d = lattice(96, 41);
-  const brushX = lattice(64, 53), brushY = lattice(4, 59);
+  const brushX = lattice(64, 53), brushY = lattice(4, 59), loang = lattice(3, 71), loang2 = lattice(7, 73);
   const data = new Uint8Array(N * N * 4);
   for (let y = 0; y < N; y++) {
     for (let x = 0; x < N; x++) {
@@ -45,7 +47,7 @@ export async function bakeLimeWash({ slice = true } = {}) {
       data[i] = 255 * (0.62 * a(x, y) + 0.38 * b(x, y));
       data[i + 1] = 255 * (0.6 * c(x, y) + 0.4 * d(x, y));
       data[i + 2] = 255 * (0.7 * brushX(x, y) + 0.3 * brushY(x, y));
-      data[i + 3] = 255;
+      data[i + 3] = 255 * (0.7 * loang(x, y) + 0.3 * loang2(x, y));
     }
     if (slice && y % 64 === 63) await yieldNow();
   }
@@ -84,3 +86,7 @@ export async function bakeTerrazzo({ slice = true } = {}) {
   }
   return texture(data);
 }
+
+// The gạch bông runner's albedo is stored relative to its cream ground at this level (gach.js), so worn
+// pigment can lift toward cream and the house shader (materials/still-surface.js) divides it back out.
+export const TILE_CREAM = 0.92;

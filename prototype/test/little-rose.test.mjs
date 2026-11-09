@@ -130,3 +130,103 @@ test("the corridor's index and stage: Little Rose by name only, no location, nev
     assert.match(m.match(/<li class="bay"[^>]*data-unit="little-rose"[^>]*>/)[0], /--spill:var\(--color-sun-100\)/, "its light in the panel is plain daylight");
   }
 });
+
+// ---- The richness pass (05-DESIGN D0.6.4): the house adds fans, leaflets, paint and tiles, never to Little
+// Rose's bay. The proposal's props check (docs/design/proposals-2/saigon-home/lr-props-check.mjs) as a test over
+// three bay orders, and colour-light's red/pink pattern applied to every colour the corridor uses as light.
+const ORDERS = [["green-bamboo", "little-rose", "cau-han"], ["little-rose", "green-bamboo", "cau-han"], ["cau-han", "green-bamboo", "little-rose"]];
+const beatsOf = (units) => units.map((unit) => ({ unit, door: "open", emblem: unit === "cau-han" ? "vomCau" : "dotTre" }));
+
+test("the house's props never come near Little Rose's bay, in any order, live or in a still", async () => {
+  const { buildProps, FAN, KIND, LEAFLET } = await import("../src/world/objects/props.js");
+  const { CORRIDOR, corridorLayout } = await import("../src/world/journey.js");
+  for (const units of ORDERS) for (const leaflets of [16, 32, "rest"]) {
+    const lay = corridorLayout(beatsOf(units)), [z0, z1] = lay.doors.find((d) => d.unit === "little-rose").bay;
+    const { geometry, fans } = buildProps({ C: CORRIDOR, lay, leaflets });
+    const pos = geometry.getAttribute("position"), piv = geometry.getAttribute("aPivot"), k = geometry.getAttribute("aK");
+    for (let i = 0; i < pos.count; i++) {
+      const kind = k.getX(i), at = `${units.join("/")} ${leaflets}: vertex ${i}`;
+      if (kind === KIND.leaflet) {
+        // its whole drift: the spawn z ± the sway, kept 0.8 m from the bay
+        const z = piv.getZ(i);
+        assert.ok(z + LEAFLET.sway < z0 - LEAFLET.clear || z - LEAFLET.sway > z1 + LEAFLET.clear, `${at}: leaflet path within ${LEAFLET.clear} m`);
+      } else {
+        // a fan's vertex anywhere on its turn (radius about its rod), a resting leaflet where it lies
+        const reach = kind === KIND.fan ? Math.hypot(pos.getX(i) - piv.getX(i), pos.getZ(i) - piv.getZ(i)) : 0;
+        const z = kind === KIND.fan ? piv.getZ(i) : pos.getZ(i);
+        assert.ok(z + reach < z0 - 0.3 || z - reach > z1 + 0.3, `${at}: prop within 0.3 m of the bay`);
+      }
+    }
+    for (const f of fans) assert.ok(f.z + FAN.r + 0.1 < z0 || f.z - FAN.r - 0.1 > z1, `${units.join("/")}: a fan disc touches the bay`);
+    assert.equal(fans.length, units.length - 1, "a fan in every bay but Little Rose's");
+  }
+});
+
+test("the house's fan shadows, dado and door: Little Rose's bay is like every other, less the fan, and always shut", async () => {
+  const { corridorScene } = await import("../src/world/sets/corridor.js");
+  const { DOOR } = await import("../src/world/objects/door.js");
+  const { HOUSE } = await import("../src/world/sets/common.js");
+  const { DOOR_PATTERN } = await import("../src/world/glsl/doors.js");
+  for (const units of ORDERS) {
+    // The DOM asks for Little Rose open with a coloured emblem: nothing changes.
+    const set = corridorScene({ beats: beatsOf(units), open: 72 });
+    const i = set.specs.findIndex((d) => d.unit === "little-rose"), [z0, z1] = set.layout.doors[i].bay, U = set.U;
+    for (const deg of [0, 72, 180]) { set.setDoor(i, deg); assert.equal(U.uDoors.value[i].z, 0); }
+    assert.equal(U.uDoors.value[i].y, DOOR_PATTERN.open, "its transom's light is plain");
+    // The fan shadows' centres are in the aperture's uv (u = start − z): none over its bay.
+    for (const v of U.uFans.value) if (v.w > 0.5) { const z = set.layout.start - v.x; assert.ok(z + 0.8 < z0 || z - 0.8 > z1); }
+    // One door break for every door (the dado stops 10 cm short of each frame), read from the same list.
+    assert.ok(Math.abs(U.uHouse.value.z - (DOOR.w / 2 + DOOR.frame + HOUSE.doorBreak)) < 1e-9);
+    assert.equal(U.uDoorN.value, units.length);
+    assert.ok(U.uNoSun.value.some((v) => v.x === z0 && v.y === z1), "no corridor sun in its bay");
+  }
+});
+
+test("no brick in the corridor, and every colour it uses as light is daylight or leans green/blue, never red or pink", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["../src/world/sets/corridor.js", "../src/world/objects/props.js", "../src/world/gach-bake.js", "../src/world/gach.js", "../src/world/sets/common.js"]) {
+    assert.doesNotMatch(readFileSync(new URL(f, import.meta.url), "utf8"), /tile-brick|brick-lit|["']brick["']/, `${f} references brick`);
+  }
+  const { gachPigments } = await import("../src/world/gach.js");
+  assert.deepEqual(Object.keys(gachPigments()).sort(), ["cream", "indigo", "jade", "ochre"]);
+  const { corridorScene } = await import("../src/world/sets/corridor.js");
+  const set = corridorScene({ beats: beatsOf(ORDERS[0]), open: 72 });
+  // Daylight: warm white as displayed (sRGB), its green within 15% of its red and its blue under its green
+  // (never pink: b > g, never red: a low green).
+  const srgb = (v) => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
+  const daylight = (c) => { const [r, g, b] = c.toArray().map(srgb); return g <= r + 1e-9 && g >= 0.85 * r && b <= g + 1e-9; };
+  const light = (c, what) => assert.ok(daylight(c) || c.y >= c.x, `${what} leans red or pink: ${c.toArray().map((v) => v.toFixed(3))}`);
+  for (const tt of [0.25, 0.35, 0.45]) {
+    set.setSun(tt);
+    light(set.U.uSunCol.value, `the sun at ${tt}`);
+    set.U.uSpillT.value.forEach((c, k) => light(c, `the rooms' daylight (kind ${k})`));
+    const props = set.objects.find((o) => o.material?.uniforms?.uSunTint && o.geometry?.getAttribute("aK"));
+    light(props.material.uniforms.uSunTint.value, "the leaflets' glint");
+  }
+  // Little Rose's transom: the rooms' plain daylight behind it, never its unit's colour.
+  const { mixc, tok, vec } = await import("../src/world/colors.js");
+  const day = vec(mixc(tok("sky"), tok("wallSun"), 0.45));
+  const transoms = set.objects.filter((o) => o.material?.uniforms?.uBehindLow && o.material.uniforms.uBehindY?.value?.[0] === 2);
+  const lrZ = set.specs.find((d) => d.unit === "little-rose").zc;
+  const lr = transoms.find((o) => Math.abs(o.material.uniforms.uO?.value?.z ?? NaN) >= 0 && Math.abs((o.material.uniforms.uO.value.z + o.material.uniforms.uU.value.z * 0.45) - lrZ) < 0.5);
+  assert.ok(lr, "Little Rose's transom panel");
+  assert.ok(lr.material.uniforms.uBehindLow.value.distanceTo(day) < 1e-6, "plain daylight behind it");
+  light(lr.material.uniforms.uBehindLow.value, "Little Rose's transom light");
+  light(lr.material.uniforms.uBehindHigh.value, "Little Rose's transom sky");
+});
+
+test("the house's door walls in the stills: Little Rose's door breaks the dado like the others, no fan, no runner", async () => {
+  const { SHOTS, HOME_BEATS, hubDoorZ } = await import("../src/world/sets/stills.js");
+  const hub = SHOTS["hub-doors-wide"].scene({ lime: null, terr: null });
+  const lr = HOME_BEATS.findIndex((b) => b.unit === "little-rose");
+  assert.equal(hub.U.uDoorN.value, HOME_BEATS.length);
+  assert.ok(hub.U.uDoors.value.slice(0, HOME_BEATS.length).some((v) => Math.abs(v.x - hubDoorZ(lr)) < 1e-9), "its door is in the dado's break list");
+  assert.equal(hub.U.uGachP.value.w, 0, "plain tiles, no runner");
+  assert.equal(hub.U.uFans, undefined, "no fans");
+  const card = SHOTS["door-little-rose"].scene({ lime: null, terr: null });
+  assert.equal(card.U.uDoorN.value, 1);
+  // The walk's stills of its bay: leaflets only resting, none in its bay (checked above), its door shut.
+  const bay = SHOTS["bay-little-rose"].scene({ lime: null, terr: null });
+  const i = bay.specs.findIndex((d) => d.unit === "little-rose");
+  assert.equal(bay.U.uDoors.value[i].z, 0);
+});

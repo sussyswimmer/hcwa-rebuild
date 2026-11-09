@@ -1,0 +1,1138 @@
+diff -ruN a/prototype/src/pages/home/work-sheet.mjs b/prototype/src/pages/home/work-sheet.mjs
+--- a/prototype/src/pages/home/work-sheet.mjs	2026-11-09 02:05:42.544204854 +0000
++++ b/prototype/src/pages/home/work-sheet.mjs	2026-11-09 02:05:42.547331461 +0000
+@@ -2,7 +2,7 @@
+ import { viKeep } from "../../lib/vikeep.mjs";
+ import { visibleFigures } from "../../lib/content.mjs";
+ import { icon, pendingChip, programRow } from "../../partials/components.mjs";
+-import { lightArt, AREA_BLOCK } from "../../partials/blocks.mjs";
++import { glassArt, AREA_BLOCK } from "../../partials/blocks.mjs";
+ 
+ // Home H5, the Our work sheet (Desire 2): the first opaque sheet after the corridor. Places were doors;
+ // here the work is a wall of blocks (focus areas), the plaques on it (figures) and light passing through
+@@ -12,13 +12,20 @@
+ // (tablet 2 + 2 + 1 + 1 = 6 of 6). Each area carries its block from the set drawn in light (lines and lit
+ // holes, never an ink square), bleeding off the tile's top-right, and the light that block throws on the
+ // plaster; the words sit in the tile's second row, so they never meet the art.
+-const SCREEN = { education: { cols: 2, rows: 2 }, protection: { cols: 3, rows: 2 }, family: { cols: 1, rows: 1 }, policy: { cols: 1, rows: 1 } };
++// PROPOSAL (colour and light): each area is a pane of kính màu set deep in the wall (a niche in blue-950 shade,
++// feathered into the plaster), its block pattern glazed in the area's glass, and the colour it throws falling on
++// the plaster where its words are. A glint of sun crosses the glass and the cast drifts as the page scrolls
++// (CSS scroll-driven, transform and opacity only). Without motion it is all there at rest.
++const SCREEN = { education: { cols: 3, rows: 3 }, protection: { cols: 3, rows: 1 }, family: { cols: 3, rows: 2 }, policy: { cols: 4, rows: 2 } };
+ 
+ const tile = (c, a) => {
+   const kind = AREA_BLOCK[a.id];
+   return html`<li class="tile tile--${a.id}">
+-    <span class="tile__light" aria-hidden="true"></span>
+-    ${lightArt(kind, { ...SCREEN[a.id], cls: "tile__art" })}
++    <span class="tile__niche" aria-hidden="true">
++      ${glassArt(kind, { ...SCREEN[a.id], cls: "tile__glass" })}
++      <span class="tile__sheen"></span>
++    </span>
++    <span class="tile__cast" aria-hidden="true"></span>
+     <div class="tile__body">
+       <h3 class="tile__name"><a href="${c.url("ourWork")}?area=${a.id}#f-${a.id}">${viKeep(c.tx(a.name))}</a></h3>
+       <p class="tile__text"${c.d(a.text)}>${c.tx(a.text)}</p>
+diff -ruN a/prototype/src/partials/blocks.mjs b/prototype/src/partials/blocks.mjs
+--- a/prototype/src/partials/blocks.mjs	2026-11-09 02:05:42.552564493 +0000
++++ b/prototype/src/partials/blocks.mjs	2026-11-09 02:05:42.554027688 +0000
+@@ -123,3 +123,66 @@
+   const d = part === "face" ? face(kind) : holes(kind);
+   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-H} ${-H} ${SIZE} ${SIZE}"><path fill-rule="evenodd" d="${d}"/></svg>\n`;
+ };
++
++// PROPOSAL (colour and light): the focus areas as panes of kính màu, glazed the way Saigon stair windows and
++// transoms are: every part of the pane is glass. The block pattern (glsl/blocks.js numbers) is drawn by the
++// cames, dark steel lines along every hole and joint (blue-950); the holes take the area's own glass and its
++// accents, the field round them a pale glass of the same family, so the whole pane glows. One light runs from
++// the top-left (lifted toward sun-100) to the glass colour at the bottom-right. Colours are CSS custom
++// properties from tokens.css (--color-glass-*): no hex here.
++const GLASS_KEYS = ["amber", "teal", "blue", "green", "sky"];
++const start = (d) => d.match(/M(-?[\d.]+)[ ,](-?[\d.]+)/).slice(1).map(Number);
++// Which glass goes in a hole: kind, block column / row, the hole's subpath and its start point.
++const GLAZE = {
++  // Education: amber quatrefoils, the rosette pips in teal and sky by turns.
++  hoaThi: (c, r, i) => (i === 0 ? "amber" : (c + r + i) % 2 ? "teal" : "sky"),
++  // Protection: logo-blue diamonds, a ring of sky ones round an amber heart in every block.
++  matCao: (c, r, i, [x, y]) => {
++    const cell = mm(MAT_CAO.cell), h = mm(MAT_CAO.half);
++    const d = Math.abs(Math.round((x + h) / cell)) + Math.abs(Math.round(y / cell));
++    return d === 0 ? "amber" : d === 2 ? "sky" : "blue";
++  },
++  // Family: the rings close into circles where four blocks meet; most teal, every fourth amber, one green.
++  vongTron: (c, r, i, [x, y]) => {
++    const cx = c + (x > 0 ? 1 : 0), cy = r + (y > 0 ? 1 : 0), k = (cx * 2 + cy * 3) % 4;
++    return k === 0 ? "amber" : k === 3 ? "green" : "teal";
++  },
++  // Policy: green steps, climbing to sky and an amber top step.
++  bacThang: (c, r, i, [, y]) => (y < -60 ? "amber" : y < 0 ? "sky" : "green"),
++};
++// The field glass round the holes, per area: the area's colour, deep (the token toward its dark partner), so
++// the holes glow out of it the way sun through a pattern glows out of a deep pane.
++const FIELD = {
++  hoaThi: ["color-mix(in oklab, var(--color-glass-amber) 62%, var(--color-gold-700))", "var(--color-gold-700)"],
++  matCao: ["color-mix(in oklab, var(--color-glass-blue) 70%, var(--color-blue-700))", "var(--color-blue-900)"],
++  vongTron: ["color-mix(in oklab, var(--color-glass-teal) 70%, var(--color-blue-950))", "color-mix(in oklab, var(--color-glass-teal) 40%, var(--color-blue-950))"],
++  bacThang: ["color-mix(in oklab, var(--color-glass-green) 68%, var(--color-blue-950))", "color-mix(in oklab, var(--color-glass-green) 38%, var(--color-blue-950))"],
++};
++export function glassArt(kind, { cols = 2, rows = 2, cls = "glass-art", id = kind } = {}) {
++  const S = SIZE, W = cols * S, Hh = rows * S;
++  const subs = holes(kind).split("Z").filter(Boolean).map((d) => d + "Z");
++  const grad = (gid, k, lift, deep) => `<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="${Hh}">`
++    + `<stop offset="0" style="stop-color:color-mix(in oklab, var(--color-glass-${k}) ${lift}%, var(--color-sun-100))"/>`
++    + `<stop offset="1" style="stop-color:color-mix(in oklab, var(--color-glass-${k}) ${deep}%, var(--color-sun-100))"/></linearGradient>`;
++  const [f0, f1] = FIELD[kind];
++  const grads = GLASS_KEYS.map((k) => grad(`gl-${id}-${k}`, k, 64, 100)).join("")
++    + `<linearGradient id="gl-${id}-field" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="${Hh}"><stop offset="0" style="stop-color:${f0}"/><stop offset="1" style="stop-color:${f1}"/></linearGradient>`
++    // The pane is brightest where the sun is behind it and falls off toward its frame.
++    + `<radialGradient id="gl-${id}-v" cx="0.42" cy="0.36" r="0.75"><stop offset="0.35" style="stop-color:var(--color-blue-950);stop-opacity:0"/><stop offset="1" style="stop-color:var(--color-blue-950);stop-opacity:0.42"/></radialGradient>`;
++  const holesD = [], panes = [];
++  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
++    const t = `translate(${c * S + S / 2} ${r * S + S / 2})`;
++    for (const [i, d] of subs.entries()) {
++      panes.push(`<path transform="${t}" fill="url(#gl-${id}-${GLAZE[kind](c, r, i, start(d))})" d="${d}"/>`);
++      holesD.push(`<path transform="${t}" d="${d}"/>`);
++    }
++  }
++  const joints = [];
++  for (let c = 1; c < cols; c++) joints.push(`M${c * S} 0V${Hh}`);
++  for (let r = 1; r < rows; r++) joints.push(`M0 ${r * S}H${W}`);
++  return raw(`<svg class="${cls}" viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><defs>${grads}</defs>`
++    + `<rect width="${W}" height="${Hh}" fill="url(#gl-${id}-field)"/><rect width="${W}" height="${Hh}" fill="url(#gl-${id}-v)"/>${panes.join("")}`
++    + `<g class="glass-art__came">${holesD.join("")}</g>`
++    + (joints.length ? `<path class="glass-art__joint" d="${joints.join("")}"/>` : "")
++    + `<rect class="glass-art__frame" width="${W}" height="${Hh}"/></svg>`);
++}
+diff -ruN a/prototype/src/styles/pages.css b/prototype/src/styles/pages.css
+--- a/prototype/src/styles/pages.css	2026-11-09 02:05:42.559328555 +0000
++++ b/prototype/src/styles/pages.css	2026-11-09 02:05:42.560841977 +0000
+@@ -59,77 +59,94 @@
+   .bento { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(clamp(300px, 24vw, 360px), auto); }
+   .tile--education { grid-row: span 2; }
+ }
+-.tile--education { --hole: url("/svg/hole-hoa-thi.svg"); --pitch: 72px; --art: 58%; }
+-.tile--protection { --hole: url("/svg/hole-mat-cao.svg"); --pitch: 56px; --art: 40%; }
+-.tile--family { --hole: url("/svg/hole-vong-tron.svg"); --pitch: 56px; --art: 70%; }
+-.tile--policy { --hole: url("/svg/hole-bac-thang.svg"); --pitch: 56px; --art: 70%; }
+-
+-/* Two rows: the block's light in the first, the words in the second, so the heading never meets the art. */
+-.tile { --f: clamp(18px, 2.4vw, 36px); --pad: clamp(24px, 2.6vw, 40px); position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-rows: 1fr auto; row-gap: 16px; min-height: 300px; padding: var(--pad); padding-right: 64px; }
+-/* A pool of shade under the block, no rectangle: an ellipse that reaches zero before every edge of the
+-   tile (closest-side), so neighbouring pools never meet in a straight line. */
+-.tile::before {
+-  content: ""; position: absolute; inset: 0; z-index: -1;
+-  background: radial-gradient(closest-side at 60% 46%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent);
+-}
+-/* The block drawn in light, not ink (D7): its edges and holes as warm lines that read on plaster at both
+-   sizes, the sun coming through the holes. It sits 6 px inside the tile's top-right corner and fades out
+-   toward the top and the right before the tile's edge (and away from the corner below), so the tile never
+-   cuts a line straight. */
+-.tile__art { grid-row: 1; justify-self: end; align-self: start; position: relative; z-index: 0; display: block; width: var(--art); height: auto; margin: calc(-1 * var(--pad) + 6px) calc(-64px + 6px) 0 0;
+-  mask-image: linear-gradient(to left, transparent, black 24%), linear-gradient(to bottom, transparent, black 24%), radial-gradient(farthest-corner at 100% 0, black 34%, transparent 80%);
++/* PROPOSAL (colour and light, 9 Nov 2026): the focus areas as four panes of kính màu, the coloured glass of
++   Saigon transoms and stair windows, each set deep in the wall. The niche is shade (blue-900 to blue-950)
++   that feathers out into the plaster on every side, so no edge is ever drawn (D0.5); the glass is the area's
++   block pattern glazed in its own colour (glassArt, the shader's numbers); below it, on the plaster where the
++   words are, falls the colour the glass throws: the block's holes as a sheared pool, fading out before the
++   running text, and a 12% wash of the same colour under the words (ink-900 there measures 11.6-13.1:1).
++   Scroll moves the light: a glint of sun crosses each pane, the pane brightens as it passes the middle of
++   the screen, the pool slides across the plaster. Transform and opacity only, CSS scroll-driven; static
++   (and complete) without it. */
++.tile--education { --hole: url("/svg/hole-hoa-thi.svg"); --pitch: 64px; --glass: var(--color-glass-amber); }
++.tile--protection { --hole: url("/svg/hole-mat-cao.svg"); --pitch: 44px; --glass: var(--color-glass-blue); }
++.tile--family { --hole: url("/svg/hole-vong-tron.svg"); --pitch: 52px; --glass: var(--color-glass-teal); }
++.tile--policy { --hole: url("/svg/hole-bac-thang.svg"); --pitch: 44px; --glass: var(--color-glass-green); }
++
++.tile { --pad: clamp(16px, 1.8vw, 28px); --reveal: 14px; --gap: clamp(36px, 3.6vw, 56px); position: relative; isolation: isolate; overflow: clip; display: grid; grid-template-rows: auto auto; align-content: start; row-gap: var(--gap); padding: var(--pad) var(--pad) calc(var(--pad) + 16px); }
++/* The niche: the wall's depth round the window, in shade. Its outer reveal feathers to nothing (D0.5). */
++.tile__niche { grid-area: 1 / 1; position: relative; z-index: 1; display: block; aspect-ratio: 3 / 2; padding: var(--reveal);
++  background: var(--color-blue-950);
++  mask: linear-gradient(to right, transparent, black var(--reveal), black calc(100% - var(--reveal)), transparent) no-repeat, linear-gradient(to bottom, transparent, black var(--reveal), black calc(100% - var(--reveal)), transparent) no-repeat;
+   mask-composite: intersect; }
+-.block-light__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 35%, transparent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+-.block-light__core { stop-color: var(--color-sun-200); }
+-.block-light__edge { stop-color: var(--color-sun-200); stop-opacity: 0.12; }
+-.block-art__sky { fill: var(--color-sun-100); }
+-.block-art__face { fill: var(--color-blue-700); }
+-.block-art__joint { fill: none; stroke: var(--color-blue-900); stroke-width: 3; }
+-/* The light that block throws: one slanted fall from the art toward the bottom-left, fading long before
+-   the text. */
+-.tile__light {
+-  --fall: linear-gradient(205deg, black 12%, transparent 46%);
+-  position: absolute; inset: 0; z-index: 0; transition: translate 280ms var(--ease-out);
+-  mask: var(--fall), linear-gradient(to right, transparent, black var(--f), black calc(100% - var(--f)), transparent), linear-gradient(to bottom, transparent, black var(--f), black calc(100% - var(--f)), transparent);
+-  mask-composite: intersect;
+-}
+-.tile__light::before {
+-  content: ""; position: absolute; inset: -30%; background: var(--color-sun-200); opacity: 0.38;
+-  mask: var(--hole) 0 0 / var(--pitch) var(--pitch) repeat;
+-  transform: rotate(-4deg) skewX(-18deg) scaleY(1.2);
+-}
+-.tile__body { grid-row: 2; position: relative; z-index: 1; display: grid; gap: 10px; max-width: 36ch; }
++.tile__glass { display: block; width: 100%; height: 100%; }
++.glass-art__came path, .glass-art__joint, .glass-art__frame { fill: none; stroke: var(--color-blue-950); stroke-linejoin: round; }
++.glass-art__came path { stroke-width: 6; }
++.glass-art__joint { stroke-width: 12; }
++.glass-art__frame { stroke-width: 24; }
++/* The sun behind the glass: a soft hot spot that crosses the pane as the page scrolls, added as light
++   (plus-lighter; plain alpha where it is not supported). */
++.tile__sheen { position: absolute; inset: var(--reveal); overflow: hidden; pointer-events: none; mix-blend-mode: plus-lighter; }
++.tile__sheen::before { content: ""; position: absolute; inset: -40% -60%; translate: -16% 0; background: radial-gradient(ellipse 26% 40% at 50% 40%, color-mix(in srgb, var(--color-sun-100) 34%, transparent), color-mix(in srgb, var(--color-sun-100) 12%, transparent) 45%, transparent 75%); }
++/* The colour the glass throws, from the window's foot onto the plaster above the words: a soft pool and the
++   block's holes in it, sheared away from the sun, gone by the heading's cap height. Never under running text. */
++.tile__cast { grid-area: 2 / 1; align-self: start; position: relative; z-index: 0; height: calc(var(--gap) + 0.55em); margin-top: calc(-1 * var(--gap)); margin-inline: 2% -2%; pointer-events: none; font-size: var(--fs-h3);
++  mask: linear-gradient(to bottom, black 10%, transparent) no-repeat, linear-gradient(to right, transparent, black 14%, black 86%, transparent) no-repeat; mask-composite: intersect; }
++.tile__cast::before, .tile__cast::after { content: ""; position: absolute; inset: 0; }
++.tile__cast::before { background: linear-gradient(to bottom, color-mix(in oklab, var(--glass) 46%, transparent), color-mix(in oklab, var(--glass) 18%, transparent)); }
++.tile__cast::after { background: var(--glass); opacity: 0.7; mask: var(--hole) 0 0 / var(--pitch) var(--pitch) repeat; transform: skewX(-24deg) scaleY(0.62); transform-origin: 50% 0; }
++/* Under the words: the same colour as a faint wash on the plaster, feathered on every side (no panel edge). */
++.tile__body { grid-area: 2 / 1; position: relative; z-index: 1; display: grid; gap: 10px; max-width: 38ch; padding-right: 28px; }
++.tile__body::before { content: ""; position: absolute; z-index: -1; inset: -12px -40px -28px -24px; pointer-events: none; background: color-mix(in oklab, var(--glass) 12%, transparent);
++  mask: linear-gradient(to right, transparent, black 28px, black calc(100% - 40px), transparent) no-repeat, linear-gradient(to bottom, transparent, black 28px, black 55%, transparent) no-repeat; mask-composite: intersect; }
+ .tile__name { font-size: var(--fs-h3); }
+ .tile--education .tile__name { font-size: clamp(2.5rem, 1.2rem + 3.6vw, 4.75rem); line-height: var(--lh-h1); }
+ .tile--protection .tile__name { font-size: clamp(1.75rem, 1.1rem + 1.6vw, 2.75rem); }
+ /* The whole tile is the link (::after); the name itself is a 44 px tall target too. */
+ .tile__name a { display: inline-block; padding-block: 10px; margin-block: -10px; color: var(--color-ink-900); text-decoration: none; }
+ .tile__name a::after { content: ""; position: absolute; inset: 0; z-index: 3; }
+-.tile__text { color: var(--color-ink-700); }
++/* Running text in ink-900 here: it stands on the glass colour's wash (ink-700 would fall to 6.6:1 on blue). */
++.tile__text { color: var(--color-ink-900); }
+ .tile--education .tile__text { font-size: var(--fs-lg); line-height: var(--lh-lead); }
+-.tile__go { position: absolute; z-index: 2; right: clamp(20px, 2vw, 32px); bottom: clamp(24px, 2.6vw, 40px); color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+-/* Hover: the sun moves 6 px and the light shifts with it (D5.7 bento tile). The wall itself never lifts:
+-   the tiles share their mortar. */
++.tile__go { position: absolute; z-index: 2; right: clamp(12px, 1.4vw, 24px); bottom: clamp(18px, 2vw, 32px); color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
++.tile__cast, .tile__glass { transition: opacity 280ms var(--ease-out); }
+ @media (hover: hover) {
+-  .tile:hover .tile__light { translate: -6px 6px; }
++  .tile:hover .tile__cast::after { opacity: 0.9; }
+   .tile:hover .tile__name a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
+   .tile:hover .tile__go { translate: 3px 0; }
+ }
+ .tile:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+ .tile a:focus-visible { outline: none; }
+-/* Phones: one column, the block art 96 px beside the title (PLAN H5a), its holes lit so it reads at that
+-   size; the light falls from it down to the right. */
++
++/* Light moving with the scroll (05-DESIGN D5: it follows the scroll, never time): the sun crosses each pane
++   while the pane crosses the screen, the pane is brightest mid-screen, its pool slides against it. */
++@keyframes glass-sun { from { translate: -42% 0; } to { translate: 42% 0; } }
++@keyframes glass-lit { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
++@keyframes glass-cast { from { translate: 14px 0; } to { translate: -14px 0; } }
++@supports (animation-timeline: view()) {
++  html[data-motion="on"] .tile__sheen::before { animation: glass-sun linear both; animation-timeline: view(); }
++  html[data-motion="on"] .tile__glass { animation: glass-lit linear both; animation-timeline: view(); }
++  html[data-motion="on"] .tile__cast::after { animation: glass-cast linear both; animation-timeline: view(); }
++}
++
++/* Desktop: the 8-cell wall. Education's is the big window and fills its two rows; Protection a wide band;
++   Family and Policy are transom-like panes over their words. */
++@media (min-width: 1024px) {
++  .bento { grid-auto-rows: minmax(clamp(340px, 27vw, 400px), auto); gap: clamp(8px, 1vw, 16px); }
++  .tile--education { grid-template-rows: minmax(0, 1fr) auto; }
++  .tile--education .tile__niche { aspect-ratio: auto; min-height: 380px; }
++  .tile--protection .tile__niche { aspect-ratio: 3 / 1; }
++}
++/* Phones: one column; each pane is a wide band of glass (the blocks crop, never shrink), its words under it. */
+ @media (max-width: 599px) {
+-  .tile { --pad: 24px; min-height: 0; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: auto; align-items: start; gap: 16px; padding: 24px 16px 28px 8px; }
+-  .tile::before { background: radial-gradient(closest-side at 40% 50%, color-mix(in oklab, var(--color-shade-100) 80%, transparent), color-mix(in oklab, var(--color-shade-100) 45%, transparent) 55%, transparent); }
+-  .tile__name { padding-right: 32px; }
+-  .tile__art { grid-row: 1; grid-column: 1; width: 96px; height: 96px; margin: 0; mask-image: radial-gradient(closest-side, black 70%, transparent); }
+-  .tile__art .block-light__sun { fill: color-mix(in srgb, var(--color-sun-200) 70%, transparent); }
+-  .tile__body { grid-row: 1; grid-column: 2; }
+-  .tile__light { --fall: linear-gradient(155deg, black 10%, transparent 42%); }
++  .bento { gap: 4px; }
++  .tile { --pad: 0px; --reveal: 12px; --gap: 32px; padding-bottom: 32px; }
++  .tile__niche { aspect-ratio: 12 / 5; }
+   .tile--education .tile__name, .tile--protection .tile__name { font-size: var(--fs-h3); }
+   .tile--education .tile__text { font-size: var(--fs-base); line-height: var(--lh-body); }
+-  .tile__go { right: 16px; bottom: auto; top: 28px; }
++  .tile__body { padding-right: 40px; }
++  .tile__body::before { inset: -12px 0 -24px 0; }
++  .tile__go { right: 4px; bottom: 34px; }
+ }
+ 
+ /* Plaques (H5b): the organization figures on the wall's base course, one unboxed row, 64 px apart, each
+@@ -264,9 +281,9 @@
+ 
+ /* Reduced motion and pause: the light holds still; hover colours stay. */
+ @media (prefers-reduced-motion: reduce) {
+-  .tile__light, .tile__go, .lit-wall__light, .louver::before, .louver__label::after, .louver__go, .program-row::before, .program-more__link .icon, .dated__ext { transition: none; }
++  .tile__cast, .tile__glass, .tile__go, .lit-wall__light, .louver::before, .louver__label::after, .louver__go, .program-row::before, .program-more__link .icon, .dated__ext { transition: none; }
+ }
+-html[data-motion="off"] :is(.tile__light, .lit-wall__light) { transition: none; }
++html[data-motion="off"] :is(.tile__cast, .tile__glass, .lit-wall__light) { transition: none; }
+ 
+ /* =====================================================================================================
+    Inner pages: Our Work hub, a center, a program (PLAN P1-P3). One stretch of the day per page (05-DESIGN
+diff -ruN a/prototype/src/styles/stages.css b/prototype/src/styles/stages.css
+--- a/prototype/src/styles/stages.css	2026-11-09 02:05:42.566014439 +0000
++++ b/prototype/src/styles/stages.css	2026-11-09 02:05:42.567299657 +0000
+@@ -103,9 +103,12 @@
+   mask-image: linear-gradient(to bottom, transparent, black 72px, black calc(100% - 48px), transparent);
+ }
+ .bay__name { margin: 0; font-size: clamp(1.75rem, 1.15rem + 1.7vw, 2.75rem); text-wrap: balance; }
+-.bay__since, .bay__where { margin: 0; font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; color: var(--color-ink-700); }
++/* PROPOSAL (colour and light): the bays' stills now carry ochre, teal and the coloured frieze behind the card's
++   feathered plaster, so the meta lines and the privacy note move from ink-700 to ink-900 (ink-700 fell to
++   6.2-6.7:1 over the stacked stills at 1440; ink-900 keeps 11:1). Size and weight still rank them. */
++.bay__since, .bay__where { margin: 0; font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; color: var(--color-ink-900); }
+ .bay__serves { margin: 0; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-ink-900); text-wrap: pretty; }
+-.bay__note { margin: 4px 0 0; font-size: var(--fs-sm); line-height: 1.6; color: var(--color-ink-700); text-wrap: pretty; }
++.bay__note { margin: 4px 0 0; font-size: var(--fs-sm); line-height: 1.6; color: var(--color-ink-900); text-wrap: pretty; }
+ .bay__links { display: flex; flex-wrap: wrap; gap: 0 28px; margin: 2px 0 0; }
+ .bays__all { margin-top: clamp(32px, 5vw, 64px); }
+ @media (min-aspect-ratio: 1/1) { .bay__view { aspect-ratio: 16 / 10; } }
+diff -ruN a/prototype/src/styles/tokens.css b/prototype/src/styles/tokens.css
+--- a/prototype/src/styles/tokens.css	2026-11-09 02:05:42.572807434 +0000
++++ b/prototype/src/styles/tokens.css	2026-11-09 02:05:42.575788829 +0000
+@@ -68,6 +68,24 @@
+   --color-world-face-sand:      #D7CDBD; /* the proof's warm sand-cement block face: an A/B for Maxwell only (poster &face=sand) */
+ }
+ 
++/* PROPOSAL (colour and light, 9 Nov 2026): kính màu, the coloured glass of old Saigon transoms and
++   stair windows, and the corridor's ochre lime wash, teal oil-paint dado and đá mài floor.
++   Glass colours are light, never text, never behind running text above a 16% mix into lime-50
++   (ink-900 then measures 11.56-13.07:1). Shared by the corridor (world) and the focus panes (CSS). */
++:root {
++  --color-glass-amber: #F2A31B;  /* hổ phách: HCWA's sun through glass */
++  --color-glass-teal:  #16A39A;  /* xanh ngọc */
++  --color-glass-blue:  #3E5BD6;  /* the logo blue, lit from behind */
++  --color-glass-green: #5AAE3C;  /* xanh lá mạ: lighter and yellower than Tre Xanh's door green */
++  --color-glass-sky:   #5FB6E4;  /* xanh da trời */
++  --color-world-ochre-sun:    #F3C77C; /* corridor lime wash in ochre (vàng vôi), in the sun */
++  --color-world-ochre-shade:  #B58B57; /* the same wall in shade */
++  --color-world-dado-sun:     #3F958B; /* teal oil-paint dado at parapet height (90 cm), in the sun */
++  --color-world-dado-shade:   #1F5D58; /* the dado in shade */
++  --color-world-ceiling-warm: #B9A585; /* the corridor ceiling, always in shade */
++  --color-world-terrazzo:     #9E9282; /* đá mài cement in shade (chips from the glass and ink tokens) */
++}
++
+ :root {
+   /* Type (D2). Archivo instanced to wdth 78, wght 600-700; Be Vietnam Pro 400/500/600. */
+   --font-display: "Archivo HCWA", "Archivo HCWA Fallback", "Arial Narrow", sans-serif;
+diff -ruN a/prototype/src/world/glsl/doors.js b/prototype/src/world/glsl/doors.js
+--- a/prototype/src/world/glsl/doors.js	2026-11-09 02:05:42.581008733 +0000
++++ b/prototype/src/world/glsl/doors.js	2026-11-09 02:05:42.583796247 +0000
+@@ -1,4 +1,4 @@
+-import { Vector4 } from "three";
++import { Vector3, Vector4 } from "three";
+ import { BLOCK, DEPTH } from "./blocks.js";
+ import { DOOR } from "../objects/door.js";
+ 
+@@ -16,6 +16,16 @@
+ uniform vec4 uDoors[${MAX_DOORS}];  // zc, pattern id, leaf angle (rad), hinge side (+1 the +z jamb, −1 the −z)
+ uniform int uDoorN;
+ uniform vec4 uDoorWall;             // wx, transom y0, 0, 0
++// PROPOSAL (colour and light): each open unit's transom glazed. uDoorGlass[k]: the glass either side (white:
++// clear), uGlassMid: HCWA's amber in the middle block. gDoorTint carries the colour of the light doorsMask()
++// last returned (white for the doorway and for any pattern-0 transom: Little Rose's light stays untinted).
++uniform vec3 uDoorGlass[${MAX_DOORS}];
++uniform vec3 uGlassMid;
++vec3 gDoorTint = vec3(1.);
++vec3 doorGlass(int k){
++  for (int i = 0; i < ${MAX_DOORS}; i++) if (i == k) return uDoorGlass[i];
++  return vec3(1.);
++}
+ float doorPat(float id, vec2 c){
+   if (id < 0.5) return -1.;
+   if (id < 1.5) return sdDotTre(c);
+@@ -38,10 +48,12 @@
+   float w = 0.0025 + 0.0093 * t0 * 0.6;
+   // Transom: three blocks, two face tests through the block's depth.
+   float tr = 1.;
++  float blockX = 1.;
+   for (int s = 0; s < 2; s++) {
+     float t = (wx + float(s) * ${f(DEPTH)} - P.x) / L.x;
+     vec3 R = P + L * t;
+     vec2 uv = vec2(R.z - (D.x - ${f(1.5 * BLOCK)}), R.y - uDoorWall.y);
++    blockX = floor(uv.x / ${f(BLOCK)});
+     float rect = sdBox2(uv - vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}), vec2(${f(1.5 * BLOCK)}, ${f(0.5 * BLOCK)}));
+     if (D.y < 0.5) { float fe = 0.05 + w; tr *= smoothstep(fe, -fe, rect); }
+     else tr *= smoothstep(w, -w, max(rect, doorPat(D.y, mod(uv, ${f(BLOCK)}) - ${f(0.5 * BLOCK)})));
+@@ -71,6 +83,9 @@
+       }
+     }
+   }
++  // The transom's light takes its glass; the doorway's stays daylight. Pattern 0 (Little Rose): never tinted.
++  vec3 glass = D.y < 0.5 ? vec3(1.) : (abs(blockX - 1.) < .5 ? uGlassMid : doorGlass(k));
++  gDoorTint = mix(vec3(1.), glass, tr * (1. - dw));
+   return max(tr, dw);
+ }
+ `;
+@@ -95,6 +110,8 @@
+     uDoors: { value: Array.from({ length: MAX_DOORS }, () => new Vector4()) },
+     uDoorN: { value: 0 },
+     uDoorWall: { value: new Vector4() },
++    uDoorGlass: { value: Array.from({ length: MAX_DOORS }, () => new Vector3(1, 1, 1)) },
++    uGlassMid: { value: new Vector3(1, 1, 1) },
+     uNoSun: { value: [new Vector4(), new Vector4()] },
+   };
+ }
+diff -ruN a/prototype/src/world/glsl/glass.js b/prototype/src/world/glsl/glass.js
+--- a/prototype/src/world/glsl/glass.js	1970-01-01 00:00:00.000000000 +0000
++++ b/prototype/src/world/glsl/glass.js	2026-11-09 02:05:42.588885298 +0000
+@@ -0,0 +1,126 @@
++import { Vector3, Vector4 } from "three";
++import { tok, vec } from "../colors.js";
++
++// PROPOSAL (colour and light): kính màu, the coloured glass of old Saigon transoms and stair windows, in
++// the corridor. Three openings, all analytic like the screen (05-DESIGN D6.1), no shadow maps, no textures:
++//   clerestory: a band of 30 cm panes above the screen (one pane per block column), lit by the sun (light 0).
++//               It lays a frieze of coloured rectangles along the door wall at head height that slides down
++//               the wall as the sun clock rises with the scroll. Frosted, untinted panes over Little Rose's bay.
++//   end window: a 5 × 7 pane window in the corridor's far end wall, lit by the soft daylight of the street
++//               beyond it (not the sun: its pool is soft and fades within 7 m, so it never reaches Little Rose).
++//   transoms:   each open unit's emblem glazed (glsl/doors.js gDoorTint): the unit's glass either side, HCWA's
++//               amber in the middle block. Little Rose's transom stays plain, untinted daylight.
++// Palette ids (uGlass[i]): 0 frost (untinted), 1 amber, 2 teal, 3 blue, 4 green, 5 sky. No red, no pink.
++export const GLASS_IDS = { frost: 0, amber: 1, teal: 2, blue: 3, green: 4, sky: 5 };
++const PALETTE = ["sky", "glass-amber", "glass-teal", "glass-blue", "glass-green", "glass-sky"];
++
++// The transmitted colour, normalised so its brightest channel is 1 (linear): what the glass does to white light.
++export function glassTint(name) {
++  const c = tok(name);
++  const m = Math.max(c.r, c.g, c.b);
++  return new Vector3(c.r / m, c.g / m, c.b / m);
++}
++export const glassPalette = () => PALETTE.map((n, i) => (i === 0 ? new Vector3(1, 1, 1) : glassTint(n)));
++// What the eye sees looking at the lit glass: the glass token itself, lifted (deep and saturated, not pastel).
++export const glassShow = (k = 1.3) => PALETTE.map((n, i) => (i === 0 ? vec(tok("sky")) : vec(tok(n)).multiplyScalar(k)));
++
++export const GLASS_GLSL = /* glsl */ `
++uniform vec3 uGlass[6];
++uniform vec4 uClere;   // plane x, y0, y1, z0
++uniform vec4 uClere2;  // z1, pane width, muntin width, rows (0: off)
++uniform vec4 uFrost;   // z0, z1 of the frosted run (Little Rose's bay and 0.6 m either side); empty when z1 <= z0
++uniform vec4 uEndWin;  // plane z, x0, x1, on (0/1)
++uniform vec4 uEndWin2; // y0, y1, cols, rows
++uniform vec4 uEndWin3; // muntin width, softness per metre, reach (m), strength
++uniform vec3 uEndL;    // toward the end window's daylight
++uniform vec4 uPool;    // strength, albedo share, saturation, white leak
++
++// The clerestory: two rows of panes, the upper row a half-step on from the lower, so the colours climb
++// diagonally along the corridor (amber, teal, blue, amber, green, sky).
++int paneId(vec2 id, float zc){
++  if (zc > uFrost.x && zc < uFrost.y) return 0;
++  float k = mod(id.x + 3. * id.y, 6.);
++  return k < .5 ? 1 : k < 1.5 ? 2 : k < 2.5 ? 3 : k < 3.5 ? 1 : k < 4.5 ? 4 : 5;
++}
++// The end window, as Saigon stair windows are glazed: one colour for the field (teal), a border of the logo
++// blue, an amber diamond with a sky heart in the middle, green where the diamond's points meet the border.
++int endId(vec2 id, float cols, float rows){
++  vec2 c = vec2(floor(cols * .5), floor(rows * .5));
++  if (id.x < .5 || id.y < .5 || id.x > cols - 1.5 || id.y > rows - 1.5) {
++    return (abs(id.x - c.x) < .5 || abs(id.y - c.y) < .5) ? 4 : 3;
++  }
++  float d = abs(id.x - c.x) + abs(id.y - c.y);
++  if (d < .5) return 5;
++  if (d < 1.5) return 1;
++  if (abs(d - 3.) < .5) return 1;
++  return 2;
++}
++vec3 glassC(int i){ return i == 0 ? uGlass[0] : i == 1 ? uGlass[1] : i == 2 ? uGlass[2] : i == 3 ? uGlass[3] : i == 4 ? uGlass[4] : uGlass[5]; }
++
++// The sun (L toward it) through the clerestory: rgb the glass colour, a its coverage (muntins and penumbra).
++vec4 clereLight(vec3 P, vec3 L){
++  if (uClere2.w < .5 || L.x > -1e-4) return vec4(0.);
++  float rows = uClere2.w;
++  float t = (uClere.x - P.x) / L.x;
++  if (t <= 0.) return vec4(0.);
++  vec3 Q = P + L * t;
++  if (Q.y < uClere.y - 0.05 || Q.y > uClere.z + 0.05) return vec4(0.);
++  float w = 0.0025 + 0.0093 * t * 0.6;
++  float band = smoothstep(w, -w, max(uClere.y - Q.y, Q.y - uClere.z)) * smoothstep(w, -w, max(uClere.w - Q.z, Q.z - uClere2.x));
++  if (band <= 0.) return vec4(0.);
++  vec2 cell = vec2(uClere2.y, (uClere.z - uClere.y) / rows);
++  vec2 g = vec2(Q.z - uClere.w, Q.y - uClere.y) / cell, id = floor(g), f = fract(g);
++  vec2 e = min(f, 1. - f) * cell;
++  float mu = smoothstep(-w, w, min(e.x, e.y) - uClere2.z * .5);
++  return vec4(glassC(paneId(id, uClere.w + (id.x + .5) * cell.x)), band * mu);
++}
++
++// The street's daylight through the end window: soft, fading with distance.
++vec4 endLight(vec3 P, vec3 N){
++  if (uEndWin.w < .5) return vec4(0.);
++  vec3 L = uEndL;
++  float n = dot(N, L);
++  if (n <= 0. || P.z < uEndWin.x + 0.005) return vec4(0.);
++  float t = (uEndWin.x - P.z) / L.z;
++  if (t <= 0. || t > uEndWin3.z) return vec4(0.);
++  vec3 Q = P + L * t;
++  if (Q.y < uEndWin2.x - 0.3 || Q.y > uEndWin2.y + 0.3) return vec4(0.);
++  float w = 0.01 + uEndWin3.y * t;
++  vec2 size = vec2(uEndWin.z - uEndWin.y, uEndWin2.y - uEndWin2.x), q = vec2(Q.x - uEndWin.y, Q.y - uEndWin2.x);
++  float rect = sdBox2(q - .5 * size, .5 * size);
++  float cov = smoothstep(w, -w, rect);
++  if (cov <= 0.) return vec4(0.);
++  vec2 cell = size / vec2(uEndWin2.z, uEndWin2.w), g = q / cell, id = clamp(floor(g), vec2(0.), vec2(uEndWin2.z, uEndWin2.w) - 1.), fr = fract(g);
++  vec2 e = min(fr, 1. - fr) * cell;
++  float mu = smoothstep(-w, w, min(e.x, e.y) - uEndWin3.x * .5);
++  float fall = 1. / (1. + 0.12 * t * t) * (1. - smoothstep(uEndWin3.z * .6, uEndWin3.z, t));
++  return vec4(glassC(endId(id, uEndWin2.z, uEndWin2.w)), cov * mu * sqrt(n) * fall * uEndWin3.w);
++}
++
++// A pool of coloured light on a surface whose lit colour is \`lit\`: the glass colour carried at the lit
++// surface's own brightness (a blue pool on ochre plaster stays blue, as the eye sees it), with a little of
++// the surface's own colour and a little white light leaking round the glass.
++float lumaG(vec3 c){ return dot(c, vec3(.2126, .7152, .0722)); }
++vec3 pool(vec3 lit, vec3 tint){
++  vec3 t = mix(vec3(1.), tint, uPool.z);
++  vec3 c = mix(t * (0.35 + 0.65 * sqrt(lumaG(lit))), lit * t, uPool.y);
++  return mix(c, lit, uPool.w) * uPool.x;
++}
++`;
++
++// Uniforms; clere/end/frost from sets/corridor.js. Off (on = 0) unless given, so a set without glass costs one branch.
++export function glassUniforms({ clere = null, end = null, frost = null, pool = [1, 0.25, 1, 0.12] } = {}) {
++  return {
++    uGlass: { value: glassPalette() },
++    uClere: { value: new Vector4(clere?.x ?? 0, clere?.y0 ?? 0, clere?.y1 ?? 0, clere?.z0 ?? 0) },
++    uClere2: { value: new Vector4(clere?.z1 ?? 0, clere?.pane ?? 0.3, clere?.muntin ?? 0.02, clere ? clere.rows ?? 1 : 0) },
++    uFrost: { value: new Vector4(frost?.[0] ?? 0, frost?.[1] ?? 0, 0, 0) },
++    uEndWin: { value: new Vector4(end?.z ?? 0, end?.x0 ?? 0, end?.x1 ?? 0, end ? 1 : 0) },
++    uEndWin2: { value: new Vector4(end?.y0 ?? 0, end?.y1 ?? 0, end?.cols ?? 1, end?.rows ?? 1) },
++    uEndWin3: { value: new Vector4(end?.muntin ?? 0.03, end?.soft ?? 0.03, end?.reach ?? 7, end?.strength ?? 0.8) },
++    uEndL: { value: new Vector3(...(end?.light ?? [0, 0.35, -1])).normalize() },
++    uPool: { value: new Vector4(...pool) },
++  };
++}
++
++export const glassColor = (name) => vec(tok(name));
+diff -ruN a/prototype/src/world/journey.js b/prototype/src/world/journey.js
+--- a/prototype/src/world/journey.js	2026-11-09 02:05:42.590862467 +0000
++++ b/prototype/src/world/journey.js	2026-11-09 02:05:42.596480968 +0000
+@@ -35,7 +35,7 @@
+ // +x, the street and the sun beyond it; the door wall on the right at x = WALL_X. A 3 m lead-in, then one
+ // 6.5 m bay per door with its door at the centre and a shallow pier at its far end, then 2 m.
+ // The screen's blocks are laid so one hole is centred at (z 1.5, y 1.05): the camera comes out of it.
+-export const CORRIDOR = { screenX: 98.9, wallX: 101.3, ceiling: 3.1, lead: 3, bay: 6.5, tail: 2, start: 3, parapet: 0.9, rows: 7, pier: 0.32 };
++export const CORRIDOR = { screenX: 98.9, wallX: 101.3, ceiling: 3.1, lead: 3, bay: 6.5, tail: 2, start: 3, parapet: 0.9, rows: 5, pier: 0.32 }; // PROPOSAL: 5 rows (was 7), the clerestory above
+ export const EXIT_HOLE = { z: 1.5, y: 1.05 };
+ const B = 0.3;
+ 
+diff -ruN a/prototype/src/world/materials/paint.js b/prototype/src/world/materials/paint.js
+--- a/prototype/src/world/materials/paint.js	2026-11-09 02:05:42.601549131 +0000
++++ b/prototype/src/world/materials/paint.js	2026-11-09 02:05:42.603986138 +0000
+@@ -2,6 +2,7 @@
+ import { BLOCKS } from "../glsl/blocks.js";
+ import { NOISE } from "../glsl/noise.js";
+ import { aperturesGLSL } from "../glsl/apertures.js";
++import { GLASS_GLSL } from "../glsl/glass.js";
+ 
+ // Painted wood (doors, frames, shutters; 05-DESIGN D6.3): the paint token is the display color in full
+ // light, so a lit door lands on its unit token (not tone-mapped, D6.3); shade is the token darkened and
+@@ -22,7 +23,9 @@
+ // ao: GLSL `float paintAo(vec3 P)`, contact shade where the paint meets something (a leaf at its hinge, a
+ // shut leaf in its frame). uGrad (own): the daylight down a face, that much brighter at the head than at
+ // the foot (a shut door lit only from above).
+-export function paintMaterial(U, lights, own, { ao = null } = {}) {
++// glass (PROPOSAL, the corridor): the clerestory's coloured light and the glazed transoms' tint reach the
++// doors too (glsl/glass.js), so a frieze of colour crossing the wall crosses an open leaf with it.
++export function paintMaterial(U, lights, own, { ao = null, glass = false } = {}) {
+   return new ShaderMaterial({
+     uniforms: { ...U, uGrad: { value: 0 }, ...own },
+     vertexShader: VERT,
+@@ -34,6 +37,7 @@
+       ${NOISE}
+       ${aperturesGLSL(lights)}
+       ${ao ?? "float paintAo(vec3 P){ return 1.; }"}
++      ${glass ? GLASS_GLSL : ""}
+       void main(){
+         vec3 N = normalize(vN);
+         // Edge band in face UV, broken up by noise: chipped paint at corners and edges only.
+@@ -47,7 +51,12 @@
+         float f0 = n0 > 0. && uI[0] > 0. ? n0 / uRef[0] * lightMask0(vP) * uI[0] : 0.;
+         ${lights.length > 1 ? "float f1 = n1 > 0. && uI[1] > 0. ? n1 / uRef[1] * lightMask1(vP) * uI[1] : 0.;" : "float f1 = 0.;"}
+         vec3 col = mix(shade, albedo * uSunTint, min(f0, 1.));
+-        col = mix(col, albedo * uSpillTint, min(f1, 1.) * 0.85);
++        ${glass ? `
++        vec4 cg = n0 > 0. && uI[0] > 0. ? clereLight(vP, uLt[0]) : vec4(0.);
++        col = mix(col, pool(albedo * uSunTint, cg.rgb), min(cg.a * n0 / uRef[0] * uI[0] * bayFree(vP), 1.) * 0.9);
++        vec3 spillC = albedo * uSpillTint;
++        col = mix(col, mix(spillC, pool(spillC, gDoorTint), step(.001, 3. - dot(gDoorTint, vec3(1.)))), min(f1, 1.) * 0.85);` : `
++        col = mix(col, albedo * uSpillTint, min(f1, 1.) * 0.85);`}
+         col *= (1. + uGrad * (smoothstep(0., 2.2, vP.y) - .5)) * paintAo(vP);
+         gl_FragColor = vec4(col, 1.);
+         #include <colorspace_fragment>
+diff -ruN a/prototype/src/world/materials/shafts.js b/prototype/src/world/materials/shafts.js
+--- a/prototype/src/world/materials/shafts.js	2026-11-09 02:05:42.608797600 +0000
++++ b/prototype/src/world/materials/shafts.js	2026-11-09 02:05:42.610094444 +0000
+@@ -5,6 +5,7 @@
+ import { CAPS } from "./caps.js";
+ import { fullscreen, SCREEN_VERT } from "../renderer.js";
+ import { EXPOSURE } from "../colors.js";
++import { GLASS_GLSL } from "../glsl/glass.js";
+ 
+ // Light shafts (05-DESIGN D6.3): a full-screen raymarch into a reduced target (¼ res and
+ // 16 steps on Tier 1, ½ and 24 on Tier 2). The view ray is clipped to the set's box
+@@ -13,7 +14,10 @@
+ // (1 − (1 − dst)(1 − src)): light over light never clips one channel ahead of the others.
+ // mask: { glsl, call } for sets lit through glsl/apertures.js (the stills): the chunk that defines the
+ // light's mask and the expression that reads it at p; the room uses sunMask() and the canopy.
+-export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = null }) {
++// glass (PROPOSAL, colour and light): on Tier 2 the march also gathers the sun through the corridor's
++// clerestory, in the colour of each pane (glsl/glass.js), so coloured beams cross the air under the ceiling.
++// Tier 1 compiles without it (the define is off) and pays nothing.
++export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = null, glass = false }) {
+   const rt = new WebGLRenderTarget(1, 1, { depthBuffer: false, minFilter: LinearFilter, magFilter: LinearFilter });
+   const local = {
+     uInvP: { value: new Matrix4() },
+@@ -26,7 +30,7 @@
+     uCapScale: { value: 4 },
+   };
+   const march = new ShaderMaterial({
+-    defines: { STEPS: steps ?? (tier >= 2 ? 24 : 16) },
++    defines: { STEPS: steps ?? (tier >= 2 ? 24 : 16), GLASS_SHAFTS: glass && tier >= 2 ? 1 : 0 },
+     uniforms: { ...U, ...local },
+     vertexShader: SCREEN_VERT,
+     fragmentShader: /* glsl */ `
+@@ -39,19 +43,25 @@
+       ${mask ? mask.glsl + "\n#define SHAFT_L uLt[0]" : APERTURE + LEAF + "\n#define SHAFT_L uL"}
+       ${DISPLAY}
+       ${CAPS}
++      ${glass ? GLASS_GLSL : ""}
+       void main(){
+         vec4 vp = uInvP * vec4(vU * 2. - 1., 1., 1.); vp /= vp.w;
+         vec3 rd = normalize((uInvV * vec4(vp.xyz, 0.)).xyz), ro = uCam;
+         vec3 tf = max((uMin - ro) / rd, (uMax - ro) / rd);
+         float tExit = min(min(min(tf.x, tf.y), tf.z), 14.);
+         float dt = tExit / float(STEPS), j = h21(gl_FragCoord.xy) * dt, acc = 0.;
++        vec3 accG = vec3(0.);
+         for (int i = 0; i < STEPS; i++) {
+           vec3 p = ro + rd * (j + dt * float(i));
+           float m = ${mask ? mask.call : "sunMask(p)"};
+           if (m > 0.) acc += m ${mask ? "" : "* leaf(p, uTime)"} * (0.5 + 0.5 * texture2D(uLime, (vec2(p.x + p.y, p.z) + uWind.xz) * 0.3).r) * dt;
++          ${glass ? `#if GLASS_SHAFTS == 1
++          vec4 cg = clereLight(p, SHAFT_L);
++          if (cg.a > 0.) accG += cg.rgb * cg.a * bayFree(p) * (0.5 + 0.5 * texture2D(uLime, (vec2(p.x + p.y, p.z) + uWind.xz) * 0.3).r) * dt;
++          #endif` : ""}
+         }
+         float g = .45, mu = dot(rd, SHAFT_L), hg = (1. - g * g) / pow(1. + g * g - 2. * g * mu, 1.5) / 12.566;
+-        vec3 col = uSunCol * uSunI * uDensity * acc * (0.02 + 0.3 * hg) * capAt(gl_FragCoord.xy * uCapScale);
++        vec3 col = uSunCol * uSunI * uDensity * (acc + accG * 1.4) * (0.02 + 0.3 * hg) * capAt(gl_FragCoord.xy * uCapScale);
+         gl_FragColor = vec4(toSRGB(neutralTM(col, uExposure)), 1.);
+       }`,
+     depthTest: false, depthWrite: false,
+@@ -84,6 +94,7 @@
+     setTier(t) {
+       scale = t >= 2 ? 2 : 4;
+       march.defines.STEPS = steps ?? (t >= 2 ? 24 : 16);
++      march.defines.GLASS_SHAFTS = glass && t >= 2 ? 1 : 0;
+       march.needsUpdate = true;
+     },
+     setSize(w, h) {
+diff -ruN a/prototype/src/world/materials/still-surface.js b/prototype/src/world/materials/still-surface.js
+--- a/prototype/src/world/materials/still-surface.js	2026-11-09 02:05:42.615021800 +0000
++++ b/prototype/src/world/materials/still-surface.js	2026-11-09 02:05:42.616378709 +0000
+@@ -3,7 +3,8 @@
+ import { NOISE } from "../glsl/noise.js";
+ import { aperturesGLSL } from "../glsl/apertures.js";
+ import { CAPS } from "./caps.js";
+-import { TERRAZZO_CEMENT } from "../textures.js";
++import { TERRAZZO_CEMENT, TERRAZZO_COLOUR_CEMENT } from "../textures.js";
++import { GLASS_GLSL } from "../glsl/glass.js";
+ 
+ // Shells of the still sets (05-DESIGN D6.10): the room surface model of surface.js (display targets in
+ // shade and in full light, one texture fetch, analytic AO, caps inside text rects) with up to two
+@@ -13,7 +14,13 @@
+ //   color = mix(mix(shade, sun, f0) + glare, spill, f1)
+ // contact: GLSL defining `float contact(vec3 P)`, the soft occlusion of what stands against the shell (a
+ // door frame proud of the wall, an open leaf on the floor), multiplied into the AO.
+-export function stillSurface(U, lights, { contact = null } = {}) {
++// glass (PROPOSAL, colour and light: the corridor only): kính màu pools (glsl/glass.js) from the clerestory
++// (light 0), the end window (soft daylight) and the glazed transoms (light 1, gDoorTint); the teal oil-paint
++// dado to uDado.x on every wall; the đá mài floor's darker border uDado.y wide along both long walls; a
++// stronger lime-wash mottle (uDado.z). Other sets compile without any of it.
++// parts (prototype cost probe): c clerestory, e end window, t transom tint, d dado + sheen; default all.
++export function stillSurface(U, lights, { contact = null, glass = false, parts = "cetd" } = {}) {
++  const has = (k) => parts.includes(k);
+   return new ShaderMaterial({
+     uniforms: U,
+     vertexShader: /* glsl */ `
+@@ -34,6 +41,10 @@
+       ${aperturesGLSL(lights)}
+       ${CAPS}
+       ${contact ?? "float contact(vec3 P){ return 1.; }"}
++      ${glass ? `${GLASS_GLSL}
++      uniform vec4 uDado;   // dado top (m), floor border width (m), mottle gain, dado sheen
++      uniform vec3 uDadoShade, uDadoSun, uRimTint;
++      uniform vec4 uWalls;  // x of the screen wall, x of the door wall` : ""}
+       // A surface skips the term of the plane it lies in (facing it, within 3 mm). Distance alone also
+       // skipped the last 3 mm of the neighbouring wall, and every corner drew an unshaded bright seam.
+       float occ(float d, float r, float s, float self){ return self > .5 && d < 0.003 ? 1. : 1. - s * (1. - smoothstep(0., r, d)); }
+@@ -44,7 +55,8 @@
+         vec4 lw = texture2D(uLime, uv * 0.25);
+         float vertical = 1. - step(.5, abs(N.y));
+         float mott = (lw.r - .5) * .09 + (lw.g - .5) * .05 + (lw.b - .5) * .04 * vertical;
+-        vec3 rel = k == 1 ? texture2D(uTerr, vP.xz * 0.5).rgb / ${TERRAZZO_CEMENT.toFixed(3)} * (1. + mott * .5) : vec3(1. + mott);
++        ${glass ? "if (k == 0) mott = mott * uDado.z + (lw.a - .5) * .5 * vertical;" : ""}
++        vec3 rel = k == 1 ? texture2D(uTerr, vP.xz * 0.5).rgb / ${(glass ? TERRAZZO_COLOUR_CEMENT : TERRAZZO_CEMENT).toFixed(3)} * (1. + mott * .5) : vec3(1. + mott);
+         vec3 an = abs(N);
+         float ao = occ(vP.y - uBoxMin.y, .35, .12 * uAoK, an.y) * occ(uBoxMax.y - vP.y, .4, .1 * uAoK, an.y)
+                  * occ(vP.z - uBoxMin.z, .9, .2 * uAoK, an.z) * occ(uBoxMax.z - vP.z, .9, .2 * uAoK, an.z)
+@@ -57,10 +69,27 @@
+         float n0 = max(dot(N, uLt[0]), 0.), n1 = max(dot(N, uLt[1]), 0.);
+         float f0 = n0 > 0. && uI[0] > 0. ? n0 / uRef[0] * lightMask0(vP) * cap * uI[0] : 0.;
+         ${lights.length > 1 ? "float f1 = n1 > 0. && uI[1] > 0. ? n1 / uRef[1] * lightMask1(vP) * cap * uI[1] : 0.;" : "float f1 = 0.;"}
+-        vec3 shade = uShade[k] * rel * ao * fill;
+-        vec3 sun = uSunT[k] * 0.94 * rel * mix(1., ao, .5);
++        vec3 shadeT = uShade[k], sunT = uSunT[k];
++        ${glass ? `
++        // The dado: oil paint at parapet height on every wall, a 4 mm painted edge, a faint sheen of sky.
++        float dado = ${has("d") ? "k == 0 ? vertical * smoothstep(uDado.x + .004, uDado.x - .004, vP.y) : 0." : "0."};
++        shadeT = mix(shadeT, uDadoShade, dado); sunT = mix(sunT, uDadoSun, dado);
++        // Đá mài: a darker border along both long walls, as Saigon floors are laid.
++        if (k == 1) { float b = smoothstep(uDado.y + .006, uDado.y - .006, min(vP.x - uWalls.x, uWalls.y - vP.x)); rel *= mix(vec3(1.), uRimTint, b); }` : ""}
++        vec3 shade = shadeT * rel * ao * fill;
++        vec3 sun = sunT * 0.94 * rel * mix(1., ao, .5);
+         vec3 col = mix(mix(shade, sun, min(f0, 1.)), uGlare, min(max(f0 - 1., 0.) * .35, .6));
+-        col = mix(col, uSpillT[k] * 0.94 * rel * mix(1., ao, .5), min(f1, 1.));
++        ${glass ? `
++        // Kính màu. The sun through the clerestory (no tamarind dapple up there; none in Little Rose's bay).
++        vec4 cg = ${has("c") ? "n0 > 0. && uI[0] > 0. ? clereLight(vP, uLt[0]) : vec4(0.)" : "vec4(0.)"};
++        if (cg.a > 0.) col = mix(col, pool(sun, cg.rgb), min(cg.a * n0 / uRef[0] * cap * uI[0] * bayFree(vP), 1.) * 0.9);
++        // The street's daylight through the end window: soft, added over shade or sun.
++        vec4 ce = ${has("e") ? "endLight(vP, N)" : "vec4(0.)"};
++        if (ce.a > 0.) col = mix(col, pool(max(sun, col), ce.rgb), min(ce.a * bayFree(vP), 1.) * 0.85);
++        vec3 spill = uSpillT[k] * 0.94 * rel * mix(1., ao, .5);
++        col = mix(col, ${has("t") ? "f1 > 0. && dot(gDoorTint, vec3(1.)) < 2.999 ? pool(spill, gDoorTint) : spill" : "spill"}, min(f1, 1.));
++        ${has("d") ? "" : "//"}col += dado * uDado.w * pow(max(dot(reflect(normalize(vP - cameraPosition), N), uFillDir), 0.), 8.) * shadeT;` : `
++        col = mix(col, uSpillT[k] * 0.94 * rel * mix(1., ao, .5), min(f1, 1.));`}
+         gl_FragColor = vec4(col, 1.);
+         #include <colorspace_fragment>
+         gl_FragColor.rgb += (h21(gl_FragCoord.xy) - .5) / 255.;
+diff -ruN a/prototype/src/world/objects/glass.js b/prototype/src/world/objects/glass.js
+--- a/prototype/src/world/objects/glass.js	1970-01-01 00:00:00.000000000 +0000
++++ b/prototype/src/world/objects/glass.js	2026-11-09 02:05:42.618862469 +0000
+@@ -0,0 +1,83 @@
++import { BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial } from "three";
++import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
++import { BLOCKS } from "../glsl/blocks.js";
++import { NOISE, DITHER } from "../glsl/noise.js";
++import { GLASS_GLSL, glassShow } from "../glsl/glass.js";
++import { mixc, tok, vec } from "../colors.js";
++
++// PROPOSAL (colour and light): the corridor's coloured glass seen from inside, backlit by the street: the
++// clerestory band above the screen and the window in the far end wall, as ONE merged mesh and one draw.
++// The panes are the same palette and the same pane ids as the light they throw (glsl/glass.js), so a pane and
++// its pool on the wall always match. Hand-rolled glass: seeds and a slow ripple (value noise), brighter toward
++// the top where the sky is; muntins in dark steel (blue-950) with a lit rim. Not tone-mapped: the glass blazes
++// the way the holes of the screen do. Frosted panes (kính mờ, Little Rose's bay) are the street's own white,
++// hammered, no colour.
++const quad = (pts, panel) => {
++  const g = new BufferGeometry();
++  g.setAttribute("position", new Float32BufferAttribute(pts.flat(), 3));
++  g.setAttribute("aPanel", new Float32BufferAttribute([panel, panel, panel, panel], 1));
++  g.setIndex([0, 1, 2, 0, 2, 3]);
++  g.computeVertexNormals();
++  return g;
++};
++
++// clere: { x, y0, y1, z0, z1 } (a plane facing +x); end: { z, x0, x1, y0, y1 } (a plane facing +z).
++export function glassPanels(U, { clere, end }) {
++  const parts = [];
++  if (clere) parts.push(quad([[clere.x, clere.y0, clere.z1], [clere.x, clere.y0, clere.z0], [clere.x, clere.y1, clere.z0], [clere.x, clere.y1, clere.z1]], 0));
++  if (end) parts.push(quad([[end.x0, end.y0, end.z], [end.x1, end.y0, end.z], [end.x1, end.y1, end.z], [end.x0, end.y1, end.z]], 1));
++  const mat = new ShaderMaterial({
++    uniforms: {
++      ...U,
++      uSkyLo: { value: vec(tok("sky")) }, uSkyHi: { value: vec(mixc(tok("sky"), tok("on-dusk"), 0.5)) },
++      uSteel: { value: vec(tok("blue-950")) }, uSteelRim: { value: vec(mixc(tok("blue-950"), tok("sky"), 0.35)) },
++      uShow: { value: glassShow(1.35) },
++    },
++    vertexShader: /* glsl */ `attribute float aPanel; varying vec3 vP; varying float vPanel;
++      void main(){ vec4 w = modelMatrix * vec4(position, 1.); vP = w.xyz; vPanel = aPanel; gl_Position = projectionMatrix * viewMatrix * w; }`,
++    fragmentShader: /* glsl */ `
++      varying vec3 vP; varying float vPanel;
++      uniform vec3 uSkyLo, uSkyHi, uSteel, uSteelRim, uShow[6];
++      vec3 showC(int i){ return i == 0 ? uShow[0] : i == 1 ? uShow[1] : i == 2 ? uShow[2] : i == 3 ? uShow[3] : i == 4 ? uShow[4] : uShow[5]; }
++      ${BLOCKS}
++      ${NOISE}
++      ${DITHER}
++      ${GLASS_GLSL}
++      void main(){
++        bool endWin = vPanel > .5;
++        vec2 q, cell; vec2 id; float mw;
++        if (endWin) {
++          vec2 size = vec2(uEndWin.z - uEndWin.y, uEndWin2.y - uEndWin2.x);
++          q = vec2(vP.x - uEndWin.y, vP.y - uEndWin2.x);
++          cell = size / vec2(uEndWin2.z, uEndWin2.w);
++          id = clamp(floor(q / cell), vec2(0.), vec2(uEndWin2.z, uEndWin2.w) - 1.);
++          mw = uEndWin3.x;
++        } else {
++          q = vec2(vP.z - uClere.w, vP.y - uClere.y);
++          cell = vec2(uClere2.y, (uClere.z - uClere.y) / uClere2.w);
++          id = floor(q / cell);
++          mw = uClere2.z;
++        }
++        int pid = endWin ? endId(id, uEndWin2.z, uEndWin2.w) : paneId(id, uClere.w + (id.x + .5) * cell.x);
++        vec3 tint = showC(pid);
++        vec2 fr = fract(q / cell), e = min(fr, 1. - fr) * cell;
++        float edge = min(e.x, e.y);
++        float fw = max(fwidth(edge), 1e-4);
++        float steel = smoothstep(mw * .5 + fw, mw * .5 - fw, edge);
++        // Behind the glass: the street's light, brighter toward the top of each opening.
++        float h = endWin ? q.y / (uEndWin2.y - uEndWin2.x) : 1.;
++        vec3 sky = mix(uSkyLo, uSkyHi, h);
++        // Seeds and a slow ripple in hand-rolled glass; a frosted pane is hammered all over.
++        float seed = vn(q * 70.) * .6 + vn(q * 9. + 3.1) * .4;
++        vec3 glass = pid == 0 ? sky * (0.86 + 0.14 * vn(q * 140.)) : tint * mix(vec3(1.), sky, .3) * (0.8 + 0.34 * seed) * (0.9 + 0.2 * h);
++        // The pane is a touch darker where it meets its frame (the putty line).
++        glass *= 0.86 + 0.14 * smoothstep(0., 0.03, edge - mw * .5);
++        vec3 metal = mix(uSteel, uSteelRim, smoothstep(mw * .5, 0., edge) * .4);
++        gl_FragColor = vec4(mix(glass, metal, steel), 1.);
++        #include <colorspace_fragment>
++        DITHER_OUT;
++      }`,
++    toneMapped: false,
++  });
++  return new Mesh(mergeGeometries(parts), mat);
++}
+diff -ruN a/prototype/src/world/objects/lattice.js b/prototype/src/world/objects/lattice.js
+--- a/prototype/src/world/objects/lattice.js	2026-11-09 02:05:42.627830303 +0000
++++ b/prototype/src/world/objects/lattice.js	2026-11-09 02:05:42.630204390 +0000
+@@ -35,6 +35,9 @@
+     // Along the panel (U, metres from its corner): the street's light fading from the near end (x) to the
+     // far one (y) by z; 0 leaves the street as it is (the dusk: the last gold dies toward the far end).
+     uFall: { value: new Vector3(0, 1, 0) },
++    // PROPOSAL (colour and light): glass in the holes, by block column (a transom: the middle block and the
++    // two beside it). White: no glass, the holes show what is behind as before.
++    uTintSide: { value: new Vector3(1, 1, 1) }, uTintMid: { value: new Vector3(1, 1, 1) },
+     ...own,
+   };
+   const mat = new ShaderMaterial({
+@@ -42,7 +45,7 @@
+     vertexShader: /* glsl */ `varying vec3 vP; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+     fragmentShader: /* glsl */ `
+       varying vec3 vP;
+-      uniform vec3 uO, uU, uV, uNf, uFace, uFaceSun, uWallC, uRimC, uBehindLow, uBehindHigh, uCanopyC, uFall;
++      uniform vec3 uO, uU, uV, uNf, uFace, uFaceSun, uWallC, uRimC, uBehindLow, uBehindHigh, uCanopyC, uFall, uTintSide, uTintMid;
+       uniform vec2 uSize, uOne, uBehindY;
+       uniform float uDepth, uHalo, uRef[2], uI[2], uCanopyAmt, uBehindDist;
+       ${BLOCKS}
+@@ -89,7 +92,10 @@
+           vec3 wall = mix(uWallC, uRimC, clamp(lit * 1.6, 0., 1.));` : `
+           float lit = max(dot(n, uLt[${light}]), 0.) * uI[${light}];
+           vec3 wall = mix(uWallC * (0.85 + 0.25 * b / tb), uRimC, clamp(lit * 1.8, 0., 1.));`}
+-          vec3 hole = mix(wall, behind(vP + rd * (uBehindDist / max(abs(toward), 1e-3)), uv.x), smoothstep(fw, -fw, d2));
++          vec3 glass = abs(id.x - 1.) < .5 ? uTintMid : uTintSide;
++          // Hand-rolled glass: a little seed and ripple, so a pane never reads as a flat fill.
++          glass *= mix(1., 0.9 + 0.2 * vn(uv * 90.), step(.001, 3. - dot(glass, vec3(1.))));
++          vec3 hole = mix(wall, behind(vP + rd * (uBehindDist / max(abs(toward), 1e-3)), uv.x) * glass, smoothstep(fw, -fw, d2));
+           col = mix(hole, col, smoothstep(-fw, fw, d));
+         }
+         gl_FragColor = vec4(col, 1.);
+diff -ruN a/prototype/src/world/sets/corridor.js b/prototype/src/world/sets/corridor.js
+--- a/prototype/src/world/sets/corridor.js	2026-11-09 02:05:42.635253468 +0000
++++ b/prototype/src/world/sets/corridor.js	2026-11-09 02:05:42.636663429 +0000
+@@ -1,4 +1,4 @@
+-import { Group, Mesh, PerspectiveCamera, PlaneGeometry, Scene, Vector3 } from "three";
++import { Group, Mesh, PerspectiveCamera, PlaneGeometry, Scene, Vector4 } from "three";
+ import { createShafts } from "../materials/shafts.js";
+ import { aperturesGLSL, apertureUniforms } from "../glsl/apertures.js";
+ import { DEPTH } from "../glsl/blocks.js";
+@@ -13,6 +13,26 @@
+ import { CORRIDOR, corridorLayout } from "../journey.js";
+ import { roomShade, roomSun, screenColors, street, surfaceUniforms, tint } from "./common.js";
+ import { EXIT, exitLook } from "./places.js";
++import { GLASS_IDS, glassPalette, glassTint, glassUniforms } from "../glsl/glass.js";
++import { glassPanels } from "../objects/glass.js";
++import { bakeTerrazzoColour } from "../textures.js";
++import { Vector3 } from "three";
++import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
++
++// PROPOSAL (colour and light, 9 Nov 2026): kính màu. A clerestory of 30 cm coloured panes in two rows over the
++// screen (the screen drops to 5 rows to make room), a 7 × 11 coloured window in the far end wall, the open units' transoms
++// glazed in their unit's glass with HCWA's amber in the middle block. Ochre lime wash, a teal oil-paint dado at
++// parapet height, đá mài in colour with a darker border, a warm ceiling, deeper corner shade. Little Rose: no
++// glass colour anywhere in its bay (frosted clerestory panes over it and 0.6 m either side, its transom plain),
++// and no corridor sun there as before.
++export const GLASS = {
++  clere: { y0: 2.44, y1: 3.04, pane: 0.3, rows: 2, muntin: 0.026 },
++  end: { w: 1.5, y0: 0.55, y1: 2.75, cols: 7, rows: 11, muntin: 0.026, soft: 0.03, reach: 7, strength: 2.2, light: [0.08, 0.3, -1] },
++  dado: 0.9, border: 0.24, mottle: 3.6, sheen: 0.06,
++  // Transom glass either side of the amber middle block, by unit. Little Rose: none, whatever is asked.
++  transom: { "green-bamboo": "glass-green", "cau-han": "glass-blue" },
++};
++export const transomGlass = (unit) => (unit === "little-rose" ? null : GLASS.transom[unit] ?? "glass-amber");
+ 
+ // The corridor (05-DESIGN D6.2, D6.5): open-air, the breeze-block screen on the left with the street and
+ // the morning sun beyond it, the lime wall on the right with one painted door per [data-beat] card, each
+@@ -24,7 +44,10 @@
+ 
+ export const DOOR_OPEN = 72; // degrees a door swings to at its beat (D5.3); live.js drives it
+ 
+-export function corridorScene({ lime, terr, beats, open = 0, t = 0.25 }) {
++// Prototype-only cost probe (?gl=spm: surface, paint, mesh; default all): which parts of the glass to build.
++const GL = (() => { try { return new URLSearchParams(globalThis.location?.search ?? "").get("gl") ?? "spm"; } catch { return "spm"; } })();
++
++export function corridorScene({ lime, terr, terrC, beats, open = 0, t = 0.25 }) {
+   if (beats.length > MAX_DOORS) throw new Error(`corridor: ${beats.length} doors > ${MAX_DOORS}`);
+   const lay = corridorLayout(beats), C = CORRIDOR, s = lay.screen;
+   const box = { min: [C.screenX, 0, lay.end], max: [C.wallX, C.ceiling, lay.start] };
+@@ -43,11 +66,26 @@
+   // Daylight from the rooms: untinted, the same for every door (Little Rose's never carries a color).
+   const day = mixc(tok("sky"), tok("wallSun"), 0.45);
+   const spillT = [day, day.clone().multiplyScalar(0.86), day];
++  // Ochre in shade and sun; the floor's cement warm; the ceiling warm and lower in key (deeper shadow).
++  const floorSun = mixc(tok("terrazzo"), tok("sun-200"), 0.62);
++  const shade = [tok("ochreShade"), tok("terrazzo"), tok("ceilingWarm")];
++  const sunT = (c) => [tint(tok("ochreSun"), c, 0.5), tint(floorSun, c, 0.5), tint(tok("ochreSun"), c, 0.5)];
++  // The frosted run: Little Rose's bay and 0.6 m either side of it.
++  const lrBay = lay.doors.find((d) => d.unit === "little-rose")?.bay;
++  const frost = lrBay ? [lrBay[0] - 0.6, lrBay[1] + 0.6] : null;
++  const endWin = { z: lay.end, x0: (C.screenX + C.wallX) / 2 - GLASS.end.w / 2, x1: (C.screenX + C.wallX) / 2 + GLASS.end.w / 2, ...GLASS.end };
++  const clere = { x: C.screenX, y0: GLASS.clere.y0, y1: GLASS.clere.y1, z0: s.z0, z1: s.z1, pane: GLASS.clere.pane, rows: GLASS.clere.rows, muntin: GLASS.clere.muntin };
+   const U = {
+-    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun: sun.color, shade: roomShade(), sunT: roomSun(sun.color, 0.5), spillT, refs: [Math.abs(sun.dir.x), Li.y], lime, terr }),
++    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun: sun.color, shade, sunT: sunT(sun.color), spillT, refs: [Math.abs(sun.dir.x), Li.y], lime, terr: GL.includes("s") ? terrC ?? terr : terr }),
+     ...apertureUniforms(lights, [sun.dir, Li]),
+     ...doorUniforms(),
++    ...glassUniforms({ clere, end: endWin, frost, pool: [1, 0.22, 0.92, 0.1] }),
++    uDado: { value: new Vector4(GLASS.dado, GLASS.border, GLASS.mottle, GLASS.sheen) },
++    uDadoShade: { value: vec(tok("dadoShade")) }, uDadoSun: { value: vec(tint(tok("dadoSun"), sun.color, 0.5)) },
++    uRimTint: { value: vec(mixc(tok("dadoShade"), tok("terrazzo"), 0.55)).divide(vec(tok("terrazzo"))) },
++    uWalls: { value: new Vector4(C.screenX, C.wallX, 0, 0) },
+   };
++  U.uAoK.value = 1.7;
+   U.uI.value = [1, 0.9];
+ 
+   // ---- doors from the beats ----
+@@ -55,9 +93,12 @@
+   U.uDoorN.value = specs.length;
+   U.uDoorWall.value.set(C.wallX, specs[0]?.transom.y0 ?? 2.3, 0, 0);
+   let lr = 0;
++  U.uGlassMid.value.copy(glassTint("glass-amber"));
+   specs.forEach((d, i) => {
+     const light = doorLight(d.unit);
+     U.uDoors.value[i].set(d.zc, DOOR_PATTERN[light.transomPattern] ?? DOOR_PATTERN.hoaThi, 0, d.hinge);
++    const g = transomGlass(d.unit);
++    U.uDoorGlass.value[i].copy(g ? glassTint(g) : new Vector3(1, 1, 1));
+     if (!light.corridorSun && lr < 2) U.uNoSun.value[lr++].set(d.beat.bay[0], d.beat.bay[1], 0, 0);
+   });
+ 
+@@ -68,22 +109,24 @@
+     ...rect("y", 0, X, ends, 1, 1),
+     ...rect("y", H, X, ends, -1, 2),
+     ...rect("x", C.wallX, ends, [0, H], -1, 0, specs.flatMap((d) => d.holes)),
+-    ...rect("x", C.screenX, ends, [0, H], 1, 0, [[s.z0, s.z1, s.y0, s.y1]]),
++    ...rect("x", C.screenX, ends, [0, H], 1, 0, [[s.z0, s.z1, s.y0, s.y1], [s.z0, s.z1, GLASS.clere.y0, GLASS.clere.y1]]),
+     ...rect("z", lay.start, X, [0, H], -1, 0),
+-    ...rect("z", lay.end, X, [0, H], 1, 0),
++    ...rect("z", lay.end, X, [0, H], 1, 0, [[endWin.x0, endWin.x1, endWin.y0, endWin.y1]]),
+     ...lay.piers.flatMap((z) => [
+       ...rect("z", z + half, [C.wallX - P, C.wallX], [0, H], 1, 0),
+       ...rect("z", z - half, [C.wallX - P, C.wallX], [0, H], -1, 0),
+       ...rect("x", C.wallX - P, [z - half, z + half], [0, H], -1, 0),
+     ]),
+   ];
+-  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights));
++  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights, { glass: GL.includes("s"), parts: (GL.match(/\[([a-z]*)\]/) ?? [, "cetd"])[1] }));
+ 
+   // Faces the corridor (+x): laid from the screen's +z end along −z, on the light's own block grid.
+   const lattice = latticePanel(U, lights, { corner: [s.sx, s.y0, s.z1], u: [0, 0, -1], v: [0, 1, 0], size: screen.size, pattern: "hoaThi", light: 0, own: street() });
+   screenColors(lattice.material.uniforms);
+ 
+-  const objects = [shell, lattice];
++  // The glass itself, clerestory and end window: one merged mesh, one draw.
++  const glass = glassPanels(U, { clere: { ...clere, x: C.screenX + 0.012 }, end: { ...endWin, z: lay.end + 0.012 } });
++  const objects = GL.includes("m") ? [shell, lattice, glass] : [shell, lattice];
+   const leaves = [], glows = [];
+   for (const d of specs) {
+     const unitColor = tok("unit-" + d.unit), isLR = d.unit === "little-rose";
+@@ -91,12 +134,18 @@
+       uPaint: { value: vec(unitColor) }, uWood: { value: vec(tok("wood")) }, uCool: { value: vec(tok("wallShade")) },
+       uSunTint: { value: vec(tint(tok("lime-50"), sun.color)) }, uSpillTint: { value: vec(mixc(tok("lime-50"), day, 0.5)) },
+       uShadeK: { value: 0.58 }, uWear: { value: isLR ? 0.3 : 0.6 },
+-    });
++    }, { glass: GL.includes("p") });
+     const g = doorGeometries(d);
+     const leaf = new Group();
+-    leaf.position.set(...g.hinge);
+-    leaf.add(new Mesh(g.leaf, paint));
+-    objects.push(new Mesh(g.frame, paint), leaf);
++    if (isLR) {
++      // PROPOSAL: Little Rose's leaf never moves (setDoor keeps it at 0), so it is merged into its frame: one draw,
++      // which pays for the glass mesh and keeps the corridor at 14 draws on Tier 1 (05-DESIGN D6.7).
++      objects.push(new Mesh(mergeGeometries([g.frame, g.leaf.clone().translate(...g.hinge)]), paint), leaf);
++    } else {
++      leaf.position.set(...g.hinge);
++      leaf.add(new Mesh(g.leaf, paint));
++      objects.push(new Mesh(g.frame, paint), leaf);
++    }
+     leaves.push(leaf);
+     // What shows through an open doorway: the lit room, nothing in it modeled. Little Rose has none.
+     if (!isLR) {
+@@ -113,6 +162,8 @@
+       own: { uBehindLow: { value: vec(isLR ? day : mixc(tok("sun-100"), unitColor, 0.06)) }, uBehindHigh: { value: vec(isLR ? tok("sky") : tok("sun-100")) }, uBehindY: { value: [2, 3] } },
+     });
+     const u = tr.material.uniforms;
++    const tg = transomGlass(d.unit);
++    if (tg) { u.uTintSide.value.copy(glassTint(tg)); u.uTintMid.value.copy(glassTint("glass-amber")); }
+     u.uFace.value.copy(vec(mixc(tok("wallShade"), tok("screenFace"), 0.7)));
+     u.uWallC.value.copy(vec(mixc(tok("wallShade"), tok("screenFace"), 0.35)));
+     u.uRimC.value.copy(vec(day));
+@@ -134,8 +185,9 @@
+   // The sun along the corridor's clock (D6.4: t 0.25 → 0.45, nearly head-on to the door wall).
+   const setSun = (tt, intensity = 1) => {
+     sunAt("corridor", tt, sun);
+-    const k = roomSun(sun.color, 0.5);
++    const k = sunT(sun.color);
+     U.uSunT.value.forEach((v, i) => v.set(k[i].r, k[i].g, k[i].b));
++    U.uDadoSun.value.copy(vec(tint(tok("dadoSun"), sun.color, 0.5)));
+     U.uSunCol.value.set(sun.color.r, sun.color.g, sun.color.b);
+     U.uRef.value[0] = Math.max(Math.abs(sun.dir.x), 0.05);
+     U.uI.value[0] = intensity;
+@@ -154,10 +206,11 @@
+ // The live corridor (live.js): built from the page's beats once the room is live, sharing the room's
+ // baked textures. Shafts through the screen on both tiers (they gate like the room's).
+ export async function buildCorridor({ gl, tier, beats, textures }) {
+-  const set = corridorScene({ ...textures, beats });
++  const terrC = await bakeTerrazzoColour();
++  const set = corridorScene({ ...textures, terrC, beats });
+   const scene = new Scene();
+   scene.add(...set.objects);
+-  const shafts = createShafts(gl.renderer, set.U, { box: set.box, tier, ortho: gl.ortho, mask: { glsl: aperturesGLSL(set.lights.slice(0, 1)), call: "lightMask0(p)" } });
++  const shafts = createShafts(gl.renderer, set.U, { box: set.box, tier, ortho: gl.ortho, glass: true, mask: { glsl: aperturesGLSL(set.lights.slice(0, 1)), call: "lightMask0(p)" } });
+   shafts.uniforms.uDensity.value = 1.4;
+   const camera = new PerspectiveCamera(EXIT.fov.landscape, 1, 0.05, 60);
+   // The tamarinds' dapple (the screen's light is aperture 0, the trees 1).
+@@ -173,6 +226,7 @@
+     },
+     dispose() {
+       scene.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
++      terrC.dispose();
+       shafts.dispose();
+     },
+   };
+diff -ruN a/prototype/src/world/sets/stills.js b/prototype/src/world/sets/stills.js
+--- a/prototype/src/world/sets/stills.js	2026-11-09 02:05:42.638862470 +0000
++++ b/prototype/src/world/sets/stills.js	2026-11-09 02:05:42.645036296 +0000
+@@ -7,7 +7,7 @@
+ import { latticePanel } from "../objects/lattice.js";
+ import { boxRoom, rect, shellGeometry } from "../objects/shell.js";
+ import { DOOR, doorLight, doorMeshes, doorSpec, leafAperture } from "../objects/door.js";
+-import { bakeLimeWash, bakeTerrazzo } from "../textures.js";
++import { bakeLimeWash, bakeTerrazzo, bakeTerrazzoColour } from "../textures.js";
+ import { STILL_SUNS, sunFixed } from "../clock.js";
+ import { mixc, tok, vec } from "../colors.js";
+ import { BOX as ROOM_BOX, SCREEN as ROOM_SCREEN } from "./room.js";
+@@ -588,8 +588,8 @@
+ 
+ export async function buildStill(name, crop, { gl, aspect, cam: tryCam = null, sun: trySun = null }) {
+   const shot = SHOTS[name];
+-  const [lime, terr] = await Promise.all([bakeLimeWash({ slice: false }), bakeTerrazzo({ slice: false })]);
+-  const set = shot.scene({ lime, terr });
++  const [lime, terr, terrC] = await Promise.all([bakeLimeWash({ slice: false }), bakeTerrazzo({ slice: false }), bakeTerrazzoColour({ slice: false })]);
++  const set = shot.scene({ lime, terr, terrC });
+   if (trySun) sunFixed({ az: trySun[0], el: trySun[1], mirror: set.lights[0].dir.x < 0 && trySun[2] !== 0 }, set.lights[0].dir);
+   const scene = new Scene();
+   scene.add(...set.objects);
+diff -ruN a/prototype/src/world/textures.js b/prototype/src/world/textures.js
+--- a/prototype/src/world/textures.js	2026-11-09 02:05:42.650317950 +0000
++++ b/prototype/src/world/textures.js	2026-11-09 02:05:42.651668371 +0000
+@@ -34,10 +34,11 @@
+   return t;
+ }
+ 
+-// R: broad mottling, G: fine mottling, B: vertical brush direction. Covers 4 x 4 m.
++// R: broad mottling, G: fine mottling, B: vertical brush direction, A (PROPOSAL): the loang of an old ochre
++// wash, metre-wide patches, read in the same fetch (the room never reads A). Covers 4 x 4 m.
+ export async function bakeLimeWash({ slice = true } = {}) {
+   const a = lattice(6, 11), b = lattice(14, 23), c = lattice(40, 37), d = lattice(96, 41);
+-  const brushX = lattice(64, 53), brushY = lattice(4, 59);
++  const brushX = lattice(64, 53), brushY = lattice(4, 59), loang = lattice(3, 71), loang2 = lattice(7, 73);
+   const data = new Uint8Array(N * N * 4);
+   for (let y = 0; y < N; y++) {
+     for (let x = 0; x < N; x++) {
+@@ -45,7 +46,7 @@
+       data[i] = 255 * (0.62 * a(x, y) + 0.38 * b(x, y));
+       data[i + 1] = 255 * (0.6 * c(x, y) + 0.4 * d(x, y));
+       data[i + 2] = 255 * (0.7 * brushX(x, y) + 0.3 * brushY(x, y));
+-      data[i + 3] = 255;
++      data[i + 3] = 255 * (0.7 * loang(x, y) + 0.3 * loang2(x, y));
+     }
+     if (slice && y % 64 === 63) await yieldNow();
+   }
+@@ -84,3 +85,45 @@
+   }
+   return texture(data);
+ }
++
++// PROPOSAL (colour and light): the corridor's đá mài, the Saigon terrazzo laid in colour. Same storage as
++// bakeTerrazzo (albedo relative to the cement, cement at TERRAZZO_CEMENT) so the surface shader is unchanged;
++// the cement's own hue is the world-terrazzo target. Denser and larger chips (4 to 14 mm over 2 × 2 m): white
++// marble most, then black, amber, teal, green, and a few logo blue. No red, no pink. One more 512² texture
++// (1.3 MB with mips), baked in slices after the corridor is requested.
++export const TERRAZZO_COLOUR_CEMENT = 0.4; // headroom for white marble chips (2.5 × the cement)
++export async function bakeTerrazzoColour({ slice = true } = {}) {
++  const C = TERRAZZO_COLOUR_CEMENT;
++  const cement = tok("terrazzo");
++  const chipTokens = [["lime-50", 0], ["ink-900", 0.15], ["glass-amber", 0.1], ["glass-teal", 0.15], ["glass-green", 0.2], ["glass-blue", 0.2]];
++  const chips = chipTokens.map(([name, lift]) => {
++    const ch = tok(name).lerp(cement, lift);
++    return [ch.r / cement.r, ch.g / cement.g, ch.b / cement.b];
++  });
++  const weights = [0.46, 0.62, 0.76, 0.86, 0.94, 1];
++  const r = rng(131), cloud = lattice(8, 149);
++  const data = new Uint8Array(N * N * 4);
++  for (let y = 0; y < N; y++) {
++    for (let x = 0; x < N; x++) {
++      const i = (y * N + x) * 4, k = C * (0.95 + 0.1 * cloud(x, y)) * 255;
++      data[i] = data[i + 1] = data[i + 2] = k; data[i + 3] = 255;
++    }
++    if (slice && y % 128 === 127) await yieldNow();
++  }
++  const count = 7000, contrast = 0.85;
++  for (let n = 0; n < count; n++) {
++    const cx = r() * N, cy = r() * N, rad = 1 + r() * r() * 2.6, pick = r(), sq = 0.6 + r() * 0.5, rot = r() * Math.PI;
++    const tint = chips[weights.findIndex((w) => pick <= w)];
++    const ca = Math.cos(rot), sa = Math.sin(rot);
++    for (let y = Math.floor(cy - rad - 2); y <= cy + rad + 2; y++) for (let x = Math.floor(cx - rad - 2); x <= cx + rad + 2; x++) {
++      // Crushed stone, not discs: a squashed, turned ellipse.
++      const dx = x + 0.5 - cx, dy = y + 0.5 - cy, u = dx * ca + dy * sa, v = (-dx * sa + dy * ca) / sq;
++      const cover = Math.min(1, Math.max(0, rad + 0.5 - Math.hypot(u, v))) * contrast;
++      if (cover <= 0) continue;
++      const i = (((y + N) % N) * N + ((x + N) % N)) * 4;
++      for (let ch = 0; ch < 3; ch++) data[i + ch] = Math.min(255, data[i + ch] * (1 - cover) + C * 255 * Math.min(tint[ch], 2.45) * cover);
++    }
++    if (slice && n % 2500 === 2499) await yieldNow();
++  }
++  return texture(data);
++}
+diff -ruN a/prototype/test/little-rose.test.mjs b/prototype/test/little-rose.test.mjs
+--- a/prototype/test/little-rose.test.mjs	2026-11-09 02:05:42.657769612 +0000
++++ b/prototype/test/little-rose.test.mjs	2026-11-09 02:05:42.660736291 +0000
+@@ -130,3 +130,28 @@
+     assert.match(m.match(/<li class="bay"[^>]*data-unit="little-rose"[^>]*>/)[0], /--spill:var\(--color-sun-100\)/, "its light in the panel is plain daylight");
+   }
+ });
++
++// PROPOSAL (colour and light): kính màu in the corridor never reaches Little Rose.
++test("kính màu: Little Rose's transom is unglazed, the clerestory over its bay frosted, no glass colour lands in its bay, no red or pink glass anywhere", async () => {
++  const { corridorScene, transomGlass, GLASS } = await import("../src/world/sets/corridor.js");
++  const { corridorLayout } = await import("../src/world/journey.js");
++  const { GLASS_GLSL } = await import("../src/world/glsl/glass.js");
++  const { tok } = await import("../src/world/colors.js");
++  // Whatever the caller asks for, its transom carries no glass.
++  assert.equal(transomGlass("little-rose"), null);
++  const beats = [{ unit: "green-bamboo", door: "open", emblem: "dotTre" }, { unit: "little-rose", door: "open", emblem: "dotTre" }, { unit: "cau-han", door: "open", emblem: "vomCau" }];
++  const set = corridorScene({ lime: null, terr: null, terrC: null, beats });
++  const i = set.specs.findIndex((d) => d.unit === "little-rose"), U = set.U;
++  assert.deepEqual(U.uDoorGlass.value[i].toArray(), [1, 1, 1], "its transom light is untinted");
++  assert.equal(U.uDoors.value[i].y, 0, "its transom pattern is plain (0): untinted in the shader whatever uDoorGlass says");
++  // The frosted run covers its whole bay and 0.6 m either side; the sun is cut from the same bay.
++  const bay = corridorLayout(beats).doors[i].bay;
++  assert.ok(U.uFrost.value.x <= bay[0] - 0.6 + 1e-9 && U.uFrost.value.y >= bay[1] + 0.6 - 1e-9, "frosted clerestory over its bay");
++  assert.deepEqual([U.uNoSun.value[0].x, U.uNoSun.value[0].y], bay, "no corridor sun (nor its glass light) in its bay");
++  assert.match(GLASS_GLSL, /if \(zc > uFrost\.x && zc < uFrost\.y\) return 0;/, "frosted panes are palette id 0, white");
++  // The end window's pool fades out within its reach, far short of Little Rose's bay.
++  assert.ok(Math.abs(set.layout.end - bay[0]) > GLASS.end.reach, "the end window's light never reaches its bay");
++  // No glass in the palette leans red or pink: every glass token has more green or blue than red, or is amber.
++  for (const name of ["glass-teal", "glass-blue", "glass-green", "glass-sky"]) { const c = tok(name); assert.ok(c.r < c.g || c.r < c.b, name); }
++  const a = tok("glass-amber"); assert.ok(a.g > 0.3 * a.r && a.b < a.g, "amber is amber, not red");
++});

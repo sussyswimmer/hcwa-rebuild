@@ -1,0 +1,930 @@
+diff -ruN a/prototype/src/pages/home/work-sheet.mjs b/prototype/src/pages/home/work-sheet.mjs
+--- a/prototype/src/pages/home/work-sheet.mjs	2026-11-09 01:37:06.269995264 +0000
++++ b/prototype/src/pages/home/work-sheet.mjs	2026-11-09 01:37:06.275828271 +0000
+@@ -2,7 +2,7 @@
+ import { viKeep } from "../../lib/vikeep.mjs";
+ import { visibleFigures } from "../../lib/content.mjs";
+ import { icon, pendingChip, programRow } from "../../partials/components.mjs";
+-import { lightArt, AREA_BLOCK } from "../../partials/blocks.mjs";
++import { lightArt, gachTile, AREA_BLOCK } from "../../partials/blocks.mjs";
+ 
+ // Home H5, the Our work sheet (Desire 2): the first opaque sheet after the corridor. Places were doors;
+ // here the work is a wall of blocks (focus areas), the plaques on it (figures) and light passing through
+@@ -27,6 +27,18 @@
+   </li>`;
+ };
+ 
++// Proposal saigon-home: the focus areas as a floor of gạch bông, one 20 cm cement tile per area in its own
++// pattern (its block's holes inlaid) and pigment, laid edge to edge like the corridor's runner seen from
++// above; the words stand beside each tile on the plaster, never on the pattern. The sun crosses the floor as
++// the page scrolls (pages.css .floor__sun). The whole column is the link.
++const gach = (c, a, i) => html`<li class="gach gach--${a.id}">
++    ${gachTile(AREA_BLOCK[a.id], { filter: i === 0 })}
++    <div class="gach__body">
++      <h3 class="gach__name"><a href="${c.url("ourWork")}?area=${a.id}#f-${a.id}"><span>${viKeep(c.tx(a.name))}</span>${icon("arrow", "icon gach__go")}</a></h3>
++      <p class="gach__text"${c.d(a.text)}>${c.tx(a.text)}</p>
++    </div>
++  </li>`;
++
+ // Organization figures as plaques on the wall. Production renders the row only when at least two are
+ // verified (06-PAGES); today none are, so it is staging-only and the sheet must read finished without it.
+ const plaques = (c) => {
+@@ -51,7 +63,10 @@
+   <span class="sun-layer sun-layer--work" aria-hidden="true"></span>
+   <div class="container">
+     <h2 class="wall__title" id="focus-title" data-reveal${c.d(work.focusTitle)}>${viKeep(c.tx(work.focusTitle))}</h2>
+-    <ul class="bento" data-reveal="stagger">${work.focusAreas.map((a) => tile(c, a))}</ul>
++    <div class="floor">
++      <span class="floor__sun" aria-hidden="true"></span>
++      <ul class="floor__tiles" data-reveal="stagger">${work.focusAreas.map((a, i) => gach(c, a, i))}</ul>
++    </div>
+     ${plaques(c)}
+   </div>
+   <section class="programs" aria-labelledby="programs-title">
+diff -ruN a/prototype/src/partials/blocks.mjs b/prototype/src/partials/blocks.mjs
+--- a/prototype/src/partials/blocks.mjs	2026-11-09 01:37:06.270037318 +0000
++++ b/prototype/src/partials/blocks.mjs	2026-11-09 01:37:06.275923482 +0000
+@@ -123,3 +123,22 @@
+   const d = part === "face" ? face(kind) : holes(kind);
+   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-H} ${-H} ${SIZE} ${SIZE}"><path fill-rule="evenodd" d="${d}"/></svg>\n`;
+ };
++
++// ---- Gạch bông (proposal saigon-home): each focus area as a 20 cm cement tile ----
++// The tile is the block turned into a floor: a pigment medallion (the area's colour) inlaid with the block's
++// own holes in cream, 2 × 2 blocks of it, so Hoa thị makes rosettes, Vòng tròn closes its full ring in the
++// middle and Mắt cáo becomes a net, from the same numbers as the light (glsl/blocks.js). No ground is drawn
++// round the medallion: the plaster is the tile's margin, so the floor never draws a line between two areas;
++// the tiles are set 14 mm apart in the plaster itself, so the joint is the page, not a drawn line.
++// Colours from pages.css (tile-* tokens). viewBox units: 200 = one 20 cm tile (mm).
++export function gachTile(kind, { cls = "gach__art", filter = false } = {}) {
++  const B = 200, m = 7, med = B - 2 * m, s = med / 2 / SIZE; // one block per quadrant of the medallion
++  const blocks = [];
++  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
++    const tx = m + med / 4 + (c * med) / 2, ty = m + med / 4 + (r * med) / 2;
++    blocks.push(`<path class="gach__inlay" transform="translate(${tx} ${ty}) scale(${s.toFixed(4)})" d="${holes(kind)}"/><circle class="gach__heart" cx="${tx}" cy="${ty}" r="6"/>`);
++  }
++  const corners = "";
++  const defs = filter ? `<defs><filter id="gach-cement" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 0.96  0 0 0 -1.6 1.02"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs>` : "";
++  return raw(`<svg class="${cls}" viewBox="0 0 ${B} ${B}" aria-hidden="true" focusable="false">${defs}${corners}<rect class="gach__med" x="${m}" y="${m}" width="${med}" height="${med}" rx="14"/><rect class="gach__frame" x="${m + 8}" y="${m + 8}" width="${med - 16}" height="${med - 16}" rx="9"/>${blocks.join("")}<rect class="gach__wear" x="${m}" y="${m}" width="${med}" height="${med}" rx="14" filter="url(#gach-cement)"/></svg>`);
++}
+diff -ruN a/prototype/src/styles/pages.css b/prototype/src/styles/pages.css
+--- a/prototype/src/styles/pages.css	2026-11-09 01:37:06.270364649 +0000
++++ b/prototype/src/styles/pages.css	2026-11-09 01:37:06.276518273 +0000
+@@ -1120,3 +1120,73 @@
+   .track__dot { transition: none; }
+   .kit-light.is-sun :is(.lit__light, .lit__screen), .kit-light.is-sun .lit__light img { animation: none; mask-image: none; }
+ }
++
++/* ---------- H5a, proposal saigon-home: the focus areas as a gạch bông floor ----------
++   Four 20 cm cement tiles laid edge to edge, the corridor's runner seen from above: each area its own
++   block inlaid in cream on its own pigment (blocks.mjs gachTile). Tiles meet cream to cream, so no line
++   is drawn between two areas (D0.5); the floor's outer cream band is the plaster's own tone. The words
++   stand under (beside, on phones) each tile on the plaster, never on the pattern: ink-900 / ink-700 on
++   lime-100 as every sheet. The sun crosses the floor as the page scrolls (transform only). */
++.floor { position: relative; isolation: isolate; margin-top: clamp(40px, 5vw, 72px); }
++.floor__tiles { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
++.gach { --pig: var(--color-tile-ochre); --acc: var(--color-tile-indigo); position: relative; display: grid; grid-template-rows: auto 1fr; align-content: start; }
++.gach--protection { --pig: var(--color-tile-indigo); --acc: var(--color-tile-ochre); }
++.gach--family { --pig: var(--color-tile-jade); --acc: var(--color-tile-ochre); }
++.gach--policy { --pig: var(--color-tile-brick); --acc: var(--color-tile-indigo); }
++.gach__art { position: relative; z-index: 0; display: block; width: 100%; height: auto; aspect-ratio: 1; }
++.gach__ground { fill: var(--color-tile-cream); }
++.gach__med { fill: var(--pig); }
++.gach__frame { fill: none; stroke: var(--color-tile-cream); stroke-width: 2.5; }
++.gach__inlay { fill: var(--color-tile-cream); }
++.gach__heart, .gach__corner { fill: var(--acc); }
++/* worn pigment and cement speckle (one feTurbulence, rasterised once, never animated) */
++.gach__wear { fill: var(--color-tile-cream); opacity: 0.32; }
++/* Bậc thang's slots are narrow: drawn a little bolder so the stair reads at tile size. */
++.gach--policy .gach__inlay { stroke: var(--color-tile-cream); stroke-width: 9; stroke-linejoin: round; }
++/* The pigment is a little in the screen's shade until the sun reaches it. */
++.gach::after { content: ""; position: absolute; z-index: 1; left: 0; right: 0; top: 0; aspect-ratio: 1; pointer-events: none;
++  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-sun-100) 46%, transparent), transparent); opacity: 0; transition: opacity 280ms var(--ease-out); }
++.gach__body { position: relative; z-index: 2; display: grid; gap: 10px; align-content: start; padding: clamp(20px, 2vw, 28px) clamp(16px, 1.6vw, 28px) 8px clamp(10px, 1.2vw, 18px); max-width: 34ch; }
++.gach__name { font-size: var(--fs-h3); }
++.gach__name a { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 10px; margin-block: -10px; color: var(--color-ink-900); text-decoration: none; }
++.gach__name a::after { content: ""; position: absolute; inset: 0; z-index: 3; }
++.gach__go { flex: none; color: var(--color-blue-700); translate: 0 4px; transition: translate var(--d-hover) var(--ease-out); }
++.gach__text { color: var(--color-ink-700); }
++@media (hover: hover) {
++  .gach:hover::after { opacity: 1; }
++  .gach:hover .gach__name a span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; }
++  .gach:hover .gach__go { translate: 3px 4px; }
++}
++.gach:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 2px; }
++.gach a:focus-visible { outline: none; }
++/* The sun through the house's screen, on the floor: Hoa thị patches in sun-100 inside a soft pool, sliding
++   across the four tiles while the floor passes through the viewport (D4 CSS sun layer, transform only). */
++/* Light adds (screen): a patch on indigo turns a lighter, warmer blue, never a grey film over it. */
++.floor__sun { position: absolute; z-index: 1; left: 0; right: 0; top: 0; aspect-ratio: 4 / 1; pointer-events: none; overflow: hidden; mix-blend-mode: screen; }
++.floor__sun::before, .floor__sun::after { content: ""; position: absolute; inset: -30% -20%; }
++.floor__sun::before { background: var(--color-sun-200); opacity: 0.66;
++  mask: url("/svg/hole-hoa-thi.svg") 0 0 / 84px 84px repeat, radial-gradient(ellipse 21% 40% at 50% 50%, black 52%, transparent 68%); mask-composite: intersect;
++  transform: rotate(-4deg) skewX(-14deg) scaleY(1.1); }
++/* the warm pool the patches sit in: the sun on waxed cement */
++.floor__sun::after { background: radial-gradient(ellipse 26% 52% at 50% 50%, color-mix(in oklab, var(--color-sun-200) 22%, transparent), transparent 72%); }
++@keyframes floor-sun { from { translate: -34% 0; } to { translate: 34% 0; } }
++@keyframes floor-sun-v { from { translate: 0 -30%; } to { translate: 0 30%; } }
++@supports (animation-timeline: view()) {
++  html[data-motion="on"] .floor__sun::before, html[data-motion="on"] .floor__sun::after { animation: floor-sun linear both; animation-timeline: view(); animation-range: cover 10% cover 90%; }
++}
++@media (min-width: 600px) and (max-width: 1023px) {
++  .floor__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 8px; }
++  .floor__sun { aspect-ratio: 2 / 1; }
++}
++/* Phones: the runner turns to run down the page, each tile 128 px beside its words. */
++@media (max-width: 599px) {
++  .floor__tiles { grid-template-columns: minmax(0, 1fr); }
++  .gach { grid-template-columns: 128px minmax(0, 1fr); grid-template-rows: auto; column-gap: 16px; align-items: start; }
++  .gach__art { width: 128px; }
++  .gach::after { right: auto; width: 128px; }
++  .gach__body { padding: 14px 0 20px; }
++  .floor__sun { aspect-ratio: auto; bottom: 0; right: auto; width: 128px; }
++  .floor__sun::before { inset: -10% -60%; mask-size: 52px 52px, 100% 100%; }
++  @supports (animation-timeline: view()) { html[data-motion="on"] .floor__sun::before, html[data-motion="on"] .floor__sun::after { animation-name: floor-sun-v; } }
++}
++@media (prefers-reduced-motion: reduce) { .gach::after, .gach__go { transition: none; } }
+diff -ruN a/prototype/src/styles/stages.css b/prototype/src/styles/stages.css
+--- a/prototype/src/styles/stages.css	2026-11-09 01:37:06.270553209 +0000
++++ b/prototype/src/styles/stages.css	2026-11-09 01:37:06.276881595 +0000
+@@ -139,7 +139,9 @@
+    frame lets go of the corridor with no box on it. A backdrop blur only where the GPU has room for it
+    (Tier 2: 92% plaster); elsewhere the plaster is denser instead (96%), so nothing behind it reads as an
+    edge (fixing-motion-performance: no continuous blur over a large animated surface on a phone). */
+-html.stages .is-stage { --pane: color-mix(in oklab, var(--color-lime-50) 96%, transparent); }
++/* proposal saigon-home: 97.5% (was 96%): the yellow wash and the mint dado behind the pane are darker than the
++   old grey-white wall, and the rail's 13 px labels must keep 7:1 (measured 7.00 at 96%). */
++html.stages .is-stage { --pane: color-mix(in oklab, var(--color-lime-50) 97.5%, transparent); }
+ html.stages[data-tier="2"] .is-stage { --pane: color-mix(in oklab, var(--color-lime-50) 92%, transparent); }
+ html.stages .is-stage .bays__glass { display: block; position: absolute; inset: auto 0 0; height: calc(var(--panel-h) + 56px); z-index: 1; pointer-events: none; background: var(--pane); mask-image: linear-gradient(to bottom, transparent, black 56px); }
+ html.stages[data-tier="2"] .is-stage .bays__glass { backdrop-filter: blur(8px); }
+diff -ruN a/prototype/src/styles/tokens.css b/prototype/src/styles/tokens.css
+--- a/prototype/src/styles/tokens.css	2026-11-09 01:37:06.270325311 +0000
++++ b/prototype/src/styles/tokens.css	2026-11-09 01:37:06.276419927 +0000
+@@ -52,6 +52,16 @@
+   --color-world-floor-shade: #A5A9B1; /* terrazzo in shade */
+   --color-world-screen-face: #3D4370; /* backlit block face: the logo-blue silhouette (holes 8.8:1 against it). Never behind text */
+   --color-world-wash:        #FFF3D3; /* the light flood: equals sun-100 */
++
++  /* Gạch bông and the Saigon house paint (proposal saigon-home, 9 Nov 2026). Decorative pigment only:
++     the focus-area tiles, the corridor floor, dado and pots. Never text, never a button, never behind
++     running text without a lime-50 plate. */
++  --color-tile-cream:  #F3E9D6; /* cement ground of every tile */
++  --color-tile-ochre:  #C4861C; /* mustard pigment: Giáo dục */
++  --color-tile-indigo: #2C3584; /* the logo blue as pigment: Bảo vệ trẻ em */
++  --color-tile-jade:   #176F5E; /* xanh ngọc: Gia đình và cộng đồng */
++  --color-tile-brick:  #A5472A; /* đỏ gạch: Vận động chính sách */
++  --color-tile-mint:   #8DC2A6; /* the corridor dado, oil paint */
+   /* tokens:end */
+ }
+ 
+@@ -65,6 +75,13 @@
+   --color-world-sun-shutters-a: #FFD08A; /* shutters, t 0.85 */
+   --color-world-sun-shutters-b: #FFB866; /* shutters, t 0.95 */
+   --color-world-wood:           #8A6A48; /* worn door edges */
++  --color-world-vang-shade:     #D5BB7E; /* Saigon yellow lime wash (vôi vàng) in the corridor's shade */
++  --color-world-vang-sun:       #FFE09A; /* the same wash in a sun patch */
++  --color-world-dado-shade:     #5B8F78; /* mint oil-paint dado in shade */
++  --color-world-dado-sun:       #A2D4B6; /* the dado in a sun patch */
++  --color-world-dado-line:      #1C5A4C; /* the painted line on the dado's top */
++  --color-world-gach-shade:     #BDAF93; /* gạch bông cream ground in shade */
++  --color-world-ceiling-warm:   #DDD5C4; /* the corridor ceiling: white lime wash, warm bounce from the floor */
+   --color-world-face-sand:      #D7CDBD; /* the proof's warm sand-cement block face: an A/B for Maxwell only (poster &face=sand) */
+ }
+ 
+diff -ruN a/prototype/src/world/glsl/apertures.js b/prototype/src/world/glsl/apertures.js
+--- a/prototype/src/world/glsl/apertures.js	2026-11-09 01:37:06.271526132 +0000
++++ b/prototype/src/world/glsl/apertures.js	2026-11-09 01:37:06.278828102 +0000
+@@ -25,6 +25,8 @@
+   dotTre: "return sdDotTre(mod(uv, B) - 0.5 * B);",
+   vomCau: "return sdVomCau(mod(uv, B) - 0.5 * B);",
+   open: "return -1.;",
++  // The corridor's ceiling fans (proposal saigon-home, objects/props.js FANS_GLSL): blades block the sun.
++  fans: "return -fanBlades(uv);",
+   solid: "return 1.;",
+   // Louver gaps along V: p.x pitch, p.y open fraction.
+   slats: "float h = 0.5 * p.x; return abs(mod(uv.y, p.x) - h) - h * p.y;",
+@@ -60,7 +62,7 @@
+   if (abs(ln) < 1e-4 || pn * side > -0.001) return 1.;
+   vec2 size = uApS[${i}].xy;
+   float m = 1.;
+-  for (int f = 0; f < 2; f++) {
++  for (int f = 0; f < ${a.thin ? 1 : 2}; f++) {
+     float t = (float(f) * uApS[${i}].z * side - pn) / ln;
+     vec3 Q = P + L * t;
+     vec2 uv = vec2(dot(Q - C, U), dot(Q - C, V));
+diff -ruN a/prototype/src/world/live.js b/prototype/src/world/live.js
+--- a/prototype/src/world/live.js	2026-11-09 01:37:06.272619900 +0000
++++ b/prototype/src/world/live.js	2026-11-09 01:37:06.280561272 +0000
+@@ -213,7 +213,7 @@
+   // ---- the journey: where the scroll is, which set, which pose ----
+   const sunState = { t: REST.room, nudge, intensity: 1, rims: 1 }; // reused: no per-frame garbage
+   const at = { hero: 0, passage: 0, y: 0, approach: 0, stage: 0, out: 0 }, path = { s: 0, lift: 0 };
+-  let lastY = -1, inRoom = true, inS3 = false, wasS3 = false, corridorSun = -1;
++  let lastY = -1, inRoom = true, inS3 = false, wasS3 = false, corridorSun = -1, propT = 0;
+   const draw = (now) => {
+     const y = scrollY;
+     lastY = y;
+@@ -304,7 +304,12 @@
+       // the stills. Little Rose's stays shut whatever is asked (setDoor).
+       for (let i = 0; i < n; i++) corridor.setDoor(i, walking ? doorAngle(i, at.stage, n) : DOOR_DEG);
+       // The sun along the corridor's clock (D6.4), set only when it moves (setSun allocates colors).
+-      if (tier >= 2) corridor.sway(time);
++      // The house's life (proposal saigon-home): fans, leaves, leaflets. Tier 2 on the clock and the scroll,
++      // Tier 1 on the scroll only (no idle frames on a phone); frozen while motion is paused.
++      if (!paused) propT = tier >= 2 ? time + y / 300 : y / 300;
++      corridor.animate(propT);
++      // The tamarinds outside sway on the same clock (Tier 1: with the scroll only).
++      corridor.sway(propT);
+       const st = lerp(WALK.sun[0], WALK.sun[1], at.stage);
+       if (Math.abs(st - corridorSun) > 1e-4) { corridor.setSun(st); corridorSun = st; }
+       scene = corridor.scene;
+diff -ruN a/prototype/src/world/materials/paint.js b/prototype/src/world/materials/paint.js
+--- a/prototype/src/world/materials/paint.js	2026-11-09 01:37:06.272174486 +0000
++++ b/prototype/src/world/materials/paint.js	2026-11-09 01:37:06.279955800 +0000
+@@ -9,7 +9,13 @@
+ // Lit by the same lights and apertures as the shell, so a leaf in a beam takes the beam.
+ const VERT = /* glsl */ `
+ varying vec3 vP; varying vec3 vN; varying vec2 vUv;
++#ifdef VERTEX_PAINT
++attribute vec3 aPaint; varying vec3 vPaint;
++#endif
+ void main(){
++  #ifdef VERTEX_PAINT
++  vPaint = aPaint;
++  #endif
+   mat4 m = modelMatrix;
+   #ifdef USE_INSTANCING
+   m = m * instanceMatrix;
+@@ -22,13 +28,22 @@
+ // ao: GLSL `float paintAo(vec3 P)`, contact shade where the paint meets something (a leaf at its hinge, a
+ // shut leaf in its frame). uGrad (own): the daylight down a face, that much brighter at the head than at
+ // the foot (a shut door lit only from above).
+-export function paintMaterial(U, lights, own, { ao = null } = {}) {
++// vertexPaint (proposal saigon-home): the paint comes from an aPaint attribute, so every door frame of the
++// corridor is one draw.
++export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false } = {}) {
+   return new ShaderMaterial({
++    defines: vertexPaint ? { VERTEX_PAINT: "" } : {},
+     uniforms: { ...U, uGrad: { value: 0 }, ...own },
+     vertexShader: VERT,
+     fragmentShader: /* glsl */ `
+       varying vec3 vP; varying vec3 vN; varying vec2 vUv;
+-      uniform vec3 uPaint, uWood, uCool, uSpillTint, uSunTint;
++      #ifdef VERTEX_PAINT
++      varying vec3 vPaint;
++      #define uPaint vPaint
++      #else
++      uniform vec3 uPaint;
++      #endif
++      uniform vec3 uWood, uCool, uSpillTint, uSunTint;
+       uniform float uShadeK, uWear, uGrad, uRef[2], uI[2];
+       ${BLOCKS}
+       ${NOISE}
+diff -ruN a/prototype/src/world/materials/still-surface.js b/prototype/src/world/materials/still-surface.js
+--- a/prototype/src/world/materials/still-surface.js	2026-11-09 01:37:06.272143804 +0000
++++ b/prototype/src/world/materials/still-surface.js	2026-11-09 01:37:06.279906684 +0000
+@@ -3,7 +3,7 @@
+ import { NOISE } from "../glsl/noise.js";
+ import { aperturesGLSL } from "../glsl/apertures.js";
+ import { CAPS } from "./caps.js";
+-import { TERRAZZO_CEMENT } from "../textures.js";
++import { TERRAZZO_CEMENT, TILE_CREAM } from "../textures.js";
+ 
+ // Shells of the still sets (05-DESIGN D6.10): the room surface model of surface.js (display targets in
+ // shade and in full light, one texture fetch, analytic AO, caps inside text rects) with up to two
+@@ -13,7 +13,15 @@
+ //   color = mix(mix(shade, sun, f0) + glare, spill, f1)
+ // contact: GLSL defining `float contact(vec3 P)`, the soft occlusion of what stands against the shell (a
+ // door frame proud of the wall, an open leaf on the floor), multiplied into the AO.
+-export function stillSurface(U, lights, { contact = null } = {}) {
++// house (proposal saigon-home): the corridor as a lived-in mái ấm. Floor (kind 1) in gạch bông from two
++// baked textures (field and a border row along each wall, uGachP: screen x, wall x, tile size); every wall
++// below uDado.x in mint oil paint with a darker painted line on its top (uDado.y tall); on the door wall a
++// painted surround around each door that has one (uSurround[i]: rgb, zc; rgb 0 = none: Little Rose).
++export const HOUSE_GLSL = /* glsl */ `
++uniform sampler2D uGach, uGachB; uniform vec4 uGachP, uDado; uniform vec3 uDadoShade, uDadoSun, uDadoLine;
++uniform vec4 uSurround[8]; uniform vec4 uSurroundP;
++`;
++export function stillSurface(U, lights, { contact = null, house = false } = {}) {
+   return new ShaderMaterial({
+     uniforms: U,
+     vertexShader: /* glsl */ `
+@@ -34,6 +42,7 @@
+       ${aperturesGLSL(lights)}
+       ${CAPS}
+       ${contact ?? "float contact(vec3 P){ return 1.; }"}
++      ${house ? HOUSE_GLSL : ""}
+       // A surface skips the term of the plane it lies in (facing it, within 3 mm). Distance alone also
+       // skipped the last 3 mm of the neighbouring wall, and every corner drew an unshaded bright seam.
+       float occ(float d, float r, float s, float self){ return self > .5 && d < 0.003 ? 1. : 1. - s * (1. - smoothstep(0., r, d)); }
+@@ -45,6 +54,40 @@
+         float vertical = 1. - step(.5, abs(N.y));
+         float mott = (lw.r - .5) * .09 + (lw.g - .5) * .05 + (lw.b - .5) * .04 * vertical;
+         vec3 rel = k == 1 ? texture2D(uTerr, vP.xz * 0.5).rgb / ${TERRAZZO_CEMENT.toFixed(3)} * (1. + mott * .5) : vec3(1. + mott);
++        vec3 shT = uShade[k], suT = uSunT[k];
++        ${house ? `
++        if (k == 1) {
++          // A runner from the screen: border row, field, border row (uGachP.w wide in all); then plain cream
++          // tiles to the door wall, where the sun lands, so the light still draws the block on plain cement.
++          float s = vP.x - uGachP.x, T = uGachP.z, R = uGachP.w;
++          if (s < R) {
++            float e = min(s, R - s);
++            rel = (e < T ? texture2D(uGachB, vec2(vP.z / (2. * T), 1. - e / T)).rgb
++                         : texture2D(uGach, vec2(s - T, vP.z) / (2. * T)).rgb) / ${TILE_CREAM.toFixed(3)};
++          } else {
++            vec2 g = abs(fract(vec2(s, vP.z) / T + .5) - .5) * T;
++            float fw = fwidth(vP.z) + fwidth(vP.x);
++            rel = vec3(.985 - .11 * (1. - smoothstep(.0012, .0026 + fw, min(g.x, g.y))));
++          }
++          rel *= 1. + mott * .3;
++        } else if (k == 0) {
++          // The painted dado: paint hides most of the lime mottling; a soft 4 mm edge, never a cut.
++          float d = smoothstep(uDado.x + .003, uDado.x - .003, vP.y);
++          float line = d * smoothstep(uDado.x - uDado.y - .003, uDado.x - uDado.y + .003, vP.y);
++          shT = mix(mix(shT, uDadoShade, d), uDadoLine * .85, line);
++          suT = mix(mix(suT, uDadoSun, d), uDadoLine * 1.6, line);
++          rel = mix(rel, vec3(1. + mott * .3), d);
++          // Door surrounds on the door wall (it faces −x): a painted band around the opening.
++          if (N.x < -.5) for (int i = 0; i < 8; i++) {
++            if (float(i) >= uSurroundP.w) break;
++            vec4 S = uSurround[i];
++            if (dot(S.rgb, S.rgb) < 1e-6) continue;
++            float dz = abs(vP.z - S.w) - uSurroundP.x, dy = vP.y - uSurroundP.y;
++            float m = smoothstep(.004, -.004, max(dz - uSurroundP.z, dy - uSurroundP.z)) * smoothstep(-.004, .004, max(dz, dy));
++            shT = mix(shT, S.rgb * .6, m); suT = mix(suT, S.rgb * 1.08, m);
++            rel = mix(rel, vec3(1. + mott * .2), m);
++          }
++        }` : ""}
+         vec3 an = abs(N);
+         float ao = occ(vP.y - uBoxMin.y, .35, .12 * uAoK, an.y) * occ(uBoxMax.y - vP.y, .4, .1 * uAoK, an.y)
+                  * occ(vP.z - uBoxMin.z, .9, .2 * uAoK, an.z) * occ(uBoxMax.z - vP.z, .9, .2 * uAoK, an.z)
+@@ -57,8 +100,8 @@
+         float n0 = max(dot(N, uLt[0]), 0.), n1 = max(dot(N, uLt[1]), 0.);
+         float f0 = n0 > 0. && uI[0] > 0. ? n0 / uRef[0] * lightMask0(vP) * cap * uI[0] : 0.;
+         ${lights.length > 1 ? "float f1 = n1 > 0. && uI[1] > 0. ? n1 / uRef[1] * lightMask1(vP) * cap * uI[1] : 0.;" : "float f1 = 0.;"}
+-        vec3 shade = uShade[k] * rel * ao * fill;
+-        vec3 sun = uSunT[k] * 0.94 * rel * mix(1., ao, .5);
++        vec3 shade = shT * rel * ao * fill;
++        vec3 sun = suT * 0.94 * rel * mix(1., ao, .5);
+         vec3 col = mix(mix(shade, sun, min(f0, 1.)), uGlare, min(max(f0 - 1., 0.) * .35, .6));
+         col = mix(col, uSpillT[k] * 0.94 * rel * mix(1., ao, .5), min(f1, 1.));
+         gl_FragColor = vec4(col, 1.);
+diff -ruN a/prototype/src/world/objects/props.js b/prototype/src/world/objects/props.js
+--- a/prototype/src/world/objects/props.js	1970-01-01 00:00:00.000000000 +0000
++++ b/prototype/src/world/objects/props.js	2026-11-09 01:37:06.280118153 +0000
+@@ -0,0 +1,274 @@
++import { BoxGeometry, BufferGeometry, CircleGeometry, CylinderGeometry, DoubleSide, Float32BufferAttribute, LatheGeometry, Matrix4, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from "three";
++import { BLOCKS } from "../glsl/blocks.js";
++import { NOISE } from "../glsl/noise.js";
++import { aperturesGLSL } from "../glsl/apertures.js";
++import { mixc, tok, vec } from "../colors.js";
++
++// The lived-in mái ấm (proposal saigon-home): what a Saigon corridor has in it, as ONE draw for the whole
++// corridor. Ceiling fans (quạt trần) turning lazily, pots of Biên Hòa glaze and terracotta with lưỡi hổ
++// (snake plant, gold-edged) and trầu bà (pothos) whose leaves stir in the air through the screen, a few
++// frangipani (hoa sứ) blossoms fallen on the tiles, and tamarind leaflets (lá me) drifting down through
++// the sun from the tamarinds outside. Everything moves in the vertex shader from two uniforms (uTime, uFanA):
++// no per-frame JS, no allocations. Lit by the same analytic sun as the shell, so the screen's holes and the
++// fans' blades shade them too.
++// Little Rose's bay gets nothing (D6.5): no fan, no pot, no blossom, no leaflet; it keeps only the
++// architecture every bay shares (floor, dado, wash).
++
++export const FAN = { x: 99.75, y: 2.45, dz: -1.6, r: 0.7, hub: 0.13, blade: [0.14, 0.7, 0.0625], omega: 2.1 };
++
++const K = { solid: 0, fan: 1, leaf: 2, leaflet: 3, blossom: 4 };
++
++// A tiny seeded random so the props are the same on every visit and in every still.
++function rng(seed) {
++  let s = seed >>> 0;
++  return () => ((s = (s + 0x6d2b79f5) >>> 0), (((s ^ (s >>> 15)) * (s | 1)) >>> 0) / 4294967296);
++}
++
++class Builder {
++  constructor() { this.pos = []; this.nor = []; this.uv = []; this.col = []; this.piv = []; this.k = []; this.idx = []; }
++  add(g, m, { col, kind = K.solid, pivot = [0, 0, 0], seed = 0, shape = 0, amp = 0, gloss = 0 }) {
++    if (m) g.applyMatrix4(m);
++    const p = g.getAttribute("position"), n = g.getAttribute("normal"), u = g.getAttribute("uv"), base = this.pos.length / 3;
++    for (let i = 0; i < p.count; i++) {
++      this.pos.push(p.getX(i), p.getY(i), p.getZ(i));
++      this.nor.push(n.getX(i), n.getY(i), n.getZ(i));
++      this.uv.push(u ? u.getX(i) : 0, u ? u.getY(i) : 0);
++      this.col.push(col.r, col.g, col.b);
++      this.piv.push(...pivot);
++      this.k.push(kind, seed, shape, kind === K.leaf ? amp : gloss);
++    }
++    const ix = g.index ? Array.from(g.index.array) : [...Array(p.count).keys()];
++    for (const i of ix) this.idx.push(i + base);
++    g.dispose();
++  }
++  geometry() {
++    const g = new BufferGeometry();
++    g.setAttribute("position", new Float32BufferAttribute(this.pos, 3));
++    g.setAttribute("normal", new Float32BufferAttribute(this.nor, 3));
++    g.setAttribute("uv", new Float32BufferAttribute(this.uv, 2));
++    g.setAttribute("aCol", new Float32BufferAttribute(this.col, 3));
++    g.setAttribute("aPivot", new Float32BufferAttribute(this.piv, 3));
++    g.setAttribute("aK", new Float32BufferAttribute(this.k, 4));
++    g.setIndex(this.idx);
++    g.computeBoundingSphere();
++    return g;
++  }
++}
++
++const M = () => new Matrix4();
++const at = (x, y, z) => M().makeTranslation(x, y, z);
++
++// A ceiling fan hung at (x, z): canopy, downrod, motor, three pitched blades turning about its axis.
++function fan(b, x, z, seed) {
++  const body = tok("tile-jade"), blade = mixc(tok("lime-50"), tok("tile-cream"), 0.5), C = 3.1, pivot = [x, FAN.y, z];
++  b.add(new CylinderGeometry(0.075, 0.085, 0.05, 16), at(x, C - 0.025, z), { col: body, gloss: 0.5 });
++  b.add(new CylinderGeometry(0.013, 0.013, C - 0.05 - (FAN.y + 0.1), 6), at(x, (C - 0.05 + FAN.y + 0.1) / 2, z), { col: body });
++  const motor = new LatheGeometry([[0, -0.07], [0.06, -0.068], [0.12, -0.04], [0.135, 0], [0.12, 0.05], [0.05, 0.075], [0, 0.08]].map(([r, y]) => new Vector2(r, y)), 18);
++  b.add(motor, at(x, FAN.y + 0.03, z), { col: body, kind: K.fan, pivot, seed, gloss: 0.7 });
++  const [r0, r1, hw] = FAN.blade;
++  for (let k = 0; k < 3; k++) {
++    const m = M().makeRotationY((k * 2 * Math.PI) / 3).multiply(M().makeTranslation((r0 + r1) / 2, 0, 0)).multiply(M().makeRotationX(0.16));
++    b.add(new BoxGeometry(r1 - r0, 0.007, 2 * hw), at(x, FAN.y, z).multiply(m), { col: blade, kind: K.fan, pivot, seed, gloss: 0.25 });
++    const arm = M().makeRotationY((k * 2 * Math.PI) / 3).multiply(M().makeTranslation(0.13, 0.012, 0));
++    b.add(new BoxGeometry(0.12, 0.012, 0.03), at(x, FAN.y, z).multiply(arm), { col: body, kind: K.fan, pivot, seed });
++  }
++}
++
++// Pots: a Biên Hòa glazed pot (jade or cobalt glaze) or a plain terracotta one, with soil.
++const POTS = {
++  glazed: [[0, 0], [0.12, 0], [0.13, 0.02], [0.18, 0.12], [0.19, 0.2], [0.165, 0.29], [0.17, 0.31], [0.19, 0.33], [0.18, 0.34]],
++  terracotta: [[0, 0], [0.1, 0], [0.11, 0.01], [0.15, 0.22], [0.165, 0.23], [0.165, 0.27], [0.15, 0.27]],
++};
++function pot(b, x, z, kind, glaze) {
++  const prof = POTS[kind];
++  b.add(new LatheGeometry(prof.map(([r, y]) => new Vector2(r, y)), 20), at(x, 0, z), { col: glaze, gloss: kind === "glazed" ? 1 : 0.1 });
++  const top = prof.at(-1);
++  b.add(new CircleGeometry(top[0] - 0.012, 16), at(x, top[1] - 0.025, z).multiply(M().makeRotationX(-Math.PI / 2)), { col: mixc(tok("wood"), tok("ink-900"), 0.55) });
++  return top[1] - 0.03;
++}
++
++// Plants: leaves are quads cut to shape in the fragment shader (shape 0: a lưỡi hổ sword, gold-edged;
++// 1: a trầu bà heart), rooted at the soil, swaying about it with height.
++function plant(b, r, x, y0, z, type) {
++  const green = type === 0 ? mixc(tok("unit-green-bamboo"), tok("ink-900"), 0.45) : mixc(tok("unit-green-bamboo"), tok("tile-jade"), 0.4);
++  const n = type === 0 ? 9 : 11;
++  for (let i = 0; i < n; i++) {
++    const h = type === 0 ? 0.45 + 0.4 * r() : 0.16 + 0.06 * r(), w = type === 0 ? 0.075 : 0.13;
++    const g = new PlaneGeometry(w, h).translate(0, h / 2, 0);
++    const yaw = (i / n) * Math.PI * 2 + r() * 0.6;
++    // swords stand nearly upright; pothos leaves arch out and droop over the rim
++    const tilt = type === 0 ? 0.08 + 0.18 * r() : 0.9 + 0.5 * r();
++    const lift = type === 0 ? 0 : 0.05 + 0.12 * r();
++    const out = type === 0 ? 0.03 * r() : 0.05 + 0.06 * r();
++    const m = at(x + Math.cos(yaw) * out, y0 + lift, z + Math.sin(yaw) * out).multiply(M().makeRotationY(-yaw + Math.PI / 2)).multiply(M().makeRotationX(tilt));
++    const shade = 0.85 + 0.3 * r();
++    b.add(g, m, { col: green.clone().multiplyScalar(shade), kind: K.leaf, pivot: [x, y0, z], seed: r(), shape: type, amp: type === 0 ? 0.05 : 0.12 });
++  }
++}
++
++// The corridor's props for a layout (journey.js corridorLayout) and its door specs; leaflets: how many
++// tamarind leaflets drift (16 on Tier 1, 32 on Tier 2).
++export function buildProps({ C, lay, specs, leaflets = 32 }) {
++  const b = new Builder(), r = rng(29);
++  const bays = lay.doors.filter((d) => d.unit !== "little-rose");
++  const glazes = [tok("tile-jade"), mixc(tok("tile-indigo"), tok("unit-cau-han"), 0.45), tok("tile-jade")];
++  const terracotta = mixc(tok("tile-brick"), tok("tile-ochre"), 0.25);
++  const fans = [];
++  const groups = [];
++  // the lead-in (between the screen's exit hole and the first bay) and each bay but Little Rose's
++  groups.push({ z: 1.15, side: "screen" });
++  for (const d of bays) {
++    fans.push({ z: d.zc + FAN.dz, seed: r() * 6.283 });
++    groups.push({ z: d.zc + 2.05, side: "screen" }, { z: d.zc + 1.5, side: "screen", small: true }, { z: d.zc - 1.75, side: "screen" }, { z: d.bay[1] - 0.48, side: "wall" });
++  }
++  for (const f of fans) fan(b, FAN.x, f.z, f.seed);
++  groups.forEach((g, i) => {
++    const x = g.side === "screen" ? C.screenX + 0.22 : C.wallX - 0.24;
++    const glazed = !g.small;
++    const y0 = pot(b, x, g.z, glazed ? "glazed" : "terracotta", glazed ? glazes[i % glazes.length] : terracotta);
++    plant(b, r, x, y0, g.z, g.side === "wall" || i % 2 === 0 ? 0 : 1);
++  });
++  // hoa sứ fallen on the tiles near the screen-side pots
++  const cream = mixc(tok("lime-50"), tok("sky"), 0.5);
++  // (two on the runner, two on the plain tiles by the door wall where the sun lands)
++  for (const d of bays) for (let i = 0; i < 4; i++) {
++    const z = d.zc + 1.0 + 1.6 * r(), x = i < 2 ? C.screenX + 0.7 + 0.6 * r() : C.wallX - 0.25 - 0.4 * r(), s = 0.11 + 0.02 * r();
++    b.add(new PlaneGeometry(s, s), at(x, 0.004, z).multiply(M().makeRotationX(-Math.PI / 2)).multiply(M().makeRotationZ(r() * 6.28)), { col: cream, kind: K.blossom, seed: r() });
++  }
++  // lá me: tamarind leaflets, yellow-green, from the screen's top course into the corridor (never in Little
++  // Rose's bay: their spawn runs stop 0.8 m short of it)
++  const leaf = mixc(tok("sun-400"), tok("unit-green-bamboo"), 0.38);
++  const runs = [[lay.start - 0.4, 0.8], ...bays.map((d) => [d.bay[1] - 0.8, d.bay[0] + 0.8])];
++  for (let i = 0; i < leaflets; i++) {
++    const [z1, z0] = runs[i % runs.length], z = z0 + (z1 - z0) * r();
++    const g = new PlaneGeometry(0.034, 0.013).rotateX(-Math.PI / 2);
++    b.add(g, null, { col: leaf.clone().multiplyScalar(0.85 + 0.3 * r()), kind: K.leaflet, pivot: [C.screenX + 0.05 + 0.2 * r(), 2.75 + 0.25 * r(), z], seed: r() });
++  }
++  return { geometry: b.geometry(), fans };
++}
++
++// The fans as one occluder for the sun (glsl/apertures.js pattern "fans"): up to four fans, their centres
++// in the aperture's uv (metres along −z from the corridor's start, metres from the screen), each with a
++// phase; uFanA turns them all. The same blades as the meshes (FAN.blade), so the shadow is the fan's own.
++export const FANS_GLSL = /* glsl */ `
++uniform vec4 uFans[4]; // u, v of the centre, phase, on
++uniform float uFanA;
++float fanBlades(vec2 uv){
++  float d = 1e3;
++  for (int i = 0; i < 4; i++) {
++    vec4 F = uFans[i];
++    if (F.w < .5) continue;
++    vec2 q = uv - F.xy;
++    float r = length(q);
++    if (r > ${(FAN.r + 0.05).toFixed(3)}) continue;
++    float a = atan(q.y, q.x) + uFanA + F.z - 1.5707963;
++    float s = 2.0943951, k = a - s * floor(a / s + .5);
++    vec2 bq = r * vec2(cos(k), sin(k));
++    d = min(d, sdBox2(bq - vec2(${((FAN.blade[0] + FAN.blade[1]) / 2).toFixed(3)}, 0.), vec2(${((FAN.blade[1] - FAN.blade[0]) / 2).toFixed(3)}, ${FAN.blade[2].toFixed(4)})));
++    d = min(d, r - ${FAN.hub.toFixed(3)});
++  }
++  return d;
++}
++`;
++
++export function fanAperture({ C, lay }) {
++  return { mode: "occluder", pattern: "fans", corner: [C.screenX, FAN.y, lay.start], u: [0, 0, -1], v: [1, 0, 0], size: [lay.start - lay.end, C.wallX - C.screenX], depth: 0, thin: true };
++}
++
++export function propsMaterial(U, lights, own) {
++  return new ShaderMaterial({
++    uniforms: { ...U, ...own },
++    side: DoubleSide,
++    vertexShader: /* glsl */ `
++      attribute vec3 aCol, aPivot; attribute vec4 aK;
++      uniform float uTime, uFanA;
++      varying vec3 vP, vN, vCol; varying vec2 vUv; varying vec4 vK; varying float vFade;
++      vec3 rotY(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(c * v.x + s * v.z, v.y, -s * v.x + c * v.z); }
++      vec3 rotX(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(v.x, c * v.y - s * v.z, s * v.y + c * v.z); }
++      void main(){
++        vec3 p = position, n = normal; float kind = aK.x; vFade = 1.;
++        if (kind > .5 && kind < 1.5) {
++          float a = uFanA + aK.y;
++          p = aPivot + rotY(p - aPivot, a); n = rotY(n, a);
++        } else if (kind > 1.5 && kind < 2.5) {
++          float h = max(p.y - aPivot.y, 0.), t = uTime;
++          float sw = aK.w * h * h * (sin(t * 1.3 + aK.y * 6.283) + .45 * sin(t * 3.1 + aK.y * 17.));
++          p.x += sw * .7; p.z += sw;
++        } else if (kind > 2.5 && kind < 3.5) {
++          float ph = fract(uTime / 15. + aK.y);
++          vec3 c = aPivot + vec3((1.1 + .7 * fract(aK.y * 7.3)) * ph + .06 * sin(ph * 23. + aK.y * 40.), -3.4 * ph, .3 * sin(ph * 8. + aK.y * 61.));
++          float rest = c.y < .006 ? 0. : 1.;
++          c.y = max(c.y, .006);
++          float a1 = (uTime * 2.6 + aK.y * 50.) * rest + aK.y * 9., a2 = (uTime * 1.9 + aK.y * 31.) * rest;
++          p = c + rotY(rotX(position, a2), a1); n = rotY(rotX(normal, a2), a1);
++          vFade = smoothstep(0., .04, ph) * (1. - smoothstep(.9, 1., ph));
++        }
++        vec4 w = modelMatrix * vec4(p, 1.);
++        vP = w.xyz; vN = normalize(mat3(modelMatrix) * n); vCol = aCol; vUv = uv; vK = aK;
++        gl_Position = projectionMatrix * viewMatrix * w;
++      }`,
++    fragmentShader: /* glsl */ `
++      varying vec3 vP, vN, vCol; varying vec2 vUv; varying vec4 vK; varying float vFade;
++      uniform vec3 uCool, uSunTint, uGold; uniform float uShadeK, uRef[2], uI[2];
++      ${BLOCKS}
++      ${NOISE}
++      ${aperturesGLSL(lights)}
++      void main(){
++        float kind = vK.x;
++        vec3 albedo = vCol;
++        vec2 q = vUv * 2. - 1.;
++        if (kind > 1.5 && kind < 2.5) {
++          if (vK.z < .5) {
++            // lưỡi hổ: a sword, tapering to a point, its edges gold
++            float w = (1. - pow(vUv.y, 2.2)) * .95;
++            if (abs(q.x) > w) discard;
++            float band = sin(vUv.y * 40. + q.x * 3.) * .5 + .5;
++            albedo *= .82 + .3 * band;
++            albedo = mix(albedo, uGold, smoothstep(.62, .72, abs(q.x) / max(w, .01)));
++          } else {
++            // trầu bà: a heart, its midrib a little lighter
++            float y = vUv.y, w = .95 * sin(3.1416 * pow(y, .75)) * (1. - .25 * y);
++            if (abs(q.x) > w) discard;
++            albedo *= 1. + .25 * (1. - smoothstep(0., .08, abs(q.x)));
++          }
++        } else if (kind > 2.5 && kind < 3.5) {
++          if (dot(q * vec2(1., 1.), q) > 1. || h21(gl_FragCoord.xy) > vFade) discard;
++        } else if (kind > 3.5) {
++          // hoa sứ: five overlapping oval petals in a pinwheel, the yellow heart
++          float r = length(q), a = atan(q.y, q.x) + r * .9;
++          float petal = .38 + .62 * pow(abs(cos(2.5 * a)), .55);
++          if (r > petal) discard;
++          albedo = mix(uGold, albedo, smoothstep(.16, .58, r));
++        }
++        vec3 N = normalize(vN);
++        if (!gl_FrontFacing) N = -N;
++        float ndl = dot(N, uLt[0]);
++        float thin = step(1.5, kind);
++        float n0 = mix(max(ndl, 0.), abs(ndl), thin);
++        float f0 = n0 > 0. && uI[0] > 0. ? min(n0 / uRef[0], 1.4) * lightMask0(vP) * uI[0] : 0.;
++        float sky = .8 + .2 * N.y;
++        vec3 shade = mix(albedo * uShadeK, uCool * uShadeK, .12) * sky;
++        vec3 col = mix(shade, albedo * uSunTint, min(f0, 1.));
++        // glaze and wax catch the sun; leaves let it through; leaflets glint
++        vec3 V = normalize(cameraPosition - vP), R = reflect(-uLt[0], N);
++        float gloss = kind < 1.5 ? vK.w : kind > 2.5 && kind < 3.5 ? .8 : 0.;
++        col += uSunTint * pow(max(dot(R, V), 0.), 24.) * gloss * min(f0, 1.) * .55;
++        if (kind > 1.5 && kind < 2.5 && ndl < 0.) col += albedo * f0 * .4;
++        gl_FragColor = vec4(col, 1.);
++        #include <colorspace_fragment>
++      }`,
++    toneMapped: false,
++  });
++}
++
++export function propsMesh(U, lights, props, sun) {
++  const mat = propsMaterial(U, lights, {
++    uTime: { value: 0 }, uShadeK: { value: 0.6 }, uCool: { value: vec(tok("wallShade")) },
++    uSunTint: { value: vec(sun) }, uGold: { value: vec(mixc(tok("sun-400"), tok("tile-ochre"), 0.35)) },
++  });
++  const mesh = new Mesh(props.geometry, mat);
++  // Drawn before the shell, so the plaster and tiles behind a leaf or a pot are rejected by depth.
++  mesh.renderOrder = -1;
++  mesh.frustumCulled = false; // leaflets and fan blades move in the vertex shader
++  return mesh;
++}
+diff -ruN a/prototype/src/world/sets/corridor.js b/prototype/src/world/sets/corridor.js
+--- a/prototype/src/world/sets/corridor.js	2026-11-09 01:37:06.271732678 +0000
++++ b/prototype/src/world/sets/corridor.js	2026-11-09 01:37:06.279241609 +0000
+@@ -1,4 +1,5 @@
+-import { Group, Mesh, PerspectiveCamera, PlaneGeometry, Scene, Vector3 } from "three";
++import { Float32BufferAttribute, Group, Mesh, PerspectiveCamera, PlaneGeometry, Scene, Vector3, Vector4 } from "three";
++import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+ import { createShafts } from "../materials/shafts.js";
+ import { aperturesGLSL, apertureUniforms } from "../glsl/apertures.js";
+ import { DEPTH } from "../glsl/blocks.js";
+@@ -13,6 +14,8 @@
+ import { CORRIDOR, corridorLayout } from "../journey.js";
+ import { roomShade, roomSun, screenColors, street, surfaceUniforms, tint } from "./common.js";
+ import { EXIT, exitLook } from "./places.js";
++import { FAN, FANS_GLSL, buildProps, fanAperture, propsMesh } from "../objects/props.js";
++import { bakeGachBong } from "../textures.js";
+ 
+ // The corridor (05-DESIGN D6.2, D6.5): open-air, the breeze-block screen on the left with the street and
+ // the morning sun beyond it, the lime wall on the right with one painted door per [data-beat] card, each
+@@ -24,7 +27,10 @@
+ 
+ export const DOOR_OPEN = 72; // degrees a door swings to at its beat (D5.3); live.js drives it
+ 
+-export function corridorScene({ lime, terr, beats, open = 0, t = 0.25 }) {
++// gach (proposal saigon-home): the baked gạch bông textures ({ field, border }); with them the corridor is
++// the lived-in mái ấm (yellow lime wash over a mint dado, a cement-tile floor, door surrounds, fans, pots,
++// blossoms and leaflets). Without them (the stills, until they are re-rendered) it is the plain corridor.
++export function corridorScene({ lime, terr, beats, open = 0, t = 0.25, gach = null, leaflets = 32, fansOn = true, propsOn = true }) {
+   if (beats.length > MAX_DOORS) throw new Error(`corridor: ${beats.length} doors > ${MAX_DOORS}`);
+   const lay = corridorLayout(beats), C = CORRIDOR, s = lay.screen;
+   const box = { min: [C.screenX, 0, lay.end], max: [C.wallX, C.ceiling, lay.start] };
+@@ -35,20 +41,37 @@
+   const screen = { mode: "window", pattern: "hoaThi", corner: [s.sx, s.y0, s.z0], u: [0, 0, 1], v: [0, 1, 0], size: [s.z1 - s.z0, s.y1 - s.y0], depth: DEPTH };
+   // Tamarinds along the street: the patches come and go as in the room.
+   const trees = { mode: "occluder", pattern: "canopy", corner: [s.sx - 3.2, -2, lay.end - 6], u: [0, 0, 1], v: [0, 1, 0], size: [lay.start - lay.end + 12, 9], depth: 0, params: [0.9, 0.56, 1.3, 4.1] };
++  const house = Boolean(gach);
++  const props = house ? buildProps({ C, lay, specs: lay.doors, leaflets }) : null;
++  const fans = fansOn ? props?.fans ?? [] : [];
+   const lights = [
+-    { dir: sun.dir, apertures: [screen, trees], glsl: NO_SUN, factor: "bayFree(P)" },
++    { dir: sun.dir, apertures: fans.length ? [screen, trees, fanAperture({ C, lay })] : [screen, trees], glsl: NO_SUN + (house ? FANS_GLSL : ""), factor: "bayFree(P)" },
+     { dir: Li, glsl: DOORS, mask: "doorsMask(P, L)" },
+   ];
+ 
+   // Daylight from the rooms: untinted, the same for every door (Little Rose's never carries a color).
+   const day = mixc(tok("sky"), tok("wallSun"), 0.45);
+   const spillT = [day, day.clone().multiplyScalar(0.86), day];
++  // The house's surfaces: Saigon yellow lime wash in shade and sun, the cream of the tiles, a warm ceiling.
++  const houseShade = () => [tok("vangShade"), tok("gachShade"), tok("ceilingWarm")];
++  const houseSun = (c, k = 0.5) => [tint(tok("vangSun"), c, k), tint(tok("wallSun"), c, k).multiplyScalar(0.84), tint(tok("vangSun"), c, k)];
+   const U = {
+-    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun: sun.color, shade: roomShade(), sunT: roomSun(sun.color, 0.5), spillT, refs: [Math.abs(sun.dir.x), Li.y], lime, terr }),
++    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun: sun.color, shade: house ? houseShade() : roomShade(), sunT: house ? houseSun(sun.color) : roomSun(sun.color, 0.5), spillT, refs: [Math.abs(sun.dir.x), Li.y], lime, terr }),
+     ...apertureUniforms(lights, [sun.dir, Li]),
+     ...doorUniforms(),
++    // fans (FANS_GLSL): centres in the fan aperture's uv (along −z from the start, across from the screen)
++    uFans: { value: Array.from({ length: 4 }, (_, i) => fans[i] ? new Vector4(lay.start - fans[i].z, FAN.x - C.screenX, fans[i].seed, 1) : new Vector4()) },
++    uFanA: { value: 0 },
+   };
+   U.uI.value = [1, 0.9];
++  if (house) Object.assign(U, {
++    uGach: { value: gach.field }, uGachB: { value: gach.border },
++    uGachP: { value: new Vector4(C.screenX, C.wallX, 0.2, 1.6) }, // runner: 8 tiles from the screen
++    uDado: { value: new Vector4(1.12, 0.035, 0, 0) },
++    uDadoShade: { value: vec(tok("dadoShade")) }, uDadoSun: { value: vec(tint(tok("dadoSun"), sun.color, 0.5)) }, uDadoLine: { value: vec(tok("dadoLine")) },
++    uSurround: { value: Array.from({ length: 8 }, () => new Vector4()) },
++    uSurroundP: { value: new Vector4(DOOR.w / 2 + DOOR.frame, DOOR.h + DOOR.frame, 0.11, lay.doors.length) },
++  });
+ 
+   // ---- doors from the beats ----
+   const specs = lay.doors.map((d) => ({ ...doorSpec({ wx: C.wallX, zc: d.zc, unit: d.unit, open: 0, hinge: -1 }), beat: d }));
+@@ -59,6 +82,12 @@
+     const light = doorLight(d.unit);
+     U.uDoors.value[i].set(d.zc, DOOR_PATTERN[light.transomPattern] ?? DOOR_PATTERN.hoaThi, 0, d.hinge);
+     if (!light.corridorSun && lr < 2) U.uNoSun.value[lr++].set(d.beat.bay[0], d.beat.bay[1], 0, 0);
++    // A painted surround in a light tint of the unit's colour. Little Rose's door gets none (D6.5: nothing
++    // is added to its bay), whatever the DOM says.
++    if (house && d.unit !== "little-rose") {
++      const c = mixc(tok("unit-" + d.unit), tok("lime-50"), 0.42);
++      U.uSurround.value[i].set(c.r, c.g, c.b, d.zc);
++    }
+   });
+ 
+   // ---- shell: floor, ceiling, the door wall cut by doorways and transoms, the screen wall around the
+@@ -77,13 +106,17 @@
+       ...rect("x", C.wallX - P, [z - half, z + half], [0, H], -1, 0),
+     ]),
+   ];
+-  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights));
++  const shell = new Mesh(shellGeometry(rects), stillSurface(U, lights, { house }));
+ 
+   // Faces the corridor (+x): laid from the screen's +z end along −z, on the light's own block grid.
+   const lattice = latticePanel(U, lights, { corner: [s.sx, s.y0, s.z1], u: [0, 0, -1], v: [0, 1, 0], size: screen.size, pattern: "hoaThi", light: 0, own: street() });
+   screenColors(lattice.material.uniforms);
+ 
+   const objects = [shell, lattice];
++  // house: the door frames of every unit as one draw (vertex paint), which pays for the props' draw.
++  const frameGeos = [];
++  const propMesh = props ? propsMesh(U, lights, props, tint(tok("lime-50"), sun.color, 0.6)) : null;
++  if (propMesh && propsOn) objects.push(propMesh);
+   const leaves = [], glows = [];
+   for (const d of specs) {
+     const unitColor = tok("unit-" + d.unit), isLR = d.unit === "little-rose";
+@@ -96,7 +129,13 @@
+     const leaf = new Group();
+     leaf.position.set(...g.hinge);
+     leaf.add(new Mesh(g.leaf, paint));
+-    objects.push(new Mesh(g.frame, paint), leaf);
++    if (house) {
++      const n = g.frame.getAttribute("position").count, a = new Float32Array(n * 3);
++      for (let k = 0; k < n; k++) a.set([unitColor.r, unitColor.g, unitColor.b], k * 3);
++      g.frame.setAttribute("aPaint", new Float32BufferAttribute(a, 3));
++      frameGeos.push(g.frame);
++      objects.push(leaf);
++    } else objects.push(new Mesh(g.frame, paint), leaf);
+     leaves.push(leaf);
+     // What shows through an open doorway: the lit room, nothing in it modeled. Little Rose has none.
+     if (!isLR) {
+@@ -120,6 +159,14 @@
+     objects.push(tr);
+   }
+ 
++  if (frameGeos.length) {
++    const fp = paintMaterial(U, lights, {
++      uWood: { value: vec(tok("wood")) }, uCool: { value: vec(tok("wallShade")) },
++      uSunTint: { value: vec(tint(tok("lime-50"), sun.color)) }, uSpillTint: { value: vec(mixc(tok("lime-50"), day, 0.5)) },
++      uShadeK: { value: 0.58 }, uWear: { value: 0.5 },
++    }, { vertexPaint: true });
++    objects.push(new Mesh(mergeGeometries(frameGeos), fp));
++  }
+   // A door at its angle: the leaf, the light past it, the lit room behind it. Little Rose stays shut.
+   const setDoor = (i, deg) => {
+     const d = specs[i];
+@@ -140,10 +187,22 @@
+     U.uRef.value[0] = Math.max(Math.abs(sun.dir.x), 0.05);
+     U.uI.value[0] = intensity;
+     U.uSunI.value = intensity;
++    if (house) {
++      const d = tint(tok("dadoSun"), sun.color, 0.5), p = tint(tok("lime-50"), sun.color, 0.6);
++      U.uDadoSun.value.set(d.r, d.g, d.b);
++      propMesh.material.uniforms.uSunTint.value.set(p.r, p.g, p.b);
++    }
++  };
++  // The life in it (proposal saigon-home): tm in seconds. Tier 2 runs it on the clock and the scroll; Tier 1
++  // on the scroll alone, so a phone only moves the fans and leaves while the visitor scrolls (live.js).
++  const animate = (tm) => {
++    if (!propMesh) return;
++    U.uFanA.value = (tm * FAN.omega) % (Math.PI * 2);
++    propMesh.material.uniforms.uTime.value = tm;
+   };
+ 
+   return {
+-    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun,
++    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun, animate, house,
+     // For the still renderer: what frames the shot, what glows on its own.
+     subject: [screen], glow: [screen], shafts: 1.4,
+   };
+@@ -153,11 +212,20 @@
+ 
+ // The live corridor (live.js): built from the page's beats once the room is live, sharing the room's
+ // baked textures. Shafts through the screen on both tiers (they gate like the room's).
+-export async function buildCorridor({ gl, tier, beats, textures }) {
+-  const set = corridorScene({ ...textures, beats });
++export async function buildCorridor({ gl, tier, beats, textures, house = true }) {
++  // The tiles bake here, in idle slices after the hero is live (never on the LCP path).
++  // The fans' shadow (a blade test in every sun lookup) is Tier 2 only: on a phone the fans turn but cast
++  // nothing (measured: it was most of the corridor's added cost at 390 × 844).
++  // ?house=-fans,-props,-aniso,-all: measurement switches for the proposal's cost table (prototype only)
++  const off = new Set((globalThis.location ? new URLSearchParams(location.search).get("house") ?? "" : "").split(",").filter(Boolean));
++  if (off.has("-all")) house = false;
++  const gach = house ? await bakeGachBong({ size: tier >= 2 ? 512 : 256, aniso: off.has("-aniso") ? 1 : tier >= 2 ? 4 : 2 }) : null;
++  const set = corridorScene({ ...textures, beats, gach, leaflets: tier >= 2 ? 32 : 16, fansOn: tier >= 2 && !off.has("-fans"), propsOn: !off.has("-props") });
+   const scene = new Scene();
+   scene.add(...set.objects);
+-  const shafts = createShafts(gl.renderer, set.U, { box: set.box, tier, ortho: gl.ortho, mask: { glsl: aperturesGLSL(set.lights.slice(0, 1)), call: "lightMask0(p)" } });
++  // Tier 1: the shafts leave the fans out (16 more blade tests per shaft step on a phone); the surfaces keep them.
++  const shaftLight = tier >= 2 ? set.lights[0] : { ...set.lights[0], apertures: set.lights[0].apertures.filter((a) => a.pattern !== "fans") };
++  const shafts = createShafts(gl.renderer, set.U, { box: set.box, tier, ortho: gl.ortho, mask: { glsl: aperturesGLSL([shaftLight]), call: "lightMask0(p)" } });
+   shafts.uniforms.uDensity.value = 1.4;
+   const camera = new PerspectiveCamera(EXIT.fov.landscape, 1, 0.05, 60);
+   // The tamarinds' dapple (the screen's light is aperture 0, the trees 1).
+@@ -173,6 +241,7 @@
+     },
+     dispose() {
+       scene.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
++      gach?.field.dispose(); gach?.border.dispose();
+       shafts.dispose();
+     },
+   };
+diff -ruN a/prototype/src/world/textures.js b/prototype/src/world/textures.js
+--- a/prototype/src/world/textures.js	2026-11-09 01:37:06.271399018 +0000
++++ b/prototype/src/world/textures.js	2026-11-09 01:37:06.278594850 +0000
+@@ -84,3 +84,87 @@
+   }
+   return texture(data);
+ }
++
++// ---- Gạch bông (proposal saigon-home): the corridor's cement-tile floor ----
++// 20 cm encaustic cement tiles, the pigments from tokens (tile-*). Baked once when the corridor builds (after
++// the hero is live, in idle slices), stored like the terrazzo as albedo relative to the cream ground
++// (1.0 = cream, stored at TILE_CREAM so worn pigment can sit a little above it), so the shell's shade and
++// sun targets light it like any surface. field: 2 × 2 tiles (0.4 m), border: 2 tiles along × 1 across.
++// The field tile is the house's Hoa thị turned into a floor: an ochre quatrefoil in the middle of each
++// tile, an indigo disc with a cream quatrefoil where four tiles meet, jade leaves to the edges. The border
++// runs along both walls: an indigo band with ochre lozenges and cream dots that close across the joints.
++export const TILE_CREAM = 0.92;
++const lin = (c) => [c.r, c.g, c.b];
++const sdQuat = (x, y, r) => Math.min(Math.hypot(x - r, y), Math.hypot(x + r, y), Math.hypot(x, y - r), Math.hypot(x, y + r)) - r;
++function fieldTile(x, y, P) {
++  // x, y in −0.5..0.5 (tile units)
++  const cx = x - Math.sign(x || 1) * 0.5, cy = y - Math.sign(y || 1) * 0.5, rc = Math.hypot(cx, cy);
++  if (rc < 0.05) return P.ochre;
++  if (rc < 0.33) return sdQuat(cx, cy, 0.105) < 0 ? P.cream : P.indigo;
++  if (rc < 0.36) return P.cream;
++  if (rc < 0.385) return P.brick;
++  const r0 = Math.hypot(x, y);
++  if (r0 < 0.035) return P.brick;
++  if (sdQuat(x, y, 0.085) < 0) return P.ochre;
++  // jade leaves from the middle toward each edge's midpoint
++  const ax = Math.abs(x), ay = Math.abs(y);
++  const leaf = (u, v) => (u - 0.36) ** 2 / 0.075 ** 2 + v ** 2 / 0.032 ** 2 < 1;
++  if (leaf(ax, y) || leaf(ay, x)) return P.jade;
++  return P.cream;
++}
++function borderTile(a, b, P) {
++  // a along the wall, b across (−0.5 at the field, +0.5 at the wall)
++  const ab = Math.abs(b);
++  if (ab > 0.44) return P.brick;
++  if (ab > 0.38) return P.cream;
++  if (Math.abs(a) + ab * 1.25 < 0.27) return Math.abs(a) + ab * 1.25 < 0.1 ? P.cream : P.ochre;
++  if (Math.hypot(Math.abs(a) - 0.5, b) < 0.075) return P.cream;
++  return P.indigo;
++}
++function tileTexture(w, h, data, aniso) {
++  const t = new DataTexture(data, w, h, RGBAFormat, UnsignedByteType);
++  t.wrapS = t.wrapT = RepeatWrapping;
++  t.generateMipmaps = true;
++  t.minFilter = LinearMipmapLinearFilter;
++  t.magFilter = LinearFilter;
++  t.anisotropy = aniso;
++  t.needsUpdate = true;
++  return t;
++}
++// size: 512 on Tier 2 (a tile 256 px), 256 on Tier 1 (phones: a near tile is under 100 px on screen).
++export async function bakeGachBong({ slice = true, aniso = 4, size = 512 } = {}) {
++  const cream = lin(tok("tile-cream"));
++  const P = Object.fromEntries(["cream", "ochre", "indigo", "jade", "brick"].map((k) => { const c = lin(tok("tile-" + k)); return [k, c.map((v, i) => v / cream[i])]; }));
++  const wear = lattice(96, 211), wear2 = lattice(37, 227), cloud = lattice(6, 223);
++  const tone = [1, 0.965, 0.985, 1.025]; // the four tiles of a field cell are not quite the same batch
++  const bake = async (W, H, tilesX, tilesY, fn) => {
++    const data = new Uint8Array(W * H * 4), tw = W / tilesX, th = H / tilesY, S = [0.25, 0.75];
++    for (let py = 0; py < H; py++) {
++      for (let px = 0; px < W; px++) {
++        const tx = Math.floor(px / tw), ty = Math.floor(py / th);
++        let r = 0, g = 0, b = 0;
++        for (const sx of S) for (const sy of S) {
++          const u = ((px + sx) % tw) / tw - 0.5, v = ((py + sy) % th) / th - 0.5;
++          const c = fn(u, v);
++          r += c[0]; g += c[1]; b += c[2];
++        }
++        // grout: a hairline of darker cement where tiles meet; worn pigment lifts toward the cream
++        const eu = Math.min((px % tw) + 0.5, tw - (px % tw) - 0.5), ev = Math.min((py % th) + 0.5, th - (py % th) - 0.5);
++        const joint = Math.min(eu, ev) < 1.2 ? 0.86 : 1;
++        const wv = wear(px * (512 / W), py * (512 / H)), k = tone[(tx + 2 * ty) % 4] * (0.97 + 0.06 * cloud(px * (512 / W), py * (512 / H))) * joint;
++        const lift = Math.max(0, 0.6 * wv + 0.4 * wear2(px * (512 / W), py * (512 / H)) - 0.6) * 0.75;
++        const i = (py * W + px) * 4;
++        data[i] = Math.min(255, 255 * TILE_CREAM * k * ((r / 4) * (1 - lift) + lift));
++        data[i + 1] = Math.min(255, 255 * TILE_CREAM * k * ((g / 4) * (1 - lift) + lift));
++        data[i + 2] = Math.min(255, 255 * TILE_CREAM * k * ((b / 4) * (1 - lift) + lift));
++        data[i + 3] = 255;
++      }
++      if (slice && py % 16 === 15) await yieldNow();
++    }
++    return data;
++  };
++  const N2 = size, H2 = size / 2;
++  const field = await bake(N2, N2, 2, 2, (u, v) => fieldTile(u, v, P));
++  const border = await bake(N2, H2, 2, 1, (u, v) => borderTile(u, v, P));
++  return { field: tileTexture(N2, N2, field, aniso), border: tileTexture(N2, H2, border, aniso) };
++}

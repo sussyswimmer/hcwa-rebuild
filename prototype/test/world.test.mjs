@@ -150,3 +150,37 @@ test("the room's rest sun is 40° azimuth, 24° elevation (05-DESIGN D6.4)", () 
   // The corridor mirrors: its street is on the −x side.
   assert.ok(sunAt("corridor", 0.3, makeSun()).dir.x < 0);
 });
+
+// The richness pass's runner (05-DESIGN D0.6.2): the bake's cream level is the shader's, pigment stays within
+// its share of each tile, and the corridor stays within its draw budget.
+test("gạch bông: one cream level, field pigment ≤ 38%, border ≤ 30%, no brick", async () => {
+  const { TILE_CREAM } = await import("../src/world/textures.js");
+  const bake = await import("../src/world/gach-bake.js");
+  const { gachPigments } = await import("../src/world/gach.js");
+  assert.equal(bake.TILE_CREAM, TILE_CREAM);
+  const P = gachPigments();
+  assert.deepEqual(Object.keys(P).sort(), ["cream", "indigo", "jade", "ochre"]);
+  for (const [kind, w, h, tx, ty, max] of [["field", 256, 256, 2, 2, 0.38], ["border", 256, 128, 2, 1, 0.3]]) {
+    const d = bake.gachPixels(kind, w, h, tx, ty, P), c = TILE_CREAM * 255;
+    let pig = 0;
+    for (let i = 0; i < w * h; i++) if (Math.abs(d[i * 4] - c) + Math.abs(d[i * 4 + 1] - c) + Math.abs(d[i * 4 + 2] - c) > 60) pig++;
+    assert.ok(pig / (w * h) <= max, `${kind}: ${(100 * pig / (w * h)).toFixed(1)}% pigment`);
+    assert.ok(pig / (w * h) > 0.1, `${kind}: has its pattern`);
+  }
+});
+
+test("the corridor's meshes: frames and Little Rose's leaf are one draw, the props one more", async () => {
+  const { corridorScene } = await import("../src/world/sets/corridor.js");
+  const { readBeats } = await import("../src/world/journey.js");
+  const beats = readBeats(["green-bamboo", "little-rose", "cau-han"].map((unit) => ({ dataset: { unit, door: "open", emblem: "dotTre" } })));
+  const set = corridorScene({ beats, open: 72 });
+  const meshes = [];
+  for (const o of set.objects) o.traverse((m) => m.isMesh && meshes.push(m));
+  const painted = meshes.filter((m) => m.geometry.getAttribute("aPaint"));
+  assert.equal(painted.length, 1, "every frame and Little Rose's fixed leaf in one mesh");
+  assert.equal(meshes.filter((m) => m.geometry.getAttribute("aK")).length, 1, "fans and leaflets in one mesh");
+  // shell, screen, props, frames, 2 swinging leaves, 2 doorway glows, 3 transoms
+  assert.equal(meshes.length, 11);
+  const tris = meshes.reduce((s, m) => s + (m.geometry.index ? m.geometry.index.count : m.geometry.getAttribute("position").count) / 3, 0);
+  assert.ok(tris <= 2500, `${tris} triangles`);
+});

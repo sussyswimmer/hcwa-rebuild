@@ -45,11 +45,14 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   // lobes reach past the frame and its block shows only as a soft sun-200 vignette between them (18%
   // feather), and dust drifts through the light with the scroll, so the plateau is a place, not a fill.
   // The corridor goes out through a wash of the plaster it hands over to (lime-100), not the light: color.
-  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, light = tok("wash");
+  // And it goes from the top of the frame down (uSweep: on, the front's feather, the foot of what is still seen,
+  // in uv from the bottom): the ceiling and the walls go first, the floor last, so the runner is still fading
+  // just above the sheet that rises over it (critique r1, fix round 1).
+  const flareU = { value: new Vector4() }, aspectU = { value: 1 }, holeU = { value: new Vector4() }, sweepU = { value: new Vector4() }, light = tok("wash");
   const wash = new ShaderMaterial({
-    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU },
+    uniforms: { uWash: { value: 0 }, uColor: { value: light.clone() }, uRim: { value: tok("sun-200") }, uFlare: flareU, uAspect: aspectU, uHole: holeU, uSweep: sweepU },
     vertexShader: SCREEN_VERT,
-    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim; uniform vec4 uFlare, uHole; varying vec2 vU;
+    fragmentShader: /* glsl */ `uniform float uWash, uAspect; uniform vec3 uColor, uRim; uniform vec4 uFlare, uHole, uSweep; varying vec2 vU;
       ${DITHER}
       float h12(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float lobes(vec2 p, float r){ return min(min(length(p - vec2(r, 0.)), length(p + vec2(r, 0.))), min(length(p - vec2(0., r)), length(p + vec2(0., r)))) - r; }
@@ -70,7 +73,13 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
           light = mix(light, mix(uRim, uColor, 1. - inside), speck);
           col = mix(uColor, light, uHole.x);
         }
-        gl_FragColor = vec4(col, max(uWash, f));
+        float a = uWash;
+        if (uSweep.x > 0.) {
+          // r: 0 at the frame's top, 1 at the foot of what is still seen; the front runs down it, feathered.
+          float r = clamp((1. - vU.y) / max(1. - uSweep.z, .05), 0., 1.), F = uSweep.y, g = uWash * (1. + F) - F * .5;
+          a = 1. - smoothstep(g - F * .5, g + F * .5, r);
+        }
+        gl_FragColor = vec4(col, max(a, f));
       #include <colorspace_fragment>
         DITHER_OUT;
         gl_FragColor.a += (ign(gl_FragCoord.yx) - .5) / 255.;
@@ -107,8 +116,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
       renderer.setSize(w, h, false);
     },
     // scene + passes (shafts) unless the wash covers everything. flare: a Vector4 (see the wash); hole: a
-    // Vector4 (amount, drift x, drift y), the passage's inside of the hole; color: the wash's (default the light).
-    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null) {
+    // Vector4 (amount, drift x, drift y), the passage's inside of the hole; color: the wash's (default the light);
+    // sweep: a Vector4 (on, feather, foot) for a wash from the top of the frame down (see the wash).
+    frame(scene, camera, passes = [], washAmount = 0, flare = null, hole = null, color = null, sweep = null) {
       renderer.info.reset();
       renderer.setRenderTarget(null);
       const c = color ?? light;
@@ -123,6 +133,7 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         wash.uniforms.uWash.value = washAmount;
         if (flaring) flareU.value.copy(flare); else flareU.value.w = 0;
         if (holing) holeU.value.copy(hole); else holeU.value.x = 0;
+        if (sweep && sweep.x > 0) sweepU.value.copy(sweep); else sweepU.value.x = 0;
         aspectU.value = size.w / Math.max(size.h, 1);
         renderer.render(washScene, ortho);
       }

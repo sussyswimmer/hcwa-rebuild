@@ -12,7 +12,7 @@ import { tok } from "./colors.js";
 import { bezier } from "./tokens.js";
 import { cubicBezier, stepSpring } from "./ease.js";
 import { createFlight, journeyAt } from "./flight.js";
-import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, wash as washAt } from "./journey.js";
+import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, leafFade, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, walkPitch, washSpan, wash as washAt } from "./journey.js";
 import { createWalk } from "./walk.js";
 import { worldOff } from "./index.js";
 
@@ -75,7 +75,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // fixed: at the rest pose (scroll 0) document px are canvas px; past it the flight table takes over.
   const box = { x: 0, y: 0, w: 1, h: 1 }, view = { w: 1, h: 1 }, frameRect = { x: 0, y: 0, w: 1, h: 1 };
   const right = new Vector3(), turn = new Quaternion(), euler = new Euler(0, 0, 0, "YXZ");
-  const span = { hero: { top: 0, len: 1 }, passage: { top: 0, len: 1 }, corridor: { top: 0, len: 1, pre: 1 }, shutters: { from: 0, top: 0, len: 1 } };
+  const span = { hero: { top: 0, len: 1 }, passage: { top: 0, len: 1 }, corridor: { top: 0, len: 1, pre: 1, next: 0 }, shutters: { from: 0, top: 0, len: 1 } };
   let lastFrame = null, dirty = true, parallax = 1, solved = null, walking = false, lastBucket = "landscape";
   const beats = readBeats(document.querySelectorAll("[data-beat]"));
   const doors = corridorLayout(beats);
@@ -155,7 +155,10 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     // it would let the cards run ahead of the camera.
     const tb = readBox(corridorEl.querySelector("[data-stage-track]") ?? corridorEl), fr = frameEl.getBoundingClientRect(), pr = paneEl.getBoundingClientRect();
     const fh = fr.height || view.h;
-    Object.assign(span.corridor, { top: tb.y, len: Math.max(tb.h - fh, 1), pre: fh });
+    // The sheet after the corridor: the way out's wash runs until its top nears the top of the frame (journey.js
+    // washSpan), wherever the page puts it.
+    const nx = corridorEl.nextElementSibling, next = nx ? readBox(nx).y : tb.y + tb.h + view.h;
+    Object.assign(span.corridor, { top: tb.y, len: Math.max(tb.h - fh, 1), pre: fh, next });
     const head = parseFloat(getComputedStyle(root).getPropertyValue(innerWidth >= 1024 ? "--header-h-compact" : "--header-h")) || 0;
     const side = pr.left - fr.left > fr.width * 0.3;
     const free = side ? { x0: 0, x1: pr.left - fr.left, y0: head, y1: fh } : { x0: 0, x1: fr.width, y0: head, y1: pr.top - fr.top };
@@ -179,6 +182,9 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // The passage's wash as the inside of the hole: its lobes' vignette and the dust drifting at 0.3× the
   // scroll (renderer.js), in frame-height units.
   const hole = new Vector4(), DUST = 0.3;
+  // The corridor's way out: its wash from the top of the frame down (renderer.js sweep), eased --ease-in-out.
+  const sweep = new Vector4(), EDGE = 28;
+  let leafLast = -1;
   const s3Cam = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 };
   let s3Last = -1, s3Sunt = -1, floodHold = null;
 
@@ -213,7 +219,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // ---- the journey: where the scroll is, which set, which pose ----
   const sunState = { t: REST.room, nudge, intensity: 1, rims: 1 }; // reused: no per-frame garbage
   const at = { hero: 0, passage: 0, y: 0, approach: 0, stage: 0, out: 0 }, path = { s: 0, lift: 0 };
-  let lastY = -1, inRoom = true, inS3 = false, wasS3 = false, corridorSun = -1;
+  let lastY = -1, inRoom = true, inS3 = false, wasS3 = false, corridorSun = -1, propT = 0, hallWash = 1;
   const draw = (now) => {
     const y = scrollY;
     lastY = y;
@@ -292,19 +298,36 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       const c = span.corridor;
       at.approach = walking ? clamp01((y - (c.top - c.pre)) / c.pre) : 0;
       at.stage = walking ? clamp01((y - c.top) / c.len) : 0;
-      // The way out (journey.js WALK_OUT): the camera leaves the last door from `release` on, and past the
-      // stage's end the frame washes to the plaster below.
-      const outPx = WALK_OUT.wash * view.h, from = c.top + WALK.release * c.len;
-      at.out = walking ? clamp01((y - from) / ((1 - WALK.release) * c.len + outPx)) : 0;
-      const gone = walking ? clamp01((y - (c.top + c.len)) / outPx) : 0;
-      if (walking && u >= 1) walk.pose(corridor.camera, at.approach, at.stage, n, at.out);
+      // The way out (journey.js WALK_OUT): the camera leaves the last door from `release` on, looking down to the
+      // runner, and past the stage's end the frame washes to the plaster below from the top down, until the next
+      // sheet's top nears the top of the frame: the runner fades last, just above the sheet rising over it.
+      const ws = washSpan(c.top + c.len, c.next, view.w, view.h), from = c.top + WALK.release * c.len;
+      at.out = walking ? clamp01((y - from) / (ws.y0 + ws.len - from)) : 0;
+      const gone = walking ? clamp01((y - ws.y0) / ws.len) : 0;
+      // Once the stage lets go the frame scrolls up with the page and the image goes with it (a lens shift), so
+      // the floor stays just above the sheet that follows it.
+      if (walking && u >= 1) walk.pose(corridor.camera, at.approach, at.stage, n, at.out, walkPitch(at.stage), Math.max(y - ws.y0, 0));
       else flight.exit(corridor.camera, u);
-      if (gone > 0) { wash = gone * gone * (3 - 2 * gone); washColor = PLASTER; }
+      if (gone > 0) {
+        wash = inOut(gone);
+        washColor = PLASTER;
+        // The foot of what is still seen: the sheet's top (its bông gió row half over the frame).
+        sweep.set(1, WALK_OUT.feather, clamp01(1 - (c.next - y - EDGE) / view.h), 0);
+      } else sweep.x = 0;
+      // The leaflets are gone while Little Rose's door is read (scrubbed with the scroll; journey.js leafFade).
+      const lf = walking ? leafFade(at.stage, n, corridor.lr) : 1;
+      if (lf !== leafLast) { corridor.setLeafFade(lf); leafLast = lf; }
       // Each open door swings at its beat and stays open; held at K4 (stacked cards) they stand open, as in
       // the stills. Little Rose's stays shut whatever is asked (setDoor).
       for (let i = 0; i < n; i++) corridor.setDoor(i, walking ? doorAngle(i, at.stage, n) : DOOR_DEG);
+      // The house's life (D0.6.2): fans, leaflets and the tamarinds outside on one props clock. Tier 2 on the
+      // clock and the scroll, Tier 1 on the scroll alone (a phone draws nothing new while the page is still);
+      // frozen while motion is paused.
+      if (!paused) propT = tier >= 2 ? time + y / 300 : y / 300;
+      corridor.animate(propT);
+      corridor.sway(propT);
+      hallWash = wash;
       // The sun along the corridor's clock (D6.4), set only when it moves (setSun allocates colors).
-      if (tier >= 2) corridor.sway(time);
       const st = lerp(WALK.sun[0], WALK.sun[1], at.stage);
       if (Math.abs(st - corridorSun) > 1e-4) { corridor.setSun(st); corridorSun = st; }
       scene = corridor.scene;
@@ -316,7 +339,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     hole.set(!inS3 && p > 0 && p < 1 ? wash : 0, 0.25 * Math.sin(drift * 2.1), -11 * drift, 0);
     gate?.begin();
     // No corridor yet (a fast scroll before it was built): the wash holds until it is.
-    if (scene) gl.frame(scene, camera, passes, wash, glow, hole, washColor);
+    if (scene) gl.frame(scene, camera, passes, wash, glow, hole, washColor, !inS3 && !inRoom ? sweep : null);
     else gl.frame(room.scene, cam, [], 1, null, inS3 ? null : hole.setX(1));
     gate?.end(now);
   };
@@ -338,8 +361,9 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     // Idle motion belongs to the rooms at rest (the hero's, and S3's once built); in the flight nothing moves
     // by itself.
     const s3 = inShutters(scrollY) && shutters && blendAt(at.s3 ?? 0) < 1;
-    // The corridor's tamarinds sway while a card is read, on Tier 2 only (a phone keeps its battery).
-    const hall = !inRoom && !inS3 && corridor && tier >= 2 && washAt(at.passage) < 1;
+    // The corridor's fans, leaflets and tamarinds move by themselves on Tier 2 only (a phone keeps its battery),
+    // at the 30 fps idle cadence, while the corridor is on screen and not washed out.
+    const hall = !inRoom && !inS3 && corridor && tier >= 2 && washAt(at.passage) < 1 && hallWash < 0.999 && (sections.get(corridorEl) || sections.get(passageEl));
     // A modal over the page (the menu sheet) covers the canvas: nothing moves by itself under it.
     const idle = !paused && !covered && ((inRoom && at.y <= 1) || s3 || hall);
     // S3's flood runs on time once the scroll has armed it (paused: straight to its end, no flood).
@@ -538,7 +562,10 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     if (dead) return;
     const { buildCorridor } = await import("./sets/corridor.js");
     if (dead) return;
-    const c = await buildCorridor({ gl, tier, beats, textures: room.textures });
+    let slice = 0;
+    const t0 = performance.now();
+    const c = await buildCorridor({ gl, tier, beats, textures: room.textures, traces: Boolean(corridorEl?.hasAttribute("data-traces")), onSlice: (ms) => { slice = Math.max(slice, ms); } });
+    const baked = performance.now() - t0;
     c.setTier(tier);
     c.shafts.setSize(Math.round(view.w * gl.size.dpr), Math.round(view.h * gl.size.dpr));
     await c.compile();
@@ -546,7 +573,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     corridor = c;
     dirty = true;
     kick();
-    console.info(`[world] corridor · ${beats.length} doors (${beats.map((b) => `${b.unit} ${b.door}`).join(", ")})`);
+    console.info(`[world] corridor · ${beats.length} doors (${beats.map((b) => `${b.unit} ${b.door}`).join(", ")}) · gạch bông baked ${c.bakedInWorker ? "in a worker" : "on the main thread"} in ${Math.round(baked)} ms, longest main-thread slice ${slice.toFixed(1)} ms`);
   }).catch((err) => console.warn("[world] corridor unavailable, the wash holds", err))
     // S3 next, in its own idle slice: it is needed only past the sheets. Until it is built, the section shows
     // its stills (it has no is-live).

@@ -22,12 +22,17 @@ const svgDir = new URL("../public/svg/", import.meta.url);
 const withSite = (c, site) => ({ ...c, content: { ...c.content, site: { ...c.content.site, ...site } } });
 const text = (h) => h.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 
-test("public/svg matches the block SDF numbers (run node scripts/blocks-svg.mjs)", () => {
+test("public/svg matches the block SDF numbers (run npm run svg)", () => {
   for (const [name, svg] of Object.entries(generate())) assert.equal(readFileSync(new URL(name, svgDir), "utf8"), svg, `${name} drifted`);
   const r = HOA_THI.r * 1000;
   assert.match(holes("hoaThi"), new RegExp(`^M${r} ${-r}A${r} ${r} `), "quatrefoil lobes use HOA_THI.r");
   assert.match(generate()["face-hoa-thi.svg"], new RegExp(`viewBox="${(-BLOCK / 2) * 1000} ${(-BLOCK / 2) * 1000} ${BLOCK * 1000} ${BLOCK * 1000}"`));
   for (const kind of Object.values(AREA_BLOCK)) assert.ok(KINDS.includes(kind), `${kind} has an SDF`);
+  // The floor's sunlight: the Hoa thị holes under the floor projection, crisp (no blur) and repeating in x.
+  const sun = generate()["sun-hoa-thi.svg"];
+  assert.match(sun, /<g transform="skewX\(-14\) scale\(1 1\.1\)">/);
+  assert.ok(sun.includes(`d="${holes("hoaThi")}"`), "the same quatrefoil as the screen");
+  assert.doesNotMatch(sun, /filter|blur|Gaussian/i);
 });
 
 test("partners: production renders the section only with 4 or more approved logos; the guard agrees", () => {
@@ -89,13 +94,70 @@ test("programs: centers are door chips with names only; Little Rose never gets a
   }
 });
 
-test("our work sheet: gapless wall of four areas, figures hidden on production while unverified", () => {
+test("our work sheet: a floor of gạch bông (4 / 2 / 1 / 1 tiles), figures hidden on production while unverified", () => {
   const stage = str(workSheet(ctx("vi", "home", false)));
   const prod = str(workSheet(ctx("vi", "home", true)));
-  assert.equal((stage.match(/<li class="tile /g) ?? []).length, 4);
+  assert.equal((stage.match(/<li class="gach /g) ?? []).length, 4);
+  assert.doesNotMatch(stage, /class="(tile|bento)[ "]/, "the 8 Nov bento is gone");
+  assert.equal((stage.match(/class="gach-sprite"/g) ?? []).length, 1, "one sprite per page");
+  for (const kind of Object.values(AREA_BLOCK)) assert.equal((stage.match(new RegExp(`<symbol id="gach-${kind}"`, "g")) ?? []).length, 1, `${kind} symbol`);
+  const tiles = { education: 4, protection: 2, family: 1, policy: 1 };
+  for (const [area, n] of Object.entries(tiles)) {
+    const li = stage.match(new RegExp(`<li class="gach gach--${area}">[\\s\\S]*?</li>`))[0];
+    const art = li.match(/<svg class="gach__art"[\s\S]*?<\/svg>/)[0], lit = li.match(/<svg class="gach__lit"[\s\S]*?<\/svg>/)[0];
+    assert.equal((art.match(/<use /g) ?? []).length, n, `${area}: ${n} tiles, the hierarchy is the tile count`);
+    assert.equal(lit.replace("gach__lit", "gach__art"), art, `${area}: the sunlit copy is the same tiles, registered`);
+    assert.match(li, /<div class="gach__floor" aria-hidden="true">/, `${area}: the tiles and the light are decoration`);
+    assert.match(li, new RegExp(`<h3 class="gach__name"><a href="/hoat-dong/\\?area=${area}#f-${area}">`), `${area}: links to Our Work filtered`);
+  }
+  // Bậc thang rises left to right: never turned, its nosings climb as x grows (y down in SVG).
+  const policy = stage.match(/<li class="gach gach--policy">[\s\S]*?<\/li>/)[0];
+  assert.doesNotMatch(policy, /rotate\(/, "the stair is never turned");
+  const stairPath = stage.match(/<symbol id="gach-bacThang">[\s\S]*?stroke-linejoin="miter"[^>]*d="([^"]+)"/)[1];
+  const corners = [...stairPath.matchAll(/H([\d.]+)V([\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  assert.equal(corners.length, 6, "six equal steps");
+  for (let i = 1; i < corners.length; i++) assert.ok(corners[i][0] > corners[i - 1][0] && corners[i][1] < corners[i - 1][1], "each nosing is right of and above the last");
+  const en = str(workSheet(ctx("en", "home", false)));
+  assert.match(en, /<h3 class="gach__name"><a href="\/en\/our-work\/\?area=education#f-education">/);
   assert.match(stage, /class="plaques"/);
   assert.doesNotMatch(prod, /class="plaques"|data-pending/, "fewer than 2 verified figures: no plaques at all");
   assert.match(prod, /id="work"/, "the corridor's skip link lands here");
+});
+
+test("our work sheet, fix r1: each patch is one laid floor, with a crisp light lattice and a cement ground", () => {
+  const stage = str(workSheet(ctx("vi", "home", false)));
+  // a tile is a square of cement with its medallion 2 mm in, and the corner motifs run to the tile's edge
+  for (const kind of Object.values(AREA_BLOCK)) {
+    const sym = stage.match(new RegExp(`<symbol id="gach-${kind}">[\\s\\S]*?</symbol>`))[0];
+    assert.match(sym, /^<symbol id="[^"]+"><rect width="200" height="200" style="fill:var\(--cream\)"\/><rect x="2" y="2" width="196" height="196" rx="1.5" style="fill:var\(--pig\)"\/>/, `${kind}: cement square, then the medallion at 2 mm`);
+  }
+  assert.match(stage, /<clipPath id="gach-clip"><rect width="200" height="200"\/><\/clipPath>/, "corner motifs clip to the tile, not the medallion");
+  // tiles in a patch meet at one 1.5 px grout joint, drawn only between tiles (never round the patch)
+  const joints = { education: "M200 0V400M0 200H400", protection: "M200 0V200" };
+  for (const area of ["education", "protection", "family", "policy"]) {
+    const art = stage.match(new RegExp(`<li class="gach gach--${area}">[\\s\\S]*?<svg class="gach__art"[\\s\\S]*?</svg>`))[0];
+    const grout = art.match(/<path fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke" style="stroke:var\(--grout\)" d="([^"]+)"\/>/);
+    if (joints[area]) assert.equal(grout?.[1], joints[area], `${area}: joints between its tiles`);
+    else assert.equal(grout, null, `${area}: one tile, no joint`);
+  }
+  // the CSS sun layer is gone from the sheet (the tile light carries it); nothing else reaches the plaster
+  assert.doesNotMatch(stage, /sun-layer--work/);
+  // the light lattice never repeats inside the tallest patch (2 tiles at a 0.42-tile block: 1650 units is 2.3 tiles)
+  const files = generate();
+  assert.match(files["sun-hoa-thi.svg"], /viewBox="0 0 300 1650"/);
+  // the cement ground's speckle: the tiles' own wear noise, seamless, alpha only (no colour in the file)
+  const cement = files["cement.svg"];
+  assert.match(cement, /<feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" stitchTiles="stitch"\/>/);
+  assert.match(stage, /<feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7"/, "the same speckle as the tiles' wear");
+  assert.doesNotMatch(cement, /#[0-9a-f]{3,6}\b|rgb\(/i);
+  // pages.css: the light's numbers from the fix (mask 0.42 T, band 2 T, 10% fades, lit wear 0.16), the rise
+  const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8");
+  assert.match(css, /url\("\/svg\/sun-hoa-thi\.svg"\) 0 0 \/ calc\(0\.42 \* var\(--T\)\) auto repeat, linear-gradient\(to right, transparent, black 10%, black 90%, transparent\)/);
+  assert.match(css, /--band: calc\(2 \* var\(--T\)\)/);
+  assert.match(css, /\.gach__lit \{[^}]*--wear: 0\.16/);
+  assert.match(css, /#centers \+ #work \{ --rise: calc\(var\(--section-y\) - var\(--s-8\)\); margin-top: calc\(-1 \* var\(--rise\)\); padding-top: clamp\(24px, 3vw, 48px\); \}/);
+  assert.match(css, /html\.stages #centers\.is-stage \+ #work \{ --rise: 24svh; \}/);
+  assert.match(css, /@media \(max-width: 599px\) \{ html\.stages #centers\.is-stage \+ #work \{ --rise: 16svh; \} \}/);
 });
 
 test("footer: dusk on every page, a link to Facebook and never an embed", () => {

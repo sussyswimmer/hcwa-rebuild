@@ -52,6 +52,18 @@
   --color-world-floor-shade: #A5A9B1; /* terrazzo in shade */
   --color-world-screen-face: #3D4370; /* backlit block face: the logo-blue silhouette (holes 8.8:1 against it). Never behind text */
   --color-world-wash:        #FFF3D3; /* the light flood: equals sun-100 */
+  /* Gạch bông pigments (05-DESIGN 0.6): the focus-area tiles and the corridor floor. Decorative only:
+     never text, never a button, never behind running text. Brick never in the corridor. */
+  --color-tile-cream:  #F3E9D6; /* cement ground of every tile; the inlays */
+  --color-tile-ochre:  #C4861C; /* mustard: Giáo dục, the floor's quatrefoils (not sun-400: Donate stays the only sun fill) */
+  --color-tile-indigo: #2C3584; /* the logo blue as pigment: Bảo vệ trẻ em, the floor's discs */
+  --color-tile-jade:   #176F5E; /* xanh ngọc: Gia đình và cộng đồng, the floor's leaves, fan bodies */
+  --color-tile-brick:  #A5472A; /* đỏ gạch: Vận động chính sách only */
+  /* The same pigments in a sun patch (the focus floor's light); cream in the sun is sun-100 */
+  --color-tile-ochre-lit:  #F0B13F;
+  --color-tile-indigo-lit: #4265C2;
+  --color-tile-jade-lit:   #449C80;
+  --color-tile-brick-lit:  #D7703B;
   /* tokens:end */
 }
 
@@ -65,6 +77,14 @@
   --color-world-sun-shutters-a: #FFD08A; /* shutters, t 0.85 */
   --color-world-sun-shutters-b: #FFB866; /* shutters, t 0.95 */
   --color-world-wood:           #8A6A48; /* worn door edges */
+  /* The corridor as a Saigon mái ấm (05-DESIGN 0.6): shader targets, never CSS. */
+  --color-world-vang-shade:     #D5BB7E; /* Saigon yellow lime wash (vôi vàng) above the dado, in shade */
+  --color-world-vang-sun:       #FFE09A; /* the same wash in a sun patch */
+  --color-world-dado-shade:     #5B8F78; /* mint oil-paint dado to 0.90 m, in shade. Never behind text (ink-900 4.30) */
+  --color-world-dado-sun:       #A2D4B6; /* the dado in a sun patch */
+  --color-world-dado-line:      #1C5A4C; /* the 3.5 cm painted line on the dado's top */
+  --color-world-gach-shade:     #BDAF93; /* the tiles' cream ground in the corridor's shade */
+  --color-world-ceiling-warm:   #DDD5C4; /* the corridor ceiling: white lime wash, warm bounce from the floor */
   --color-world-face-sand:      #D7CDBD; /* the proof's warm sand-cement block face: an A/B for Maxwell only (poster &face=sand) */
 }
 

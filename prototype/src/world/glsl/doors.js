@@ -1,5 +1,5 @@
 import { Vector4 } from "three";
-import { BLOCK, DEPTH } from "./blocks.js";
+import { BLOCK, DEPTH, MAX_DOORS } from "./blocks.js";
 import { DOOR } from "../objects/door.js";
 
 // The corridor's doors as one light (05-DESIGN D6.5): daylight from the rooms behind the door wall
@@ -7,7 +7,7 @@ import { DOOR } from "../objects/door.js";
 // door stands open, through the doorway past the leaf. One test for any number of doors: the ray toward
 // the light meets the wall once, and the door nearest that spot decides. Little Rose's transom lets out
 // plain, softened light (pattern 0): no motif. Needs BLOCKS before it.
-export const MAX_DOORS = 8;
+export { MAX_DOORS };
 export const DOOR_PATTERN = { open: 0, dotTre: 1, vomCau: 2, hoaThi: 3 };
 
 const f = (n) => n.toFixed(4);

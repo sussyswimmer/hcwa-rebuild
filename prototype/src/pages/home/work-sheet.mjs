@@ -2,28 +2,26 @@ import { html, raw } from "../../lib/html.mjs";
 import { viKeep } from "../../lib/vikeep.mjs";
 import { visibleFigures } from "../../lib/content.mjs";
 import { icon, pendingChip, programRow } from "../../partials/components.mjs";
-import { lightArt, AREA_BLOCK } from "../../partials/blocks.mjs";
+import { gachArt, gachSprite, AREA_BLOCK, AREA_PATCH } from "../../partials/blocks.mjs";
 
-// Home H5, the Our work sheet (Desire 2): the first opaque sheet after the corridor. Places were doors;
-// here the work is a wall of blocks (focus areas), the plaques on it (figures) and light passing through
-// louvers (programs). Owner: page stream (prototype/PLAN.md section 3).
+// Home H5, the Our work sheet (Desire 2): the first sheet after the corridor. Places were doors; here the
+// work is the floor they open onto (focus areas as gạch bông), the plaques (figures) and light passing
+// through louvers (programs). Owner: page stream (prototype/PLAN.md section 3).
 
-// Gapless 4-column wall, 8 of 8 cells: Education 2 × 2, Protection 2 × 1, Family and Policy 1 × 1
-// (tablet 2 + 2 + 1 + 1 = 6 of 6). Each area carries its block from the set drawn in light (lines and lit
-// holes, never an ink square), bleeding off the tile's top-right, and the light that block throws on the
-// plaster; the words sit in the tile's second row, so they never meet the art.
-const SCREEN = { education: { cols: 2, rows: 2 }, protection: { cols: 3, rows: 2 }, family: { cols: 1, rows: 1 }, policy: { cols: 1, rows: 1 } };
-
-const tile = (c, a) => {
-  const kind = AREA_BLOCK[a.id];
-  return html`<li class="tile tile--${a.id}">
-    <span class="tile__light" aria-hidden="true"></span>
-    ${lightArt(kind, { ...SCREEN[a.id], cls: "tile__art" })}
-    <div class="tile__body">
-      <h3 class="tile__name"><a href="${c.url("ourWork")}?area=${a.id}#f-${a.id}">${viKeep(c.tx(a.name))}</a></h3>
-      <p class="tile__text"${c.d(a.text)}>${c.tx(a.text)}</p>
+// H5a, "Lĩnh vực hoạt động" as a floor of gạch bông (05-DESIGN 0.6.3): each area is a patch of 20 cm
+// cement tiles in its own pigment, the corridor's floor seen from above. The hierarchy is the number of
+// tiles (4 / 2 / 1 / 1), never their size. The words stand on the plaster beside or under the patch, never
+// on a tile. A band of sunlight through the house's Hoa thị screen crosses each patch as it crosses the
+// screen: the same tiles drawn in their sunlit pigments, so the light lands only on tiles (pages.css).
+// The whole area is the link; every element but the words is aria-hidden decoration.
+const gach = (c, a) => {
+  const kind = AREA_BLOCK[a.id], patch = AREA_PATCH[a.id];
+  return html`<li class="gach gach--${a.id}">
+    <div class="gach__floor" aria-hidden="true">${gachArt(kind, patch, "gach__art")}<span class="gach__light">${gachArt(kind, patch, "gach__lit")}</span></div>
+    <div class="gach__body">
+      <h3 class="gach__name"><a href="${c.url("ourWork")}?area=${a.id}#f-${a.id}"><span>${viKeep(c.tx(a.name))}</span>&#8288;${icon("arrow", "icon gach__go")}</a></h3>
+      <p class="gach__text"${c.d(a.text)}>${c.tx(a.text)}</p>
     </div>
-    ${icon("arrow", "icon tile__go")}
   </li>`;
 };
 
@@ -48,10 +46,12 @@ export function workSheet(c) {
   const anchor = c.lang === "vi" ? "#du-an" : "#programs";
   return html`
 <section class="wall wall--sun wall--edge work" id="work" aria-labelledby="focus-title">
-  <span class="sun-layer sun-layer--work" aria-hidden="true"></span>
   <div class="container">
-    <h2 class="wall__title" id="focus-title" data-reveal${c.d(work.focusTitle)}>${viKeep(c.tx(work.focusTitle))}</h2>
-    <ul class="bento" data-reveal="stagger">${work.focusAreas.map((a) => tile(c, a))}</ul>
+    <div class="floor">
+      <h2 class="wall__title floor__title" id="focus-title" data-reveal${c.d(work.focusTitle)}>${viKeep(c.tx(work.focusTitle))}</h2>
+      <ul class="floor__areas" data-reveal="stagger">${work.focusAreas.map((a) => gach(c, a))}</ul>
+    </div>
+    ${gachSprite()}
     ${plaques(c)}
   </div>
   <section class="programs" aria-labelledby="programs-title">

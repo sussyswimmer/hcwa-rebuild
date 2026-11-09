@@ -5,6 +5,9 @@ export const BLOCK = 0.3; // outer size; mortar joints are shading only, never g
 // 6 cm: a Saigon cast-cement block (19-30 cm square, about 6 cm thick). The light's two aperture tests
 // use it too, so a deeper block would thin every patch to a sliver at the room's sun angles.
 export const DEPTH = 0.06;
+// Doors a corridor can hold (glsl/doors.js; the house's dado breaks read the same list). Here, not in doors.js,
+// so the surfaces that only need the count never pull the doors' light into their chunk.
+export const MAX_DOORS = 8;
 
 export const HOA_THI = { r: 0.056, pipAt: 0.112, pipR: 0.021 };
 export const MAT_CAO = { cell: 0.075, half: 0.026 };

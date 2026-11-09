@@ -1,7 +1,8 @@
 import { ShaderMaterial } from "three";
-import { BLOCKS } from "../glsl/blocks.js";
+import { BLOCK, BLOCKS } from "../glsl/blocks.js";
 import { NOISE } from "../glsl/noise.js";
 import { aperturesGLSL } from "../glsl/apertures.js";
+import { DOOR } from "../objects/door.js";
 
 // Painted wood (doors, frames, shutters; 05-DESIGN D6.3): the paint token is the display color in full
 // light, so a lit door lands on its unit token (not tone-mapped, D6.3); shade is the token darkened and
@@ -9,7 +10,19 @@ import { aperturesGLSL } from "../glsl/apertures.js";
 // Lit by the same lights and apertures as the shell, so a leaf in a beam takes the beam.
 const VERT = /* glsl */ `
 varying vec3 vP; varying vec3 vN; varying vec2 vUv;
+#ifdef VERTEX_PAINT
+attribute vec4 aPaint; varying vec4 vPaint;
+#endif
+#ifdef LEAF_WEAR
+attribute vec3 aLeafP; varying vec3 vL;
+#endif
 void main(){
+  #ifdef VERTEX_PAINT
+  vPaint = aPaint;
+  #endif
+  #ifdef LEAF_WEAR
+  vL = aLeafP;
+  #endif
   mat4 m = modelMatrix;
   #ifdef USE_INSTANCING
   m = m * instanceMatrix;
@@ -22,14 +35,32 @@ void main(){
 // ao: GLSL `float paintAo(vec3 P)`, contact shade where the paint meets something (a leaf at its hinge, a
 // shut leaf in its frame). uGrad (own): the daylight down a face, that much brighter at the head than at
 // the foot (a shut door lit only from above).
-export function paintMaterial(U, lights, own, { ao = null } = {}) {
+// vertexPaint (05-DESIGN D0.6.2, from proposal saigon-home): the paint and its wear come from an aPaint
+// attribute (rgb, wear), so the corridor's door frames and Little Rose's fixed leaf are one draw.
+// leafWear (critique r1: the wear read as dirt or mould, speckled over the leaves' faces): a door leaf (its aLeafP,
+// objects/door.js, in hinge space) is worn only where a door wears, within 4 cm of its edges, in the 25 cm kick
+// zone at its foot and a 10 cm disc round the handle; elsewhere its face takes at most 0.1. Frames (aLeafP.y −1)
+// keep the chipped edge band. The same rule for every door, Little Rose's at its 0.3.
+export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, leafWear = false } = {}) {
   return new ShaderMaterial({
+    defines: { ...(vertexPaint ? { VERTEX_PAINT: "" } : {}), ...(leafWear ? { LEAF_WEAR: "" } : {}) },
     uniforms: { ...U, uGrad: { value: 0 }, ...own },
     vertexShader: VERT,
     fragmentShader: /* glsl */ `
       varying vec3 vP; varying vec3 vN; varying vec2 vUv;
-      uniform vec3 uPaint, uWood, uCool, uSpillTint, uSunTint;
-      uniform float uShadeK, uWear, uGrad, uRef[2], uI[2];
+      #ifdef LEAF_WEAR
+      varying vec3 vL;
+      #endif
+      #ifdef VERTEX_PAINT
+      varying vec4 vPaint;
+      #define uPaint vPaint.rgb
+      #define uWear vPaint.a
+      #else
+      uniform vec3 uPaint;
+      uniform float uWear;
+      #endif
+      uniform vec3 uWood, uCool, uSpillTint, uSunTint;
+      uniform float uShadeK, uGrad, uRef[2], uI[2];
       ${BLOCKS}
       ${NOISE}
       ${aperturesGLSL(lights)}
@@ -38,8 +69,18 @@ export function paintMaterial(U, lights, own, { ao = null } = {}) {
         vec3 N = normalize(vN);
         // Edge band in face UV, broken up by noise: chipped paint at corners and edges only.
         vec2 e = min(vUv, 1. - vUv);
-        float edge = 1. - smoothstep(0.015, 0.05, min(e.x, e.y));
-        float chip = smoothstep(0.62, 0.7, vn(vP.xy * 38. + vP.zz * 21.)) * edge * uWear;
+        float wear = (1. - smoothstep(0.015, 0.05, min(e.x, e.y))) * uWear;
+        vec2 grain = vP.xy * 38. + vP.zz * 21.;
+        #ifdef LEAF_WEAR
+        if (vL.y > -.5) {
+          float az = abs(vL.z), d = min(min(vL.y, ${DOOR.h.toFixed(3)} - vL.y), min(az, ${DOOR.w.toFixed(3)} - az));
+          float m = max(1. - smoothstep(.03, .045, d), 1. - smoothstep(.2, .26, vL.y));
+          m = max(m, 1. - smoothstep(.085, .105, length(vec2(vL.y - 1.02, az - ${(DOOR.w - 0.08).toFixed(3)}))));
+          wear = mix(min(uWear, .1), uWear, m);
+          grain = vL.zy * 38. + vL.xx * 21.; // the chips stay on the leaf as it swings
+        }
+        #endif
+        float chip = smoothstep(0.62, 0.7, vn(grain)) * wear;
         vec3 albedo = mix(uPaint, uWood, chip);
         float sky = 0.82 + 0.18 * N.y;
         vec3 shade = mix(albedo * uShadeK, uCool * uShadeK * 1.08, 0.18) * sky;
@@ -59,16 +100,28 @@ export function paintMaterial(U, lights, own, { ao = null } = {}) {
 // Light seen directly (a doorway's lit room, the sky past a window): a vertical gradient in world y
 // with a little value noise, drawn as the display color.
 // canopy: the tamarind leaves of sky.js STREET over a street seen through a window ({ color, amount }).
-export function glowMaterial({ low, high, y0 = 0, y1 = 2.4, grain = 0.02, canopy = null }) {
+// dapple: a doorway's room ({ zc, half, amount }, a plane facing −x): the reveal's shade along the jambs and the
+// room's own screen's Hoa thị sun, slanted down its back wall, `amount` either way (critique r1: not a flat slab).
+export function glowMaterial({ low, high, y0 = 0, y1 = 2.4, grain = 0.02, canopy = null, dapple = null }) {
   return new ShaderMaterial({
-    uniforms: { uLow: { value: low }, uHigh: { value: high }, uY: { value: [y0, y1] }, uGrain: { value: grain }, uCanopyC: { value: canopy?.color ?? high }, uCanopyAmt: { value: canopy?.amount ?? 0 } },
+    uniforms: { uLow: { value: low }, uHigh: { value: high }, uY: { value: [y0, y1] }, uGrain: { value: grain }, uCanopyC: { value: canopy?.color ?? high }, uCanopyAmt: { value: canopy?.amount ?? 0 }, uDapple: { value: dapple ? [dapple.zc, dapple.half, dapple.amount, 1] : [0, 0, 0, 0] } },
     vertexShader: /* glsl */ `varying vec3 vP; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
-      varying vec3 vP; uniform vec3 uLow, uHigh, uCanopyC; uniform float uY[2], uGrain, uCanopyAmt;
+      varying vec3 vP; uniform vec3 uLow, uHigh, uCanopyC; uniform float uY[2], uGrain, uCanopyAmt, uDapple[4];
       ${NOISE}
+      ${BLOCKS}
       void main(){
         float t = smoothstep(uY[0], uY[1], vP.y);
         vec3 col = mix(uLow, uHigh, t) * (1. + (vn(vP.zy * 3. + vP.xx) - .5) * uGrain);
+        if (uDapple[3] > .5) {
+          float a = uDapple[1] - abs(vP.z - uDapple[0]), k = uDapple[2];
+          // The reveal keeps the room's light off the jambs and the head; deeper at the floor's line.
+          col *= 1. - k * 1.4 * (1. - smoothstep(0., .14, a)) - k * (1. - smoothstep(0., .1, vP.y));
+          // The room's own screen: its holes' sun slanted down the back wall, soft (it is metres away).
+          vec2 c = vec2(vP.z - uDapple[0] + vP.y * .42, vP.y * 1.15 - .3);
+          float h = sdHoaThi(mod(c, ${BLOCK.toFixed(2)}) - ${(BLOCK / 2).toFixed(3)});
+          col *= 1. + k * (1. - smoothstep(-.012, .03, h)) * smoothstep(.3, 1.1, vP.y);
+        }
         float tree = smoothstep(.54, .66, fbm(vP.zy * vec2(.55, .6) + 3.1) + (clamp(vP.y / 5., 0., 1.) - .45) * .9);
         col = mix(col, uCanopyC, tree * uCanopyAmt);
         gl_FragColor = vec4(col, 1.);

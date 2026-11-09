@@ -4,6 +4,10 @@
    the scroll length of the flight and its frame is sticky. Neither ever draws a hard edge (05-DESIGN D0.5):
    every change of light is a long feathered blend. */
 
+/* The corridor pane's extent (motion/stages.js), registered so it eases between cards. */
+@property --pane-t { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --pane-b { syntax: "<length>"; inherits: false; initial-value: 4000px; }
+
 /* ---------- H3 passage: through the hero block into the light ---------- */
 /* Stacked: a band of light. The hero's floor has dissolved into sun-100 above it (world.css); the
    statement sits in that light; then the corridor still rises out of it and settles into the plaster of
@@ -103,9 +107,12 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
   mask-image: linear-gradient(to bottom, transparent, black 72px, black calc(100% - 48px), transparent);
 }
 .bay__name { margin: 0; font-size: clamp(1.75rem, 1.15rem + 1.7vw, 2.75rem); text-wrap: balance; }
-.bay__since, .bay__where { margin: 0; font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; color: var(--color-ink-700); }
+/* Richness pass (D0.6.1, from colour-light): the meta lines and the privacy note are ink-900, not ink-700. The
+   corridor behind the feathered pane now carries the yellow wash, the mint dado and the tiles (ink-700 fell to
+   6.2-6.7:1 over the darker stills; ink-900 keeps 11:1). Size and weight still rank them. */
+.bay__since, .bay__where { margin: 0; font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; color: var(--color-ink-900); }
 .bay__serves { margin: 0; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-ink-900); text-wrap: pretty; }
-.bay__note { margin: 4px 0 0; font-size: var(--fs-sm); line-height: 1.6; color: var(--color-ink-700); text-wrap: pretty; }
+.bay__note { margin: 4px 0 0; font-size: var(--fs-sm); line-height: 1.6; color: var(--color-ink-900); text-wrap: pretty; }
 .bay__links { display: flex; flex-wrap: wrap; gap: 0 28px; margin: 2px 0 0; }
 .bays__all { margin-top: clamp(32px, 5vw, 64px); }
 @media (min-aspect-ratio: 1/1) { .bay__view { aspect-ratio: 16 / 10; } }
@@ -123,11 +130,13 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
    canvas; without it, the bay's own view does. The panel shows the stage header, then one card per beat
    (never scrubbed: in at 0.18 of its beat, out at 0.97; the last one holds to 0.95, as its door stays the
    subject), with the door index. */
-/* After the walk the corridor settles into plaster over 30svh (eased, D0.5) before the next sheet, and the
-   link to every center sits on it. The live canvas goes out the same way: the camera walks on past the last
-   door and washes to lime-100 over the first 20svh of it (world/journey.js WALK_OUT), so the link (in the last
-   10svh) stands on plain plaster, never over the corridor. */
-html.stages .bays-section.is-stage { padding: 0; background: linear-gradient(to bottom, transparent calc(100% - 30svh), color-mix(in oklab, var(--color-lime-100) 55%, transparent) calc(100% - 23svh), color-mix(in oklab, var(--color-lime-100) 92%, transparent) calc(100% - 15svh), var(--color-lime-100) calc(100% - 8svh)); }
+/* The section ends where the walk does (critique r1: no plaster tail, no link alone on it). The live canvas goes
+   out by itself: the camera walks on past the last door looking down to the runner, and the frame washes to
+   lime-100 from its top down while the work sheet rises over it (world/journey.js WALK_OUT, at least 24svh /
+   16svh, eased), so the runner is the last thing seen, still fading just above the sheet's bông gió row. Without
+   the live world the bay's view feathers into the root's lime-100 (.bay__view's mask). The link to every center
+   comes in under the last card (.bays__all below). */
+html.stages .bays-section.is-stage { padding: 0; background: transparent; }
 html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 50svh); }
 @media (max-width: 599.98px) { html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 40svh); } }
 /* Phones: the card panel is the frame's bottom 45svh (PLAN H4's 44%, plus the row the Little Rose card's two
@@ -139,8 +148,11 @@ html.stages .is-stage .bays__frame { --panel-h: 45svh; position: sticky; top: 0;
    frame lets go of the corridor with no box on it. A backdrop blur only where the GPU has room for it
    (Tier 2: 92% plaster); elsewhere the plaster is denser instead (96%), so nothing behind it reads as an
    edge (fixing-motion-performance: no continuous blur over a large animated surface on a phone). */
-html.stages .is-stage { --pane: color-mix(in oklab, var(--color-lime-50) 96%, transparent); }
-html.stages[data-tier="2"] .is-stage { --pane: color-mix(in oklab, var(--color-lime-50) 92%, transparent); }
+/* Critique r1: the plaster leans toward the wall it stands on (lime-50 with 20% of the wash in the sun), so the
+   pane reads as the house's own wash, not a cream wall over it. Measured live (Tier 1 and 2, darkest 1%): see
+   PLAN section 9. */
+html.stages .is-stage { --pane-c: color-mix(in oklab, var(--color-lime-50) 80%, var(--color-world-vang-sun)); --pane: color-mix(in oklab, var(--pane-c) 96%, transparent); }
+html.stages[data-tier="2"] .is-stage { --pane: color-mix(in oklab, var(--pane-c) 92%, transparent); }
 html.stages .is-stage .bays__glass { display: block; position: absolute; inset: auto 0 0; height: calc(var(--panel-h) + 56px); z-index: 1; pointer-events: none; background: var(--pane); mask-image: linear-gradient(to bottom, transparent, black 56px); }
 html.stages[data-tier="2"] .is-stage .bays__glass { backdrop-filter: blur(8px); }
 /* The door's own light in the plaster (its unit's color at 10%, D6.5: at most 15%; Little Rose plain daylight). */
@@ -170,7 +182,12 @@ html.stages .is-stage .bay__text::before { content: none; }
 html.stages .is-stage .bay__name { font-size: clamp(1.625rem, 1.2rem + 1.4vw, 2.5rem); }
 html.stages .is-stage .bay__serves { font-size: var(--fs-base); }
 html.stages .is-stage .bay__note { margin-top: 0; }
-html.stages .is-stage .bays__all { display: flex; align-items: end; box-sizing: border-box; height: 30svh; min-height: 200px; margin-top: 0; padding-bottom: calc(var(--edge-block, 64px) + 12px); }
+/* The link to every center: just under the last card (--all-y, motion/stages.js), in and out with it, so it is
+   read as the walk's last step and never stands alone on plaster. Focusing it walks to the last door. */
+html.stages .is-stage .bays__all { grid-area: stack; align-self: start; position: relative; z-index: 2; height: auto; min-height: 0; margin: 0; padding: 0; translate: 0 var(--all-y, 0px); pointer-events: none; }
+html.stages .is-stage .bays__all > * { opacity: 0; translate: 0 14px; transition: opacity 200ms var(--ease-out), translate 0s linear 200ms; }
+html.stages .is-stage.is-last .bays__all { pointer-events: auto; }
+html.stages .is-stage.is-last .bays__all > * { opacity: 1; translate: 0 0; transition: opacity var(--d-reveal) var(--ease-out) 300ms, translate var(--d-reveal) var(--ease-out) 300ms; }
 
 /* The index of the doors: a row on phones, a column at the panel's top on desktop. Each is its transom,
    lit (sun in the holes) while its door is read; the names stay readable at rest. */
@@ -188,7 +205,9 @@ html.stages .is-stage .bays__rail { display: block; grid-area: rail; }
 }
 /* Below 380 px the names go without their transoms (the EN names need the room at 360). */
 @media (max-width: 379.98px) { html.stages .is-stage .rail__transom { display: none; } }
-.bays__rail a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--color-ink-700); font-size: var(--fs-meta); font-weight: 500; text-decoration: none; transition: color var(--d-hover) var(--ease-out); }
+/* The index labels are ink-900 too (D0.6.1): 13 px over the house's colours. The current one keeps its unit
+   underline and lit transom; hover keeps the transom's light. */
+.bays__rail a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--color-ink-900); font-size: var(--fs-meta); font-weight: 500; text-decoration: none; transition: color var(--d-hover) var(--ease-out); }
 .bays__rail a:hover, .bays__rail a[aria-current="true"] { color: var(--color-ink-900); }
 .rail__transom { flex: none; width: 27px; height: 9px; }
 .rail__transom .block-art__sky { fill: var(--color-lime-300); transition: fill var(--d-reveal) var(--ease-out); }
@@ -222,7 +241,14 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
      of the panel, beside the door's own height, and the header is in view while the frame is still rising
      (well before the stage pins). */
   html.stages .is-stage .bays__frame { --foot: clamp(56px, 12svh, 120px); }
-  html.stages .is-stage .bays__glass { inset: 0 0 0 auto; width: calc(min(500px, 36vw) + 140px); height: auto; mask-image: linear-gradient(to right, transparent, black 22%), linear-gradient(to bottom, transparent, black calc(var(--header-h-compact) + 8px)); mask-composite: intersect; }
+  /* Critique r1: plaster only where there is text. From the door index's top − 24 px to the shown text's foot
+     + 72 px (--pane-t / --pane-b from motion/stages.js, eased between cards), feathered over 96 px (eased stops),
+     so the yellow wash and the ceiling show above the index and the mint dado and the floor below the card. */
+  html.stages .is-stage .bays__glass {
+    --t0: calc(var(--pane-t) - 120px); --t1: calc(var(--pane-t) - 24px); --b0: calc(var(--pane-b) + 72px); --b1: calc(var(--pane-b) + 168px);
+    inset: 0 0 0 auto; width: calc(min(500px, 36vw) + 140px); height: auto;
+    mask-image: linear-gradient(to right, transparent, black 22%), linear-gradient(to bottom, transparent var(--t0), rgb(0 0 0 / 0.16) calc(var(--t0) + 24px), rgb(0 0 0 / 0.5) calc(var(--t0) + 48px), rgb(0 0 0 / 0.84) calc(var(--t0) + 72px), black var(--t1), black var(--b0), rgb(0 0 0 / 0.84) calc(var(--b0) + 24px), rgb(0 0 0 / 0.5) calc(var(--b0) + 48px), rgb(0 0 0 / 0.16) calc(var(--b0) + 72px), transparent var(--b1));
+    mask-composite: intersect; transition: --pane-t var(--d-reveal) var(--ease-out), --pane-b var(--d-reveal) var(--ease-out); }
   html.stages .is-stage .bays__glass::before { mask-image: linear-gradient(to right, black 10%, transparent 70%); }
   html.stages .is-stage .bays__panel { grid-area: 1 / 2; padding: calc(var(--header-h-compact) + clamp(24px, 4svh, 48px)) clamp(32px, 3.4vw, 56px) var(--foot) 8px; gap: clamp(24px, 4svh, 48px); }
   html.stages .is-stage .bays__head { align-self: center; }

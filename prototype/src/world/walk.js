@@ -8,7 +8,8 @@ import { CORRIDOR, DOOR_FOCUS_Y, VIEW, lensFor, walkLeave, walkPose, walkT } fro
 // While the stage rises into place (the approach) the camera turns from looking down the corridor to its
 // reading yaw; once the stage is pinned walkT() walks it. A lens shift keeps each door in the part of the
 // frame its card leaves free (read from the card panel), so a card never covers the door it is about, and
-// verticals stay vertical. No roll, no pitch, the fov changes by under 15%.
+// verticals stay vertical. No roll, the fov changes by under 15%; the only pitch is the way out's look down to
+// the floor (journey.js walkPitch), once the last card is going.
 
 const smooth = (x) => { const t = MathUtils.clamp(x, 0, 1); return t * t * (3 - 2 * t); };
 
@@ -29,8 +30,9 @@ export function createWalk() {
   };
 
   // a: the approach (0 at K4, 1 settled); q: the stage's progress; n: doors; out: the way out past the last
-  // door (0..1, journey.js WALK_OUT).
-  const pose = (cam, a, q, n, out = 0) => {
+  // door (0..1, journey.js WALK_OUT); pitch: degrees down (journey.js walkPitch); lift: px the frame has scrolled up
+  // since the stage let go, the image carried up with it (the runner stays just above the sheet that follows).
+  const pose = (cam, a, q, n, out = 0, pitch = 0, lift = 0) => {
     const p = walkPose(walkT(q, n) + walkLeave(out), layout, lay, at), e = smooth(a);
     const yaw = MathUtils.degToRad(MathUtils.lerp(exitYaw(bucket)[1], p.yaw, e));
     const fov = MathUtils.lerp(EXIT.fov[bucket], p.fov, e);
@@ -38,13 +40,14 @@ export function createWalk() {
     cam.position.copy(pos);
     cam.fov = fov;
     cam.aspect = aspect;
-    cam.lookAt(look.set(pos.x + Math.sin(yaw) * 10, 1.1, pos.z - Math.cos(yaw) * 10));
+    const pt = MathUtils.degToRad(pitch), c = Math.cos(pt) * 10;
+    cam.lookAt(look.set(pos.x + Math.sin(yaw) * c, 1.1 - Math.sin(pt) * 10, pos.z - Math.cos(yaw) * c));
     cam.updateMatrixWorld();
     // The lens shifts in as the camera settles, scaled to the fov in between.
     centred(fov, aspect, k4);
     const s = Math.tan(MathUtils.degToRad(fov / 2)) / Math.tan(MathUtils.degToRad(p.fov / 2));
     for (const key of ["l", "r", "t", "b"]) b[key] = MathUtils.lerp(k4[key], lens[key] * s, e);
-    applyBounds(cam, b, 0, viewH);
+    applyBounds(cam, b, lift, viewH);
   };
 
   return { setLayout, pose, get layout() { return layout; }, get lens() { return lens; } };

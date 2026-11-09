@@ -34,18 +34,40 @@ export function initStages() {
   if (!el || !root.classList.contains("stages")) return;
   const track = el.querySelector("[data-stage-track]"), frame = el.querySelector(".bays__frame");
   const panel = el.querySelector(".bays__panel"), rail = el.querySelector(".bays__rail"), head = el.querySelector(".bays__head");
-  const glass = el.querySelector(".bays__glass");
+  const glass = el.querySelector(".bays__glass"), all = el.querySelector(".bays__all"), list = el.querySelector(".bays");
   const cards = [...el.querySelectorAll("[data-beat]")], n = cards.length;
   const texts = cards.map((c) => c.querySelector(".bay__text"));
   const links = [...el.querySelectorAll(".bays__rail a[data-to]")];
   const staged = () => root.classList.contains("stages") && el.classList.contains("is-stage");
   let shown, at, pane = -1, q = 0;
 
+  // Where the panel's content is, read once per layout (decide): the pane is plaster only from the door index's
+  // top to the shown text's foot (stages.css, critique r1: the yellow wash, the mint dado and the floor show above
+  // and below the card), and the link to every center sits just under the last card (never alone on plaster).
+  const GAP = 12;
+  let ext = null;
+  const measure = () => {
+    const f = frame.getBoundingClientRect(), y = (e) => e.getBoundingClientRect();
+    const lb = n ? y(texts[n - 1]).bottom : y(head).bottom, cell = y(list);
+    ext = { top: y(rail).top - f.top, head: y(head).bottom - f.top, cards: texts.map((t) => y(t).bottom - f.top), all: lb - f.top + GAP + all.offsetHeight };
+    el.style.setProperty("--all-y", `${Math.round(lb - cell.top + GAP)}px`);
+    return lb + GAP + all.offsetHeight <= cell.bottom + 1;
+  };
+  let lastK = -1;
+  const extent = (k) => {
+    if (k != null) lastK = k;
+    if (!ext || k == null) return;
+    const b = k === -1 ? ext.head : k === n - 1 ? ext.all : ext.cards[k];
+    glass.style.setProperty("--pane-t", `${Math.round(ext.top)}px`);
+    glass.style.setProperty("--pane-b", `${Math.round(b)}px`);
+  };
   const show = (k) => {
     if (k === shown) return;
     shown = k;
     head.classList.toggle("is-current", k === -1);
     cards.forEach((c, i) => c.classList.toggle("is-current", i === k));
+    el.classList.toggle("is-last", n > 0 && k === n - 1);
+    extent(k);
   };
   // The door index and the light in the panel follow the walk, between cards too.
   const mark = (i, lit) => {
@@ -80,12 +102,13 @@ export function initStages() {
     const cs = getComputedStyle(panel);
     return panel.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - rail.offsetHeight - parseFloat(cs.rowGap || 0);
   };
-  const fits = () => { const r = room(); return n > 0 && [head, ...texts].every((t) => t.offsetHeight <= r + 1); };
+  const fits = () => { const r = room(); return n > 0 && [head, ...texts].every((t) => t.offsetHeight <= r + 1) && measure(); };
   const decide = () => {
     const was = el.classList.contains("is-stage");
     el.classList.add("is-stage");
     const ok = root.classList.contains("stages") && fits();
-    if (!ok) el.classList.remove("is-stage");
+    if (!ok) { el.classList.remove("is-stage"); ext = null; }
+    else extent(lastK);
     if (ok !== was) ScrollTrigger.refresh();
   };
   let pending = 0;
@@ -114,7 +137,8 @@ export function initStages() {
   // Focus on a card that is not shown walks to its door first, so focus never lands on an empty pane: the
   // card is shown at once (no fade) and the page jumps to its beat.
   el.addEventListener("focusin", (e) => {
-    const card = e.target.closest("[data-beat]");
+    // The link to every center belongs to the last card: focusing it walks to the last door.
+    const card = e.target.closest("[data-beat]") ?? (all.contains(e.target) ? cards[n - 1] : null);
     if (!card || !staged()) return;
     const i = cards.indexOf(card);
     if (i === shown) return;

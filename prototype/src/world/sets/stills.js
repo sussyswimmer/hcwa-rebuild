@@ -8,10 +8,11 @@ import { latticePanel } from "../objects/lattice.js";
 import { boxRoom, rect, shellGeometry } from "../objects/shell.js";
 import { DOOR, doorLight, doorMeshes, doorSpec, leafAperture } from "../objects/door.js";
 import { bakeLimeWash, bakeTerrazzo } from "../textures.js";
+import { bakeGachBong } from "../gach.js";
 import { STILL_SUNS, sunFixed } from "../clock.js";
 import { mixc, tok, vec } from "../colors.js";
 import { BOX as ROOM_BOX, SCREEN as ROOM_SCREEN } from "./room.js";
-import { camera, roomShade, roomSun, screenColors, street, surfaceUniforms, tint } from "./common.js";
+import { camera, houseShade, houseSun, houseUniforms, roomShade, roomSun, screenColors, street, surfaceUniforms, tint } from "./common.js";
 import { corridorScene, DOOR_OPEN, EXIT, exitLook } from "./corridor.js";
 import { WIN_Z, shuttersScene } from "./shutters.js";
 import { CORRIDOR, DOOR_FOCUS_Y, SHUTTERS, WALK, beatAt, corridorLayout, leafAt, lensFor, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, slatAt, walkPose } from "../journey.js";
@@ -165,7 +166,7 @@ const duskShade = () => [mixc(mixc(tok("blue-900"), tok("blue-700"), 0.16), tok(
 // the transom's emblem and the open doorway; untinted daylight), the corridor's own sun from the screen
 // behind the camera (light 0) laying soft Hoa thị patches on the wall and the door.
 const DOOR_Z = 1.6;
-function door({ lime, terr, unit, warm = false, hinge = 1 }) {
+function door({ lime, terr, gach = null, unit, hinge = 1 }) {
   const box = { min: [-5.2, 0, -7], max: [0, 3.1, 6] };
   const d = doorSpec({ wx: 0, zc: DOOR_Z, unit, hinge });
   const lr = unit === "little-rose", light = doorLight(unit);
@@ -188,17 +189,19 @@ function door({ lime, terr, unit, warm = false, hinge = 1 }) {
   const day = mixc(tok("sky"), tok("wallSun"), 0.45);
   const spill = mixc(day, unitColor, light.spillTint);
   const spillT = [spill, spill.clone().multiplyScalar(0.86), spill];
+  // The corridor's house (D0.6.2): wash, dado broken at the door, warm ceiling, plain cream tiles, no fan.
   const U = {
-    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade: warm ? warmShade() : roomShade(), sunT: roomSun(sun, 0.4), spillT, refs: [Math.abs(L.x), Li.y], lime, terr }),
+    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade: houseShade(), sunT: houseSun(sun, 0.4), spillT, refs: [Math.abs(L.x), Li.y], lime, terr }),
     ...apertureUniforms(lights, [L, Li]),
+    ...houseUniforms({ gach, runner: 0, doorWall: d.wx, half: DOOR.w / 2 + DOOR.frame, doors: [d.zc], sun, k: 0.4 }),
   };
   U.uI.value = [light.corridorSun ? 0.85 : 0, lr ? 0.7 : 1];
-  const shell = new Mesh(shellGeometry(boxRoom(box, { cut: { wall: "xMax", holes: d.holes } })), stillSurface(U, lights));
+  const shell = new Mesh(shellGeometry(boxRoom(box, { cut: { wall: "xMax", holes: d.holes } })), stillSurface(U, lights, { house: true }));
   const paint = paintMaterial(U, lights, {
     uPaint: { value: vec(unitColor) }, uWood: { value: vec(tok("wood")) }, uCool: { value: vec(tok("wallShade")) },
     uSunTint: { value: vec(tint(tok("lime-50"), sun)) }, uSpillTint: { value: vec(mixc(tok("lime-50"), spill, 0.5)) },
     uShadeK: { value: 0.58 }, uWear: { value: lr ? 0.3 : 0.7 },
-  });
+  }, { leafWear: true });
   const glow = glowMaterial({ low: lr ? day : mixc(tok("sun-200"), unitColor, 0.08), high: lr ? tok("sky") : mixc(tok("sun-100"), unitColor, 0.05), y0: 0, y1: 2.4 });
   const panelPaint = paint.clone();
   panelPaint.uniforms = { ...paint.uniforms, uWear: { value: 0.25 } };
@@ -256,9 +259,9 @@ function doorKit(d, { U, lights, sun, day, terr, room = [2.4, 1.05] }) {
   const ao = isLr
     ? `float paintAo(vec3 P){ float e = min(min(P.z - ${f4(d.zc - half)}, ${f4(d.zc + half)} - P.z), ${f4(DOOR.h)} - P.y); return 1. - .3 * (1. - smoothstep(0., .07, e)); }`
     : `float paintAo(vec3 P){ float h = length(P.xz - vec2(${f4(l.corner[0])}, ${f4(l.corner[2])})); return (1. - .24 * (1. - smoothstep(0., .3, h))) * (1. - .16 * (1. - smoothstep(0., .14, P.y))); }`;
-  const paint = paintMaterial(U, lights, own, { ao });
-  const panelPaint = paintMaterial(U, lights, { ...own, uWear: { value: isLr ? 0 : 0.12 } }, { ao });
-  const frame = paintMaterial(U, lights, { ...own, uWear: { value: isLr ? 0 : 0.2 }, uGrad: { value: 0 } });
+  const paint = paintMaterial(U, lights, own, { ao, leafWear: true });
+  const panelPaint = paintMaterial(U, lights, { ...own, uWear: { value: isLr ? 0 : 0.12 } }, { ao, leafWear: true });
+  const frame = paintMaterial(U, lights, { ...own, uWear: { value: isLr ? 0 : 0.2 }, uGrad: { value: 0 } }, { leafWear: true });
   const out = [doorMeshes(d, { paint, frame, panel: panelPaint, glow: null })];
   // The room past an open doorway: room[0] deep, wider than the door so an oblique camera finds a side wall,
   // its light the transom's (sun-100 on the back wall, a few percent of the unit, D6.5 ≤ 15%).
@@ -301,7 +304,7 @@ export const HUB_SPACING = (2 * hubHalfH() * HUB.aspect) / 3;
 export const hubDoorZ = (i, n = HOME_BEATS.length) => (i - (n - 1) / 2) * HUB_SPACING;
 // Little Rose's bay: no gallery sun within this distance of its door's centre (feathered over the last 0.3 m).
 export const HUB_NO_SUN = 1.2;
-function hub({ lime, terr }) {
+function hub({ lime, terr, gach = null }) {
   const box = { min: [-HUB.dist - 2.4, 0, -7.5], max: [0, HUB.ceiling, 7.5] };
   const units = HOME_BEATS.map((b) => b.unit);
   const doors = units.map((unit, i) => doorSpec({ wx: 0, zc: hubDoorZ(i, units.length), unit, hinge: i < units.length / 2 ? -1 : 1 }));
@@ -319,16 +322,16 @@ function hub({ lime, terr }) {
   const inside = doors.flatMap(doorOpenings);
   const lights = [{ dir: L, apertures: [screen], ...bay }, { dir: Li, apertures: inside }];
   const day = mixc(tok("sky"), tok("wallSun"), 0.45), spillT = [day, day.clone().multiplyScalar(0.9), day];
-  // Warm plaster, and a terrazzo floor with the same warmth in its cement (never the morning rooms' grey).
-  const shade = warmShade(0.66);
-  shade[1] = mixc(tok("floorShade"), tok("lime-300"), 0.72);
+  // The corridor's house (D0.6.2): yellow wash over the mint dado, broken 10 cm short of every door frame
+  // (Little Rose's too), the warm ceiling and plain cream tiles; no runner, no fans.
   const U = {
-    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade, sunT: roomSun(sun, 0.4), spillT, refs: [Math.abs(L.x), Li.y], lime, terr }),
+    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade: houseShade(), sunT: houseSun(sun, 0.4), spillT, refs: [Math.abs(L.x), Li.y], lime, terr }),
     ...apertureUniforms(lights, [L, Li]),
+    ...houseUniforms({ gach, runner: 0, doorWall: 0, half: DOOR.w / 2 + DOOR.frame, doors: doors.map((d) => d.zc), sun, k: 0.4 }),
   };
   U.uI.value = [0.9, 0.95];
   const contact = doorContact(doors);
-  const shell = new Mesh(shellGeometry(boxRoom(box, { cut: { wall: "xMax", holes: doors.flatMap((d) => d.holes) } })), stillSurface(U, lights, { contact }));
+  const shell = new Mesh(shellGeometry(boxRoom(box, { cut: { wall: "xMax", holes: doors.flatMap((d) => d.holes) } })), stillSurface(U, lights, { contact, house: true }));
   const objects = [shell];
   for (const d of doors) objects.push(...doorKit(d, { U, lights, sun, day, terr }));
   return { box, lights, U, objects, subject: [], glow: [], shafts: false, noSun };
@@ -376,20 +379,21 @@ function centerDoor({ lime, terr, unit }) {
 // out on every side, and a floor line would draw across that fade). The page draws the six frames in
 // light over it; nothing hangs in the render.
 const GALLERY = { eye: 1.2, dist: 4.2, screen: { z: CENTER_SIDE, x: [-5.0, -1.2], y: [1.5, 2.9] } };
-function galleryWall({ lime, terr }) {
+function galleryWall({ lime, terr, gach = null }) {
   const box = { min: [-7.5, 0, -7], max: [0, 3.3, CENTER_SIDE] };
   const sunSpec = STILL_SUNS.gallery, L = sunFixed(sunSpec), sun = sunColor(sunSpec.color);
   const { z, x: [x0, x1], y: [y0, y1] } = GALLERY.screen;
   const screen = { mode: "window", pattern: "hoaThi", corner: [x0, y0, z], u: [1, 0, 0], v: [0, 1, 0], size: [x1 - x0, y1 - y0], depth: DEPTH, feather: 0.3, penumbra: 0.25 };
   const lights = [{ dir: L, apertures: [screen] }];
-  const shade = warmShade(0.7);
-  shade[1] = mixc(tok("floorShade"), tok("lime-300"), 0.72);
+  // The corridor's house (D0.6.2): wash with its loang over the mint dado, no door in this stretch.
+  const shade = houseShade();
   const U = {
-    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade, sunT: roomSun(sun, 0.4), spillT: shade, refs: [Math.abs(L.x), 1], lime, terr }),
+    ...surfaceUniforms({ box, fillDir: [-1, 0, 0], sun, shade, sunT: houseSun(sun, 0.4), spillT: shade, refs: [Math.abs(L.x), 1], lime, terr }),
     ...apertureUniforms(lights, [L, new Vector3(0, 1, 0)]),
+    ...houseUniforms({ gach, runner: 0, doorWall: 0, half: DOOR.w / 2 + DOOR.frame, doors: [], sun, k: 0.4 }),
   };
   U.uI.value = [0.92, 0];
-  const shell = new Mesh(shellGeometry(boxRoom(box)), stillSurface(U, lights));
+  const shell = new Mesh(shellGeometry(boxRoom(box)), stillSurface(U, lights, { house: true }));
   return { box, lights, U, objects: [shell], subject: [], glow: [], shafts: false };
 }
 // Square on to the gallery wall from GALLERY's spot, the lens framing wall window [z0, z1] × [y0, y1].
@@ -528,13 +532,15 @@ export const SHOTS = {
   "not-found": { scene: (o) => frontal({ ...o, missing: [7, 2] }), crops: { square: { pos: [-1.9, 1.1, 0.1], look: [2.6, 1.35, 1.55], fov: 56 } } },
   story: { scene: (o) => room(o), crops: { story: { pos: [-2.4, 1.1, 1.2], look: [0.9, 1.35, -4], fov: 40 } } },
   // 21:9 from 600 px (the frames hang over its left half, the light runs on to the right), 16:10 on phones.
+  // The house's wash above its dado (D0.6.2): the frames hang on the yellow, as photos hang above a dado, and
+  // the dado's painted line stays just under the crop, so no line runs through the page's bottom fade (D0.5).
   "gallery-wall": { scene: (o) => galleryWall(o), crops: {
-    desk: galleryCam(-2.6, { z0: -5.6, z1: 0.4, y0: 0.02, y1: 2.591 }),
-    mobile: galleryCam(-2.4, { z0: -4.1, z1: -0.7, y0: 0.02, y1: 2.145 }),
+    desk: galleryCam(-2.6, { z0: -5.6, z1: 0.4, y0: 0.95, y1: 3.25 }),
+    mobile: galleryCam(-2.4, { z0: -4.1, z1: -0.7, y0: 0.95, y1: 3.075 }),
   } },
   // The passage's end (K4) for the pages without the live flight: the home corridor's own three doors, the
   // open ones open, Little Rose shut.
-  "passage-corridor": { scene: (o) => corridorScene({ ...o, beats: HOME_BEATS, open: DOOR_OPEN }), crops: {
+  "passage-corridor": { scene: (o) => corridorScene({ ...o, beats: HOME_BEATS, open: DOOR_OPEN, leaflets: "rest" }), crops: {
     desk: { pos: EXIT.to.toArray(), look: exitLook(EXIT.to).toArray(), fov: EXIT.fov.landscape },
     mobile: { pos: EXIT.to.toArray(), look: exitLook(EXIT.to, 14).toArray(), fov: 62 },
   } },
@@ -558,7 +564,7 @@ function bayShot(i) {
   }
   return {
     scene: (o) => {
-      const set = corridorScene({ ...o, beats: HOME_BEATS, t });
+      const set = corridorScene({ ...o, beats: HOME_BEATS, t, leaflets: "rest" });
       set.specs.forEach((_, j) => set.setDoor(j, j <= i ? DOOR_OPEN : 0));
       return set;
     },
@@ -588,8 +594,9 @@ for (const [name, p] of Object.entries(S3_STILLS)) {
 
 export async function buildStill(name, crop, { gl, aspect, cam: tryCam = null, sun: trySun = null }) {
   const shot = SHOTS[name];
-  const [lime, terr] = await Promise.all([bakeLimeWash({ slice: false }), bakeTerrazzo({ slice: false })]);
-  const set = shot.scene({ lime, terr });
+  // Every corridor-scene shot and every door wall of the house gets the runner's textures (D0.6.2).
+  const [lime, terr, gach] = await Promise.all([bakeLimeWash({ slice: false }), bakeTerrazzo({ slice: false }), bakeGachBong({ slice: false, size: 512, aniso: 8 })]);
+  const set = shot.scene({ lime, terr, gach });
   if (trySun) sunFixed({ az: trySun[0], el: trySun[1], mirror: set.lights[0].dir.x < 0 && trySun[2] !== 0 }, set.lights[0].dir);
   const scene = new Scene();
   scene.add(...set.objects);

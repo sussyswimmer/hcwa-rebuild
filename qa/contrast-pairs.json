@@ -333,5 +333,55 @@
   "texto": "--color-ink-500",
   "fondo": "--color-shade-100",
   "tipo": "ui"
+ },
+ {
+  "texto": "--color-ink-900",
+  "fondo": "--color-world-vang-shade",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-900",
+  "fondo": "--color-world-vang-sun",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-900",
+  "fondo": "--color-world-gach-shade",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-900",
+  "fondo": "--color-world-ceiling-warm",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-tile-cream",
+  "fondo": "--color-tile-indigo",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-tile-cream",
+  "fondo": "--color-tile-jade",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-tile-cream",
+  "fondo": "--color-tile-brick",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-tile-indigo",
+  "fondo": "--color-lime-100",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-tile-jade",
+  "fondo": "--color-lime-100",
+  "tipo": "ui"
+ },
+ {
+  "texto": "--color-tile-brick",
+  "fondo": "--color-lime-100",
+  "tipo": "ui"
  }
 ]

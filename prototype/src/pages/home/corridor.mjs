@@ -12,7 +12,8 @@ import { EMBLEMS } from "../../world/objects/door.js";
 //   into it.
 // - Stage (html.stages + is-stage, added by motion/stages.js once every card fits): the track is the walk's
 //   scroll length, the frame is sticky, the live corridor (or, without it, the bay's view) fills it, and the
-//   panel shows the stage header, then one card per beat, with an index of the doors.
+//   panel shows the stage header, then one card per beat, with an index of the doors. The link to every center
+//   comes in under the last card and goes with it (critique r1: never a link alone on plaster).
 // Each [data-beat] card is one door of the live corridor (unit, open or closed, its transom's emblem), in
 // DOM order: adding or removing a center here adds or removes its door. Little Rose: closed door, no
 // location, never "visit", its privacy note in words, its light plain daylight (--spill none).
@@ -44,10 +45,16 @@ const rail = (c, centers) => html`<nav class="bays__rail" aria-label="${c.t("cen
   <ol>${centers.map((x, i) => html`<li><a href="#center-${x.id}" data-to="${i}" style="--unit:var(--color-unit-${x.accent})">${screenArt(EMBLEMS[x.id] ?? "hoaThi", { cols: 3, rows: 1, cls: "rail__transom" })}<span>${c.tx(x.shortName)}</span></a></li>`)}</ol>
 </nav>`;
 
+// Traces of children's lives (05-DESIGN D6.8): only the chalk lò cò on the Tre Xanh bay's plain band, drawn by the
+// live corridor when content/draft/world.json switches traces on. Staging shows it for HCWA's safeguarding lead to
+// judge in context; PROD renders it only once HCWA has approved (and the PROD guard fails the build before then).
+// Never in a still, never in or near Little Rose's bay (sets/corridor.js).
+const tracesOn = (c) => c.content.world?.traces?.enabled === true && (!c.prod || c.content.world.traces.approved === true);
+
 export function corridor(c) {
   const { site, work } = c.content;
   return html`
-<section class="bays-section" id="centers" data-world="corridor" data-stage style="--n:${work.centers.length}" aria-labelledby="centers-title">
+<section class="bays-section" id="centers" data-world="corridor" data-stage${tracesOn(c) ? " data-traces" : ""} style="--n:${work.centers.length}" aria-labelledby="centers-title">
   <a class="bays__skip" href="#work">${c.t("skipCenters")}</a>
   <div class="bays__track" data-stage-track>
     <div class="bays__frame">
@@ -59,9 +66,9 @@ export function corridor(c) {
         </div>
         ${rail(c, work.centers)}
         <ol class="bays">${work.centers.map((x, i) => bay(c, x, i))}</ol>
+        <p class="bays__all">${textLink(c.url("ourWork") + (c.lang === "vi" ? "#co-so" : "#centers"), c.t("allWork"))}</p>
       </div>
     </div>
   </div>
-  <p class="container bays__all">${textLink(c.url("ourWork") + (c.lang === "vi" ? "#co-so" : "#centers"), c.t("allWork"))}</p>
 </section>`;
 }

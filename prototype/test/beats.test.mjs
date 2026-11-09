@@ -227,7 +227,11 @@ test("the corridor's markup: one card per center in order, the door index, the s
   const { STILLS } = await import("../src/world/still-shots.js");
   for (const lang of ["vi", "en"]) for (const prod of [false, true]) {
     const c = ctx(lang, "home", prod), m = str(corridor(c)), ids = c.content.work.centers.map((x) => x.id);
-    assert.match(m, /<section class="bays-section" id="centers" data-world="corridor" data-stage style="--n:3"/);
+    assert.match(m, /<section class="bays-section" id="centers" data-world="corridor" data-stage(?: data-traces)? style="--n:3"/);
+    // The chalk lò cò's switch (D6.8): staging only while HCWA has not approved traces, never on a PROD page.
+    if (prod && c.content.world?.traces?.approved !== true) assert.doesNotMatch(m, /data-traces/);
+    // The link to every center is in the panel, after the cards (critique r1: never alone on plaster).
+    assert.match(m, /<\/ol>\s*<p class="bays__all">/);
     assert.match(m, /<div class="bays__track" data-stage-track>/);
     assert.deepEqual([...m.matchAll(/<li class="bay" id="center-([\w-]+)" data-beat/g)].map((x) => x[1]), ids);
     assert.deepEqual([...m.matchAll(/<a href="#center-([\w-]+)" data-to="(\d+)"/g)].map((x) => [x[1], +x[2]]), ids.map((id, i) => [id, i]));
@@ -298,7 +302,16 @@ test("the way out: the last card holds to 0.95, the camera only starts to leave 
   for (let x = 0; x < 1; x += 0.05) assert.ok(walkLeave(x + 0.05) >= walkLeave(x), "never back");
   // Under the last card the camera has not moved more than its reading drift.
   assert.ok(walkT(WALK.release, n) - walkT(WALK.beats[0] + (n - 1 + 0.5) * ((WALK.beats[1] - WALK.beats[0]) / n), n) < 0.2);
-  assert.ok(WALK_OUT.wash > 0 && WALK_OUT.wash <= 0.25, "the wash is done within the plaster's first quarter screen");
+  // Critique r1: the wash lasts at least D0.5's 24svh (16svh on a phone), from the top of the frame down, until the
+  // next sheet's top is near the frame's top; the camera looks 12–15° down to the runner over the stage's end.
+  const { washSpan, walkPitch } = await import("../src/world/journey.js");
+  assert.ok(WALK_OUT.wash >= 0.24 && WALK_OUT.washPhone >= 0.16);
+  assert.equal(washSpan(1000, 1100, 1440, 900).len, 0.24 * 900, "never under 24svh, even with the sheet close");
+  assert.equal(washSpan(1000, 1100, 390, 844).len, 0.16 * 844, "never under 16svh on a phone");
+  assert.equal(washSpan(1000, 2000, 1440, 900).len, 2000 - WALK_OUT.end * 900 - 1000, "until the sheet's top is near the frame's top");
+  assert.equal(walkPitch(0.9), 0);
+  assert.ok(walkPitch(1) >= 12 && walkPitch(1) <= 15);
+  for (let q = 0.9; q < 1; q += 0.01) assert.ok(walkPitch(q + 0.01) >= walkPitch(q), "the look down never goes back");
   const { readFileSync } = await import("node:fs");
   const css = readFileSync(new URL("../src/styles/stages.css", import.meta.url), "utf8");
   assert.match(css, /\.bays__track \{ height: calc\(100svh \+ var\(--n\) \* 50svh\); \}/, "no 10svh tail on the track");

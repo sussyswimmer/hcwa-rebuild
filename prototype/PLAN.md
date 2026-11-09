@@ -259,31 +259,123 @@ share one fixed canvas and one camera path with no opaque sheet between them (D5
   with doorway spill (≤ 15% unit tint) and transom emblem light (Đốt tre, Vòm cầu); Little
   Rose closed, Hoa thị transom, untinted daylight, no trace in its bay; sun t 0.25 → 0.45
   nearly head-on to the door wall; lò cò chalk in bay 1 (if approved).
+- **Richness pass (9 Nov 2026, D0.6.2; Maxwell: "a plain white wall").** The corridor becomes a
+  Saigon *mái ấm*:
+  - Walls: Saigon-yellow lime wash with *loang* (from the lime texture's alpha) over a mint
+    oil-paint dado to **0.90 m** on every wall. The dado stops 10 cm short of **every** door frame,
+    Little Rose's included. No door surrounds.
+  - Floor: a calmed *gạch bông* runner on the screen side (border, 6 field rows, border; no brick)
+    and plain cream tiles in the 0.8 m sunlit band by the door wall, where the emblem light lands.
+  - Ceiling: warm (`ceiling-warm`).
+  - Life: one ceiling fan per bay except Little Rose's (shadows Tier 2 only) and *lá me* leaflets
+    (16 / 32). Tier 2 moves on the clock and the scroll, at the existing 30 fps idle cadence and only
+    while the corridor is on screen. Tier 1 moves only with the scroll. Everything freezes when paused.
+  - Not built: pots, plants, *hoa sứ*, transom glass, the clerestory and the end window.
+  - Draws: frames, plus Little Rose's static leaf, become one draw; props are one draw; ≤ 12 draws at
+    bay 1 on Tier 1.
+  - Stills: `bay-*` and `passage-corridor` are re-rendered with the house (fans still, leaflets
+    resting). So are Our Work's `hub-doors-wide`, `hub-door-*`, `door-*` and Green Bamboo's
+    `gallery-wall` (wash, dado and plain tiles only).
+  - Pane: rail labels and the stacked meta lines go to ink-900. The pane stays at 96% / 92%.
+  - Port list and file ownership: D0.6.6.
 - **Skills:** `scroll-experience` (sticky stage, steps), `3d-web-experience`,
-  `threejs-materials` (paint, `toneMapped: false`), `threejs-animation` (door swings),
-  `frontend-ui-engineering` (cards, tabs, focus), `design-token-contrast` (unit bands).
+  `threejs-materials` (paint, `toneMapped: false`), `threejs-shaders` (house surface, props vertex
+  motion), `threejs-animation` (door swings, fans, leaflets), `frontend-ui-engineering` (cards,
+  tabs, focus), `design-token-contrast` (unit bands), `fixing-motion-performance` (bake slices).
 - **Accept:** removing a card from the DOM removes its door (beats test); Little Rose test
   passes; lit door swatches ΔE2000 ≤ 3 against unit tokens; emblem shapes readable on the
   floor at 390 (stills reviewed); tab order: skip link → tabs → card links, focus never on a
   hidden card; 200% text zoom stacks the stage; on G1 failure mobile shows door stills with
-  the same cards.
+  the same cards. **Richness pass, also:**
+  - `test/little-rose.test.mjs` gains:
+    - the props check over three bay orders: no prop vertex within the bay ±0.3 m, no leaflet path
+      within ±0.8 m, no fan disc touching it;
+    - no `tile-brick` in the corridor set or props;
+    - every colour used as light in the corridor is untinted or has g ≥ r;
+    - the door stays at 0 and the transom is plain whatever the DOM says.
+  - Text contrast:
+    - `light-contrast.mjs` passes on the re-rendered stills (all stage points, VI/EN, 390/1440);
+    - the live probe passes on Tier 1 **and** Tier 2 at stage 0.04 / 0.17 / 0.22 / 0.50 / 0.78
+      (H ≥ 4.5, running text ≥ 7, darkest 1%, 0 lines below).
+  - Light:
+    - `check-sun-crisp` passes;
+    - the emblem pools at 390 reach a lit-to-shade luminance ratio ≥ 1.6;
+    - the runner never reaches under the bông gió patches.
+  - Card sync: the 1440 Tier 1 bay-1 frame is re-captured and no dwell frame shows two headings each
+    above 10% opacity (beats test plus strip).
+  - Performance:
+    - no bake slice over 16 ms on the 4× CPU trace and INP < 200 ms, otherwise the bake moves to a
+      worker;
+    - `lcp.cjs` median of 3, world on and off, ≤ 2.5 s;
+    - GPU ≤ 12 ms at 390 × 844 on a real A15-class phone, or "not measured on device" logged in
+      section 9 with the runtime gate in place;
+    - the D0.6.2 ladder is applied in order if it misses.
+  - Stills: every still is within the `encode-posters.py` budgets.
+  - Review: the 16-frame strip (390/1440, Tier 1/2) is reviewed for busyness and the "could this be a
+    café?" question. If it is busy, simplify the field tile to indigo on cream first.
+  - `?house=` flags removed; 97.5% pane not ported.
 
 ### H5. Our work sheet (`#work`): Desire 2
 
 The first opaque sheet. It slides over the corridor's last frame with a bông gió top edge;
 the canvas pauses once the sheet covers it. Background lime-100 (sun) with the CSS sun
-layer in the right margin.
+layer in the left margin behind the H2 (moved from the right margin on 9 Nov: Bảo vệ's tiles fill the top
+right now, D0.6.3).
 
-**H5a. Focus areas bento**
+**H5a. Focus areas: a floor of *gạch bông* (richness pass, 9 Nov 2026, D0.6.3)**
+
+Maxwell: "so bland and all white". The bento's pale tiles are replaced by cement tiles in pigment: the
+corridor's floor seen from above. This replaces the 8 Nov bento. The sentence on the bento's shade pools
+in section 9 "Continuity" no longer applies.
 - **Content:** H2 `work.focusTitle` (new draft: "[DRAFT: Lĩnh vực hoạt động]" / "[DRAFT: Areas
-  of work]"); `work.focusAreas[]` `name`, `text` (draft), link `?area=<id>` to Our Work.
-- **Layout:** 1440 gapless 4-column dense grid: Giáo dục 2 × 2 (Hoa thị), Bảo vệ trẻ em 2 × 1
-  (Mắt cáo), Gia đình và cộng đồng 1 × 1 (Vòng tròn), Vận động chính sách 1 × 1 (Bậc thang) =
-  8/8 cells; tablet 2 columns 6/6; 390 one column with 72 px block art left of the title.
-- **Motion:** `stagger-cascade` (60 ms, max 4); block-art light drifts with `view()`; hover
-  light shift 6 px + lift 2 px.
-- **3D:** none; block art SVG from `blocks-svg.mjs` (same numbers as the shader).
-- **Skills:** `gpt-taste` (gapless bento), `anti-ui-slop`, `design-spells` (light shift).
+  of work]"); `work.focusAreas[]` `name`, `text` (draft), link `?area=<id>` to Our Work. No new
+  strings; every new element is `aria-hidden` decoration.
+- **Layout (tile count is the hierarchy, a tile is never scaled):**
+  - Patches: Giáo dục 2 × 2 tiles (Hoa thị, ochre), Bảo vệ trẻ em 2 × 1 (Mắt cáo, indigo), Gia đình
+    và cộng đồng 1 (Vòng tròn, jade), Vận động chính sách 1 (Bậc thang redrawn as one rising stair,
+    brick).
+  - ≥ 1024 (`--T` = `clamp(136px, 11.7vw, 176px)`): a 4-column grid. The H2 is at columns 1–2, row 1.
+    The `ul` uses subgrid: Bảo vệ at columns 3–4, rows 1–2 (fills the top right); Giáo dục at columns
+    1–2, rows 2–3; Gia đình and Vận động at columns 3 and 4, row 3. Two-tile-wide patches have their
+    words under them, at the cell's foot for Giáo dục; single tiles have their words under them.
+  - 600–1023: 2 columns. Giáo dục and Bảo vệ are full rows with their words beside; Gia đình and Vận
+    động sit side by side.
+  - < 600: one column, one tile per area (`clamp(88px, 30vw, 128px)`, a patch cropped to its first
+    tile) beside its words.
+  - Text: ink-900 / ink-700 on lime-100, never on a tile. The whole area is the link, with the focus
+    ring on the `li`.
+  - `.sun-layer--work` moves to the left margin behind the H2.
+- **Motion (CSS only, transform and opacity only, no blend modes):**
+  - A crisp band of Hoa thị sunlight (the mask `public/svg/sun-hoa-thi.svg` from `blocks-svg.mjs`)
+    crosses each area as it crosses the viewport (a named view timeline per area, `cover 12%–88%`).
+  - The light is the same tile drawn in its `*-lit` pigments, counter-translated so it stays
+    registered, so it lands only on pigment and inlay, never on the plaster.
+  - Band opacity 0.55 → 1 → 0.55.
+  - Hover: lit 0.9 → 1, the name underlines, the arrow moves 3 px.
+  - `stagger-cascade` (60 ms, max 4) is kept.
+  - Rest (reduced motion, pause, no JS, Tier 0, no scroll timelines): the band at 55% of its travel,
+    opacity 0.9.
+- **3D:** none. Tile art is an SVG sprite of 4 symbols from `blocks.mjs` (the shader's numbers), with a
+  border band, corner quarter-motifs that close into rosettes where tiles meet, the block inlaid in cream,
+  and one `feTurbulence` wear filter on the base only.
+- **Skills:** `anti-ui-slop`, `design-taste-frontend`, `high-end-visual-design` (tile craft),
+  `emil-design-eng` and `ui-motion` (Silk light band), `scroll-experience` (view timelines),
+  `design-token-contrast`.
+- **Accept (H5a):**
+  - The work-sheet test in `test/sheets.test.mjs` asserts 4 `li.gach`, patch sizes 4 / 2 / 1 / 1
+    `<use>`s, one sprite, and no `.tile` or `.bento` markup.
+  - `check-tiles.cjs` is pointed at `.gach`: no heading or text rect overlaps any tile art or light
+    band, at 390 / 600 / 768 / 1024 / 1440, VI and EN.
+  - All four names are inside the first 1440 × 900 view of the section. No quadrant of the section's
+    box at 1440 is empty plaster (the old top right).
+  - Rest frames at 390 and 1440 (reduced motion, no JS) are screenshotted and look deliberate, not
+    stained. No light on the plaster at any scroll position (screenshot the strip at 390, where the
+    proposal's blobs leaked between tiles).
+  - Vận động reads as rising steps at 88 px.
+  - 320 px has no overflow (VI, EN, no JS). Tastegate passes at 390 / 1440, VI / EN.
+  - CSS ≤ +0.6 KB gzip **net**, with the dead `.bento`, `.tile*` and `lightArt` deleted. Home HTML ≤ +1.5
+    KB gzip. No JS.
+  - Log the departure from the 8 Nov bento in section 9.
 
 **H5b. Impact plaques**
 - **Content:** `impact.figures[]` with `scope: organization` (4 figures, all unverified):
@@ -619,8 +711,8 @@ band of light in the flow instead of a pinned stage.
 6. Idle tamarind sway in the corridor, Tier 2 only.
 7. Corridor doors swing on `--ease-out` instead of smoothstep.
 
-**Continuity (D0.5) on the sheets.** The work sheet's bento has no mortar lines and no outline: each
-focus area is a pool of shade feathered into the plaster under its block, separated by sunlit valleys.
+**Continuity (D0.5) on the sheets.** The work sheet's focus areas are a floor of gạch bông (H5a, see
+"H5a focus floor" below): no line is drawn between areas, the joints are the page's own plaster.
 Plaques have no frames. Work (lime-100) runs into news (shade-100) over 28svh (18svh on phones) with
 eased stops. Louver faces feather in over 36 px. The footer parapet is a row of lit Hoa thị holes with
 no blue-950 band, and the dusk still's foot sinks into the night. Lit headers end their fade above the
@@ -665,6 +757,140 @@ live corridor and shutters, which use the same surface) drew a 1 px unshaded bri
 skips only the face it lies in (by its normal). Every still was re-rendered and re-encoded within budget;
 the hero room (`materials/surface.js`) is unchanged.
 
-**Scripts.** `npm run svg` regenerates `public/svg/` from the block SDF numbers. `npm run check:tiles`
-checks that no home focus tile's heading touches its block art (1024 and 1440, VI and EN). The pause
+**Scripts.** `npm run svg` regenerates `public/svg/` from the block SDF numbers (now also
+`sun-hoa-thi.svg`, the floor's sunlight). `npm run check:tiles` checks the gạch floor: no heading or line
+of text touches any patch or its light band, the sun layer touches neither, all four names sit in the
+section's first 1440 × 900 view, and nothing scrolls sideways (320 / 390 / 600 / 768 / 1024 / 1440, VI and
+EN). The pause
 toggle carries `data-paused` (no `aria-pressed`); `check-page.cjs` and `check-hero.cjs` read that.
+
+**H5a focus floor (richness pass, 9 Nov 2026; focus engineer).** Built to D0.6.3. The 8 Nov bento, its
+`.bento` / `.tile*` / `.block-light*` CSS and `lightArt` are deleted. Where the build differs:
+1. From 1280 px, Giáo dục and Bảo vệ set their words beside the patch, at its foot, not under it. At 1440
+   a two-tile patch (337 px) left 311 px of bare plaster beside it in its two-column cell, and words under
+   Bảo vệ's patch left the top right empty again. 1024-1279 keeps D0.6.3 exactly (words under; Giáo dục's
+   at the cell's foot), because words beside would be under 20ch there.
+2. The corner motifs are clipped to the medallion's square with a 4 mm corner, not its 14 mm one. With
+   rx 14 the cream quarter Hoa thị (lobe 13) sat almost wholly in the joint and no rosette closed. The
+   medallion keeps rx 14 underneath, so a tile reads as square with quarter-flowers in its corners.
+3. Mắt cáo inlays keep only the block's 9 whole diamonds: the slivers its frame cuts read as grit at 88 px.
+4. Symmetric tiles are laid at quarter turns (as a real floor is), so the wear never repeats within a
+   patch; the stair is never turned. Wear is one feTurbulence (fractal, 0.62, 2 octaves, alpha 8a - 4.1)
+   at 32%: a fine cement speckle. Lower frequencies read as water stains.
+5. The 2 × 2 inlay blocks carry a 0.8 mm cream stroke, which closes the anti-aliased hairlines where the
+   Vòng tròn quarter rings meet in the middle.
+6. The sun layer is an absolutely placed item in the H2's own grid row (cols 1-2 from 1024), so it can
+   reach neither a tile nor an area's words; `check:tiles` asserts it.
+7. The arrow keeps to the name's last word with a word joiner (U+2060), never alone on a line.
+8. The light band's rest (55% of travel, opacity 0.9) also applies on Tier 0, as D0.6.3 lists.
+9. Our Work's filter chips keep the `screenArt` block icon; D0.6 does not extend the floor to them.
+Budgets: home HTML +0.6 KB gzip (VI and EN), main CSS +0.2 KB gzip net, `public/svg` 4.8 KB of 6. No JS.
+Measured text over the floor: H2 and names 13.02, lines 7.41 (lime-100 under every word at 390 and 1440,
+VI and EN, Tier 0 and 1). HCWA approves the tile palette and the brick tile (D0.6.4).
+
+**H5a focus floor, fix round 1 (9 Nov 2026; focus engineer).** Maxwell: "so bland and all white". Built to the
+critique's items; where the build differs, and what it supersedes above:
+1. **The sheet rises under the corridor's exit (D0.5).** On the stage (`#centers.is-stage + #work`) it rises
+   24svh (16svh below 600 px) with a `clamp(24px, 3vw, 48px)` lead, so the H2 and the first patch arrive in
+   the lower half of the screen while the runner is still fading above. The sheet keeps its bông gió row and
+   is plaster from its top, not see-through: the corridor's wash now runs from the frame's top down
+   (`WALK_OUT`), so a see-through lead would have set the H2 on the runner. Stacked (Tier 0, reduced motion,
+   no JS) there is no picture and the corridor's list ends on the link to every center, so the sheet rises
+   only into the corridor's own foot, `--section-y − --s-8`, and keeps 64 px clear of that link.
+2. **Light band** as the critique set it: Hoa thị blocks 0.42 of a tile, a band 2 tiles wide with 10% side
+   fades, the lit copy at wear 0.16 (supersedes D0.6.3's "`--wear: 0` in the lit copy"). `sun-hoa-thi.svg`
+   now holds five rows (1650 units, 2.3 tiles): the shear does not repeat in y, and three rows would have
+   tiled with a seam inside Giáo dục's patch. At rest `check:tiles` counts, from the mask's own lattice, the
+   whole quatrefoils in the band's unfaded part: 4 on a single tile, 7 on Bảo vệ, 14 on Giáo dục, at every
+   width (the geometry scales with `--T`). Opacity at rest stays 0.9.
+3. **A patch is one laid floor.** Each tile is a square of cement (`--cream`) with its medallion 2 mm in (was
+   7) and rx 1.5; the corner motifs clip to the tile's square (supersedes item 2 above), so four quarter-discs
+   close into one rosette across the joint. Tiles meet at a 1.5 px `vector-effect: non-scaling-stroke` grout
+   joint (`color-mix(tile-cream, ink-700 14%)`; in the light `sun-100` + 12%), drawn only between tiles: no
+   outline goes round a patch. `--T` is unchanged.
+4. **A cement ground.** `.floor::before` is tile-cream and `.floor::after` its speckle (`public/svg/cement.svg`,
+   the tiles' own wear noise, alpha only, seamless at 240 px) in `color-mix(tile-cream, ink-700 44%)` at 0.28,
+   both under one ellipse feathered from 46% to 100% of its radius (at least 100 px at 320, 194 px at 1440).
+   **Departure:** the areas' lines are ink-900, not ink-700 (D0.6.3): ink-700 fell under 7:1 on the darkest
+   grains. Measured with the text hidden, darkest 1% under each line, VI and EN, 390 and 1440, Tier 0 and
+   Tier 1 (sheet rising, and floor in view): every line ≥ 10.86, 0 below. Size and weight keep the hierarchy.
+5. **No plaster hole.** From 1024 px Giáo dục's words follow its patch straight away (supersedes item 1's
+   "at the cell's foot" for 1024-1279): beside the patch's first row from 1280, under the patch below that.
+6. **Phones show the tile count.** Below 600 px Giáo dục shows its whole 2 × 2 patch and Bảo vệ its 2 × 1,
+   above their words; Gia đình and Vận động keep one tile beside theirs (supersedes D0.6.3's < 600 row).
+   `check:tiles` asserts every patch shows whole tiles at its count, one `--T` for all (320-1440).
+7. **`.sun-layer--work` is deleted** (the critique's second option; supersedes item 6 above). Crisp patches
+   behind the H2 would sit in the overlap, over the corridor's picture; the tile light carries the sheet.
+8. Not done: the Our Work filter chips' tile swatches (could). `src/pages/work.mjs` has no owner in this round.
+9. `check:tiles` also walks the stage overlap at 390 and 1440 (Tier 1) in 40 px steps and fails when the
+   sheet hides more than a third of a corridor line that can still be read, or when any sheet word or tile
+   touches one.
+Budgets: home HTML +54 B gzip (VI and EN), main CSS +0.33 KB gzip (with the corridor's concurrent stages.css
+changes), `public/svg` 5.3 KB of 6. No JS. HCWA still approves the tile palette and the brick tile.
+
+**H4 corridor richness pass (9 Nov 2026; corridor engineer).** Built to D0.6.2 and D0.6.4 from the port list
+(saigon-home's bake, house surface, fans and leaflets, vertex paint, props clock; colour-light's loang in the
+lime texture's alpha, Little Rose leaf merge, still baking, ink-900 meta lines, red/pink test). Not ported:
+pots, plants, hoa sứ, door surrounds, the 97.5% pane, the `?house=` flags, anything glass. Where the build
+differs:
+1. **The bake runs in a module worker** (`world/gach-worker.js`, pure maths in `world/gach-bake.js`). On the
+   4× CPU trace the main-thread bake's first slice took 32 ms (rule: 16 ms), so D0.6.2's fallback applies:
+   the worker bakes both textures and hands back transferable buffers (138 ms Tier 1, 319 ms Tier 2 at 4×,
+   0 ms on the main thread). Where no module worker starts, the sliced main-thread bake (8 / 16 rows) loads
+   as its own chunk. The stills call the maths directly.
+2. **Fan shadows land on the surfaces, not in the shafts.** In the shafts' march the blade test ran in every
+   step: the SwiftShader proxy at 1440 Tier 2 went from +6% (no fans) to +52%; with the blades on the
+   surfaces only it is +11%. On a gate step from Tier 2 to Tier 1 the fans stop casting (a uniform), their
+   test stays compiled.
+3. **The house's sun targets shift relative to `sun-corridor-a`**, not the room's warmer rest sun, so at
+   t 0.25 a patch on the wash is `world-vang-sun` and on the dado `world-dado-sun` (measured in D0.6.1).
+   The dado's painted line in the sun is `dado-line × dado-sun / dado-shade`.
+4. **Wear** is tileable gradient noise with the quintic fade (3 octaves) in the texture's alpha, plus the 3%
+   speckle; quintic value noise still showed axis-aligned blocks at 2×. The shader lifts pigment toward cream
+   by up to 18%, × a Gaussian (σ 0.35 m) about the runner's centre × the lime texture's broad mottle, so the
+   0.4 m bake never repeats as a pattern. Per-tile tone (±2.5%) is by tile id in the shader.
+5. **Emblem pools: not on the plain band.** The rooms' light leaves the transom at 57°, so the Đốt tre and
+   Vòm cầu pools land 1.49-1.69 m from the door wall, on the runner's field (the 0.8 m plain band takes the
+   screen's sun, which lands within 0.72 m of the wall, and the first 0.8 m of the doorway's spill). On the
+   runner's cream ground the pool is 1.72:1 lit to shade (token maths; the old terrazzo 1.86), but the
+   pattern breaks the slots and the arch: the emblems read in the transoms, not on the floor. D0.6.2's
+   signature check therefore fails as written and needs a lead decision:
+   (a) leave it; (b) steepen the rooms' light to ~76° so the pools reach the plain band (then 7 cm deep and
+   merged with the doorway's spill); (c) centre a 0.8 m runner between a 0.6 m sunlit band and a 1.0 m
+   plain band on the screen side where the pools land.
+6. **Green Bamboo's gallery is framed higher** (wall y 0.95-3.25 m, was 0.02-2.59): with the house's dado
+   in frame its painted line ran under the two lower frames and through the page's bottom fade. The frames
+   now hang on the wash; the dado is just below the crop. `header-green-bamboo` is not in D0.6.2's list and
+   keeps the 8 Nov plaster, so that page shows two plasters (header warm-grey, gallery yellow): flagged.
+7. The rail labels are ink-900 at every size (`.bays__rail a`), not only the 13 px stage ones.
+8. The stills' resting leaflets: two on the tiles in each open bay and one in the lead-in (five in the
+   home corridor). Fans stand at a fixed angle (0.6 rad).
+9. The door frames and Little Rose's leaf merge with a small merge in `objects/door.js`, and `MAX_DOORS`
+   moved to `glsl/blocks.js`: three's BufferGeometryUtils and the doors' light no longer ride in the shared
+   chunk.
+10. Not built: D0.6.2's optional 4° pitch-down during the end wash.
+11. Supersedes H7 item 6 above: the corridor's tamarinds sway on the props clock on every tier (Tier 1 with
+   the scroll only), and Tier 2's idle frames run only while the passage or the corridor intersects the
+   viewport and the frame is not washed out.
+
+Measured (Tier 1 worst frame, bay 1, door open): 12 draw calls (14), 1,306 triangles (560); textures +0.50 MB
+Tier 1, +2.00 MB Tier 2; props 0.05 MB and frames 0.02 MB of geometry. Lazy JS gzip: corridor chunk 10.05 KB
+(6.69), the worker 1.3 KB, world total +6.3 KB on the worker path (target +6: 0.3 KB over; the main-thread
+bake's 1.2 KB chunk loads only when no worker starts). Per frame: two uniform writes
+(`uFanA`, `uTime`), no allocation. SwiftShader proxy (not a GPU measurement; median of 24 frames with a
+pixel read-back): 390 × 844 Tier 1 +13% (89.9 → 101.4 ms), 1440 Tier 1 +14%, 1440 Tier 2 +11%.
+**GPU on a real A15-class phone: not measured on device** (no phone here; 05-DESIGN 13.3). The runtime gate
+(Tier 1 > 14 ms → lite) stays, and the D0.6.2 ladder applies in order if the phone misses.
+Text: `light-contrast.mjs` 212 lines over the re-rendered stills, 0 below; the live probe at stage 0.04 /
+0.17 / 0.22 / 0.50 / 0.78, Tier 1 and 2, VI and EN, 390 and 1440, darkest 1%: 296 lines, 0 below (worst
+running text 7.60 Tier 1, 7.59 Tier 2; headings ≥ 12.5). `check-sun-crisp` passes (its corridor set is
+still listed as skipped). LCP (`lcp.cjs`, median of 3, Moto G Power / Slow 4G / 4× CPU): world off 2,180 ms,
+world on 2,208 ms, default path 2,208 ms (limit 2,500, goal 1,800); the script still exits 1 on its
+first-10 s long-task rule (255 ms; 267 ms before this pass). The 16-frame strips (390 and 1440, Tier 1 and 2,
+VI and EN): live, 0 console errors, no frame with two headings above 10%. `check-bays` 24/24; the matrix
+(home corridor, Our Work, Green Bamboo; VI/EN; 390/1440; Tier 1/2, reduced, Tier 0, no JS; 320): 56 views,
+0 console errors, 0 overflow. Tastegate passes on home, VI and EN. Stills: every `bay-*`, `passage-corridor`, `hub-*`, `door-*` and `gallery-wall`
+file re-encoded within `encode-posters.py`'s budgets (bay and passage AVIF at q49-62).
+HCWA approves before production: the yellow and mint paint, the fans, the leaflets and the tile palette
+(D0.6.4); the safeguarding lead sees `bay-little-rose` re-rendered (no fan, no leaflet, door shut, plain
+transom, the same dado break as every door).
