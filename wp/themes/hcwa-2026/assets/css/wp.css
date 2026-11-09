@@ -75,3 +75,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pagination a.page-numbers { transition: none; }
 }
+/* WordPress-only lists (news hub, categories, search): a one-line title link is a 24 px target on its
+   own (WCAG 2.5.8), not only through the row's stretched ::after. Scoped to .page-wp so the parity
+   routes render exactly as the prototype. */
+.page-wp .dated__title a { display: inline-block; min-block-size: 1.5rem; }

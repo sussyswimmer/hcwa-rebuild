@@ -738,6 +738,68 @@ the lead commits.
   patterns, the port replaced them (see the sections above). "Unverified until
   WordPress runs" is superseded by the real-WordPress checks.
 
+### Final recheck (9 Nov 2026, the final port tree)
+
+Every gate of `docs/plan/11-WP-PORT.md` section 7, run again on the final tree. Logs and
+reports are under `qa/wp-port/final/` (gitignored).
+
+| Gate | Result |
+|---|---|
+| 7.1 Prototype unchanged | Pass. `git diff --stat` since the port began lists only the 4 files 1.1 allows. `npm test` 110/110 (12 files); `npm run build` and `build:pages` pass; `PROD=1 npm run build` fails with exactly the 59 problems, line for line the same as `qa/wp-port/prototype-map/prod-guards.log`. |
+| 7.2 Export | Pass. `export:wp` twice: `assets/generated/`, `prototype-data.php` and `golden.json` unchanged both times (24 generated files, 0 changed); 0 root-absolute references in dist JS or CSS; `showsLittleRoseDoor` holds the 9 stills. Gzip against the prototype's own build today: main + draft CSS 28.3 KB against 28.0 KB, JS entry 7.2 KB against 7.2 KB, motion chunk 53.9 KB against 53.9 KB, world set 165.8 KB on both sides. (The 1.1 figures, 16.0 KB for the entry with its `common` chunk and 183.8 KB for the world set, describe an older prototype build; the rule is "the same as the prototype", which holds.) |
+| 7.3 Unit tests | Pass. `php wp/tests/run.php` 6548 passed, 0 failed; in a fresh copy of the tracked files 6533 passed, 0 failed, 1 skipped (the bundle checks, no `assets/dist/`). |
+| 7.4 Static check | Pass. 0 errors, 10 warnings (the accepted shared-Vietnamese-source and unused-key warnings), the same in the fresh copy; `--self-test` all passed, including two new cases (a synced pattern and an old `core-embed/*` block inside `hcwa/day`). |
+| 7.5 Lint | Pass. The commands above print nothing (158 PHP files, 46 JS files under `wp/`, the parity scripts, `bash -n`, `py_compile`). |
+| 7.6 Every seeded URL renders | Pass. `smoke main`: 174 of 174 (126 page views and 48 HTTP probes, 32 of them feeds); `hcwa coverage` reports no blocking row and the new fields; `debug.log` on `main` stayed at 44,335 bytes (0 new lines). curl on `main`: every refused-attachment form and feed answers 404 `text/html` with no `Location`, no item and no Little Rose path; `/feed/` and `/en/feed/` still list the 4 news posts. |
+| 7.7 Production variants | Pass on a throwaway `scratch-final` (5.9, with `protect-little-rose --apply` in step 1): 42 raw rows unpublished from the `--format=urls` list; production smoke 162 of 162 (72 page views, 90 HTTP probes including the 42 unpublished URLs); `--production-asserts` 32 of 32 route views and 40 of 40 attachment and feed probes; `draft-scan --printed=raw` lists nothing; coverage clean; its `debug.log` holds only core's `translations_api` network warning. Tastegate on production Home, Our Work, Contact and Donate, VI and EN: 8 of 8 pass. The instance is stopped. |
+| 7.8 Parity: structure, text, links | Pass. `parity main -- --full`: structure 996/996, text 900/900, links 900/900; page checks 128/128 on each side (head metadata included). |
+| 7.9 Parity: pixels | Pass. 480/480. 16 rows pass by an allow entry, all at 390 on the three English pages with a news list (the 29 px news-list shift of 2.8); the center lit headers now pass at 0.0% with the uploaded logo masked (58×59 px), so their two allow entries were deleted. |
+| 7.10 Behaviour and budgets | Pass. check-page 24/24, check-hero 381/1 against the prototype's 380/2, check-bays 24/24, check-tiles 16/16, check-sunin 4/3 on both sides, light-contrast 212/212: no prototype PASS line fails on WordPress. World and budgets 34/34: `world-live` at Tier 1 and 2 on both sides, `main.js` evaluated once, no `?ver`, no forbidden assets, home before `load` 10 requests and 223.8 KB (prototype 9 and 222.3 KB), home HTML 14.4 KB gzip, world set 165.8 KB after `load`; the four frame strips pass (24 frames each within 1.0% outside allowed sections, no near-empty frame between the last door and the H2). |
+| 7.11 Mobile LCP | Pass on re-run; the full run was 5 of 6. Home default path: LCP 2092 ms, but the longest main-thread task in one of its three runs was 201 ms against the 200 ms limit (the prototype measured 287 ms in the same run). Re-run of home on WordPress alone: LCP 2068 / 2120 / 2116 ms (Tier 0 / Tier 1 / default), longest task 101 ms, pass. Green Bamboo: 2048 / 2012 / 1996 ms against the prototype's 1980 / 1992 / 1984 ms. CLS at most 0.004. |
+| 7.12 Editor | Not re-run on the final tree. Fix round 2 ran the front-end negative case on real WordPress (a `core/html`, a synced pattern holding `core/html` and an Instagram iframe, and a `core/embed`: none printed). The editor checks last ran in critic round 2 on `scratch-cre` (tree `cc09ea8`: all 10 patterns insert without an invalid block, sections cannot be moved, removed or inserted into, text edits reach the front end); round 2 changed only the front-end render, not the editor. |
+| 7.13 Safeguarding | Pass. No binary added under `wp/` during the port (the old fonts and PNGs were deleted; no tracked image remains under `wp/`); Little Rose rules hold in the smoke and production assertions; no `text-transform: uppercase` in our CSS; the language and number checks pass on every smoke view. |
+| 7.14 Look | Partly. No hard line WordPress adds: 32/32. Tastegate on the 16 parity routes: 32 of 32 pass (prototype and WordPress alike). On 16 other pages (About, Impact, the news hub, a category, a story, search, the Little Rose center, Volunteer; VI and EN), 10 pass; the news hub, the Stories category and search (VI and EN) fail `small_tap_target` on one-line post titles in `ol.dated-list` (23 px tall). That is the prototype's own stretched-link pattern (`.dated__title a::after` covers the whole row, measured 358×125 px or more, so the real tap target is large); tastegate measures only the inline link box. Needs the lead to accept in writing or a small CSS change. Side-by-side full pages (32) are in `qa/wp-port/final/side-by-side/` and the strips in `qa/wp-port/final/parity/strips/`; a person still has to look at them before sign-off. |
+
+Open after the final recheck (none blocks staging; each is listed for the lead):
+
+- 7.14 tastegate on the WordPress-only list pages (above): accept the stretched-link
+  pattern in writing, or give one-line `.dated__title a` a 24 px minimum height in
+  `wp.css` (templates).
+- On production with Impact, Policies and Privacy unpublished, the footer's
+  "Báo cáo & chính sách" column prints its heading and toggle over an empty body, and
+  Donate's `nav.trust` lists three unlinked items (the round-2 could). Leave both out when
+  nothing in them links (templates; 11-WP-PORT 3.5 and `run.py`'s `nav.trust` count change
+  with it).
+- Staging meta descriptions on pages the prototype has no page for (a report's
+  `hcwa_summary`, a post excerpt) still keep their `[DRAFT: …]` brackets; production prints
+  nothing for them. Optional: run that fallback through `hcwa_theme_draft_text()` and change
+  `theme-gates-test.php` line 260 to match.
+- 7.12 editor checks are from critic round 2 (above); re-run them on a scratch instance
+  before Phase 3 if the blocks change again.
+
+What the port cannot finish without others:
+
+- **HCWA's live site or host:** a copy of the live site (task 2.2), then on that copy
+  `wp hcwa protect-little-rose` (dry run reviewed with HCWA before `--apply`),
+  `wp hcwa media-scrub --dry-run`, the posts that still carry Elementor data, the redirect
+  map (Phase 3), Yoast at the live site's version, host caching, compression and HTTP/2,
+  real email delivery, the redirects on the live server, and LCP on a real mid-range
+  Android (05-DESIGN 13.3).
+- **Maxwell:** 11-WP-PORT section 8 Q1 (the Little Rose door on production; until then no
+  door in any form), Q2 (traces stay staging-only unless he chooses 05-DESIGN 6.8), Q7
+  (build `assets/dist/` in CI or commit it on a release branch), Q8 (the level of the
+  section lock) and Q9 (plaques against counts); accepting the tastegate tap-target result
+  and the open items above; the SEO plugin, neutral upload names and legacy post text
+  (Open questions below); looking at the frame strips and side-by-side pages before
+  sign-off; the commit.
+- **HCWA:** Q3 (who holds `hcwa_approve_safeguarding`, who ticks "since year verified" and
+  "contact confirmed"), Q4 and Q5 (forms and the reduced Contact and Donate on production),
+  Q6 (header stills for the other centers; Little Rose never a door), Q9 of 03-STRATEGY and a
+  form plugin (task 2.7), the Little Rose door sign-off by the safeguarding lead, and every
+  wording, impact figure, photo, partner logo permission, contact detail and donation detail
+  (bank, QR, account holder and PayPal only from `content/verified/`, which does not exist
+  yet). Until each is approved, production shows nothing in its place.
+
 ## Status history (integration, 5 Nov 2026; two review rounds the same day)
 
 ### Built

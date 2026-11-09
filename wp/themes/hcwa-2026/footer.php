@@ -84,8 +84,14 @@ $hcwa_menu = static function ( string $location ): string {
 		if ( $hcwa_lines ) {
 			echo $hcwa_col( hcwa_theme_t( 'contact' ), '<ul class="foot-contact"' . ( $hcwa_draft ? ' data-draft' : '' ) . ">\n        " . implode( "\n        ", $hcwa_lines ) . "\n      </ul>" ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
 		}
-		echo "\n      " . $hcwa_col( hcwa_theme_t( 'explore' ), $hcwa_menu( 'footer-explore' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- menu output.
-		echo "\n      " . $hcwa_col( hcwa_theme_t( 'trust' ), $hcwa_menu( 'footer-trust' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- menu output.
+		// A column whose menu has no live links (on production, before HCWA publishes Impact, Policies and
+		// Privacy) is left out, like the contact column, instead of printing a heading over an empty body.
+		foreach ( array( 'explore' => 'footer-explore', 'trust' => 'footer-trust' ) as $hcwa_key => $hcwa_location ) {
+			$hcwa_items = $hcwa_menu( $hcwa_location );
+			if ( false !== stripos( $hcwa_items, '<li' ) ) {
+				echo "\n      " . $hcwa_col( hcwa_theme_t( $hcwa_key ), $hcwa_items ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- menu output.
+			}
+		}
 		?>
     </div></div>
     <div class="site-footer__bar">

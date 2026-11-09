@@ -20,23 +20,23 @@ signatures and gating rules. Read it before changing anything here.
 ## Permission note
 
 Maxwell gave permission on 9 Nov 2026 to download and run WordPress locally in the shared
-build environment. Since then the theme and plugin run in a real local WordPress (7.1.4,
-Polylang 3.9.1, SQLite), and that instance is the main check of every change (see
+build environment. Since then the theme and plugin run in a real local WordPress 7.1.4 with
+Polylang 3.9.1 and SQLite, and that instance is the main check of every change (see
 "Run it locally"). The stub tests (`php wp/tests/run.php`) and the static check still run
 without WordPress, for CI and a fresh clone.
 
 `scripts/wp-local.sh` still asks for the permission to be stated. Commands that download or
 run WordPress (`setup`, `start`, `seed`, `wp`, `reset`) run from a terminal, or from an
 automated run with `HCWA_WP_LOCAL_OK=1` set. Without either they are refused with a message
-pointing here. Automated runs set it on every command, for example
-`HCWA_WP_LOCAL_OK=1 scripts/wp-local.sh smoke main`.
+pointing here. Automated runs set it on each such command, for example
+`HCWA_WP_LOCAL_OK=1 scripts/wp-local.sh wp main -- hcwa coverage`.
 
 Root containers: cloud build containers only have the root user, and WP-CLI refuses to run
 as root unless it is given `--allow-root`. `scripts/wp-local.sh` passes that flag itself
 whenever it runs as root (`id -u` is 0), on every WP-CLI call it makes (`setup`, `seed`,
-`wp`, and the language-cache reset of `start`), so nobody needs to add it by hand. That is safe here because the
-instance only listens on 127.0.0.1 and runs this repo's code plus the pinned, hash-checked
-downloads. Do not pass `--allow-root` on HCWA's own servers.
+`wp`, and the language-cache reset of `start`), so nobody needs to add it by hand. That is
+safe here because the instance only listens on 127.0.0.1 and runs this repo's code plus the
+pinned, hash-checked downloads. Do not pass `--allow-root` on HCWA's own servers.
 
 Rules for the shared instances (`docs/plan/11-WP-PORT.md` 5.9): the seeded instance `main`
 (port 8881) is shared by every agent, so never `stop`, `reset`, `setup` or `env` it; re-seed
@@ -330,22 +330,18 @@ must gain no warning, notice or deprecation naming `hcwa-2026` or `hcwa-core`.
 
 ## Phase 2 status
 
-As of 5 Nov 2026. "Written" means checked with the commands above but not yet run inside
-WordPress (see the permission note).
+As of 9 Nov 2026 (the WordPress port of the Bông gió prototype, `docs/plan/11-WP-PORT.md`).
+Everything below runs in the local WordPress (see the permission note); the numbers are from
+the final recheck, recorded in `CONTRACT.md` "Final recheck".
 
 | # | Task | Status |
 |---|---|---|
-| 2.1 | Spike: block theme or hybrid | Done. Hybrid, decided from the Polylang 3.9.1 and WordPress 7.1.4 source (`docs/plan/03`). Still to confirm on a running install. |
-| 2.2 | Import a copy of the live site | Not started. Needs the host's staging or a migration export, and permission to run WordPress. |
-| 2.3 | hcwa-core: types, fields, media approval, Polylang, `wp hcwa coverage` | Written. Stub tests pass. |
-| 2.4 | Theme: `theme.json`, fonts, header and footer, templates | Written. Stub tests pass. |
-| 2.5 | Custom blocks | Written. The nine `hcwa/*` blocks are in `plugins/hcwa-core/blocks/`, loaded by `includes/blocks.php`. Stub tests pass. |
-| 2.6 | Block patterns | Written. Includes the section patterns and the five page compositions the seed uses (`page-home`, `page-our-work`, `page-get-involved`, `page-donate`, `page-contact`), each as a VI/EN pair. Pattern markup test passes. |
-| 2.7 | Forms | Blocked. Needs HCWA's answer to Q9 and a choice of form plugin. |
-| 2.8 | Performance baseline | Not started. Needs a running site. |
-| – | Integration of the parts | Done statically: `scripts/wp-static-check.py` is clean and `php wp/tests/run.php` passes (see `CONTRACT.md` Status). Not yet run in WordPress. |
-| – | Local runtime, seed and smoke test (this page) | Written. Checked with `bash -n`, `php -l` and `py_compile`. The router and smoke test were also tried on a stub site. Not yet run against WordPress. |
-
-The first run once permission is given: `setup`, `seed`, `start`, `smoke`, then
-`wp main -- hcwa coverage` and `wp main -- hcwa draft-scan`. File what fails against the
-owning part in `CONTRACT.md`.
+| 2.1 | Spike: block theme or hybrid | Done. Hybrid (`docs/plan/03`), confirmed on WordPress 7.1.4 with Polylang 3.9.1; the contentOnly locking spike passed 15 of 15 checks. |
+| 2.2 | Import a copy of the live site | Not started. Needs the host's staging or a migration export from HCWA. |
+| 2.3 | hcwa-core: types, fields, media approval, Polylang, `wp hcwa coverage` | Done for the port and checked in WordPress: coverage clean on `main` and on a production copy. |
+| 2.4 | Theme: `theme.json`, fonts, header and footer, templates | Done. Every template ported from the prototype; parity with it passes on the 16 routes. |
+| 2.5 | Custom blocks | Done. 25 `hcwa/*` blocks, the page sections print the prototype's markup with no wrapper. |
+| 2.6 | Block patterns | Done. Generated VI/EN page patterns, locked with `hcwa/sections`. |
+| 2.7 | Forms | Blocked. Needs HCWA's answer to Q9 and a choice of form plugin. Forms do not render on production until then. |
+| 2.8 | Performance baseline | Done locally: home before `load` 10 requests and 224 KB, HTML 14.4 KB gzip, no jQuery, Elementor, emoji or block-library assets; mobile LCP about 2.1 s (home) and 2.0 s (Green Bamboo) in the lab. Real-host numbers wait for staging. |
+| – | Smoke, parity and production pass | Smoke 174 of 174 on `main`; parity structure, text, links and pixels all pass; production smoke 162 of 162 and production assertions 32 of 32 plus 40 of 40 probes. Open items are listed in `CONTRACT.md` "Final recheck". |

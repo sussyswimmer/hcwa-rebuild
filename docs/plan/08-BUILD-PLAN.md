@@ -73,8 +73,20 @@ that needs a browser wait on running WordPress, which needs Maxwell's permission
 build environment (`scripts/wp-local.sh`, `wp/README.md`). Open questions and what is
 still unverified: `wp/CONTRACT.md` Status.
 
-Status 9 Nov 2026: the theme and plugin are stale against the rebuilt prototype (Bông gió). Their port,
-checked against a real local WordPress (Maxwell's permission, 9 Nov), follows `11-WP-PORT.md`.
+Status 9 Nov 2026 (end of day): the WordPress port of the Bông gió prototype (`11-WP-PORT.md`) is
+built and checked on a real local WordPress 7.1.4 with Polylang 3.9.1 (Maxwell gave permission on
+9 Nov to run it locally). On the final tree, after two fix rounds: 6548 unit tests pass; the static
+check has 0 errors; every seeded view passes the smoke test (174 of 174) with no new `debug.log`
+line; the side-by-side parity with the prototype passes structure, text and links on 16 routes ×
+2 widths × 4 modes, pixels in the reduced and no-WebGL modes, the prototype's own behaviour
+checks, the world, the budgets and the frame strips; the production pass on a throwaway instance
+passes (162 of 162 views, 32 of 32 route assertions, 40 of 40 attachment and feed probes); mobile
+LCP is about 2.1 s on home and 2.0 s on Green Bamboo. Not yet green: a 1 ms long-task overshoot in one LCP run (passed on re-run), and
+tastegate's tap-target rule on the news, category and search lists, a false positive on the
+prototype's stretched links that the lead must accept or fix. Still waiting on HCWA or Maxwell:
+2.2 (a copy of the live site), 2.7 (forms, Q9), the Little Rose door and traces decisions
+(`11-WP-PORT.md` section 8), and every wording, figure, photo and donation detail. Details:
+`wp/CONTRACT.md` "Final recheck".
 
 | # | Task | Done when |
 |---|---|---|
