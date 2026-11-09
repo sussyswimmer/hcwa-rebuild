@@ -1,7 +1,7 @@
 <?php
 /**
- * UI dictionary generated from content/draft/ui.json. Do not edit by hand:
- * change ui.json, then run `python3 scripts/build-wp-strings.py`.
+ * UI dictionary generated from content/draft/ui.json and ui-world.json. Do not edit by
+ * hand: change the JSON, then run `python3 scripts/build-wp-strings.py`.
  * Staff edit live wording in Languages → Translations (Polylang), not here.
  *
  * @package hcwa-core
@@ -71,7 +71,7 @@ return array(
 	'enBar'              => array( 'vi' => 'View this page in English', 'en' => 'View this page in English' ),
 	'enBarDismiss'       => array( 'vi' => 'Dismiss', 'en' => 'Dismiss' ),
 	'hideAnnouncement'   => array( 'vi' => 'Ẩn thông báo', 'en' => 'Hide announcement' ),
-	'prototypeNote'      => array( 'vi' => 'Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.', 'en' => 'Prototype for HCWA review. A dashed outline marks draft text or figures waiting for HCWA approval.' ),
+	'prototypeNote'      => array( 'vi' => 'Bản mẫu để HCWA góp ý. Chọn “Hiện khung nháp” để thấy nội dung nháp và số liệu chờ HCWA duyệt.', 'en' => 'Prototype for HCWA review. Choose “Show draft outlines” to see draft text and figures waiting for HCWA approval.' ),
 	'notInPrototype'     => array( 'vi' => 'Trang này chưa có trong bản mẫu.', 'en' => 'This page isn\'t part of the prototype yet.' ),
 	'langNotice'         => array( 'vi' => 'Bài viết này hiện chỉ có bằng tiếng Anh.', 'en' => 'This article is only available in Vietnamese.' ),
 	'langNoticeRead'     => array( 'vi' => 'Đọc bản tiếng Anh', 'en' => 'Read it in Vietnamese' ),
@@ -112,5 +112,47 @@ return array(
 	'nf_text'            => array( 'vi' => 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.', 'en' => 'The page you\'re looking for doesn\'t exist or has moved.' ),
 	'nf_search'          => array( 'vi' => 'Tìm trên trang web', 'en' => 'Search this site' ),
 	'nf_searchBtn'       => array( 'vi' => 'Tìm', 'en' => 'Search' ),
-	'prototypeNoteShort' => array( 'vi' => 'Bản mẫu. Khung nét đứt: nội dung chờ HCWA duyệt.', 'en' => 'Prototype. Dashed outline: waiting for HCWA approval.' ),
+	'prototypeNoteShort' => array( 'vi' => 'Bản mẫu chờ HCWA duyệt.', 'en' => 'Prototype for HCWA review.' ),
+	'motionPause'        => array( 'vi' => 'Tạm dừng chuyển động', 'en' => 'Pause motion' ),
+	'motionPlay'         => array( 'vi' => 'Bật lại chuyển động', 'en' => 'Play motion' ),
+	'skipCenters'        => array( 'vi' => 'Bỏ qua phần giới thiệu các cơ sở', 'en' => 'Skip the centers tour' ),
+	'skipShutters'       => array( 'vi' => 'Bỏ qua, đến phần Bạn có thể giúp như thế nào', 'en' => 'Skip to how you can help' ),
+	'centersRail'        => array( 'vi' => 'Các cơ sở', 'en' => 'Centers' ),
+	'aboutShelter'       => array( 'vi' => 'Tìm hiểu về mái ấm', 'en' => 'About the shelter' ),
+	'draftHide'          => array( 'vi' => 'Ẩn khung nháp', 'en' => 'Hide draft outlines' ),
+	'draftShow'          => array( 'vi' => 'Hiện khung nháp', 'en' => 'Show draft outlines' ),
+	'partnersPending'    => array( 'vi' => '[Chờ ít nhất 4 logo đối tác đã được duyệt]', 'en' => '[Waiting for at least 4 approved partner logos]' ),
+	'fundedBy'           => array( 'vi' => 'Tài trợ', 'en' => 'Funded by' ),
+	'runsAt'             => array( 'vi' => 'Thực hiện tại', 'en' => 'Runs at' ),
+	'externalPost'       => array( 'vi' => 'mở bài viết trên hcwa.org.vn', 'en' => 'opens the post on hcwa.org.vn' ),
+	'glance'             => array( 'vi' => 'Thông tin nhanh', 'en' => 'At a glance' ),
+	'whoWeServe'         => array( 'vi' => 'Đối tượng', 'en' => 'Who we serve' ),
+	'whatWeDo'           => array( 'vi' => 'Hoạt động', 'en' => 'What we do' ),
+	'readFullHistory'    => array( 'vi' => 'Đọc toàn bộ lịch sử', 'en' => 'Read the full history' ),
+	'photos'             => array( 'vi' => 'Hình ảnh hoạt động', 'en' => 'Photos' ),
+	'photoPending'       => array( 'vi' => 'Chờ ảnh đã được HCWA duyệt', 'en' => 'Waiting for a photo HCWA has approved' ),
+	'openLarger'         => array( 'vi' => 'phóng to', 'en' => 'open larger' ),
+	'prevPhoto'          => array( 'vi' => 'Ảnh trước', 'en' => 'Previous photo' ),
+	'nextPhoto'          => array( 'vi' => 'Ảnh sau', 'en' => 'Next photo' ),
+	'programsHere'       => array( 'vi' => 'Dự án tại cơ sở', 'en' => 'Programs run here' ),
+	'relatedNews'        => array( 'vi' => 'Tin liên quan', 'en' => 'Related news' ),
+	'results'            => array( 'vi' => 'Kết quả', 'en' => 'Results' ),
+	'documents'          => array( 'vi' => 'Tài liệu', 'en' => 'Documents' ),
+	'noDocuments'        => array( 'vi' => 'Báo cáo của dự án sẽ được đăng tại đây khi HCWA công bố.', 'en' => 'Program reports will be posted here once HCWA publishes them.' ),
+	'goals'              => array( 'vi' => 'Mục tiêu', 'en' => 'Goals' ),
+	'activities'         => array( 'vi' => 'Hoạt động', 'en' => 'Activities' ),
+	'whereItRuns'        => array( 'vi' => 'Nơi thực hiện', 'en' => 'Where it runs' ),
+	'summary'            => array( 'vi' => 'Tóm tắt', 'en' => 'Summary' ),
+	'status'             => array( 'vi' => 'Trạng thái', 'en' => 'Status' ),
+	'years'              => array( 'vi' => 'Thời gian', 'en' => 'Years' ),
+	'f_sendAnother'      => array( 'vi' => 'Gửi lời nhắn khác', 'en' => 'Send another message' ),
+	'nf_links'           => array( 'vi' => 'Hoặc đi tới', 'en' => 'Or go to' ),
+	'today'              => array( 'vi' => 'Hôm nay', 'en' => 'Today' ),
+	'galleryWaiting'     => array( 'vi' => '6 ảnh đã được HCWA duyệt sẽ treo ở đây', 'en' => '6 HCWA-approved photos will hang here' ),
+	'filterShowing'      => array( 'vi' => 'Đang hiện {centers}, {programs}', 'en' => 'Showing {centers}, {programs}' ),
+	'countCenter'        => array( 'vi' => '{n} cơ sở', 'en' => '{n} center' ),
+	'countCenters'       => array( 'vi' => '{n} cơ sở', 'en' => '{n} centers' ),
+	'countProgram'       => array( 'vi' => '{n} dự án', 'en' => '{n} project' ),
+	'countPrograms'      => array( 'vi' => '{n} dự án', 'en' => '{n} projects' ),
+	'enBarLabel'         => array( 'vi' => 'Phiên bản tiếng Anh', 'en' => 'English version' ),
 );

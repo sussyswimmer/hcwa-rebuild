@@ -157,10 +157,10 @@ while ( have_posts() ) :
 				<h2 id="program-where" class="h4"><?php hcwa_theme_e( 'whereAndWho' ); ?></h2>
 				<dl>
 					<?php if ( $hcwa_center ) : ?>
-						<div><dt><?php hcwa_theme_e( 'runsAt' ); ?></dt><dd><a href="<?php echo esc_url( get_permalink( $hcwa_center ) ); ?>"><?php echo esc_html( wp_strip_all_tags( get_the_title( $hcwa_center ) ) ); ?></a></dd></div>
+						<div><dt><?php hcwa_theme_e( 'programCenter' ); ?></dt><dd><a href="<?php echo esc_url( get_permalink( $hcwa_center ) ); ?>"><?php echo esc_html( wp_strip_all_tags( get_the_title( $hcwa_center ) ) ); ?></a></dd></div>
 					<?php endif; ?>
 					<?php if ( $hcwa_partners ) : ?>
-						<div><dt><?php hcwa_theme_e( 'fundedBy' ); ?></dt><dd><?php echo esc_html( implode( ', ', wp_list_pluck( $hcwa_partners, 'name' ) ) ); ?></dd></div>
+						<div><dt><?php hcwa_theme_e( 'programFunders' ); ?></dt><dd><?php echo esc_html( implode( ', ', wp_list_pluck( $hcwa_partners, 'name' ) ) ); ?></dd></div>
 					<?php endif; ?>
 				</dl>
 			</aside>

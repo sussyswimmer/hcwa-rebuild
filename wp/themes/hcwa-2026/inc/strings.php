@@ -42,22 +42,14 @@ function hcwa_theme_strings(): array {
 		'share'            => array( 'vi' => 'Chia sẻ', 'en' => 'Share' ),
 		'copyLink'         => array( 'vi' => 'Sao chép liên kết', 'en' => 'Copy link' ),
 		'shareApp'         => array( 'vi' => 'Zalo và ứng dụng khác', 'en' => 'Zalo and other apps' ),
-		'relatedNews'      => array( 'vi' => 'Tin liên quan', 'en' => 'Related news' ),
 		'helpTitle'        => array( 'vi' => 'Bạn có thể giúp như thế nào', 'en' => 'How you can help' ),
 
 		// Center page.
 		'atGlance'         => array( 'vi' => 'Thông tin nhanh', 'en' => 'At a glance' ),
-		'whoWeServe'       => array( 'vi' => 'Đối tượng', 'en' => 'Who we serve' ),
-		'whatWeDo'         => array( 'vi' => 'Hoạt động', 'en' => 'What we do' ),
 		'location'         => array( 'vi' => 'Địa điểm', 'en' => 'Location' ),
 		'centerStory'      => array( 'vi' => 'Câu chuyện của chúng tôi', 'en' => 'Our story' ),
 		'fullHistory'      => array( 'vi' => 'Đọc toàn bộ lịch sử', 'en' => 'Read the full history' ),
 		'centerFigures'    => array( 'vi' => 'Kết quả tại {name}', 'en' => '{name} in numbers' ),
-		'photos'           => array( 'vi' => 'Hình ảnh hoạt động', 'en' => 'Photos' ),
-		'openLarger'       => array( 'vi' => 'phóng to', 'en' => 'open larger' ),
-		'prevPhoto'        => array( 'vi' => 'Ảnh trước', 'en' => 'Previous photo' ),
-		'nextPhoto'        => array( 'vi' => 'Ảnh sau', 'en' => 'Next photo' ),
-		'programsHere'     => array( 'vi' => 'Dự án tại cơ sở', 'en' => 'Programs run here' ),
 		'helpCenter'       => array( 'vi' => 'Cách giúp {name}', 'en' => 'How to help {name}' ),
 		'donateTo'         => array( 'vi' => 'Ủng hộ {name}', 'en' => 'Donate to {name}' ),
 		'visitTitle'       => array( 'vi' => 'Muốn đến thăm {name}?', 'en' => 'Want to visit {name}?' ),
@@ -65,13 +57,9 @@ function hcwa_theme_strings(): array {
 		'unitLogo'         => array( 'vi' => 'Logo {name}', 'en' => '{name} logo' ),
 
 		// Program page.
-		'summary'          => array( 'vi' => 'Tóm tắt', 'en' => 'Summary' ),
-		'goals'            => array( 'vi' => 'Mục tiêu', 'en' => 'Goals' ),
-		'activities'       => array( 'vi' => 'Hoạt động', 'en' => 'Activities' ),
-		'results'          => array( 'vi' => 'Kết quả', 'en' => 'Results' ),
 		'whereAndWho'      => array( 'vi' => 'Nơi thực hiện và nhà tài trợ', 'en' => 'Where it runs and who funds it' ),
-		'runsAt'           => array( 'vi' => 'Cơ sở', 'en' => 'Center' ),
-		'fundedBy'         => array( 'vi' => 'Nhà tài trợ', 'en' => 'Funded by' ),
+		'programCenter'    => array( 'vi' => 'Cơ sở', 'en' => 'Center' ),
+		'programFunders'   => array( 'vi' => 'Nhà tài trợ', 'en' => 'Funded by' ),
 		'supportWork'      => array( 'vi' => 'Đồng hành cùng những dự án như thế này', 'en' => 'Support work like this' ),
 		'partnerProgram'   => array( 'vi' => 'Hợp tác trong một dự án', 'en' => 'Partner on a program' ),
 
