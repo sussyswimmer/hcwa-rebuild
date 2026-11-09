@@ -1589,7 +1589,7 @@ function hcwa_center_header_html( WP_Post $center ): string {
 	$c     = hcwa_center_view( $center );
 	$logo  = '';
 	$logo_id = (int) get_post_meta( $center->ID, 'hcwa_logo_id', true );
-	$src   = $logo_id > 0 ? wp_get_attachment_image_src( $logo_id, 'thumbnail' ) : false;
+	$src   = $logo_id > 0 ? wp_get_attachment_image_src( $logo_id, 'full' ) : false;
 	if ( is_array( $src ) ) {
 		$alt  = hcwa_meta_text( $center->ID, 'hcwa_logo_alt' );
 		$logo = '<img class="lit-head__logo" src="' . esc_url( (string) $src[0] ) . '" width="56" height="56" alt="' . esc_attr( $alt['text'] ) . '">';

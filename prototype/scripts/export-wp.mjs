@@ -17,7 +17,7 @@
 // and the pages are rendered in memory (never written) to collect the picture and icon calls they make.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -64,11 +64,19 @@ const byCodePoint = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // The prototype's public/ holds Netlify's own files; a theme has no use for them.
 const NETLIFY = ["_headers", "_redirects", "robots.txt"];
 
+// Built next to dist/ and swapped in at the end, so a site serving the theme never sees a half-written
+// bundle (a running local WordPress reads the manifest on every request).
 export function build() {
   const vite = join(PROTO, "node_modules/vite/bin/vite.js");
-  const run = spawnSync(process.execPath, [vite, "build", "--config", "vite.wp.config.js"], { cwd: PROTO, stdio: "inherit" });
+  const next = `${DIST}.next`, old = `${DIST}.old`;
+  rmSync(next, { recursive: true, force: true });
+  const run = spawnSync(process.execPath, [vite, "build", "--config", "vite.wp.config.js", "--outDir", next], { cwd: PROTO, stdio: "inherit" });
   if (run.status !== 0) throw new Error("vite build --config vite.wp.config.js failed");
-  for (const f of NETLIFY) rmSync(join(DIST, f), { force: true });
+  for (const f of NETLIFY) rmSync(join(next, f), { force: true });
+  rmSync(old, { recursive: true, force: true });
+  if (existsSync(DIST)) renameSync(DIST, old);
+  renameSync(next, DIST);
+  rmSync(old, { recursive: true, force: true });
 }
 
 export function readManifest(dist = DIST) {

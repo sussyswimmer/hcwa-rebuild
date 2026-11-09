@@ -120,6 +120,70 @@
       "match": "^aside\\.en-bar \\[aria-label data-en-bar hidden\\]$",
       "reason": "No 'View this page in English' bar on a Vietnamese 404: there is no English version of a page that does not exist (header.php prints the bar only for a real translation).",
       "owner": "templates"
+    },
+    {
+      "route": "/en/",
+      "section": "main>section#news.wall",
+      "kind": "pixels",
+      "match": "",
+      "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/",
+      "section": "main>section#shutters.shutters",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/",
+      "section": "main>section#help.wall",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/",
+      "section": "main>section#partners.wall",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/our-work/centers/green-bamboo/",
+      "section": "main>.day>section.related",
+      "kind": "pixels",
+      "match": "",
+      "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/our-work/centers/green-bamboo/",
+      "section": "footer",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/our-work/programs/thrive-together/",
+      "section": "main>.day>section.related",
+      "kind": "pixels",
+      "match": "",
+      "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/our-work/programs/thrive-together/",
+      "section": "footer",
+      "kind": "pixels",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
     }
   ]
 }
