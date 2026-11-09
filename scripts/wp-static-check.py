@@ -21,14 +21,21 @@ Checks (E = error, W = warning):
   blocks    every <!-- wp:hcwa/... --> in patterns and the seed, and every
             hcwa_theme_block() call, names a block folder and only attributes its
             block.json declares (type and enum checked); attribute JSON parses;
-            blocks/blocks-manifest.php equals the block.json files.
+            blocks/blocks-manifest.php equals the block.json files. hcwa/* blocks are
+            saved self-closing, except the containers (hcwa/sections, hcwa/day: a
+            templateLock attribute or an InnerBlocks editor script), which must balance
+            and hold nothing but whitespace between their inner blocks, and no
+            core/html, core/freeform or core/shortcode block (hcwa_render_sections()
+            drops all of these).
   patterns  headers, slugs, VI/EN twins, referenced slugs, balanced block comments.
   pages     every page key passed to hcwa_page_url / hcwa_theme_url is known.
   css       every class used in block markup, patterns and theme templates has a rule in
             the bundle CSS (assets/generated/classes.json, every class selector of the
             prototype's main, draft and motion CSS), assets/css/wp.css, or, while they still
             exist, the old site.css and patterns.css (wp-*, has-*, is-*, align* allowed;
-            classes only site.js uses are warnings). Needs no dist: classes.json is committed.
+            classes only site.js uses are warnings). Hooks the prototype itself prints with
+            no rule (classes.json 'unstyled', e.g. dusk__img) are accepted too. Needs no
+            dist: classes.json is committed.
   meta      every meta key read or written is registered in includes/meta.php (keys the
             port adds in 11-WP-PORT.md 3.2 and the seed already writes: one note until
             hcwa-core registers them).
@@ -107,6 +114,7 @@ KEY_EXPANSIONS = {
     "rt_": ["annual", "financial", "program", "policy"],
     "blk_type_": ["annual", "financial", "program", "policy"],
     "type_": ["page", "center", "program", "report"],
+    "topic_": ["donate", "partner", "volunteer", "media", "other"],  # the Contact form's topic radios
 }
 
 # Literal prefixes that only ever name dictionary keys: any literal with one must exist.
@@ -718,6 +726,22 @@ def check_contract_functions(report: Report, dump: dict) -> None:
             report.error("contract", f"CONTRACT.md {name}", f"return type: contract {ret}, code {sigs[name]['return']}")
 
 
+def is_container(meta: dict, index_js: str = "") -> bool:
+    """A block that holds inner blocks (11-WP-PORT.md 4.1: hcwa/sections and hcwa/day).
+
+    It is saved as an opener and a closer around its inner blocks, not as a self-closing
+    comment. Known by a templateLock or allowedBlocks attribute in block.json, or by an
+    editor script that registers it as a container or uses InnerBlocks."""
+    attrs = meta.get("attributes", {}) if isinstance(meta.get("attributes"), dict) else {}
+    if "templateLock" in attrs or "allowedBlocks" in attrs or "allowedBlocks" in meta:
+        return True
+    return bool(re.search(r"\bregisterContainer\s*\(|\bInnerBlocks\b|\buseInnerBlocksProps\b", index_js))
+
+
+# Blocks hcwa_render_sections() removes from inside a container (11-WP-PORT.md 2.1 rule 4).
+CONTAINER_DROPPED = ("core/html", "core/freeform", "core/shortcode")
+
+
 def load_blocks(report: Report, dump: dict | None = None) -> dict[str, dict]:
     blocks: dict[str, dict] = {}
     for d in sorted(p for p in BLOCKS.iterdir() if p.is_dir()):
@@ -736,6 +760,8 @@ def load_blocks(report: Report, dump: dict | None = None) -> dict[str, dict]:
             report.error("blocks", rel(bj), "render must be file:./render.php (all blocks are dynamic)")
         if meta.get("category") != "hcwa":
             report.error("blocks", rel(bj), "category must be 'hcwa'")
+        index = d / "index.js"
+        meta["_container"] = is_container(meta, read(index) if index.exists() else "")
         blocks[name] = meta
 
     for diff in dump.get("manifest_diff", []) if dump else []:
@@ -784,13 +810,33 @@ def check_block_attrs(report: Report, blocks: dict, name: str, attrs: dict, wher
 
 
 def parse_block_comments(text: str, where: str, report: Report, blocks: dict, balance: bool) -> list[str]:
+    """Block names in a pattern or the seed, checking attributes, self-closing and balance.
+
+    Every hcwa/* block is dynamic and saved self-closing, except the containers
+    (is_container(): hcwa/sections, hcwa/day), which wrap their inner blocks. With
+    balance on, nothing but whitespace may sit between the inner blocks of a container,
+    and no core/html, core/freeform or core/shortcode block may be one of them:
+    hcwa_render_sections() drops both (11-WP-PORT.md 2.1 rule 4), so a pattern holding them
+    would print differently from what the editor shows."""
     stack: list[str] = []
     names = []
+    prev_end = 0
+
+    def container(full_name: str) -> bool:
+        return full_name.startswith("hcwa/") and bool(blocks.get(full_name, {}).get("_container"))
+
     for m in BLOCK_COMMENT_RE.finditer(text):
         name = m.group("name")
         full = name if "/" in name else "core/" + name
         line = text.count("\n", 0, m.start()) + 1
         loc = f"{where}:{line}"
+        between, prev_end = text[prev_end:m.start()], m.end()
+        if balance and stack and container(stack[-1]) and between.strip():
+            report.error("patterns", loc, f"literal HTML between the inner blocks of {stack[-1]} "
+                         f"({between.strip()[:40]!r}); hcwa_render_sections() drops it")
+        if balance and not m.group("closer") and full in CONTAINER_DROPPED and any(container(s) for s in stack):
+            report.error("patterns", loc, f"{full} inside {next(s for s in reversed(stack) if container(s))}; "
+                         "hcwa_render_sections() removes it")
         attrs = {}
         if m.group("attrs"):
             try:
@@ -812,7 +858,7 @@ def parse_block_comments(text: str, where: str, report: Report, blocks: dict, ba
         names.append(full)
         if full.startswith("hcwa/"):
             check_block_attrs(report, blocks, full, attrs, loc)
-            if not m.group("void"):
+            if not m.group("void") and not container(full):
                 report.error("blocks", loc, f"{full} is dynamic and must be saved as a self-closing comment")
         if full == "core/pattern":
             names.append("pattern:" + str(attrs.get("slug", "")))
@@ -980,6 +1026,20 @@ def generated_classes(generated: Path = GENERATED) -> set[str]:
     return {str(c).lstrip(".") for c in items if isinstance(c, str)}
 
 
+def generated_unstyled(generated: Path = GENERATED) -> set[str]:
+    """Hook classes the prototype's own pages print with no CSS rule (classes.json 'unstyled').
+
+    WordPress prints the prototype's markup, so it may print these too (dusk__img,
+    site-footer__dusk, icon-btn--sm, ...). They are not styled classes: css_classes() leaves
+    them out, and check_css() accepts them as printable hooks only."""
+    f = generated / "classes.json"
+    if not f.exists():
+        return set()
+    data = json.loads(read(f))
+    items = data.get("unstyled", []) if isinstance(data, dict) else []
+    return {str(c).lstrip(".") for c in items if isinstance(c, str)}
+
+
 def css_classes(files: list[Path] | None = None, generated: Path = GENERATED) -> set[str]:
     """Classes with a rule: the bundle CSS (classes.json), wp.css and any old CSS still there."""
     classes: set[str] = generated_classes(generated)
@@ -1052,37 +1112,51 @@ def class_uses(text: str) -> list[tuple[str, int, bool]]:
     return uses
 
 
+def check_class_use(report: Report, cls: str, is_prefix: bool, where: str, defined: set[str],
+                    unstyled: set[str] = frozenset(), js_classes: set[str] = frozenset(),
+                    expansions: dict | None = None) -> None:
+    """One class the markup can print: it needs a rule, or must be a reviewed hook.
+
+    Accepted without a rule: wp-/has-/is-/align prefixes, CSS_UNSTYLED (reviewed here),
+    classes.json 'unstyled' (hooks the prototype prints itself) and BEM block roots whose
+    elements are styled. Anything in none of those lists is an error."""
+    expansions = expansions or {}
+    if cls.startswith(CSS_ALLOWED_PREFIXES):
+        return
+    if is_prefix:
+        for value in expansions.get(cls, []):
+            if cls + value not in defined and cls + value not in unstyled:
+                report.error("css", where, f"class .{cls}{value} has no rule in the bundle CSS (classes.json) or wp.css")
+        if cls not in expansions and not any(d.startswith(cls) for d in defined | unstyled):
+            report.error("css", where, f"no class in the CSS starts with .{cls}")
+        return
+    if cls in defined or cls in CSS_UNSTYLED or cls in unstyled:
+        return
+    if "__" not in cls and "--" not in cls and any(d.startswith(cls + "__") for d in defined):
+        return  # BEM block root with styled elements
+    if cls in js_classes:
+        report.warn("css", where, f".{cls} has no CSS rule (site.js hook)")
+    else:
+        report.error("css", where, f"class .{cls} has no rule in the bundle CSS (classes.json) or wp.css, "
+                     "and the prototype does not print it unstyled (classes.json 'unstyled')")
+
+
 def check_css(report: Report) -> None:
     defined = css_classes()
     if not defined:
         report.error("css", "assets/css", "no classes found in classes.json, wp.css, site.css or patterns.css")
         return
+    unstyled = generated_unstyled()
     js = read(SITE_JS) if SITE_JS.exists() else ""
     js_classes = set(re.findall(r"""["'.\s]([a-z][\w-]*)""", js))
-    button_kinds = re.findall(r"array\(\s*'primary',\s*'secondary',\s*'on-blue'\s*\)", read(THEME / "inc" / "template-tags.php"))
+    tags = THEME / "inc" / "template-tags.php"
+    button_kinds = re.findall(r"array\(\s*'primary',\s*'secondary',\s*'on-blue'\s*\)", read(tags) if tags.exists() else "")
     expansions = {"btn--": ["primary", "secondary", "on-blue", "small"] if button_kinds else [], "status--": ["active", "completed", "planned"]}
 
     for f in markup_files():
         text = read(f)
         for cls, line, is_prefix in class_uses(text):
-            where = f"{rel(f)}:{line}"
-            if cls.startswith(CSS_ALLOWED_PREFIXES):
-                continue
-            if is_prefix:
-                for value in expansions.get(cls, []):
-                    if cls + value not in defined:
-                        report.error("css", where, f"class .{cls}{value} has no rule in the bundle CSS (classes.json) or wp.css")
-                if cls not in expansions and not any(d.startswith(cls) for d in defined):
-                    report.error("css", where, f"no class in the CSS starts with .{cls}")
-                continue
-            if cls in defined or cls in CSS_UNSTYLED:
-                continue
-            if "__" not in cls and "--" not in cls and any(d.startswith(cls + "__") for d in defined):
-                continue  # BEM block root with styled elements
-            if cls in js_classes:
-                report.warn("css", where, f".{cls} has no CSS rule (site.js hook)")
-            else:
-                report.error("css", where, f"class .{cls} has no rule in the bundle CSS (classes.json) or wp.css")
+            check_class_use(report, cls, is_prefix, f"{rel(f)}:{line}", defined, unstyled, js_classes, expansions)
 
 
 def check_meta(report: Report, dump: dict, tokens: dict[Path, dict]) -> None:
@@ -1156,7 +1230,8 @@ def check_text(report: Report) -> None:
 
     # Hard-coded visible text in theme templates (heuristic): HTML text outside PHP, and
     # gettext calls, which are for admin screens only.
-    brand = {"Zalo", "Facebook", "HCWA", "PDF", "VI", "EN", "/"}
+    # Language-neutral tokens; "©" + year + "HCWA" is the prototype's own footer line (layout.mjs).
+    brand = {"Zalo", "Facebook", "HCWA", "PDF", "VI", "EN", "/", "©"}
     templates = sorted(THEME.glob("*.php")) + sorted((THEME / "template-parts").glob("*.php"))
     for f in templates:
         text = read(f)
@@ -1331,6 +1406,54 @@ def self_test() -> int:
         print(f"{'ok  ' if ok else 'FAIL'} classes from classes.json and wp.css: {sorted(got)}")
         if not ok:
             fails.append("classes")
+
+        # classes.json 'unstyled': hooks the prototype prints with no rule are printable, not styled.
+        (gen / "classes.json").write_text(json.dumps({"classes": ["hero", "dusk"], "unstyled": ["dusk__img", ".icon-btn--sm"]}), encoding="utf-8")
+        defined, hooks = css_classes([], gen), generated_unstyled(gen)
+        ok = defined == {"hero", "dusk"} and hooks == {"dusk__img", "icon-btn--sm"}
+        print(f"{'ok  ' if ok else 'FAIL'} unstyled hooks read apart from styled classes: {sorted(defined)} / {sorted(hooks)}")
+        if not ok:
+            fails.append("unstyled")
+        r = Report()
+        for cls in ("hero", "dusk__img", "icon-btn--sm", "wp-block", "dusk__title"):
+            check_class_use(r, cls, False, "fixture.php:1", defined, hooks)
+        expect("unstyled hook and styled class: clean; .dusk__title (in neither list): one error", r, 1, 0, ".dusk__title")
+        r = Report(); check_class_use(r, "dusk__img", False, "fixture.php:1", defined)
+        expect("the same hook without classes.json 'unstyled': one error", r, 1, 0, ".dusk__img")
+
+        # Container blocks (hcwa/sections, hcwa/day) wrap inner blocks; every other hcwa/* block is self-closing.
+        ok = (is_container({"attributes": {"templateLock": {"type": "string"}}})
+              and is_container({"attributes": {}}, "hcwa.registerContainer( 'hcwa/day', {} );")
+              and not is_container({"attributes": {"title": {"type": "string"}}}, "hcwa.registerBlock( 'hcwa/hero' );"))
+        print(f"{'ok  ' if ok else 'FAIL'} containers known by templateLock or the editor script")
+        if not ok:
+            fails.append("is_container")
+        fixture_blocks = {
+            "hcwa/sections": {"attributes": {"templateLock": {"type": "string"}}, "_container": True},
+            "hcwa/day": {"attributes": {"variant": {"type": "string", "enum": ["hub", "contact"]}}, "_container": True},
+            "hcwa/hero": {"attributes": {"title": {"type": "string"}}},
+        }
+        good = ('<!-- wp:hcwa/sections {"lock":{"move":true,"remove":true}} -->\n'
+                '<!-- wp:hcwa/hero {"title":"Xin chào"} /-->\n\n'
+                '<!-- wp:hcwa/day {"variant":"contact"} -->\n<!-- wp:hcwa/hero /-->\n<!-- /wp:hcwa/day -->\n'
+                '<!-- /wp:hcwa/sections -->\n')
+        r = Report(); parse_block_comments(good, "fixture.php", r, fixture_blocks, balance=True)
+        expect("containers with opener and closer around self-closing blocks: clean", r, 0, 0)
+        r = Report(); parse_block_comments(good.replace('"Xin chào"} /-->', '"Xin chào"} -->\n<!-- /wp:hcwa/hero -->'),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("hcwa/hero saved with a closer: one error", r, 1, 0, "hcwa/hero is dynamic")
+        r = Report(); parse_block_comments(good.replace("<!-- /wp:hcwa/sections -->\n", ""), "fixture.php", r, fixture_blocks, balance=True)
+        expect("container left open: one error", r, 1, 0, "left open")
+        r = Report(); parse_block_comments(good.replace("<!-- /wp:hcwa/day -->", "<!-- /wp:hcwa/sections -->"),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("closers crossed: errors", r, 2, 0, "but the open block is hcwa/day")
+        r = Report(); parse_block_comments(good.replace("\n\n<!-- wp:hcwa/day", "\n<p>Between sections</p>\n<!-- wp:hcwa/day"),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("literal HTML between the sections: one error", r, 1, 0, "literal HTML between the inner blocks of hcwa/sections")
+        r = Report(); parse_block_comments(good.replace("<!-- wp:hcwa/hero /-->\n<!-- /wp:hcwa/day",
+                                                        "<!-- wp:html -->\n<img src=x>\n<!-- /wp:html -->\n<!-- /wp:hcwa/day"),
+                                           "fixture.php", r, fixture_blocks, balance=True)
+        expect("core/html inside hcwa/day: one error (its content is inside the html block, not between)", r, 1, 0, "core/html inside hcwa/day")
 
         blocks = root / "blocks"
         (blocks / "center-grid").mkdir(parents=True)

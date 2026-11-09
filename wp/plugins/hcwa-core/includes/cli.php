@@ -877,6 +877,25 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 		}
 	}
 
+	// Site title and tagline, in each language (Polylang translates them as strings). The
+	// title prints as it is everywhere (header, <title>, feeds, emails): raw. The tagline
+	// prints only through guards: the theme's meta description and footer, and on the live
+	// site the feeds and the REST index drop it while it is draft (post-types.php).
+	foreach ( array( 'blogname' => 'raw', 'blogdescription' => 'guarded' ) as $option => $how ) {
+		$value = (string) get_option( $option, '' );
+		$texts = array( '' => $value );
+		if ( '' !== $value && function_exists( 'pll_translate_string' ) ) {
+			foreach ( hcwa_languages() as $lang ) {
+				$texts[ $lang ] = (string) pll_translate_string( $value, $lang );
+			}
+		}
+		foreach ( array_unique( $texts ) as $lang => $text ) {
+			if ( hcwa_contains_draft( $text ) ) {
+				$rows[] = hcwa_cli_draft_row( 'option', 0, $option . ( '' !== $lang ? '.' . $lang : '' ), 'option', $text, $how );
+			}
+		}
+	}
+
 	if ( in_array( $printed, array( 'raw', 'guarded' ), true ) ) {
 		$rows = array_values( array_filter( $rows, static fn( array $row ): bool => $printed === $row['printed'] ) );
 	}

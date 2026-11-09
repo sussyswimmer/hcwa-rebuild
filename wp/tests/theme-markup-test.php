@@ -282,3 +282,55 @@ foreach ( $GLOBALS['hcwa_test']['hooks']['redirect_canonical'] ?? array() as $hc
 	$hcwa_hooked = $hcwa_hooked || 'hcwa_refused_attachment_canonical' === $hcwa_entry[0];
 }
 hcwa_assert_true( $hcwa_hooked, 'redirect: the filter is on redirect_canonical' );
+
+// ---------- A refused photo shown by a post_type query (fix round 1) ----------
+// ?post_type=attachment&p=40 (and page_id, name, post_type[]) makes WP_Query set is_single,
+// not is_attachment; the refusal reads the queried object, so each one is a 404 too.
+$hcwa_404_query = static function () {
+	return new class() {
+		public $is_404 = false;
+
+		public function set_404() {
+			$this->is_404 = true;
+		}
+	};
+};
+$hcwa_saved_is = $GLOBALS['hcwa_test']['is'] ?? array();
+foreach ( array( 'p', 'page_id', 'name' ) as $hcwa_var ) {
+	$GLOBALS['hcwa_test']['is']         = array(
+		'is_single'     => true,
+		'is_attachment' => false,
+	);
+	$GLOBALS['hcwa_test']['query_vars'] = array(
+		'post_type' => 'attachment',
+		$hcwa_var   => 'name' === $hcwa_var ? 'hcwa-20261109-v1lzeuoz' : '40',
+	);
+	$GLOBALS['hcwa_test']['queried']    = get_post( 40 );
+	hcwa_assert_same( 40, hcwa_queried_attachment_id(), "post_type=attachment&$hcwa_var: the queried attachment is found without is_attachment()" );
+	hcwa_assert_same( 40, hcwa_theme_queried_attachment_id(), "post_type=attachment&$hcwa_var: the theme finds it too" );
+	foreach ( array( 'hcwa_refuse_attachment_page', 'hcwa_theme_refuse_attachment_page' ) as $hcwa_refuser ) {
+		$GLOBALS['wp_query'] = $hcwa_404_query();
+		unset( $GLOBALS['hcwa_test']['status'] );
+		$hcwa_refuser();
+		hcwa_assert_true( $GLOBALS['wp_query']->is_404, "post_type=attachment&$hcwa_var: $hcwa_refuser makes the refused photo a 404" );
+		hcwa_assert_same( 404, $GLOBALS['hcwa_test']['status'] ?? null, "post_type=attachment&$hcwa_var: $hcwa_refuser sends status 404" );
+	}
+	hcwa_assert_same( array( 'attachment.php', 'single-attachment.php', 'single.php' ), hcwa_theme_single_attachment_template( array( 'single-attachment.php', 'single.php' ) ), "post_type=attachment&$hcwa_var: an attachment shown as a single post uses attachment.php, never single.php" );
+}
+// The approved photo keeps its page, and an ordinary post is untouched.
+$GLOBALS['hcwa_test']['queried'] = get_post( 41 );
+$GLOBALS['wp_query']             = $hcwa_404_query();
+hcwa_refuse_attachment_page();
+hcwa_theme_refuse_attachment_page();
+hcwa_assert_false( $GLOBALS['wp_query']->is_404, 'post_type=attachment&p=41: an approved photo keeps its page' );
+$GLOBALS['hcwa_test']['queried'] = hcwa_test_post( array( 'ID' => 312, 'post_type' => 'post' ) );
+hcwa_assert_same( 0, hcwa_queried_attachment_id(), 'an ordinary post is not an attachment' );
+hcwa_assert_same( array( 'single.php' ), hcwa_theme_single_attachment_template( array( 'single.php' ) ), 'an ordinary post keeps single.php' );
+$hcwa_refuse_hook = false;
+foreach ( $GLOBALS['hcwa_test']['hooks']['single_template_hierarchy'] ?? array() as $hcwa_entry ) {
+	$hcwa_refuse_hook = $hcwa_refuse_hook || 'hcwa_theme_single_attachment_template' === $hcwa_entry[0];
+}
+hcwa_assert_true( $hcwa_refuse_hook, 'the attachment template filter is on single_template_hierarchy' );
+$GLOBALS['hcwa_test']['is']         = $hcwa_saved_is;
+$GLOBALS['hcwa_test']['query_vars'] = array();
+unset( $GLOBALS['hcwa_test']['queried'], $GLOBALS['wp_query'], $GLOBALS['hcwa_test']['status'] );

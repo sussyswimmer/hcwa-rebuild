@@ -392,15 +392,104 @@ def load_allow() -> list[dict]:
     return entries
 
 
-def allowed(kind: str, route: str, section: str) -> list[dict]:
-    return [e for e in ALLOW if e.get("kind") == kind and e.get("route", "*") in ("*", route)
-            and e.get("section", "*") in ("*", section)]
+ALLOW_KINDS = ("structure", "text", "links", "pixels", "timing")
+ALLOW_KEYS = {"route", "section", "kind", "match", "reason", "owner", "width", "mode"}
 
 
-def diff_lists(a: list[str], b: list[str], kind: str, route: str, section: str) -> dict:
+def allow_entry_problems(entry, owner: str) -> list[str]:
+    """What is wrong with one allow entry (5.4), or [] when its shape is right.
+
+    route "*" or a path; section a non-empty key; kind one of ALLOW_KINDS; match a regular
+    expression that compiles (non-empty, except for pixels, where it is not used); a non-empty
+    reason; owner equal to the stream whose file holds it; optional width ("390", "1440" or a
+    list of them) and mode (a MODES key or a list of them). No other keys."""
+    if not isinstance(entry, dict):
+        return ["not an object"]
+    probs = []
+    extra = sorted(set(entry) - ALLOW_KEYS)
+    if extra:
+        probs.append("unknown key(s) " + ", ".join(extra))
+    route = entry.get("route")
+    if not isinstance(route, str) or not (route == "*" or route.startswith("/")):
+        probs.append(f"route {route!r} is not '*' or a path")
+    if not isinstance(entry.get("section"), str) or not entry.get("section"):
+        probs.append("no section")
+    kind = entry.get("kind")
+    if kind not in ALLOW_KINDS:
+        probs.append(f"kind {kind!r} is not one of {'|'.join(ALLOW_KINDS)}")
+    match = entry.get("match", "")
+    if not isinstance(match, str):
+        probs.append("match is not a string")
+    else:
+        if not match and kind != "pixels":
+            probs.append(f"empty match on a {kind} entry")
+        try:
+            re.compile(match)
+        except re.error as exc:
+            probs.append(f"match does not compile: {exc}")
+    if not isinstance(entry.get("reason"), str) or not entry["reason"].strip():
+        probs.append("no reason")
+    if entry.get("owner") != owner:
+        probs.append(f"owner {entry.get('owner')!r} is not {owner!r} (the file's stream)")
+    for key, valid in (("width", set(ROUTES["widths"])), ("mode", set(MODES))):
+        if key in entry:
+            vals = entry[key] if isinstance(entry[key], list) else [entry[key]]
+            bad = [v for v in vals if str(v) not in valid]
+            if not vals or bad:
+                probs.append(f"{key} {entry[key]!r} is not one of {'|'.join(sorted(valid))}")
+    return probs
+
+
+def allow_problems() -> list[str]:
+    """Shape problems of every entry in allow-assets.json and allow-templates.json."""
+    out = []
+    for owner in ("assets", "templates"):
+        f = HERE / f"allow-{owner}.json"
+        if not f.is_file():
+            continue
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            out.append(f"{f.name}: invalid JSON ({exc})")
+            continue
+        entries = data.get("entries") if isinstance(data, dict) else data
+        if not isinstance(entries, list):
+            out.append(f"{f.name}: no entries list")
+            continue
+        for i, e in enumerate(entries):
+            out += [f"{f.name} entry {i}: {msg}" for msg in allow_entry_problems(e, owner)]
+    return out
+
+
+def scope_values(value) -> list[str]:
+    """An allow entry's optional width or mode scope as a list of strings ([] = any)."""
+    if value in (None, "", "*"):
+        return []
+    return [str(v) for v in (value if isinstance(value, list) else [value])]
+
+
+def allowed(kind: str, route: str, section: str, width: str | None = None, mode: str | None = None) -> list[dict]:
+    """The allow entries for one comparison. An entry may name a "width" ("390" or ["390"]) and a
+    "mode" ("reduced", ["reduced", "nowebgl"]); a scoped entry applies only to comparisons made at
+    that width or in that mode, never to one whose width or mode is not known."""
+    out = []
+    for e in ALLOW:
+        if e.get("kind") != kind or e.get("route", "*") not in ("*", route) or e.get("section", "*") not in ("*", section):
+            continue
+        widths, modes = scope_values(e.get("width")), scope_values(e.get("mode"))
+        if widths and str(width) not in widths:
+            continue
+        if modes and str(mode) not in modes:
+            continue
+        out.append(e)
+    return out
+
+
+def diff_lists(a: list[str], b: list[str], kind: str, route: str, section: str,
+               width: str | None = None, mode: str | None = None) -> dict:
     """Unified diff of two line lists, minus the lines an allow entry matches."""
     raw = list(difflib.unified_diff(a, b, "prototype", "wordpress", lineterm="", n=1))
-    entries = allowed(kind, route, section)
+    entries = allowed(kind, route, section, width, mode)
     kept, dropped = [], 0
     for line in raw[2:]:
         if line[:1] in "+-" and any(re.search(e["match"], line[1:]) for e in entries if e.get("match")):
@@ -411,7 +500,8 @@ def diff_lists(a: list[str], b: list[str], kind: str, route: str, section: str) 
     return {"pass": not changes, "changes": len(changes), "allowed": dropped, "diff": kept[:400]}
 
 
-def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str) -> dict:
+def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str,
+                   width: str | None = None, mode: str | None = None) -> dict:
     if Image is None:
         return {"pass": False, "why": "Pillow is not installed"}
     A, B = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
@@ -428,7 +518,7 @@ def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str) ->
     ok = height_ok and share <= PIXEL_SHARE
     res.update({"share": share, "heightOk": height_ok})
     if not ok:
-        accepted = allowed("pixels", route, section)
+        accepted = allowed("pixels", route, section, width, mode)
         if accepted:
             res["allowedBy"] = accepted[0].get("reason", "")
             ok = True
@@ -549,7 +639,7 @@ def compare_view(route: dict, width: str, mode: str, pages: dict, shot_root: Pat
         view["sections"].append({"key": "page", "structure": {"pass": False, "diff": ["load failed"]}})
         return view
     rkey = route["path"]
-    shell = diff_lists(a.get("shell", []), b.get("shell", []), "structure", rkey, "body")
+    shell = diff_lists(a.get("shell", []), b.get("shell", []), "structure", rkey, "body", width, mode)
     view["sections"].append({"key": "body", "structure": shell})
     A = {s["key"]: s for s in a.get("sections", [])}
     B = {s["key"]: s for s in b.get("sections", [])}
@@ -562,13 +652,13 @@ def compare_view(route: dict, width: str, mode: str, pages: dict, shot_root: Pat
             miss = {"pass": False, "changes": 1, "diff": [f"section only on the {only}"]}
             row.update(structure=miss, text=miss, links=miss)
         else:
-            row["structure"] = diff_lists(sa["tree"], sb["tree"], "structure", rkey, key)
-            row["text"] = diff_lists(sa["text"], sb["text"], "text", rkey, key)
-            row["links"] = diff_lists(sa["links"], sb["links"], "links", rkey, key)
+            row["structure"] = diff_lists(sa["tree"], sb["tree"], "structure", rkey, key, width, mode)
+            row["text"] = diff_lists(sa["text"], sb["text"], "text", rkey, key, width, mode)
+            row["links"] = diff_lists(sa["links"], sb["links"], "links", rkey, key, width, mode)
         if MODES[mode]["shots"] and shot_root is not None:
             pa, pb = (a.get("shots") or {}).get(key), (b.get("shots") or {}).get(key)
             if pa and pb and not pa.startswith("error") and not pb.startswith("error"):
-                row["pixels"] = compare_pixels(pa, pb, shot_root / "diff" / (slug(key) + ".png"), rkey, key)
+                row["pixels"] = compare_pixels(pa, pb, shot_root / "diff" / (slug(key) + ".png"), rkey, key, width, mode)
                 row["pixels"]["protoShot"], row["pixels"]["wpShot"] = pa, pb
             elif pa or pb:
                 row["pixels"] = {"pass": False, "why": "screenshot on one side only", "protoShot": pa, "wpShot": pb}
@@ -973,7 +1063,8 @@ def debug_log_new(instance: Path | None, start: int) -> dict:
 PROD_JS = r"""
 () => {
   const ids = new Set([...document.querySelectorAll('[id]')].map(e => e.id));
-  const centers = document.querySelector('#centers');
+  // The corridor section: the English Our Work page's h2 is #centers too (2.1 rule 5).
+  const centers = document.querySelector('section.bays-section#centers[data-world="corridor"]');
   return {
     beats: document.querySelectorAll('[data-beat]').length,
     n: centers ? (centers.getAttribute('style') || '').match(/--n:\s*(\d+)/)?.[1] ?? null : null,
@@ -1087,7 +1178,14 @@ def production_asserts(base: str, instance: Path | None, out: Path) -> dict:
                 for f in fails:
                     print(f"       - {f}", flush=True)
         browser.close()
-    res["pass"] = all(not r["fails"] for r in res["routes"])
+    # The refused Little Rose attachment through every query that names it (5.7): 404, no Location.
+    probes = [pr for pr in SMOKE.gate_probes(manifest.get("urls", []), manifest.get("fixtures") or {})
+              if pr["id"].startswith("gate:refused-attachment-")]
+    if not probes:
+        res["probes"] = [{"id": "gate:refused-attachment", "path": "-", "fails": ["no refused_photo fixture in seed-urls.json (re-seed)"]}]
+    else:
+        res["probes"] = SMOKE.run_probes(base, probes)
+    res["pass"] = all(not r["fails"] for r in res["routes"]) and all(not r["fails"] for r in res["probes"])
     return res
 
 
@@ -1219,13 +1317,20 @@ def main() -> int:
         res = production_asserts(BASES["wp"], args.instance, out)
         (out / "production-asserts.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
         bad = [r for r in res["routes"] if r["fails"]]
-        print(f"\nProduction assertions: {len(res['routes']) - len(bad)} of {len(res['routes'])} route views pass. Report: {out / 'production-asserts.json'}")
+        bad_probes = [r for r in res.get("probes", []) if r["fails"]]
+        print(f"\nProduction assertions: {len(res['routes']) - len(bad)} of {len(res['routes'])} route views pass; "
+              f"{len(res.get('probes', [])) - len(bad_probes)} of {len(res.get('probes', []))} attachment probes pass. Report: {out / 'production-asserts.json'}")
         return 0 if res["pass"] else 1
 
     widths = [w for w in args.widths.split(",") if w in ROUTES["widths"]]
     modes = [m for m in args.modes.split(",") if m in MODES]
     routes = [r for r in ROUTES["routes"] if not args.only or any(o in r["name"] or o == r["path"] for o in args.only)]
     THREE = three_chunks()
+    problems = allow_problems()
+    if problems:
+        # A malformed entry would silently accept (or fail to accept) differences: stop before the run.
+        print("Allow lists are malformed (11-WP-PORT.md 5.4):\n  " + "\n  ".join(problems), file=sys.stderr)
+        return 2
     ALLOW = load_allow()
     log_start = debug_log_size(args.instance)
     report = {"started": started.isoformat(timespec="seconds"), "bases": BASES,

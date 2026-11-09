@@ -60,14 +60,15 @@ Port checks (docs/plan/11-WP-PORT.md 5.7), on every seeded view unless --legacy:
   - not production: the Contact form submitted without JavaScript answers 200 on the same
     path with no query string
   - --unpublished <file>: every URL listed answers 404
-  - the refused Little Rose photo: /?attachment_id=, /?p= and /?page_id= with its id all
-    answer 404 with no Location header
+  - the refused Little Rose photo: /?attachment_id=, /?p= and /?page_id= with its id, the
+    same through post_type=attachment (p, page_id, name, and post_type[]), and /?attachment=
+    with its slug all answer 404 with no Location header
 The production scans read wp/themes/hcwa-2026/assets/generated/guards.json and stills.json;
 until the export has written guards.json they read the same constants from
 prototype/src/render.mjs through node, and without stills.json the still scan fails.
 --legacy runs only the checks above the port list (the 5 Nov baseline).
-Full-page screenshots go to qa/wp/<date>/ with a report.json. Exit code 1 when any
-check fails.
+Full-page screenshots go to qa/wp/<date>-<time>/ (-production appended for a production run;
+one folder per run) with a report.json. Exit code 1 when any check fails.
 
 Safeguarding: this repo is public. Images from the media library and from other sites are
 blurred before the page renders (theme, plugin and core assets stay sharp), and media is
@@ -486,7 +487,11 @@ PORT_JS = r"""
   let i18n = null, i18nError = '';
   const node = document.getElementById('i18n');
   if (node) { try { i18n = JSON.parse(node.textContent); } catch (e) { i18nError = String(e).slice(0, 120); } }
-  const centers = document.getElementById('centers');
+  // The corridor section, not any #centers: the English Our Work page's h2 is #centers too (2.1 rule 5).
+  const centers = document.querySelector('section.bays-section#centers[data-world="corridor"]');
+  // Body children as the server printed them: the bundle adds its own at runtime (header.js's scroll
+  // sentinel div, copy.js's live region, the world's canvases), which are not markup from our code.
+  const served = args.html ? new DOMParser().parseFromString(args.html, 'text/html').body : body;
   const rendered = (el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
   const runs = [];
   const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
@@ -503,7 +508,7 @@ PORT_JS = r"""
   return {
     tier: de.getAttribute('data-tier'), motion: de.getAttribute('data-motion'), lit: de.hasAttribute('data-lit'),
     bodyClass: [...body.classList],
-    bodyKids: [...body.children].filter(el => !skip.has(el.tagName) && el.id !== 'wpadminbar').map(sig),
+    bodyKids: [...served.children].filter(el => !skip.has(el.tagName) && el.id !== 'wpadminbar').map(sig),
     i18n, i18nError, hasI18nGlobal: typeof window.hcwaI18n !== 'undefined',
     langSwitch: [...document.querySelectorAll('[data-lang-switch] a[hreflang]')].map(a => ({ lang: a.getAttribute('hreflang').toLowerCase(), href: a.href })),
     // Header, sheet and footer links on this site, without the language switches (they lead to
@@ -515,7 +520,7 @@ PORT_JS = r"""
     litHeadDay: !!document.querySelector('main > .lit-head + .day'),
     endsOnDusk: !!document.querySelector('main > :last-child.dusk'),
     beats: document.querySelectorAll('[data-beat]').length,
-    beatsOutside: [...document.querySelectorAll('[data-beat]')].filter(b => !b.closest('#centers')).length,
+    beatsOutside: [...document.querySelectorAll('[data-beat]')].filter(b => !centers || !centers.contains(b)).length,
     hasCenters: !!centers,
     centersTraces: centers ? centers.hasAttribute('data-traces') : null,
     traces: document.querySelectorAll('[data-traces]').length,
@@ -654,7 +659,7 @@ def port_checks(target: dict, html: str, port: dict, requests: list[dict], ctx: 
 
     # World: beats, traces.
     if port.get("beatsOutside"):
-        fails.append(f"port world: {port['beatsOutside']} [data-beat] outside #centers")
+        fails.append(f"port world: {port['beatsOutside']} [data-beat] outside section.bays-section#centers")
     if port.get("hasCenters") and ctx.get("expected_beats") is not None and port.get("beats") != ctx["expected_beats"]:
         fails.append(f"port world: {port.get('beats')} beats, expected {ctx['expected_beats']}")
     if production and port.get("traces"):
@@ -753,12 +758,18 @@ def contact_nojs(browser, base: str, targets: list[dict]) -> list[dict]:
                 fails.append("contact no-JS: no form[data-form] on the Contact page")
             else:
                 f = form.first
+                radios: set[str] = set()
                 for el in f.locator("input, textarea, select").all():
                     kind = (el.get_attribute("type") or el.evaluate("e => e.tagName")).lower()
-                    if kind in ("hidden", "submit", "button"):
+                    if kind in ("hidden", "submit", "button", "reset"):
                         continue
                     if kind == "checkbox":
                         el.check()
+                    elif kind == "radio":
+                        group = el.get_attribute("name") or ""
+                        if group not in radios:  # the first choice of each group (the topic)
+                            radios.add(group)
+                            el.check()
                     elif kind == "select":
                         values = [v for v in el.evaluate("e => [...e.options].map(o => o.value)") if v]
                         if values:
@@ -827,6 +838,15 @@ def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
         for var in ("p", "page_id"):
             probes.append({"id": f"gate:refused-attachment-{var.replace('_', '-')}", "path": f"/?{var}={photo}",
                            "status": 404, "no_location": True})
+        # And through a post_type=attachment query, which skips the attachment_id path in core
+        # (critic round 1: /?post_type=attachment&p=<id> rendered the attachment page).
+        slug = str(fixtures.get("refused_photo_slug") or fixtures.get("refused_photo_file") or "")
+        typed = [("pt-p", f"/?post_type=attachment&p={photo}"), ("pt-page-id", f"/?post_type=attachment&page_id={photo}"),
+                 ("pt-array-p", f"/?post_type%5B%5D=attachment&p={photo}")]
+        if slug:
+            typed += [("pt-name", f"/?post_type=attachment&name={slug}"), ("attachment-name", f"/?attachment={slug}")]
+        for key, path in typed:
+            probes.append({"id": f"gate:refused-attachment-{key}", "path": path, "status": 404, "no_location": True})
         name = str(fixtures.get("refused_photo_file") or "")
         page = str(fixtures.get("refused_photo_page") or "")
         if name and page:
@@ -998,7 +1018,7 @@ def run(base: str, targets: list[dict], out: Path, production: bool, allow_draft
                             since = page.evaluate("performance.now() - (window.__hcwaNumsAt || 0)")
                             if since < 3000:
                                 page.wait_for_timeout(int(3000 - since) + 50)
-                            port = page.evaluate(PORT_JS, {"protected": port_ctx["protected"], "visit": port_ctx["visit"][lang]})
+                            port = page.evaluate(PORT_JS, {"protected": port_ctx["protected"], "visit": port_ctx["visit"][lang], "html": html})
                             js = sorted({r["url"] for r in seen if "/assets/dist/assets/" in r["url"] and r["url"].split("?")[0].endswith(".js")})
                             ctx_now = dict(port_ctx, lang=lang, hreflang=data["hreflang"],
                                            chunk_imports=chunk_imports({u: port_ctx["chunk_body"](u) for u in js if u not in (port.get("modules") or [])}))
@@ -1035,7 +1055,7 @@ def main() -> int:
     ap.add_argument("--door-approved", action="store_true",
                     help="with --production: HCWA has approved the Little Rose door, so its door may show")
     ap.add_argument("--only", nargs="*", default=[], help="only URLs whose id or path contains one of these")
-    ap.add_argument("--out", type=Path, help="screenshot folder (default qa/wp/<date>)")
+    ap.add_argument("--out", type=Path, help="screenshot folder (default qa/wp/<date>-<time>[-production], one per run)")
     args = ap.parse_args()
 
     base = args.base.rstrip("/")
@@ -1055,7 +1075,8 @@ def main() -> int:
     # Without a manifest there is no WordPress.
     probes = gate_probes(urls, load_fixtures(args.manifest)) if args.manifest else []
     if args.legacy:
-        probes = [p for p in probes if p["id"] not in ("gate:refused-attachment-p", "gate:refused-attachment-page-id")]
+        # The 5 Nov baseline probed ?attachment_id only (gate:refused-attachment-page).
+        probes = [p for p in probes if p["id"] == "gate:refused-attachment-page" or not p["id"].startswith("gate:refused-attachment-")]
     if args.unpublished:
         listed = json.loads(args.unpublished.read_text(encoding="utf-8"))
         listed = listed.get("urls", []) if isinstance(listed, dict) else listed
@@ -1067,7 +1088,9 @@ def main() -> int:
         print("No URLs to check.", file=sys.stderr)
         return 1
 
-    out = args.out or REPO / "qa" / "wp" / datetime.date.today().isoformat()
+    # One folder per run, so a second run (production after staging) never overwrites the first.
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+    out = args.out or REPO / "qa" / "wp" / (stamp + ("-production" if args.production else ""))
     mode = "production" if args.production else "non-production"
     print(f"Checking {len(targets)} URLs x {len(VIEWPORTS)} widths and {len(probes)} HTTP gates on {base} ({mode})",
           flush=True)

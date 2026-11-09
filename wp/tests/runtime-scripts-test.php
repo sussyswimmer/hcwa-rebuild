@@ -447,6 +447,7 @@ print(json.dumps({
         "script ignored": smoke.blocker_hits('<script>var w = x[s]; /^[012]$/.test(q)</script><style>a[x]{}</style><p>ok</p>', guards),
     },
     "probes": [p["path"] for p in smoke.gate_probes([], {"refused_photo": 40})],
+    "probesSlug": [p for p in smoke.gate_probes([], {"refused_photo": 40, "refused_photo_file": "hcwa-20261109-v1lzeuoz"}) if "name" in p["id"]],
     "unpublished": smoke.unpublished_probes(["http://h/cau-chuyen-mau/", "/en/sample-story/?x=1"]),
 }, ensure_ascii=False))
 PY;
@@ -463,7 +464,7 @@ hcwa_assert_true( $hcwa_has( 'body order', 'out of the 2.2 order' ), 'port: body
 hcwa_assert_true( $hcwa_has( 'lit missing', 'data-lit missing' ), 'port: data-lit on lit pages' );
 hcwa_assert_true( $hcwa_has( 'switch differs', 'hreflang says' ), 'port: language switch equals hreflang' );
 hcwa_assert_true( $hcwa_has( 'menu link 404', 'menu links not answering 200' ), 'port: menu links answer 200' );
-hcwa_assert_true( $hcwa_has( 'beat outside', 'outside #centers' ) && $hcwa_has( 'beat outside', '4 beats, expected 3' ), 'port: beats only in #centers, as many as centers' );
+hcwa_assert_true( $hcwa_has( 'beat outside', 'outside section.bays-section#centers' ) && $hcwa_has( 'beat outside', '4 beats, expected 3' ), 'port: beats only in the corridor section, as many as centers' );
 hcwa_assert_true( $hcwa_has( 'no traces off production', 'no data-traces on #centers' ), 'port: traces on #centers off production' );
 hcwa_assert_true( $hcwa_has( 'traces on production', 'data-traces on production' ), 'port: never traces on production' );
 hcwa_assert_true( $hcwa_has( 'little rose location', 'a location line' ) && $hcwa_has( 'little rose location', 'unit-colour --spill' ), 'port: no location or unit-colour spill on a protected center' );
@@ -479,7 +480,11 @@ hcwa_assert_true( $hcwa_has( 'broken poster', 'did not answer 200' ), 'port: pos
 hcwa_assert_same( array(), $hcwa_result['blockers']['footnote passes'] ?? null, 'BLOCKERS: a digit-only bracket is a footnote' );
 hcwa_assert_same( 1, count( (array) ( $hcwa_result['blockers']['token fails'] ?? array() ) ), 'BLOCKERS: [N] is a placeholder' );
 hcwa_assert_same( array(), $hcwa_result['blockers']['script ignored'] ?? null, 'BLOCKERS: scripts and styles are removed first' );
-hcwa_assert_same( array( '/wp-json/wp/v2/media', '/wp-json/wp/v2/MEDIA', '/wp-json/wp/v2/posts?_fields=id,yoast_head,yoast_head_json', '/wp-json/yoast/v1/get_head?url=%2F', '/post-sitemap.xml', '/?attachment_id=40', '/?p=40', '/?page_id=40' ), $hcwa_result['probes'] ?? null, 'probes: the refused attachment through attachment_id, p and page_id' );
+hcwa_assert_same( array( '/wp-json/wp/v2/media', '/wp-json/wp/v2/MEDIA', '/wp-json/wp/v2/posts?_fields=id,yoast_head,yoast_head_json', '/wp-json/yoast/v1/get_head?url=%2F', '/post-sitemap.xml', '/?attachment_id=40', '/?p=40', '/?page_id=40', '/?post_type=attachment&p=40', '/?post_type=attachment&page_id=40', '/?post_type%5B%5D=attachment&p=40' ), $hcwa_result['probes'] ?? null, 'probes: the refused attachment through attachment_id, p and page_id, also with post_type=attachment (and post_type[])' );
+hcwa_assert_same( array( '/?post_type=attachment&name=hcwa-20261109-v1lzeuoz', '/?attachment=hcwa-20261109-v1lzeuoz' ), array_column( (array) ( $hcwa_result['probesSlug'] ?? array() ), 'path' ), 'probes: and by its slug (post_type=attachment&name, attachment)' );
+foreach ( (array) ( $hcwa_result['probesSlug'] ?? array() ) as $hcwa_probe ) {
+	hcwa_assert_same( array( 404, true ), array( $hcwa_probe['status'] ?? null, $hcwa_probe['no_location'] ?? null ), 'probe ' . ( $hcwa_probe['id'] ?? '?' ) . ': 404 with no Location' );
+}
 hcwa_assert_same( array( '/cau-chuyen-mau/', '/en/sample-story/?x=1' ), array_column( (array) ( $hcwa_result['unpublished'] ?? array() ), 'path' ), 'probes: --unpublished URLs must answer 404' );
 
 // The exported guards come from guards.json once the export has written it, until then from
@@ -520,13 +525,31 @@ routes = parity.ROUTES["routes"]
 allow = {}
 for owner in ("assets", "templates"):
     allow[owner] = json.load(open(str(parity.HERE / f"allow-{owner}.json")))
+# Width and mode scopes (5.4): a 390-only pixel entry does not accept the same section at 1440.
+parity.ALLOW = [{"route": "/en/", "section": "footer", "kind": "pixels", "match": "", "reason": "29 px shift at 390", "owner": "templates", "width": "390"},
+                {"route": "*", "section": "#news", "kind": "text", "match": "^x$", "reason": "no-JS only", "owner": "templates", "mode": ["nojs"]}]
+scoped = [len(parity.allowed("pixels", "/en/", "footer", "390", "reduced")), len(parity.allowed("pixels", "/en/", "footer", "1440", "reduced")),
+          len(parity.allowed("pixels", "/en/", "footer")), parity.diff_lists(["x"], [], "text", "/", "#news", "390", "nojs")["pass"],
+          parity.diff_lists(["x"], [], "text", "/", "#news", "390", "reduced")["pass"]]
+good = {"route": "*", "section": "#news", "kind": "text", "match": "^a$", "reason": "why", "owner": "templates"}
+bad = {
+    "kind": dict(good, kind="colour"), "regex": dict(good, match="(unclosed"), "empty match": dict(good, match=""),
+    "owner": dict(good, owner="assets"), "reason": dict(good, reason=" "), "route": dict(good, route="en/"),
+    "section": dict(good, section=""), "width": dict(good, width="391"), "mode": dict(good, mode=["reduced", "paused"]),
+    "extra key": dict(good, widths="390"),
+}
+shape = {"good": parity.allow_entry_problems(good, "templates"),
+         "pixels empty match": parity.allow_entry_problems(dict(good, kind="pixels", match="", width=["390"], mode="reduced"), "templates"),
+         "bad": {k: len(parity.allow_entry_problems(v, "templates")) for k, v in bad.items()}}
 print(json.dumps({
     "key": parity.line_key("vi-1440-t2: drawing buffers ~33.4 MB <= 48 MB (D6.7)"),
     "missing": [r["text"] for r in cmp["missing"]], "only": cmp["prototypeOnly"], "protoFails": cmp["protoFails"],
     "allowed": [d1["pass"], d1["allowed"]], "plain": [d2["pass"], d2["changes"]],
     "routes": len(routes), "paths": sorted({r["path"] for r in routes}), "widths": sorted(parity.ROUTES["widths"]),
     "norm": parity.norm_url("http://h/wp-content/themes/hcwa-2026/assets/dist/assets/main-BwCzEVtk.js?ver=1"),
-    "allow": {k: v.get("entries") for k, v in allow.items()},
+    "allowCounts": {k: len(v.get("entries", [])) for k, v in allow.items()},
+    "allowProblems": parity.allow_problems(),
+    "scoped": scoped, "shape": shape,
 }))
 PY;
 [ $hcwa_code, $hcwa_out, $hcwa_err ] = $hcwa_run( array( $hcwa_python, '-I', '-B', '-c', $hcwa_parity_py, $hcwa_repo . '/scripts/wp-parity/run.py' ) );
@@ -542,7 +565,16 @@ hcwa_assert_same( 16, $hcwa_parity['routes'] ?? null, 'parity: 16 routes' );
 hcwa_assert_same( array( '1440', '390' ), $hcwa_parity['widths'] ?? null, 'parity: 390 and 1440' );
 hcwa_assert_true( in_array( '/en/404.html', (array) ( $hcwa_parity['paths'] ?? array() ), true ) && in_array( '/hoat-dong/co-so/tre-xanh/', (array) ( $hcwa_parity['paths'] ?? array() ), true ), 'parity: the 404 and Green Bamboo routes' );
 hcwa_assert_same( '/assets/main.js', $hcwa_parity['norm'] ?? null, 'parity: dist URLs compare as the prototype names them' );
-hcwa_assert_same( array( 'assets' => array(), 'templates' => array() ), $hcwa_parity['allow'] ?? null, 'parity: both allow lists start empty' );
+// 5.4: the streams fill their allow lists with reviewed entries; each must have the right shape.
+hcwa_assert_true( isset( $hcwa_parity['allowCounts']['assets'], $hcwa_parity['allowCounts']['templates'] ), 'parity: both allow lists load (allow-assets.json, allow-templates.json)' );
+hcwa_assert_same( array(), $hcwa_parity['allowProblems'] ?? null, 'parity: every allow entry has route, section, a known kind, a match that compiles, a reason and the owner of its file' );
+hcwa_assert_same( array( 1, 0, 0, true, false ), $hcwa_parity['scoped'] ?? null, 'parity: an allow entry scoped to a width or mode applies only there (and never to an unscoped comparison)' );
+hcwa_assert_same( array(), $hcwa_parity['shape']['good'] ?? null, 'parity: a well-formed allow entry has no problems' );
+hcwa_assert_same( array(), $hcwa_parity['shape']['pixels empty match'] ?? null, 'parity: a pixels entry may have an empty match and width/mode scopes' );
+foreach ( (array) ( $hcwa_parity['shape']['bad'] ?? array() ) as $hcwa_case => $hcwa_n ) {
+	hcwa_assert_same( 1, $hcwa_n, "parity: an allow entry with a bad $hcwa_case is reported" );
+}
+hcwa_assert_same( 10, count( (array) ( $hcwa_parity['shape']['bad'] ?? array() ) ), 'parity: ten malformed allow-entry cases' );
 if ( '' !== $hcwa_which( 'node' ) ) {
 	foreach ( array( 'skeleton.js', 'gzip-proxy.mjs', 'lcp.cjs' ) as $hcwa_file ) {
 		[ $hcwa_code, , $hcwa_err ] = $hcwa_run( array( $hcwa_which( 'node' ), '--check', $hcwa_repo . '/scripts/wp-parity/' . $hcwa_file ) );

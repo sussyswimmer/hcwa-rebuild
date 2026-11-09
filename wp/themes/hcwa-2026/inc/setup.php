@@ -146,7 +146,7 @@ function hcwa_theme_robots( array $robots ): array {
 		);
 	}
 	// Attachment pages are leftovers of the old site, not content: keep them out of search.
-	if ( is_attachment() ) {
+	if ( hcwa_theme_queried_attachment_id() > 0 ) {
 		$robots['noindex'] = true;
 	}
 	return $robots;
@@ -163,16 +163,30 @@ add_action( 'wp', 'hcwa_theme_refuse_attachment_page', 5, 0 );
  * without hcwa-core): a plain 404, so neither the photo nor its title or caption, which
  * often carry a child's name, is printed. Same steps as core's WP::handle_404(). With
  * hcwa-core active the plugin's copy has already run (same hook and priority, loaded
- * first), so this one finds no attachment left and does nothing.
+ * first), so this one finds no attachment left and does nothing. The attachment is read
+ * from the queried object, not from is_attachment(): ?post_type=attachment&p=N shows it
+ * as a single post (is_single), and single.php would print it.
  */
 function hcwa_theme_refuse_attachment_page(): void {
-	if ( ! is_attachment() || ! hcwa_theme_attachment_refused( (int) get_queried_object_id() ) ) {
+	if ( ! hcwa_theme_attachment_refused( hcwa_theme_queried_attachment_id() ) ) {
 		return;
 	}
 	global $wp_query;
 	$wp_query->set_404();
 	status_header( 404 );
 	nocache_headers();
+}
+
+/**
+ * ID of the attachment the main query shows (an attachment page or a post_type=attachment
+ * query shown as a single post), else 0. Same rule as hcwa-core's hcwa_queried_attachment_id().
+ */
+function hcwa_theme_queried_attachment_id(): int {
+	$object = get_queried_object();
+	if ( $object instanceof WP_Post && 'attachment' === $object->post_type ) {
+		return (int) $object->ID;
+	}
+	return is_attachment() ? (int) get_queried_object_id() : 0;
 }
 
 add_action( 'template_redirect', 'hcwa_theme_lang_notice_redirect' );
@@ -261,10 +275,29 @@ add_filter( 'document_title_parts', 'hcwa_theme_attachment_document_title' );
  * @return mixed
  */
 function hcwa_theme_attachment_document_title( $parts ) {
-	if ( is_array( $parts ) && is_attachment() ) {
-		$parts['title'] = hcwa_theme_attachment_heading( (int) get_queried_object_id() );
+	$attachment_id = is_array( $parts ) ? hcwa_theme_queried_attachment_id() : 0;
+	if ( is_array( $parts ) && ( $attachment_id > 0 || is_attachment() ) ) {
+		$parts['title'] = hcwa_theme_attachment_heading( $attachment_id );
 	}
 	return $parts;
+}
+
+add_filter( 'single_template_hierarchy', 'hcwa_theme_single_attachment_template' );
+
+/**
+ * An attachment shown as a single post (?post_type=attachment&p=N, is_single rather than
+ * is_attachment) uses attachment.php like an attachment page, so its heading is never the
+ * file name and the gate applies; single.php would print the raw title. Refused photos
+ * never get here (hcwa_theme_refuse_attachment_page() makes them a 404 first).
+ *
+ * @param mixed $templates Candidate template file names, most specific first.
+ * @return mixed
+ */
+function hcwa_theme_single_attachment_template( $templates ) {
+	if ( is_array( $templates ) && hcwa_theme_queried_attachment_id() > 0 ) {
+		array_unshift( $templates, 'attachment.php' );
+	}
+	return $templates;
 }
 
 /**

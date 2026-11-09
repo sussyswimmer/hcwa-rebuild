@@ -1155,6 +1155,21 @@ function hcwa_attachment_page_refused( int $attachment_id ): bool {
 }
 
 /**
+ * ID of the attachment the main query shows, whatever the query looks like, else 0.
+ * is_attachment() is not enough: ?post_type=attachment&p=N (also with page_id, name or
+ * post_type[]) makes WP_Query set is_single, not is_attachment, and single.php then printed
+ * the attachment's title, description and a language switch naming its parent page (found
+ * on real WordPress, fix round 1). So the check reads the queried object itself.
+ */
+function hcwa_queried_attachment_id(): int {
+	$object = get_queried_object();
+	if ( $object instanceof WP_Post && 'attachment' === $object->post_type ) {
+		return (int) $object->ID;
+	}
+	return is_attachment() ? (int) get_queried_object_id() : 0;
+}
+
+/**
  * The attachment page of a refused photo is a plain 404, whatever the theme: the default
  * attachment template prints the image, its title and caption (which often carry a
  * child's name) with wp_get_attachment_image(), past the gate. Same steps as core's
@@ -1164,9 +1179,11 @@ function hcwa_attachment_page_refused( int $attachment_id ): bool {
  * attachment pages are off (canonical.php:551-552), and ?attachment_id=N is a public query
  * var (class-wp.php:18). set_404() clears is_attachment (class-wp-query.php:1846 and :525),
  * so those redirects, and hcwa-2026's own copy of this check (inc/setup.php), do nothing.
+ * The attachment is found through hcwa_queried_attachment_id(), so a post_type query that
+ * shows it as a single post is refused too.
  */
 function hcwa_refuse_attachment_page(): void {
-	if ( ! is_attachment() || ! hcwa_attachment_page_refused( (int) get_queried_object_id() ) ) {
+	if ( ! hcwa_attachment_page_refused( hcwa_queried_attachment_id() ) ) {
 		return;
 	}
 	global $wp_query;

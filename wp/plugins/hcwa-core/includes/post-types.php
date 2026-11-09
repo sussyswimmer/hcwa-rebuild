@@ -327,7 +327,11 @@ add_filter( 'enter_title_here', 'hcwa_title_placeholder', 10, 2 );
  *   photos of identifiable children and a VietQR image finance has not confirmed;
  * - Yoast SEO's /yoast/v1/get_head?url= returns any page's head (share image, schema with
  *   image captions) without rendering it; seo.php also takes yoast_head and yoast_head_json
- *   out of public post and term responses.
+ *   out of public post and term responses;
+ * - centers, programs, reports and focus areas: the theme prints their text only through
+ *   hcwa_draft_text() (center bodies through hcwa_center_body()), but content.rendered and
+ *   a term's description print it raw, so draft text would reach the live site through
+ *   REST (found on a production instance, fix round 1). The editor reads them as staff.
  *
  * Checked on the matched request (rest_request_before_callbacks, which also runs for
  * embedded and batch requests), case-insensitively, because WordPress matches routes
@@ -356,5 +360,97 @@ add_filter( 'rest_request_before_callbacks', 'hcwa_rest_protect_routes', 10, 3 )
  * @param string $route Route, e.g. /wp/v2/media/12.
  */
 function hcwa_rest_route_is_protected( string $route ): bool {
-	return (bool) preg_match( '#^/+(?:wp/v2/(?:hcwa_impact|hcwa_partner|media)|yoast/v1/get_head)(?:/|$)#i', $route );
+	return (bool) preg_match( '#^/+(?:wp/v2/(?:hcwa_impact|hcwa_partner|hcwa_center|hcwa_program|hcwa_report|hcwa_focus_area|media)|yoast/v1/get_head)(?:/|$)#i', $route );
 }
+
+/**
+ * Feeds that would print our post types: centers, programs, reports, impact figures and
+ * partners (?feed=rss2&post_type=…, post_type=any), focus area archives and search results
+ * (which list centers, programs and reports). Their bodies and term descriptions print
+ * through hcwa_draft_text() in the theme, but a feed prints them raw through
+ * the_content_feed. Nobody needs these feeds: the news feed (posts) stays.
+ */
+function hcwa_feed_shows_our_types(): bool {
+	if ( ! is_feed() ) {
+		return false;
+	}
+	$ours  = array( 'hcwa_center', 'hcwa_program', 'hcwa_report', 'hcwa_impact', 'hcwa_partner' );
+	$asked = array_map( 'strval', (array) get_query_var( 'post_type' ) );
+	if ( array_intersect( $ours, $asked ) || in_array( 'any', $asked, true ) ) {
+		return true;
+	}
+	if ( is_search() || is_tax( 'hcwa_focus_area' ) ) {
+		return true;
+	}
+	$object = get_queried_object();
+	return $object instanceof WP_Post && in_array( $object->post_type, $ours, true );
+}
+
+/**
+ * Those feeds answer a plain 404 (same steps as core's WP::handle_404()). On 'wp', before
+ * template-loader.php serves the feed: set_404() clears is_feed (class-wp-query.php
+ * init_query_flags()), so the 404 template prints instead.
+ */
+function hcwa_refuse_our_feeds(): void {
+	if ( ! hcwa_feed_shows_our_types() ) {
+		return;
+	}
+	global $wp_query;
+	$wp_query->set_404();
+	status_header( 404 );
+	nocache_headers();
+}
+add_action( 'wp', 'hcwa_refuse_our_feeds', 5, 0 );
+
+/**
+ * On the live site, feed text that still holds a draft marker prints nothing: titles,
+ * bodies and excerpts of the news feed (raw draft posts are unpublished before launch,
+ * 11-WP-PORT.md 5.9; this is the second lock). Staging keeps the marker visible.
+ *
+ * @param mixed $text Feed text.
+ * @return mixed
+ */
+function hcwa_feed_drop_draft( $text ) {
+	if ( ! is_string( $text ) || '' === $text || ! hcwa_is_production() ) {
+		return $text;
+	}
+	return hcwa_contains_draft( $text ) ? '' : $text;
+}
+foreach ( array( 'the_title_rss', 'the_content_feed', 'the_excerpt_rss' ) as $hcwa_feed_hook ) {
+	add_filter( $hcwa_feed_hook, 'hcwa_feed_drop_draft', 99 );
+}
+unset( $hcwa_feed_hook );
+
+/**
+ * The tagline (blogdescription, translated by Polylang) as feeds print it: on the live site
+ * nothing while it holds a draft marker. The tagline skips the publish guard (it is an
+ * option), and the seeded one is draft.
+ *
+ * @param mixed  $info Value.
+ * @param string $show Which bloginfo field.
+ * @return mixed
+ */
+function hcwa_feed_tagline( $info, $show = '' ) {
+	return 'description' === $show ? hcwa_feed_drop_draft( $info ) : $info;
+}
+add_filter( 'get_bloginfo_rss', 'hcwa_feed_tagline', 99, 2 );
+
+/**
+ * The REST index (/wp-json/) prints the site name and tagline to anyone: on the live site
+ * the tagline is left empty while it holds a draft marker.
+ *
+ * @param mixed $response WP_REST_Response of the index.
+ * @return mixed
+ */
+function hcwa_rest_index_tagline( $response ) {
+	if ( ! $response instanceof WP_REST_Response ) {
+		return $response;
+	}
+	$data = $response->get_data();
+	if ( is_array( $data ) && isset( $data['description'] ) && is_string( $data['description'] ) ) {
+		$data['description'] = (string) hcwa_feed_drop_draft( $data['description'] );
+		$response->set_data( $data );
+	}
+	return $response;
+}
+add_filter( 'rest_index', 'hcwa_rest_index_tagline', 99 );
