@@ -166,8 +166,8 @@ const enBar = (c) =>
       </aside>`
     : "";
 
-// Staging only. The reviewer toggle hides the dashed draft outlines for this session (05-DESIGN D7).
-const prototypeNote = (c) => (c.prod ? "" : html`<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">${c.t("prototypeNote")}</span><span class="proto-note__short">${c.t("prototypeNoteShort")}</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>${c.t("draftHide")}</button></div></div>`);
+// Staging only. The reviewer toggle shows the dashed draft outlines for this session; off by default (05-DESIGN D7).
+const prototypeNote = (c) => (c.prod ? "" : html`<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">${c.t("prototypeNote")}</span><span class="proto-note__short">${c.t("prototypeNoteShort")}</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>${c.t("draftShow")}</button></div></div>`);
 
 // The View Transition type (back, lang) is chosen in pagereveal, before first render: a classic script in
 // <head>, after head-inline.js has set data-motion (motion/transitions.js).

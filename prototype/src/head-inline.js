@@ -3,7 +3,7 @@
 // browser's GPU cannot run the world), data-motion (on|off), data-reduced
 // (the OS asks for less motion), sun-pending (the CSS sun-in will play), stages (the home's world sections
 // take their sticky stage layout: decided here so it never jumps), wf (fonts cached) and,
-// on staging, drafts-hidden (the reviewer hid the draft outlines this session).
+// on staging, drafts-shown (the reviewer turned the draft outlines on this session, or ?drafts=1).
 // Statements end in semicolons: the file is joined onto one line. Budget 1.5 KB.
 (function (d, w) {
   var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search);
@@ -22,6 +22,6 @@
   if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending");
   if (!off && tier > 0) cls.push("stages");
   if (get("sessionStorage", "hcwa:wf")) cls.push("wf");
-  if (proto && get("sessionStorage", "hcwa:drafts")) cls.push("drafts-hidden");
+  if (proto && (get("sessionStorage", "hcwa:drafts") === "shown" || q.get("drafts") === "1")) cls.push("drafts-shown");
   h.className = (h.className + " " + cls.join(" ")).trim();
 })(document, window);

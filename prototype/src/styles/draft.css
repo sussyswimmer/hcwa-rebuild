@@ -1,9 +1,10 @@
 /* Staging only (PROD=1 refuses data-draft, pending figures and donation placeholders; this file is not
-   imported there). CLAUDE.md dashed outline, quieter: 1 px gold-700 at 55%, 2 px offset (D7). */
-[data-draft] { outline: 1px dashed color-mix(in srgb, var(--color-gold-700) 55%, transparent); outline-offset: 2px; }
+   imported there). CLAUDE.md dashed outline, quieter: 1 px gold-700 at 55%, 2 px offset (D7). Off by
+   default (Maxwell, 9 Nov 2026): drawn only when the reviewer presses "Hiện khung nháp / Show draft outlines". */
+html.drafts-shown [data-draft] { outline: 1px dashed color-mix(in srgb, var(--color-gold-700) 55%, transparent); outline-offset: 2px; }
 /* Inline drafts (the hero's H1 and intro) hug each line instead of drawing one wireframe box. */
 span[data-draft] { box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.site-footer [data-draft], .dusk [data-draft] { outline-color: color-mix(in srgb, var(--color-sun-400) 70%, transparent); }
+html.drafts-shown .site-footer [data-draft], html.drafts-shown .dusk [data-draft] { outline-color: color-mix(in srgb, var(--color-sun-400) 70%, transparent); }
 .chip-pending, .pending-value { display: inline-flex; align-items: center; padding: 1px 10px; border: 1px dashed var(--color-gold-700); border-radius: var(--r-pill); background: var(--color-sun-100); color: var(--color-warn); font-size: var(--fs-meta); font-weight: 500; line-height: 1.6; }
 /* One line at a fixed height, so the hero below can subtract it from the first screen (layout.css --bars-h). */
 .proto-note { height: 36px; display: flex; align-items: center; background: var(--color-ink-900); color: var(--color-on-dusk); font-size: var(--fs-meta); }
@@ -11,9 +12,8 @@ span[data-draft] { box-decoration-break: clone; -webkit-box-decoration-break: cl
 .proto-note p { flex: 1; min-width: 0; }
 .proto-note__full, .proto-note__short { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .proto-note__toggle { flex: none; min-height: 32px; padding: 0 4px; border: 0; background: none; color: var(--color-on-dusk); font: 500 var(--fs-meta) / 1.6 var(--font-body); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
-html.drafts-hidden .proto-note__toggle { color: var(--color-sun-400); }
+html.drafts-shown .proto-note__toggle { color: var(--color-sun-400); }
 .proto-note :focus-visible { outline-color: var(--color-focus-on-dark); outline-offset: -2px; }
 html:not(.js) .proto-note__toggle { display: none; }
-html.drafts-hidden [data-draft] { outline: none; }
 .proto-note__short { display: none; }
 @media (max-width: 599px) { .proto-note { height: 44px; } .proto-note__toggle { min-height: 44px; } .proto-note__full { display: none; } .proto-note__short { display: block; } }

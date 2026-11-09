@@ -245,8 +245,8 @@
     "en": "Hide announcement"
   },
   "prototypeNote": {
-    "vi": "Bản mẫu để HCWA góp ý. Khung nét đứt là nội dung nháp hoặc số liệu chờ HCWA duyệt.",
-    "en": "Prototype for HCWA review. A dashed outline marks draft text or figures waiting for HCWA approval."
+    "vi": "Bản mẫu để HCWA góp ý. Chọn “Hiện khung nháp” để thấy nội dung nháp và số liệu chờ HCWA duyệt.",
+    "en": "Prototype for HCWA review. Choose “Show draft outlines” to see draft text and figures waiting for HCWA approval."
   },
   "notInPrototype": {
     "vi": "Trang này chưa có trong bản mẫu.",

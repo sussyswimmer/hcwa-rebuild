@@ -68,8 +68,9 @@ and donation details before anything goes live.
 ## Writing placeholder copy
 
 When you need text HCWA has not supplied, write it short and plain, and wrap it so it
-is obvious: `[DRAFT: ...]` in markdown and a `data-draft` attribute plus a visible dashed
-outline in the prototype. Never invent stats, partner names, testimonials or awards.
+is obvious: `[DRAFT: ...]` in markdown and a `data-draft` attribute in the prototype. Its dashed
+outline is off by default and shows when a reviewer presses "Hiện khung nháp / Show draft outlines"
+(Maxwell, 9 Nov 2026). Never invent stats, partner names, testimonials or awards.
 
 ## Tech defaults (see `docs/plan/03-STRATEGY-AND-DECISIONS.md` for the reasoning)
 

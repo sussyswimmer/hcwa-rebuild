@@ -1133,7 +1133,7 @@ The analytic sun stays: any Blender screen must keep the SDF hole positions.
 | Header | Logo (mark + `logoLines`) left; menu (Về chúng tôi · Hoạt động · Tác động & Báo cáo · Tin tức · Chung tay · Liên hệ) in BVP 500 15 px; VI / EN; Ủng hộ (sun). 80 → 64 px desktop, 60 px mobile (mark, VI / EN, Ủng hộ, "Menu" text button ≥ 44 × 44). Transparent over the hero (scrim), solid lime-50 after 80 px. Never hides. |
 | Language switch | Text "VI / EN", current bold + underlined, `aria-current="true"`, `hreflang` and `lang` on each link, `data-lang-switch` (View Transition `lang` type). |
 | Pause toggle | 44 × 44, `aria-pressed`, visible label on desktop, icon + accessible name on mobile; hero and footer. |
-| Draft toggle (staging only) | "Ẩn khung nháp / Hide draft outlines", default visible, `sessionStorage`. Never in PROD. |
+| Draft toggle (staging only) | "Hiện khung nháp / Show draft outlines": outlines **off by default** (Maxwell, 9 Nov 2026), on for the session after a press or with `?drafts=1`, `sessionStorage`. The `data-draft` attributes and the PROD guard are unchanged. Never in PROD. |
 | Draft marking | `data-draft` + 1 px dashed `--color-gold-700` outline at 55% opacity, 2 px offset. PROD build fails on any `data-draft`. |
 | Button | Primary (sun, ink label), secondary (opaque lime-50, blue-700 border), on-dusk (white outline), text link with arrow. Min height 48 px, pill. States: hover, focus-visible, active, disabled, loading. |
 | Lit header (inner pages) | Shaded still + light layer (`<picture>`, 3:1 desktop, 4:3 mobile) with CSS sun-in; H1 + intro over the still's text-safe wall on desktop, below the still on mobile; 6 px unit band when the page belongs to a unit. WordPress: `hcwa/lit-header` pattern. |
