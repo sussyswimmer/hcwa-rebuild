@@ -324,7 +324,7 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
             page.wait_for_timeout(400)
             out["sideways320"] = page.evaluate("Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)")
         out["php"] = php_errors(body)
-        out["html"] = body
+        out["doc"] = body
         out["headStyleBytes"] = data.get("headInlineStyleBytes", 0)
         out["htmlBytes"] = len(body.encode("utf-8"))
     except PlaywrightError as exc:
@@ -500,7 +500,7 @@ def wp_only_checks(route: dict, mode: str, pages: dict) -> list[str]:
         ver = sorted({norm_url(r["url"]) for r in p.get("requests", []) if "/assets/dist/" in r["url"] and "ver=" in r["url"]})
         if ver:
             fails.append("?ver on dist URLs: " + ", ".join(ver[:4]))
-        bad = forbidden_assets(p.get("html", ""), p.get("requests", []))
+        bad = forbidden_assets(p.get("doc", ""), p.get("requests", []))
         if bad:
             fails.append("assets the prototype never loads: " + ", ".join(bad))
     return fails
@@ -1008,7 +1008,10 @@ PROD_JS = r"""
 
 
 def production_asserts(base: str, instance: Path | None, out: Path) -> dict:
-    guards = SMOKE.load_guards()
+    try:
+        guards = SMOKE.load_guards()
+    except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
+        raise SystemExit(f"production assertions need the guards: {exc}")
     stills = SMOKE.listed_stills()
     stills_source = "assets/generated/stills.json" if stills is not None else "assets/generated/stills.json is missing (milestone A of the assets stream)"
     manifest = json.loads((instance / "seed-urls.json").read_text(encoding="utf-8")) if instance and (instance / "seed-urls.json").is_file() else {}

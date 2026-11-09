@@ -482,8 +482,13 @@ hcwa_assert_same( array(), $hcwa_result['blockers']['script ignored'] ?? null, '
 hcwa_assert_same( array( '/wp-json/wp/v2/media', '/wp-json/wp/v2/MEDIA', '/wp-json/wp/v2/posts?_fields=id,yoast_head,yoast_head_json', '/wp-json/yoast/v1/get_head?url=%2F', '/post-sitemap.xml', '/?attachment_id=40', '/?p=40', '/?page_id=40' ), $hcwa_result['probes'] ?? null, 'probes: the refused attachment through attachment_id, p and page_id' );
 hcwa_assert_same( array( '/cau-chuyen-mau/', '/en/sample-story/?x=1' ), array_column( (array) ( $hcwa_result['unpublished'] ?? array() ), 'path' ), 'probes: --unpublished URLs must answer 404' );
 
-// The exported guards come from prototype/src/render.mjs (or guards.json), never re-typed.
-if ( '' !== $hcwa_which( 'node' ) ) {
+// The exported guards come from guards.json once the export has written it, until then from
+// prototype/src/render.mjs through node (which needs prototype/node_modules: render.mjs reaches
+// three.js through the world objects), never re-typed.
+$hcwa_guards_json = is_file( $hcwa_repo . '/wp/themes/hcwa-2026/assets/generated/guards.json' );
+if ( ! $hcwa_guards_json && ( '' === $hcwa_which( 'node' ) || ! is_dir( $hcwa_repo . '/prototype/node_modules' ) ) ) {
+	hcwa_test_skip( 'smoke load_guards(): no guards.json yet, and node or prototype/node_modules is missing (npm --prefix prototype ci)' );
+} else {
 	$hcwa_guard_py = 'import importlib.util, json, sys' . "\n"
 		. 'spec = importlib.util.spec_from_file_location("wp_smoke", sys.argv[1]); smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)' . "\n"
 		. 'g = smoke.load_guards(); print(json.dumps({"source": g["source"], "why": [b["why"] for b in g["blockers"]], "door": g["door"].pattern, "min": g["minPartnerLogos"]}))';
@@ -493,8 +498,6 @@ if ( '' !== $hcwa_which( 'node' ) ) {
 	hcwa_assert_true( in_array( 'bracket placeholder token in text', (array) ( $hcwa_guards['why'] ?? array() ), true ), 'guards: the prototype BLOCKERS, bracket rule included' );
 	hcwa_assert_contains( 'hub-doors-wide', (string) ( $hcwa_guards['door'] ?? '' ), 'guards: the prototype LITTLE_ROSE_DOOR pattern' );
 	hcwa_assert_same( 4, $hcwa_guards['min'] ?? null, 'guards: MIN_PARTNER_LOGOS' );
-} else {
-	hcwa_test_skip( 'smoke load_guards(): node is not on PATH' );
 }
 
 // The parity driver's pure helpers (scripts/wp-parity/run.py), routes and allow lists.

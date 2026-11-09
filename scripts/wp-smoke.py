@@ -719,11 +719,14 @@ def port_checks(target: dict, html: str, port: dict, requests: list[dict], ctx: 
     if broken:
         fails.append("port assets: " + ", ".join(f"{u.rsplit('/', 1)[-1]}" for u in broken[:5]) + " did not answer 200")
 
-    # Production scans: always, whatever --allow-draft says.
+    # Production scans: always, whatever --allow-draft says, and failing closed without the guards.
     if production:
         guards = ctx.get("guards")
         if guards:
             fails += ["port production: " + h for h in blocker_hits(html, guards)]
+        else:
+            fails.append("port production: the production guards are not loaded (no guards.json, and prototype/src/render.mjs "
+                         "could not be read: npm --prefix prototype ci)")
         if port.get("forms"):
             fails.append("port production: form[data-form] while forms are off (hcwa_forms_enabled)")
         if port.get("partners"):
