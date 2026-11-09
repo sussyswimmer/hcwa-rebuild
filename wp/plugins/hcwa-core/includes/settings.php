@@ -216,6 +216,26 @@ function hcwa_settings_sections(): array {
 				'map_url'         => array( 'type' => 'url', 'label' => __( 'Map link', 'hcwa' ), 'help' => __( 'Opens in the visitor\'s map app. No embedded map is loaded.', 'hcwa' ) ),
 				'registration_vi' => array( 'type' => 'text', 'label' => __( 'Legal registration line in Vietnamese', 'hcwa' ) ),
 				'registration_en' => array( 'type' => 'text', 'label' => __( 'Legal registration line in English', 'hcwa' ) ),
+				'contact_confirmed' => array( 'type' => 'checkbox', 'label' => __( 'HCWA has confirmed the phone number and email addresses', 'hcwa' ), 'help' => __( 'Until this is ticked, the live site shows no phone number and no email address anywhere, and staging marks them as drafts.', 'hcwa' ) ),
+			),
+		),
+		'site'         => array(
+			'title'  => __( 'Names and notes', 'hcwa' ),
+			'intro'  => __( 'Short texts the templates repeat on many pages.', 'hcwa' ),
+			'fields' => array(
+				'short_name_vi'        => array( 'type' => 'text', 'label' => __( 'Short name in Vietnamese', 'hcwa' ), 'help' => __( 'Shown after the page title in the browser tab, for example Hội Bảo trợ Trẻ em TP.HCM.', 'hcwa' ) ),
+				'short_name_en'        => array( 'type' => 'text', 'label' => __( 'Short name in English', 'hcwa' ) ),
+				'little_rose_note_vi'  => array( 'type' => 'textarea', 'label' => __( 'Little Rose privacy note in Vietnamese', 'hcwa' ), 'help' => __( 'Shown wherever Little Rose Warm Shelter is named: why the shelter has no address, no photos and no visits.', 'hcwa' ) ),
+				'little_rose_note_en'  => array( 'type' => 'textarea', 'label' => __( 'Little Rose privacy note in English', 'hcwa' ) ),
+				'world_traces_enabled' => array( 'type' => 'checkbox', 'label' => __( 'Show traces of children\'s lives in the corridor on staging', 'hcwa' ), 'help' => __( 'Staging only, for HCWA\'s safeguarding lead to judge. The live site never shows them.', 'hcwa' ) ),
+			),
+		),
+		'safeguarding' => array(
+			'title'  => __( 'Safeguarding sign-off', 'hcwa' ),
+			'intro'  => __( 'Until HCWA\'s safeguarding lead fills in both fields, the live site shows Little Rose Warm Shelter in words only: no door, no picture of its door, and one door fewer in the home corridor. Only users who may approve safeguarding can change these fields.', 'hcwa' ),
+			'fields' => array(
+				'world_lr_door_approved_by'   => array( 'type' => 'text', 'label' => __( 'Little Rose shut door approved by', 'hcwa' ), 'cap' => 'hcwa_approve_safeguarding' ),
+				'world_lr_door_approved_date' => array( 'type' => 'date', 'label' => __( 'Approved on', 'hcwa' ), 'cap' => 'hcwa_approve_safeguarding' ),
 			),
 		),
 		'pages'        => array(
@@ -354,6 +374,13 @@ function hcwa_render_setting_field( array $args ): void {
 	$name    = 0 === strpos( $key, 'page_map:' ) ? 'hcwa_settings[page_map][' . substr( $key, 9 ) . ']' : 'hcwa_settings[' . $key . ']';
 	$help_id = $id . '-help';
 	$desc    = ! empty( $field['help'] ) ? ' aria-describedby="' . esc_attr( $help_id ) . '"' : '';
+
+	// Fields behind their own capability are shown, but only their holders can change them.
+	if ( ! empty( $field['cap'] ) && ! current_user_can( $field['cap'] ) ) {
+		printf( '<input type="text" id="%1$s" value="%2$s" class="regular-text" readonly>', esc_attr( $id ), esc_attr( (string) $value ) );
+		printf( '<p class="description">%s</p>', esc_html__( 'Only the safeguarding lead can change this.', 'hcwa' ) );
+		return;
+	}
 
 	switch ( $field['type'] ) {
 		case 'checkbox':
@@ -497,7 +524,44 @@ function hcwa_sanitize_settings( $input ): array {
 		$clean['phone_tel'] = hcwa_sanitize_setting_value( 'tel', $clean['phone'] );
 	}
 
+	$clean = hcwa_guard_safeguarding_approval( $old, $clean, hcwa_settings_can_approve_safeguarding() );
+
 	return hcwa_guard_donation_confirmation( $old, $clean );
+}
+
+/**
+ * Whether this request may change the Little Rose door approval: a signed-in user with
+ * hcwa_approve_safeguarding, never WP-CLI, a seed or a script (11-WP-PORT.md 3.2).
+ */
+function hcwa_settings_can_approve_safeguarding(): bool {
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		return false;
+	}
+	return function_exists( 'current_user_can' ) && current_user_can( 'hcwa_approve_safeguarding' );
+}
+
+/**
+ * Keeps the stored Little Rose door approval unless the user may change it, and clears a
+ * half-filled pair (a name without a date, or a date without a name).
+ *
+ * @param array $old     Stored settings.
+ * @param array $clean   New, sanitized settings.
+ * @param bool  $can     Whether this request may change the approval.
+ * @return array
+ */
+function hcwa_guard_safeguarding_approval( array $old, array $clean, bool $can ): array {
+	$keys = array( 'world_lr_door_approved_by', 'world_lr_door_approved_date' );
+	if ( ! $can ) {
+		foreach ( $keys as $key ) {
+			$clean[ $key ] = (string) ( $old[ $key ] ?? '' );
+		}
+	}
+	if ( '' === trim( (string) ( $clean[ $keys[0] ] ?? '' ) ) || ! hcwa_is_ymd( (string) ( $clean[ $keys[1] ] ?? '' ) ) ) {
+		foreach ( $keys as $key ) {
+			$clean[ $key ] = '';
+		}
+	}
+	return $clean;
 }
 
 /**

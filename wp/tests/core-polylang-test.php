@@ -69,7 +69,8 @@ hcwa_assert_true( 1 === count( $archive_hook ) && 3 === $archive_hook[0][2], 'ar
 $fields = hcwa_meta_fields();
 hcwa_assert_same( 2020, hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_since_year'], '2020' ), 'year kept' );
 hcwa_assert_same( 0, hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_since_year'], '20' ), 'implausible year dropped' );
-hcwa_assert_same( 'blue', hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_accent'], 'purple' ), 'unknown accent falls back to the default' );
+hcwa_assert_same( '', hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_accent'], 'purple' ), 'unknown accent falls back to the default (no unit)' );
+hcwa_assert_same( '', hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_accent'], 'blue' ), 'blue is no longer a unit (11-WP-PORT.md 3.2)' );
 hcwa_assert_same( 'little-rose', hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_accent'], 'little-rose' ), 'known accent kept' );
 hcwa_assert_same( "Một\nHai", hcwa_sanitize_meta_value( $fields['hcwa_center']['hcwa_what_we_do'], "Một\r\n\r\n  Hai  \n" ), 'lines trimmed, blanks dropped' );
 hcwa_assert_same( 1.5, hcwa_sanitize_meta_value( $fields['hcwa_impact']['hcwa_value'], '1.5' ), 'number' );

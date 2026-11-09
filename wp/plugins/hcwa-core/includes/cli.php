@@ -116,7 +116,7 @@ function hcwa_cli_coverage( $args, $assoc_args ): void {
 	$terms     = hcwa_cli_term_coverage();
 	$blocking += $terms['blocking'];
 
-	$rows = array_merge( $rows, $protection, $terms['rows'], hcwa_cli_menu_coverage(), hcwa_cli_string_coverage() );
+	$rows = array_merge( $rows, $protection, $terms['rows'], hcwa_cli_port_field_coverage(), hcwa_cli_menu_coverage(), hcwa_cli_string_coverage() );
 
 	$news = hcwa_cli_post_language_counts();
 	WP_CLI::log( sprintf( 'News posts: %d with both languages, %d Vietnamese only, %d English only (allowed; the language notice covers them).', $news['both'], $news['vi'], $news['en'] ) );
@@ -135,6 +135,76 @@ function hcwa_cli_coverage( $args, $assoc_args ): void {
 	}
 
 	WP_CLI::success( 'Every page, content entry, category, news tag, menu and UI string exists in Vietnamese and English.' );
+}
+
+/**
+ * The fields the port added (11-WP-PORT.md 3.2), as warning rows, never blocking: a center
+ * without a unit key (a stored 'blue' prints in HCWA blue with no door art), a center
+ * without a short name in its language, a program still on the old one-center field, and a
+ * focus area term outside the four the prototype knows (it renders without a tile). Also
+ * logs one line per center and program with its unit key, short name, header picture and
+ * centers.
+ *
+ * @return array[]
+ */
+function hcwa_cli_port_field_coverage(): array {
+	$rows  = array();
+	$units = hcwa_unit_keys();
+	$query = static fn( string $type ): array => array_map(
+		'intval',
+		get_posts(
+			array(
+				'post_type'        => $type,
+				'post_status'      => 'publish',
+				'numberposts'      => -1,
+				'fields'           => 'ids',
+				'lang'             => '',
+				'orderby'          => 'menu_order ID',
+				'order'            => 'ASC',
+				'suppress_filters' => false,
+			)
+		)
+	);
+	$lang_of = static fn( int $id ): string => function_exists( 'pll_get_post_language' ) ? (string) pll_get_post_language( $id ) : 'vi';
+
+	foreach ( $query( 'hcwa_center' ) as $id ) {
+		$accent = (string) get_post_meta( $id, 'hcwa_accent', true );
+		$short  = (string) get_post_meta( $id, 'hcwa_short_name', true );
+		$still  = (string) get_post_meta( $id, 'hcwa_header_still', true );
+		WP_CLI::log( sprintf( 'Center %d (%s): unit key %s, short name %s, header picture %s%s.', $id, $lang_of( $id ), '' !== $accent ? $accent : '-', '' !== $short ? '"' . $short . '"' : '-', '' !== $still ? $still : '- (plain header)', hcwa_center_is_protected( $id ) ? ', protected' : '' ) );
+		if ( ! in_array( $accent, $units, true ) ) {
+			$rows[] = hcwa_cli_row( 'center', $id, get_the_title( $id ), $lang_of( $id ), 'unit key', '' !== $accent ? sprintf( 'Unit "%s" is not one of %s: HCWA blue, no door art.', $accent, implode( ', ', $units ) ) : 'No unit key: HCWA blue, no door art.' );
+		}
+		if ( '' === trim( $short ) ) {
+			$rows[] = hcwa_cli_row( 'center', $id, get_the_title( $id ), $lang_of( $id ), 'short name', 'No short name: the corridor index and door chips use the full name.' );
+		}
+	}
+
+	foreach ( $query( 'hcwa_program' ) as $id ) {
+		$ids   = hcwa_id_list( get_post_meta( $id, 'hcwa_center_ids', true ) );
+		$old   = (int) get_post_meta( $id, 'hcwa_center_id', true );
+		$still = (string) get_post_meta( $id, 'hcwa_header_still', true );
+		WP_CLI::log( sprintf( 'Program %d (%s): centers %s, header picture %s.', $id, $lang_of( $id ), $ids ? implode( ', ', $ids ) : '-', '' !== $still ? $still : '- (plain header)' ) );
+		if ( ! $ids && $old > 0 ) {
+			$rows[] = hcwa_cli_row( 'program', $id, get_the_title( $id ), $lang_of( $id ), 'centers', sprintf( 'Still on the old one-center field (center %d): copy it into Centers.', $old ) );
+		}
+	}
+
+	$terms = get_terms(
+		array(
+			'taxonomy'   => 'hcwa_focus_area',
+			'hide_empty' => false,
+			'lang'       => '',
+		)
+	);
+	foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+		$key = (string) preg_replace( '/-(vi|en)$/', '', (string) $term->slug );
+		if ( ! in_array( $key, hcwa_area_keys(), true ) ) {
+			$rows[] = hcwa_cli_row( 'focus area', (int) $term->term_id, (string) $term->name, function_exists( 'pll_get_term_language' ) ? (string) pll_get_term_language( (int) $term->term_id ) : '-', 'area', sprintf( 'Slug "%s" is not one of %s: it renders without a tile.', $term->slug, implode( ', ', hcwa_area_keys() ) ) );
+		}
+	}
+
+	return $rows;
 }
 
 /**
@@ -692,17 +762,33 @@ function hcwa_cli_post_language_counts(): array {
 /**
  * Lists published content, text fields and settings that still contain draft markers.
  *
+ * The printed column says how the live site prints the field: raw when it prints without
+ * hcwa_draft_text() (a post title, a menu label, the body of a post, report or ordinary
+ * page through the_content), guarded when it prints only through hcwa_draft_text(), which
+ * prints nothing for draft text on production (block attributes of sections pages, center
+ * and program fields, center body paragraphs, Settings → HCWA). After a database push to
+ * production, unpublish the raw rows (11-WP-PORT.md 5.9); guarded rows may stay published.
+ *
  * ## OPTIONS
  *
  * [--format=<format>]
- * : table, csv, json, yaml or count.
+ * : table, csv, json, yaml, count, or ids (the post IDs of the rows, space-separated).
  * ---
  * default: table
+ * ---
+ *
+ * [--printed=<printed>]
+ * : Only rows printed this way.
+ * ---
+ * options:
+ *   - raw
+ *   - guarded
  * ---
  *
  * ## EXAMPLES
  *
  *     wp hcwa draft-scan
+ *     wp post update $(wp hcwa draft-scan --printed=raw --format=ids) --post_status=draft
  *
  * @param array $args       Positional arguments (unused).
  * @param array $assoc_args Associative arguments.
@@ -710,9 +796,10 @@ function hcwa_cli_post_language_counts(): array {
 function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 	global $wpdb;
 
-	$format = $assoc_args['format'] ?? 'table';
-	$rows   = array();
-	$like   = '%' . $wpdb->esc_like( '[' ) . '%';
+	$format  = $assoc_args['format'] ?? 'table';
+	$printed = $assoc_args['printed'] ?? '';
+	$rows    = array();
+	$like    = '%' . $wpdb->esc_like( '[' ) . '%';
 	$like2  = '%' . $wpdb->esc_like( '&#91;' ) . '%';
 	$types  = array_merge( hcwa_guarded_post_types(), array( 'nav_menu_item' ) );
 	$in     = implode( ', ', array_fill( 0, count( $types ), '%s' ) );
@@ -729,7 +816,7 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 	foreach ( (array) $posts as $post ) {
 		foreach ( array( 'post_title', 'post_content', 'post_excerpt' ) as $field ) {
 			if ( hcwa_contains_draft( (string) $post->$field ) ) {
-				$rows[] = hcwa_cli_draft_row( $post->post_type, (int) $post->ID, $field, $post->post_status, (string) $post->$field );
+				$rows[] = hcwa_cli_draft_row( $post->post_type, (int) $post->ID, $field, $post->post_status, (string) $post->$field, hcwa_cli_printed( (string) $post->post_type, $field, (string) $post->post_content ) );
 			}
 		}
 	}
@@ -757,7 +844,7 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 		);
 		foreach ( (array) $metas as $meta ) {
 			if ( hcwa_contains_draft( (string) $meta->meta_value ) ) {
-				$rows[] = hcwa_cli_draft_row( $meta->post_type, (int) $meta->post_id, $meta->meta_key, $meta->post_status, (string) $meta->meta_value );
+				$rows[] = hcwa_cli_draft_row( $meta->post_type, (int) $meta->post_id, $meta->meta_key, $meta->post_status, (string) $meta->meta_value, 'guarded' );
 			}
 		}
 	}
@@ -773,7 +860,8 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 	foreach ( is_array( $terms ) ? $terms : array() as $term ) {
 		foreach ( array( 'name', 'description' ) as $field ) {
 			if ( hcwa_contains_draft( (string) $term->$field ) ) {
-				$rows[] = hcwa_cli_draft_row( $term->taxonomy, (int) $term->term_id, $field, 'term', (string) $term->$field );
+				// Focus areas print through hcwa_draft_text() (the work sheet, the hub chips); category and tag names print as they are.
+				$rows[] = hcwa_cli_draft_row( $term->taxonomy, (int) $term->term_id, $field, 'term', (string) $term->$field, 'hcwa_focus_area' === $term->taxonomy ? 'guarded' : 'raw' );
 			}
 		}
 	}
@@ -783,18 +871,51 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 		$settings = get_option( $option, array() );
 		foreach ( is_array( $settings ) ? $settings : array() as $key => $value ) {
 			if ( is_scalar( $value ) && hcwa_contains_draft( (string) $value ) ) {
-				$rows[] = hcwa_cli_draft_row( 'setting', 0, ( 'hcwa_settings' === $option ? '' : $option . '.' ) . $key, 'option', (string) $value );
+				// hcwa_setting_l() and the theme drop draft settings on production; so does seo.php for Yoast's texts.
+				$rows[] = hcwa_cli_draft_row( 'setting', 0, ( 'hcwa_settings' === $option ? '' : $option . '.' ) . $key, 'option', (string) $value, 'guarded' );
 			}
 		}
 	}
 
-	if ( ! $rows ) {
-		WP_CLI::success( 'No draft markers in published content, fields or settings.' );
+	if ( in_array( $printed, array( 'raw', 'guarded' ), true ) ) {
+		$rows = array_values( array_filter( $rows, static fn( array $row ): bool => $printed === $row['printed'] ) );
+	}
+
+	if ( 'ids' === $format ) {
+		$ids = array_values( array_unique( array_filter( array_map( static fn( array $row ): int => in_array( $row['status'], array( 'term', 'option' ), true ) ? 0 : (int) $row['id'], $rows ) ) ) );
+		if ( $ids ) {
+			WP_CLI::line( implode( ' ', $ids ) );
+		}
 		return;
 	}
 
-	WP_CLI\Utils\format_items( $format, $rows, array( 'type', 'id', 'field', 'status', 'excerpt' ) );
+	if ( ! $rows ) {
+		WP_CLI::success( '' !== $printed ? sprintf( 'No %s draft markers in published content, fields or settings.', $printed ) : 'No draft markers in published content, fields or settings.' );
+		return;
+	}
+
+	WP_CLI\Utils\format_items( $format, $rows, array( 'type', 'id', 'field', 'status', 'printed', 'excerpt' ) );
 	WP_CLI::error( sprintf( '%d places still contain draft markers.', count( $rows ) ) );
+}
+
+/**
+ * How the live site prints a post field (see hcwa_cli_draft_scan()).
+ *
+ * @param string $post_type Post type.
+ * @param string $field     post_title, post_content or post_excerpt.
+ * @param string $content   The post's content (a sections page holds hcwa/sections).
+ */
+function hcwa_cli_printed( string $post_type, string $field, string $content ): string {
+	if ( 'post_content' !== $field ) {
+		return 'raw';
+	}
+	if ( in_array( $post_type, array( 'hcwa_center', 'hcwa_program' ), true ) ) {
+		return 'guarded'; // Center bodies print through hcwa_center_body(); program bodies are not printed.
+	}
+	if ( 'page' === $post_type && false !== strpos( $content, '<!-- wp:hcwa/sections' ) ) {
+		return 'guarded'; // hcwa_render_sections(): our blocks print attributes through hcwa_draft_text().
+	}
+	return 'raw';
 }
 
 /**
@@ -841,9 +962,10 @@ function hcwa_cli_category_section_row( array $group, string $language ): ?array
  * @param string $field  Field name.
  * @param string $status Post status or kind.
  * @param string $text   Field text.
+ * @param string $printed raw or guarded.
  * @return array
  */
-function hcwa_cli_draft_row( string $type, int $id, string $field, string $status, string $text ): array {
+function hcwa_cli_draft_row( string $type, int $id, string $field, string $status, string $text, string $printed = 'raw' ): array {
 	$plain = trim( (string) preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $text ) ) );
 	$pos   = mb_strpos( $plain, '[' );
 	$start = false === $pos ? 0 : max( 0, $pos - 20 );
@@ -853,6 +975,7 @@ function hcwa_cli_draft_row( string $type, int $id, string $field, string $statu
 		'id'      => $id,
 		'field'   => $field,
 		'status'  => $status,
+		'printed' => $printed,
 		'excerpt' => mb_substr( $plain, $start, 80 ),
 	);
 }

@@ -1177,6 +1177,57 @@ function hcwa_refuse_attachment_page(): void {
 add_action( 'wp', 'hcwa_refuse_attachment_page', 5, 0 );
 
 /**
+ * Stops core's canonical redirect from turning a refused photo's 404 into a 301 to its
+ * pretty attachment path (found on real WordPress, 9 Nov 2026). hcwa_refuse_attachment_page()
+ * sets the 404 on 'wp'; redirect_canonical() (template_redirect, priority 10) then takes its
+ * is_404() branch (canonical.php: the p, page_id and attachment_id query vars become
+ * get_permalink( N )), and the Location header names the Little Rose page path. The redirect
+ * is cancelled whenever one of those query vars, the attachment slug or the guessed target
+ * names an attachment the gate refuses; the request then ends as a plain 404.
+ *
+ * @param string|false $redirect_url  Where core would redirect.
+ * @param string       $requested_url The requested URL.
+ * @return string|false
+ */
+function hcwa_refused_attachment_canonical( $redirect_url, $requested_url = '' ) {
+	if ( false === $redirect_url || '' === (string) $redirect_url ) {
+		return $redirect_url;
+	}
+	foreach ( hcwa_canonical_attachment_candidates( (string) $redirect_url ) as $id ) {
+		if ( 'attachment' === get_post_type( $id ) && hcwa_attachment_page_refused( $id ) ) {
+			return false;
+		}
+	}
+	return $redirect_url;
+}
+add_filter( 'redirect_canonical', 'hcwa_refused_attachment_canonical', 10, 2 );
+
+/**
+ * Post IDs a canonical redirect may be about: the p, page_id and attachment_id query vars,
+ * the attachment slug, and the post the redirect target resolves to.
+ *
+ * @param string $redirect_url Where core would redirect.
+ * @return int[]
+ */
+function hcwa_canonical_attachment_candidates( string $redirect_url ): array {
+	$ids = array();
+	foreach ( array( 'p', 'page_id', 'attachment_id' ) as $var ) {
+		$ids[] = absint( get_query_var( $var ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read only.
+		$ids[] = isset( $_GET[ $var ] ) && is_scalar( $_GET[ $var ] ) ? absint( $_GET[ $var ] ) : 0;
+	}
+	$slug = (string) get_query_var( 'attachment' );
+	if ( '' !== $slug ) {
+		$found = get_page_by_path( sanitize_title( $slug ), OBJECT, 'attachment' );
+		$ids[] = $found instanceof WP_Post ? (int) $found->ID : 0;
+	}
+	if ( function_exists( 'url_to_postid' ) ) {
+		$ids[] = (int) url_to_postid( $redirect_url );
+	}
+	return array_values( array_unique( array_filter( $ids ) ) );
+}
+
+/**
  * Partner logos (contract gating rule 5): on the live site only with the partner's
  * written permission ("Permission to show the logo"). Staging shows every logo.
  *

@@ -82,19 +82,30 @@ function hcwa_meta_fields_build(): array {
 			'hcwa_accent'                   => $f(
 				'string',
 				'select',
-				__( 'Accent color', 'hcwa' ),
+				__( 'Unit', 'hcwa' ),
 				array(
-					'default' => 'blue',
+					'default' => '',
 					'sync'    => true,
 					'options' => array(
-						'green-bamboo' => __( 'Green Bamboo green', 'hcwa' ),
-						'little-rose'  => __( 'Little Rose pink', 'hcwa' ),
-						'cau-han'      => __( 'Cau Han blue', 'hcwa' ),
-						'blue'         => __( 'HCWA blue', 'hcwa' ),
+						''             => __( 'Not set', 'hcwa' ),
+						'green-bamboo' => __( 'Green Bamboo', 'hcwa' ),
+						'little-rose'  => __( 'Little Rose', 'hcwa' ),
+						'cau-han'      => __( 'Cau Han', 'hcwa' ),
 					),
-					'help'    => __( 'Taken from the unit logo. Used for the color band and dot only.', 'hcwa' ),
+					'help'    => __( 'The unit key: it picks the unit colour, the door, the emblem and the pictures of this center. A center without one shows in HCWA blue and is listed by wp hcwa coverage.', 'hcwa' ),
 				)
 			),
+			'hcwa_short_name'               => $per_lang( 'text', __( 'Short name', 'hcwa' ), __( 'For example Tre Xanh. Used in the corridor index, door chips and the breadcrumb.', 'hcwa' ) ),
+			'hcwa_header_still'             => $f( 'string', 'still', __( 'Header picture', 'hcwa' ), array( 'default' => '', 'sync' => true, 'help' => __( 'Name of a rendered header picture, for example header-green-bamboo. Leave empty for the plain header.', 'hcwa' ) ) ),
+			'hcwa_since_verified'           => $f( 'boolean', 'checkbox', __( 'Year verified by HCWA', 'hcwa' ), array( 'default' => false, 'sync' => true, 'auth' => 'approve', 'help' => __( 'Tick only when HCWA has confirmed the year above. The live site shows the year only when this is ticked.', 'hcwa' ) ) ),
+			'hcwa_story_title'              => $per_lang( 'text', __( 'Story heading', 'hcwa' ) ),
+			'hcwa_figures_title'            => $per_lang( 'text', __( 'Figures heading', 'hcwa' ) ),
+			'hcwa_help_title'               => $per_lang( 'text', __( 'How to help heading', 'hcwa' ) ),
+			'hcwa_needs'                    => $per_lang( 'lines', __( 'Current needs', 'hcwa' ), __( 'One need per line.', 'hcwa' ) ),
+			'hcwa_donate_label'             => $per_lang( 'text', __( 'Donate button label', 'hcwa' ) ),
+			'hcwa_visit_title'              => $per_lang( 'text', __( 'Closing heading', 'hcwa' ), __( 'The heading of the evening band at the end of the page.', 'hcwa' ) ),
+			'hcwa_contact_note'             => $per_lang( 'textarea', __( 'Contact note', 'hcwa' ) ),
+			'hcwa_logo_alt'                 => $per_lang( 'text', __( 'Logo description', 'hcwa' ), __( 'Alternative text of the unit logo.', 'hcwa' ) ),
 			'hcwa_logo_id'                  => $f( 'integer', 'media', __( 'Unit logo', 'hcwa' ), array( 'default' => 0, 'sync' => true, 'media' => 'image' ) ),
 			'hcwa_gallery_ids'              => $f( 'array', 'media_multi', __( 'Gallery', 'hcwa' ), array( 'default' => array(), 'sync' => true, 'media' => 'image', 'help' => __( 'Only photos marked "Approved for web" appear on the site.', 'hcwa' ) ) ),
 			'hcwa_contact_approved'         => $shared_yes( __( 'Contact details approved', 'hcwa' ), __( 'Tick only when HCWA has approved showing the contact person, phone and email.', 'hcwa' ) ),
@@ -124,7 +135,15 @@ function hcwa_meta_fields_build(): array {
 			'hcwa_start_year'  => $year( __( 'Start year', 'hcwa' ) ),
 			'hcwa_end_year'    => $year( __( 'End year', 'hcwa' ), array( 'help' => __( 'Leave empty while the program is running.', 'hcwa' ) ) ),
 			'hcwa_partner_ids' => $f( 'array', 'post_multi', __( 'Partners and funders', 'hcwa' ), array( 'default' => array(), 'sync' => true, 'post_type' => array( 'hcwa_partner' ) ) ),
-			'hcwa_center_id'   => $f( 'integer', 'post_select', __( 'Center', 'hcwa' ), array( 'default' => 0, 'sync' => true, 'post_type' => array( 'hcwa_center' ), 'help' => __( 'Optional. The center that runs this program.', 'hcwa' ) ) ),
+			'hcwa_center_ids'    => $f( 'array', 'post_multi', __( 'Centers', 'hcwa' ), array( 'default' => array(), 'sync' => true, 'post_type' => array( 'hcwa_center' ), 'help' => __( 'The centers where this program runs, in display order.', 'hcwa' ) ) ),
+			'hcwa_center_id'     => $f( 'integer', 'post_select', __( 'Center (old field)', 'hcwa' ), array( 'default' => 0, 'sync' => true, 'box' => false, 'post_type' => array( 'hcwa_center' ), 'help' => __( 'Read only while Centers above is empty.', 'hcwa' ) ) ),
+			'hcwa_full_name'     => $per_lang( 'text', __( 'Full name', 'hcwa' ), __( 'The page heading. A part after ": " is set smaller. The post title stays the short name.', 'hcwa' ) ),
+			'hcwa_years_label'   => $per_lang( 'text', __( 'Years as shown', 'hcwa' ), __( 'Used while the start and end years are not both set.', 'hcwa' ) ),
+			'hcwa_focus'         => $per_lang( 'textarea', __( 'Focus', 'hcwa' ) ),
+			'hcwa_runs_at_note'  => $per_lang( 'textarea', __( 'Note on where it runs', 'hcwa' ) ),
+			'hcwa_cta_title'     => $per_lang( 'text', __( 'Closing heading', 'hcwa' ), __( 'The heading of the evening band at the end of the page.', 'hcwa' ) ),
+			'hcwa_partner_label' => $per_lang( 'text', __( 'Partner button label', 'hcwa' ) ),
+			'hcwa_header_still'  => $f( 'string', 'still', __( 'Header picture', 'hcwa' ), array( 'default' => '', 'sync' => true, 'help' => __( 'Name of a rendered header picture, for example header-thrive-together. Leave empty for the plain header.', 'hcwa' ) ) ),
 			'hcwa_news_tag'    => $news_tag,
 		),
 		'hcwa_impact'  => array(
@@ -186,6 +205,7 @@ function hcwa_meta_fields_build(): array {
 				)
 			),
 			'hcwa_file_id'      => $f( 'integer', 'media', __( 'PDF file', 'hcwa' ), array( 'default' => 0, 'sync' => true, 'media' => 'application/pdf' ) ),
+			'hcwa_program_id'   => $f( 'integer', 'post_select', __( 'Program', 'hcwa' ), array( 'default' => 0, 'sync' => true, 'post_type' => array( 'hcwa_program' ), 'help' => __( 'Optional. The program page lists this report under its documents.', 'hcwa' ) ) ),
 		),
 		'hcwa_partner' => array(
 			'hcwa_website'         => $shared_txt( 'url', __( 'Website', 'hcwa' ) ),
@@ -404,6 +424,10 @@ function hcwa_sanitize_meta_value( array $spec, $value ) {
 
 		case 'term_slug':
 			return sanitize_title( is_string( $value ) ? $value : '' );
+
+		case 'still':
+			$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
+			return preg_match( '/^header-[a-z0-9-]{1,60}$/', $value ) ? $value : '';
 
 		case 'lines':
 			$lines = preg_split( '/\R/u', sanitize_textarea_field( is_string( $value ) ? $value : '' ) );

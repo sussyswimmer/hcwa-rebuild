@@ -4,8 +4,9 @@
  *
  * On the live site, saving a post as published or scheduled while its title, content,
  * excerpt, one of our text fields or a Yoast SEO text still contains a draft marker
- * ([DRAFT: …] or a placeholder token such as [N], [year], [năm]) puts it back to draft and
- * explains why.
+ * ([DRAFT: …] or a bracket placeholder such as [N], [year], [năm], [Story title]; the rule
+ * is the prototype's, exported into prototype-data.php) puts it back to draft and explains
+ * why.
  * Covers the classic editor, quick edit, REST (block editor), the block editor's
  * separate meta box save and scheduled posts published by cron. Staging is not affected.
  * `wp hcwa draft-scan` lists offenders (run it after any database push to production).
@@ -16,7 +17,9 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Placeholder tokens used by the draft content (content/draft/*.json, patterns).
+ * The placeholder tokens of the old rule. hcwa_contains_draft() no longer reads them (it
+ * uses the prototype's exported bracket rule, which catches every one of these); kept
+ * because scripts/wp-smoke.py's older content check (DRAFT_TOKENS) is compared with it.
  *
  * @return string[]
  */
@@ -43,9 +46,13 @@ function hcwa_draft_tokens(): array {
 }
 
 /**
- * Whether text contains a draft marker: "[DRAFT" (any case), a placeholder token from
- * hcwa_draft_tokens(), or a bracketed note that mentions HCWA such as
- * "[Answer supplied by HCWA]". Shortcodes ([gallery ids="1,2"]) and footnotes ([1]) pass.
+ * Whether text or post content has a draft marker (contract rule 4, 11-WP-PORT.md 3.3): the
+ * same rule hcwa_draft_text() applies, the prototype's exported BLOCKERS bracket rule plus
+ * "[DRAFT" in any case, with the digit-only footnote exception ([1]). Content is read as a
+ * visitor would see it: registered shortcodes ([gallery ids="1,2"]) are removed first, and a
+ * block comment delimiter counts only through the text values of its attributes, so
+ * structural attributes ({"lines":["phone","email"]}) pass and a draft text attribute
+ * ({"title":"[DRAFT: …]"}) does not.
  *
  * @param string $s Text or HTML.
  */
@@ -59,21 +66,67 @@ function hcwa_contains_draft( string $s ): bool {
 	if ( false === strpos( $s, '[' ) ) {
 		return false;
 	}
-	if ( class_exists( 'Normalizer' ) ) {
-		$normalized = Normalizer::normalize( $s, Normalizer::FORM_C );
-		$s          = false === $normalized ? $s : $normalized;
-	}
-
-	if ( preg_match( '/\[\s*DRAFT\b/i', $s ) ) {
+	$s = hcwa_nfc( $s );
+	$p = hcwa_draft_patterns();
+	if ( preg_match( $p['draft'], $s ) ) {
 		return true;
 	}
 
-	$tokens = implode( '|', array_map( static fn( $t ) => preg_quote( $t, '/' ), hcwa_draft_tokens() ) );
-	if ( preg_match( '/\[\s*(?:' . $tokens . ')\s*\]/iu', $s ) ) {
-		return true;
-	}
+	$s = hcwa_draft_block_text( hcwa_strip_registered_shortcodes( $s ) );
+	$s = (string) preg_replace_callback(
+		$p['token'],
+		static fn( array $m ): string => preg_match( $p['footnote'], $m[0] ) ? '' : $m[0],
+		$s
+	);
+	return (bool) preg_match( $p['bracket'], '>' . $s . '<' );
+}
 
-	return (bool) preg_match( '/\[[^\[\]=]*\bHCWA\b[^\[\]=]*\]/u', $s );
+/**
+ * Removes the registered shortcodes (WordPress's $shortcode_tags) from text, opening and
+ * closing tags alike; other bracketed text stays.
+ *
+ * @param string $s Text.
+ */
+function hcwa_strip_registered_shortcodes( string $s ): string {
+	global $shortcode_tags;
+	$tags = is_array( $shortcode_tags ) ? array_keys( $shortcode_tags ) : array();
+	if ( ! $tags || false === strpos( $s, '[' ) ) {
+		return $s;
+	}
+	$re = '/\[\/?(?:' . implode( '|', array_map( static fn( $t ) => preg_quote( (string) $t, '/' ), $tags ) ) . ')(?=[\s\]\/])[^\]]*\]/u';
+	return (string) preg_replace( $re, '', $s );
+}
+
+/**
+ * Block comment delimiters replaced by the text values of their attributes, each as its
+ * own text node ('>' … '<'), so the bracket rule sees attribute text and not the JSON.
+ *
+ * @param string $s Post content.
+ */
+function hcwa_draft_block_text( string $s ): string {
+	if ( false === strpos( $s, '<!--' ) ) {
+		return $s;
+	}
+	return (string) preg_replace_callback(
+		'/<!--\s+\/?wp:[a-z0-9_\/-]+(\s+(\{.*?\}))?\s+\/?-->/s',
+		static function ( array $m ): string {
+			$attrs = isset( $m[2] ) ? json_decode( $m[2], true ) : null;
+			if ( ! is_array( $attrs ) ) {
+				return '';
+			}
+			$texts = array();
+			array_walk_recursive(
+				$attrs,
+				static function ( $v ) use ( &$texts ) {
+					if ( is_string( $v ) && '' !== $v ) {
+						$texts[] = strtr( $v, array( '<' => ' ', '>' => ' ' ) );
+					}
+				}
+			);
+			return $texts ? '>' . implode( '<>', $texts ) . '<' : '';
+		},
+		$s
+	);
 }
 
 /**

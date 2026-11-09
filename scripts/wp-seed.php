@@ -176,20 +176,17 @@ function hcwa_seed_header_still( string $id, bool $protected = false ): string {
 // ------------------------------------------------------------------------- text helpers
 
 /**
- * Wraps draft text in [DRAFT: …]. A bracketed placeholder such as "[Story title]" becomes
- * "[DRAFT: Story title]"; text that already starts with [DRAFT is left as it is.
+ * Wraps draft text in [DRAFT: …], always and whole, so it prints back exactly as the
+ * prototype prints it: hcwa_draft_text() unwraps one whole-string wrapper, so
+ * "[Story title]" is stored as "[DRAFT: [Story title]]" and shows "[Story title]", and the
+ * site.json registration "[DRAFT: legal status …]" is stored wrapped once more and shows
+ * as written there (11-WP-PORT.md 2.1 rule 7, 3.3).
  *
  * @param string $text Text.
  */
 function hcwa_seed_draft( string $text ): string {
 	$text = trim( $text );
-	if ( '' === $text || preg_match( '/^\[\s*DRAFT\b/i', $text ) ) {
-		return $text;
-	}
-	if ( preg_match( '/^\[([^\[\]]+)\]$/u', $text, $m ) ) {
-		return '[DRAFT: ' . trim( $m[1] ) . ']';
-	}
-	return '[DRAFT: ' . $text . ']';
+	return '' === $text ? '' : '[DRAFT: ' . $text . ']';
 }
 
 /**
