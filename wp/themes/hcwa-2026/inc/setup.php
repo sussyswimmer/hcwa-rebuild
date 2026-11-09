@@ -22,12 +22,7 @@ function hcwa_theme_setup(): void {
 	// Editors build pages from the HCWA patterns only; core's generic patterns are off-brand.
 	remove_theme_support( 'core-block-patterns' );
 
-	$editor_styles = array( 'assets/css/site.css' );
-	if ( file_exists( get_theme_file_path( 'assets/css/patterns.css' ) ) ) {
-		$editor_styles[] = 'assets/css/patterns.css';
-	}
-	$editor_styles[] = 'assets/css/editor.css';
-	add_editor_style( $editor_styles );
+	// Editor styles (the bundle's CSS and editor.css) are added by inc/assets.php (11-WP-PORT.md 1.5).
 
 	// Menu location names are admin UI; Polylang adds a per-language assignment for each.
 	register_nav_menus(
@@ -69,20 +64,69 @@ add_filter( 'should_load_remote_block_patterns', '__return_false' );
 // Only the CSS of blocks actually on the page.
 add_filter( 'should_load_separate_core_block_assets', '__return_true' );
 
-add_filter( 'body_class', 'hcwa_theme_body_class' );
+add_filter( 'body_class', 'hcwa_theme_body_class', 99 );
 
 /**
- * Staging gets `hcwa-staging`, which turns on draft outlines and pending chips (CONTRACT rule 7).
+ * The body classes are an allow list (11-WP-PORT.md 2.1 rule 8): WordPress adds `search` on
+ * search results, and `.search` is a prototype component. So only the page class
+ * (hcwa_theme_page_context()), `hcwa-staging` off production (draft outlines, pending chips),
+ * the language, and `logged-in admin-bar` when present.
  *
- * @param string[] $classes Body classes.
+ * @param string[] $classes Body classes from WordPress.
  * @return string[]
  */
 function hcwa_theme_body_class( array $classes ): array {
+	$context = function_exists( 'hcwa_theme_page_context' ) ? hcwa_theme_page_context() : array( 'body_class' => 'page-wp' );
+	$out     = array( (string) $context['body_class'] );
 	if ( ! hcwa_theme_is_production() ) {
-		$classes[] = 'hcwa-staging';
+		$out[] = 'hcwa-staging';
 	}
-	$classes[] = 'hcwa-lang-' . hcwa_theme_lang();
-	return $classes;
+	$out[] = 'hcwa-lang-' . hcwa_theme_lang();
+	foreach ( array( 'logged-in', 'admin-bar' ) as $keep ) {
+		if ( in_array( $keep, $classes, true ) ) {
+			$out[] = $keep;
+		}
+	}
+	return $out;
+}
+
+add_filter( 'document_title_parts', 'hcwa_theme_title_parts', 20 );
+add_filter( 'document_title_separator', 'hcwa_theme_title_separator' );
+
+/**
+ * The page title (1.2 #4, prototype layout()): the home page is "{orgName} (HCWA)", every
+ * other page "{title} | {shortName}". Draft text never reaches the live site's title.
+ *
+ * @param array $parts title, page, tagline, site.
+ * @return array
+ */
+function hcwa_theme_title_parts( $parts ): array {
+	$parts = is_array( $parts ) ? $parts : array();
+	$names = hcwa_theme_names();
+	if ( is_front_page() ) {
+		return array( 'title' => $names['org'] . ' (HCWA)' );
+	}
+	$title = hcwa_theme_draft_text( (string) ( $parts['title'] ?? '' ) );
+	if ( is_404() ) {
+		$title['text'] = hcwa_theme_t( 'nf_title' );
+	}
+	return array_filter(
+		array(
+			'title' => $title['text'],
+			'page'  => $parts['page'] ?? '',
+			'site'  => $names['short'],
+		),
+		'strlen'
+	);
+}
+
+/**
+ * The prototype's title separator.
+ *
+ * @return string
+ */
+function hcwa_theme_title_separator(): string {
+	return '|';
 }
 
 add_filter( 'wp_robots', 'hcwa_theme_robots', 99 );

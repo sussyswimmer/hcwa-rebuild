@@ -10,12 +10,22 @@
 	"attributes": {
 		"reportType": {
 			"type": "string",
-			"enum": [ "any", "annual", "financial", "program", "policy" ],
+			"enum": [
+				"any",
+				"annual",
+				"financial",
+				"program",
+				"policy"
+			],
 			"default": "any"
 		},
 		"limit": {
 			"type": "integer",
 			"default": 6
+		},
+		"programId": {
+			"type": "integer",
+			"default": 0
 		}
 	},
 	"supports": {

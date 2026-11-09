@@ -1,4 +1,125 @@
 {
   "_note": "Accepted parity differences owned by the templates stream (docs/plan/11-WP-PORT.md 5.4). Only that stream edits this file; the lead reviews every entry. An entry: {\"route\": \"*\" or a path, \"section\": a section key from the report (\"*\" for every section), \"kind\": \"structure|text|links|pixels|timing\", \"match\": a regular expression, \"reason\": why the difference is right, \"owner\": \"templates\"}. For structure, text and links, match is tested against each differing line (without its +/- sign) and the lines it matches are dropped from the diff. For pixels it is ignored: the entry accepts the section's pixel failure. For timing it names the prototype check line (its PASS/FAIL text) that may be re-run once.",
-  "entries": []
+  "entries": [
+    {
+      "route": "*",
+      "section": "*",
+      "kind": "structure",
+      "match": "^\\s*li\\.door-chip \\[(data-unit=[a-z0-9-]+ )?style\\{--unit\\}\\]$|^\\s*span\\.door-chip__door \\[aria-hidden=true\\]$",
+      "reason": "11-WP-PORT.md 2.8 'Door chips': every li.door-chip carries data-unit, so the smoke and the production assertions can see a Little Rose chip; no CSS or JS reads it. The chip's door span lines move only because difflib realigns the changed li lines around them.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>section#news.wall",
+      "kind": "structure",
+      "match": "^\\s*span\\.sr-only$|^\\s*svg\\.dated__ext\\.icon \\[aria-hidden=true height=24 width=24\\]$|^\\s*path$",
+      "reason": "11-WP-PORT.md 2.8 'News list': local posts, so no external sr-only label and no external-link icon (one svg with three paths) in each dated row.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.related",
+      "kind": "structure",
+      "match": "^\\s*span\\.sr-only$|^\\s*svg\\.dated__ext\\.icon \\[aria-hidden=true height=24 width=24\\]$|^\\s*path$",
+      "reason": "11-WP-PORT.md 2.8 'News list' (related news on center and program pages): local posts, so no external sr-only label and no external-link icon.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "*",
+      "kind": "text",
+      "match": "^\\((mở bài viết trên hcwa\\.org\\.vn|opens the post on hcwa\\.org\\.vn)\\)$",
+      "reason": "11-WP-PORT.md 2.8 'News list': the prototype's sr-only note that a post opens on the live site; WordPress posts are on this site.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>section#news.wall",
+      "kind": "links",
+      "match": "^https://hcwa\\.org\\.vn/|^/(en/)?[a-z0-9-]+/$",
+      "reason": "11-WP-PORT.md 2.8 'News list': the prototype links the live site's posts (absolute hcwa.org.vn URLs) and its placeholder story to the news hub; WordPress links its own posts by their local permalinks, the featured story included.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.related",
+      "kind": "links",
+      "match": "^https://hcwa\\.org\\.vn/|^/(en/)?[a-z0-9-]+/$",
+      "reason": "11-WP-PORT.md 2.8 'News list': related news links the local posts instead of the live site's.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "*",
+      "kind": "links",
+      "match": "^/en/our-work/centers/cau-han(-project)?/$",
+      "reason": "Polylang free gives each post its own slug, so the English Cau Han center is /en/our-work/centers/cau-han-project/ (the seed warns; CONTRACT open question on the English Cau Han slug). The prototype uses work.json's /en/our-work/centers/cau-han/.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "*",
+      "kind": "structure",
+      "match": "#(gb|tt|center|program)-[a-z]+(\\.|$| )",
+      "reason": "11-WP-PORT.md 2.8 'Heading ids on center and program pages': one template serves every center and program, so its ids are center-* and program-* where the prototype's one page has gb-* and tt-*. No CSS or JS reads them.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.where",
+      "kind": "structure",
+      "match": "^\\s+a$",
+      "reason": "Cau Han has a published center page in WordPress, so its name in 'where it runs' links to it (2.5 P3: linked for a built, unprotected center); the prototype built only Green Bamboo's page (work.json built: false).",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.units",
+      "kind": "structure",
+      "match": "^\\s+a$",
+      "reason": "Cau Han has a published center page in WordPress, so its name on Contact links to it; the prototype built only Green Bamboo's page (work.json built: false). Little Rose is never linked.",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.where",
+      "kind": "links",
+      "match": "^/(en/our-work/centers|hoat-dong/co-so)/cau-han(-project)?/$",
+      "reason": "Cau Han's own center page exists in WordPress (see the structure entry).",
+      "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section.units",
+      "kind": "links",
+      "match": "^/(en/our-work/centers|hoat-dong/co-so)/cau-han(-project)?/$",
+      "reason": "Cau Han's own center page exists in WordPress (see the structure entry).",
+      "owner": "templates"
+    },
+    {
+      "route": "/404.html",
+      "section": "*",
+      "kind": "links",
+      "match": "^/(en/)?(404\\.html)?$",
+      "reason": "A 404 has no page in the other language: WordPress's language switch goes to each language's home (Polylang), where the prototype links its two static 404 files.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/404.html",
+      "section": "*",
+      "kind": "links",
+      "match": "^/(en/)?(404\\.html)?$",
+      "reason": "A 404 has no page in the other language: WordPress's language switch goes to each language's home (Polylang), where the prototype links its two static 404 files.",
+      "owner": "templates"
+    },
+    {
+      "route": "/404.html",
+      "section": "body",
+      "kind": "structure",
+      "match": "^aside\\.en-bar \\[aria-label data-en-bar hidden\\]$",
+      "reason": "No 'View this page in English' bar on a Vietnamese 404: there is no English version of a page that does not exist (header.php prints the bar only for a real translation).",
+      "owner": "templates"
+    }
+  ]
 }

@@ -148,11 +148,159 @@
 		} );
 	}
 
+	/**
+	 * One plain-text field edited in the canvas (11-WP-PORT.md 4.1): RichText with no formats,
+	 * no line breaks and no links, so the stored attribute stays plain text. The server still
+	 * cleans it with hcwa_attr_text() before printing.
+	 *
+	 * @param {Object} props label, value, onChange.
+	 * @return {Object} Element.
+	 */
+	function TextField( props ) {
+		return el(
+			'div',
+			{ className: 'hcwa-text-field' },
+			el( 'span', { className: 'hcwa-text-field__label' }, props.label ),
+			el( blockEditor.RichText, {
+				tagName: 'div',
+				className: 'hcwa-text-field__value',
+				value: props.value || '',
+				allowedFormats: [],
+				disableLineBreaks: true,
+				withoutInteractiveFormatting: true,
+				placeholder: props.label,
+				onChange: props.onChange,
+			} )
+		);
+	}
+
+	/**
+	 * The text fields of a block: plain fields, and lists of items (ways[], faq[], gifts[])
+	 * whose items keep their order and count (the pattern sets them; staff change words only).
+	 *
+	 * @param {Object} props  Block props.
+	 * @param {Array}  fields [{ key, label }] or [{ key, label, list: [{ key, label }] }].
+	 * @return {Array} Elements.
+	 */
+	function textFields( props, fields ) {
+		var a = props.attributes;
+		return fields.map( function ( field ) {
+			if ( ! field.list ) {
+				return el( TextField, {
+					key: field.key,
+					label: field.label,
+					value: a[ field.key ],
+					onChange: function ( value ) {
+						var next = {};
+						next[ field.key ] = value;
+						props.setAttributes( next );
+					},
+				} );
+			}
+			var items = Array.isArray( a[ field.key ] ) ? a[ field.key ] : [];
+			return el(
+				'fieldset',
+				{ key: field.key, className: 'hcwa-text-list' },
+				el( 'legend', null, field.label ),
+				items.map( function ( item, i ) {
+					return el(
+						'div',
+						{ key: i, className: 'hcwa-text-list__item' },
+						el( 'span', { className: 'hcwa-text-list__n' }, wp.i18n.sprintf( __( 'Item %d', 'hcwa' ), i + 1 ) ),
+						field.list.map( function ( sub ) {
+							return el( TextField, {
+								key: sub.key,
+								label: sub.label,
+								value: item ? item[ sub.key ] : '',
+								onChange: function ( value ) {
+									var copy = items.map( function ( x ) {
+										return Object.assign( {}, x );
+									} );
+									copy[ i ][ sub.key ] = value;
+									var next = {};
+									next[ field.key ] = copy;
+									props.setAttributes( next );
+								},
+							} );
+						} )
+					);
+				} )
+			);
+		} );
+	}
+
+	/**
+	 * Registers a section block whose words are edited in the canvas, above the
+	 * server-rendered preview.
+	 *
+	 * @param {string} name Block name.
+	 * @param {Object} spec title, description, fields (see textFields()), empty.
+	 */
+	function registerText( name, spec ) {
+		wp.blocks.registerBlockType( name, {
+			title: spec.title,
+			description: spec.description,
+			edit: function ( props ) {
+				var blockProps = blockEditor.useBlockProps( { className: 'hcwa-section-edit' } );
+				return el(
+					'div',
+					blockProps,
+					spec.fields && spec.fields.length
+						? el(
+							'div',
+							{ className: 'hcwa-section-edit__words' },
+							el( 'p', { className: 'hcwa-section-edit__title' }, spec.title ),
+							textFields( props, spec.fields ),
+							el( 'p', { className: 'hcwa-section-edit__help' }, __( 'Draft text shows only on staging. On the live site it is left out.', 'hcwa' ) )
+						)
+						: null,
+					el( Preview, {
+						block: name,
+						attributes: props.attributes,
+						label: spec.title,
+						empty: spec.empty || __( 'Nothing to show here yet.', 'hcwa' ),
+					} )
+				);
+			},
+			save: function () {
+				return null;
+			},
+		} );
+	}
+
+	/**
+	 * Registers a container block (hcwa/sections, hcwa/day): its inner blocks are locked with
+	 * the block's templateLock attribute and saved without any wrapper markup.
+	 *
+	 * @param {string} name Block name.
+	 * @param {Object} spec title, description.
+	 */
+	function registerContainer( name, spec ) {
+		wp.blocks.registerBlockType( name, {
+			title: spec.title,
+			description: spec.description,
+			edit: function ( props ) {
+				var lock = props.attributes.templateLock;
+				var blockProps = blockEditor.useBlockProps( { className: 'hcwa-container-edit' } );
+				var innerProps = blockEditor.useInnerBlocksProps( blockProps, {
+					templateLock: lock === 'all' || lock === 'contentOnly' ? lock : false,
+					renderAppender: false,
+				} );
+				return el( 'div', innerProps );
+			},
+			save: function () {
+				return el( blockEditor.InnerBlocks.Content );
+			},
+		} );
+	}
+
 	window.hcwaBlocks = {
 		el: el,
 		postLanguage: postLanguage,
 		Preview: Preview,
 		PostSelect: PostSelect,
 		register: register,
+		registerText: registerText,
+		registerContainer: registerContainer,
 	};
 }( window.wp ) );

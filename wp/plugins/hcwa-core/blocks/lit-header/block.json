@@ -1,0 +1,63 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/lit-header",
+	"title": "Lit header",
+	"category": "hcwa",
+	"icon": "cover-image",
+	"description": "Page header with a picture from the world, the breadcrumb, the heading and an intro.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"still": {
+			"type": "string",
+			"default": ""
+		},
+		"size": {
+			"type": "string",
+			"enum": [
+				"",
+				"display",
+				"program"
+			],
+			"default": ""
+		},
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"intro": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"actions": {
+			"type": "string",
+			"enum": [
+				"",
+				"reach"
+			],
+			"default": ""
+		},
+		"callUs": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"writeUs": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

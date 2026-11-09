@@ -1,0 +1,44 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/faq",
+	"title": "Questions",
+	"category": "hcwa",
+	"icon": "editor-help",
+	"description": "Common questions with one answer each.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"faq": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object",
+				"properties": {
+					"q": {
+						"type": "string"
+					},
+					"a": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"answer": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

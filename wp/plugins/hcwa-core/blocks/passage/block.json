@@ -1,0 +1,28 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/passage",
+	"title": "What we do",
+	"category": "hcwa",
+	"icon": "format-quote",
+	"description": "The passage into the light, with the statement read word by word.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"statement": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

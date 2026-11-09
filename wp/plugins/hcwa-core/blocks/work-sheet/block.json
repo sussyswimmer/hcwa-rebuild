@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/work-sheet",
+	"title": "Areas of work",
+	"category": "hcwa",
+	"icon": "grid-view",
+	"description": "The four focus areas as a floor of cement tiles, the figures and the programs.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"focusTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

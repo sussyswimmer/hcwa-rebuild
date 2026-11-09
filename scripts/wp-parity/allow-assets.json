@@ -1,4 +1,13 @@
 {
   "_note": "Accepted parity differences owned by the assets stream (docs/plan/11-WP-PORT.md 5.4). Only that stream edits this file; the lead reviews every entry. An entry: {\"route\": \"*\" or a path, \"section\": a section key from the report (\"*\" for every section), \"kind\": \"structure|text|links|pixels|timing\", \"match\": a regular expression, \"reason\": why the difference is right, \"owner\": \"assets\"}. For structure, text and links, match is tested against each differing line (without its +/- sign) and the lines it matches are dropped from the diff. For pixels it is ignored: the entry accepts the section's pixel failure. For timing it names the prototype check line (its PASS/FAIL text) that may be re-run once.",
-  "entries": []
+  "entries": [
+    {
+      "route": "/",
+      "section": "*",
+      "kind": "timing",
+      "match": "^(?:vi|en)-390-t1: the world moves with no input",
+      "reason": "05-DESIGN 0.6.7 notes the 390 Tier 1 ambient-motion line as timing-dependent: it measures pixel change over about 1.2 s of world time in SwiftShader, and on this machine it fails on the prototype itself (vi 0%, en 0.064% and 0.439% across runs, threshold 0.6%). The bundle and the world code are the prototype's own (one build, 11-WP-PORT.md 1.1), so a miss here is the renderer's timing, not the port; the line gets its one re-run (5.3 item 5).",
+      "owner": "assets"
+    }
+  ]
 }

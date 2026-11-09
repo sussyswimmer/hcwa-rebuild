@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/shutters",
+	"title": "Shutters",
+	"category": "hcwa",
+	"icon": "align-wide",
+	"description": "The shutters opening onto the ways to help. Pictures only.",
+	"textdomain": "hcwa",
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

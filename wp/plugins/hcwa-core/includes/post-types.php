@@ -280,6 +280,10 @@ function hcwa_register_post_types(): void {
 			'show_tagcloud'      => false,
 			'query_var'          => false,
 			'rewrite'            => false,
+			// The areas keep the order they are given in: a program's tile strip and data-areas
+			// follow it, as in the prototype (work.json lists each center's and program's areas).
+			'sort'               => true,
+			'args'               => array( 'orderby' => 'term_order' ),
 		)
 	);
 }

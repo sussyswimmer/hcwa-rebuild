@@ -4,12 +4,120 @@
 	"name": "hcwa/donation-methods",
 	"title": "Donation methods",
 	"category": "hcwa",
-	"icon": "heart",
-	"description": "Bank transfer and giving from abroad. Shows only details HCWA finance has confirmed in Settings → HCWA.",
+	"icon": "money-alt",
+	"description": "The transfer slip and the \"tell us you gave\" form. Only details HCWA finance has confirmed ever show.",
 	"textdomain": "hcwa",
+	"attributes": {
+		"howTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"tabsLabel": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"inVietnam": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"inVietnamShort": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"fromAbroad": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"fromAbroadShort": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"qr": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"pendingNote": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"paypal": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"toCenterTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"toCenter": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"tellTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"tellLead": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"amount": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"amountError": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"giftFor": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"giftForAny": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"thanks": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"bankFields": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object"
+			}
+		},
+		"abroadFields": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object"
+			}
+		}
+	},
 	"supports": {
 		"html": false,
-		"multiple": false
+		"reusable": false
 	},
 	"editorScript": "file:./index.js",
 	"render": "file:./render.php"

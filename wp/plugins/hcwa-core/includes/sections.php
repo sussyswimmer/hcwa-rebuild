@@ -171,16 +171,13 @@ function hcwa_program_center_ids( int $program_id ): array {
  */
 function hcwa_center_body( WP_Post $center, ?bool $production = null ): array {
 	$production = $production ?? hcwa_is_production();
-	$content    = (string) $center->post_content;
-	$parts      = preg_split( '/<!--more(.*?)?-->/', $content, 2 );
 	$out        = array(
 		'story'   => array(),
 		'history' => array(),
 		'draft'   => array(),
 	);
-
-	foreach ( array( 'story', 'history' ) as $i => $part ) {
-		foreach ( hcwa_body_paragraphs( (string) ( $parts[ $i ] ?? '' ) ) as $raw ) {
+	foreach ( hcwa_body_parts( (string) $center->post_content ) as $part => $paragraphs ) {
+		foreach ( $paragraphs as $raw ) {
 			$shown = hcwa_draft_text( hcwa_attr_text( $raw ), $production );
 			if ( '' === $shown['text'] ) {
 				continue;
@@ -193,27 +190,41 @@ function hcwa_center_body( WP_Post $center, ?bool $production = null ): array {
 }
 
 /**
- * Paragraph texts (still HTML-encoded) of a piece of post content: core/paragraph blocks,
- * or blank-line separated text when the content has no blocks.
+ * Paragraph texts (still HTML-encoded) of a center's content, before and after the "more"
+ * break: core/paragraph blocks around a core/more block, or, without blocks, blank-line
+ * separated text around <!--more-->.
  *
  * @param string $content Post content.
- * @return string[]
+ * @return array{story: string[], history: string[]}
  */
-function hcwa_body_paragraphs( string $content ): array {
+function hcwa_body_parts( string $content ): array {
+	$out = array(
+		'story'   => array(),
+		'history' => array(),
+	);
 	if ( '' === trim( $content ) ) {
-		return array();
+		return $out;
 	}
 	if ( false !== strpos( $content, '<!-- wp:' ) && function_exists( 'parse_blocks' ) ) {
-		$out = array();
+		$part = 'story';
 		foreach ( parse_blocks( $content ) as $block ) {
-			if ( 'core/paragraph' === ( $block['blockName'] ?? '' ) ) {
-				$out[] = (string) preg_replace( '#^\s*<p\b[^>]*>|</p>\s*$#i', '', (string) ( $block['innerHTML'] ?? '' ) );
+			$name = $block['blockName'] ?? null;
+			if ( 'core/more' === $name || ( null === $name && false !== strpos( (string) ( $block['innerHTML'] ?? '' ), '<!--more' ) ) ) {
+				$part = 'history';
+				continue;
+			}
+			if ( 'core/paragraph' === $name ) {
+				$out[ $part ][] = (string) preg_replace( '#^\s*<p\b[^>]*>|</p>\s*$#i', '', (string) ( $block['innerHTML'] ?? '' ) );
 			}
 		}
 		return $out;
 	}
-	$chunks = preg_split( '/\R\s*\R/u', trim( (string) preg_replace( '#</?p\b[^>]*>#i', "\n\n", $content ) ) );
-	return array_values( array_filter( array_map( 'trim', (array) $chunks ), 'strlen' ) );
+	$halves = preg_split( '/<!--more(.*?)?-->/', $content, 2 );
+	foreach ( array( 'story', 'history' ) as $i => $part ) {
+		$chunks       = preg_split( '/\R\s*\R/u', trim( (string) preg_replace( '#</?p\b[^>]*>#i', "\n\n", (string) ( $halves[ $i ] ?? '' ) ) ) );
+		$out[ $part ] = array_values( array_filter( array_map( 'trim', (array) $chunks ), 'strlen' ) );
+	}
+	return $out;
 }
 
 /* -------------------------------------------------------------------------

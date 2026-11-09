@@ -8,35 +8,14 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Lucide outline icon (ISC), 24px grid, 1.5px stroke. Static markup, safe to echo.
+ * Lucide outline icon (ISC) from the prototype's exported paths in hcwa-core
+ * (prototype-data.php 'icons'), so theme and blocks print the same SVG. '' without hcwa-core.
  *
  * @param string $name  Icon name.
  * @param string $class CSS class.
  */
 function hcwa_theme_icon( string $name, string $class = 'icon' ): string {
-	$paths = array(
-		'arrow'    => '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
-		'chevron'  => '<path d="m6 9 6 6 6-6"/>',
-		'menu'     => '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
-		'close'    => '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-		'copy'     => '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
-		'check'    => '<path d="M20 6 9 17l-5-5"/>',
-		'info'     => '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
-		'phone'    => '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
-		'mail'     => '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
-		'pin'      => '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
-		'external' => '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
-		'prev'     => '<path d="m15 18-6-6 6-6"/>',
-		'next'     => '<path d="m9 18 6-6-6-6"/>',
-		'search'   => '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
-		'message'  => '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
-		'download' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
-		'share'    => '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/>',
-	);
-	if ( ! isset( $paths[ $name ] ) ) {
-		return '';
-	}
-	return '<svg class="' . esc_attr( $class ) . '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $paths[ $name ] . '</svg>';
+	return function_exists( 'hcwa_icon' ) ? hcwa_icon( $name, $class ) : '';
 }
 
 /**
@@ -95,7 +74,7 @@ function hcwa_theme_lang_switch( string $class = '' ): string {
 		);
 	}
 	return sprintf(
-		'<div class="%s" role="group" aria-label="%s">%s</div>',
+		'<div class="%s" role="group" aria-label="%s" data-lang-switch>%s</div>',
 		esc_attr( trim( 'lang-switch ' . $class ) ),
 		esc_attr( hcwa_theme_t( 'language' ) ),
 		implode( '<span aria-hidden="true">/</span>', $parts )

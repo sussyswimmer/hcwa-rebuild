@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/gifts",
+	"title": "Gift examples",
+	"category": "hcwa",
+	"icon": "awards",
+	"description": "What a gift does. Staging only until HCWA sets the amounts.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"gifts": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object",
+				"properties": {
+					"amount": {
+						"type": "string"
+					},
+					"text": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

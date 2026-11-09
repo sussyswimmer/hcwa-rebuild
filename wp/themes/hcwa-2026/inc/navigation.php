@@ -10,8 +10,11 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Prints a menu as the desktop nav (`nav__*`, dropdown toggles) or the mobile sheet
- * (`sheet__*`, details/summary accordions). Two levels.
+ * Prints a menu as the prototype's desktop nav (or, 'plain', the footer's bare list) (`nav__*`, a toggle per submenu, ids sub-N by
+ * the item's position) or its menu sheet (`sheet__*`, details/summary groups whose first link
+ * repeats the hub). Two levels. Only top-level links carry aria-current: "page" on the page
+ * itself, "true" on the hub of a child page (prototype layout.mjs isCurrent()). Never
+ * menu-item-* classes.
  */
 class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 
@@ -23,11 +26,18 @@ class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 	private string $variant;
 
 	/**
-	 * Parent of the submenu being opened (start_lvl does not receive it).
+	 * The top-level item being printed and its position.
 	 *
 	 * @var object|null
 	 */
 	private $parent_item = null;
+
+	/**
+	 * Position of the current top-level item (sub-N).
+	 *
+	 * @var int
+	 */
+	private int $index = -1;
 
 	/**
 	 * Whether each open top-level item has children, so end_el can close what start_el opened.
@@ -37,21 +47,19 @@ class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 	private array $open_parents = array();
 
 	public function __construct( string $variant = 'desktop' ) {
-		parent::__construct();
-		$this->variant = 'sheet' === $variant ? 'sheet' : 'desktop';
+		$this->variant = in_array( $variant, array( 'sheet', 'plain' ), true ) ? $variant : 'desktop';
 	}
 
 	public function start_lvl( &$output, $depth = 0, $args = null ) {
 		if ( 'sheet' === $this->variant ) {
-			$output .= '<ul>';
-			// The hub page itself, since the summary only opens the accordion.
+			$output .= "<ul>\n              ";
+			// The hub page itself, since the summary only opens the group.
 			if ( $this->parent_item ) {
-				$output .= '<li>' . $this->link( $this->parent_item, $args, $depth, '' ) . '</li>';
+				$output .= '<li>' . $this->link( $this->parent_item, $args, 1, '', false ) . "</li>\n              ";
 			}
 			return;
 		}
-		$id      = $this->parent_item ? 'sub-' . $this->parent_item->ID : 'sub-' . wp_unique_id();
-		$output .= '<ul class="nav__sub" id="' . esc_attr( $id ) . '" hidden>';
+		$output .= "\n          " . '<ul class="nav__sub" id="sub-' . (int) $this->index . '" hidden>';
 	}
 
 	public function end_lvl( &$output, $depth = 0, $args = null ) {
@@ -64,30 +72,39 @@ class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 		$label        = $this->label( $item, $args, $depth );
 
 		if ( 0 === (int) $depth ) {
+			++$this->index;
 			$this->open_parents[] = $has_children;
 			$this->parent_item    = $has_children ? $item : null;
 		}
 
+		if ( 'plain' === $this->variant ) {
+			$output .= '<li>' . $this->link( $item, $args, $depth, '', false );
+			return;
+		}
+
 		if ( 'sheet' === $this->variant ) {
-			if ( $has_children ) {
-				$open    = ! empty( $item->current_item_ancestor ) || ! empty( $item->current_item_parent ) || ! empty( $item->current );
-				$output .= '<li><details' . ( $open ? ' open' : '' ) . '><summary>' . esc_html( $label ) . hcwa_theme_icon( 'chevron' ) . '</summary>';
+			if ( 0 !== (int) $depth ) {
+				$output .= '<li>' . $this->link( $item, $args, $depth, '', false );
 				return;
 			}
-			$output .= '<li>' . $this->link( $item, $args, $depth, 0 === (int) $depth ? 'sheet__link' : '' );
+			if ( $has_children ) {
+				$output .= "\n      " . '<li><details><summary>' . esc_html( $label ) . hcwa_theme_icon( 'chevron' ) . '</summary>';
+				return;
+			}
+			$output .= "\n      " . '<li>' . $this->link( $item, $args, $depth, 'sheet__link', false );
 			return;
 		}
 
 		if ( 0 !== (int) $depth ) {
-			$output .= '<li>' . $this->link( $item, $args, $depth, '' );
+			$output .= '<li>' . $this->link( $item, $args, $depth, '', false );
 			return;
 		}
 
-		$output .= '<li class="nav__item' . ( $has_children ? ' has-sub' : '' ) . '">' . $this->link( $item, $args, $depth, 'nav__link' );
+		$output .= ( $this->index ? '' : "\n    " ) . '<li class="nav__item' . ( $has_children ? ' has-sub' : '' ) . '">' . "\n        " . $this->link( $item, $args, $depth, 'nav__link', true ) . "\n        ";
 		if ( $has_children ) {
 			$output .= sprintf(
 				'<button class="nav__toggle" type="button" aria-expanded="false" aria-controls="%s" aria-label="%s">%s</button>',
-				esc_attr( 'sub-' . $item->ID ),
+				esc_attr( 'sub-' . $this->index ),
 				esc_attr( hcwa_theme_t( 'submenu', array( 'x' => $label ) ) ),
 				hcwa_theme_icon( 'chevron' )
 			);
@@ -101,8 +118,10 @@ class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 		}
 		if ( 0 === (int) $depth && 'desktop' === $this->variant ) {
 			array_pop( $this->open_parents );
+			$output .= "\n      </li>";
+			return;
 		}
-		$output .= '</li>';
+		$output .= '</li>' . ( 'sheet' === $this->variant && 0 !== (int) $depth ? "\n              " : '' );
 	}
 
 	/**
@@ -119,24 +138,25 @@ class HCWA_Theme_Nav_Walker extends Walker_Nav_Menu {
 	}
 
 	/**
-	 * The <a> for an item, with aria-current: "page" on the page itself, "true" on its section.
+	 * The <a> for an item.
 	 *
-	 * @param object $item  Menu item.
-	 * @param mixed  $args  wp_nav_menu() arguments.
-	 * @param int    $depth Depth.
-	 * @param string $class Link class.
+	 * @param object $item    Menu item.
+	 * @param mixed  $args    wp_nav_menu() arguments.
+	 * @param int    $depth   Depth.
+	 * @param string $class   Link class.
+	 * @param bool   $current Whether to mark the current page or section (top-level desktop links only).
 	 */
-	private function link( $item, $args, $depth, string $class ): string {
-		$current = '';
-		if ( ! empty( $item->current ) ) {
-			$current = 'page';
-		} elseif ( ! empty( $item->current_item_ancestor ) || ! empty( $item->current_item_parent ) ) {
-			$current = 'true';
+	private function link( $item, $args, $depth, string $class, bool $current ): string {
+		$state = '';
+		if ( $current && ! empty( $item->current ) ) {
+			$state = 'page';
+		} elseif ( $current && ( ! empty( $item->current_item_ancestor ) || ! empty( $item->current_item_parent ) || ! empty( $item->hcwa_section ) ) ) {
+			$state = 'true';
 		}
 		$atts = array(
 			'class'        => $class,
 			'href'         => $item->url ?? '',
-			'aria-current' => $current,
+			'aria-current' => $state,
 			'target'       => $item->target ?? '',
 			'rel'          => ( '_blank' === ( $item->target ?? '' ) ) ? 'noopener' : ( $item->xfn ?? '' ),
 			'title'        => $item->attr_title ?? '',
@@ -178,6 +198,7 @@ function hcwa_theme_footer_menu( string $location ): void {
 			'container'      => false,
 			'items_wrap'     => '<ul>%3$s</ul>',
 			'depth'          => 1,
+			'walker'         => new HCWA_Theme_Nav_Walker( 'plain' ),
 			'fallback_cb'    => 'hcwa_theme_menu_fallback',
 			'hcwa_fallback'  => $location,
 		)

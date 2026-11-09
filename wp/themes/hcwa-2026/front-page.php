@@ -1,7 +1,9 @@
 <?php
 /**
- * Home page: the static front page's blocks (hero, impact strip, centers, … from the
- * page-home pattern). If the site is set to show latest posts on the front, the news hub.
+ * Home (11-WP-PORT.md 2.4): the front page's hcwa/sections block printed by
+ * hcwa_render_sections() (H2 to H10, no wrapper between them). The hero carries the one H1;
+ * an sr-only H1 is added only when none was printed. If the site shows the latest posts on
+ * the front, the news hub.
  *
  * @package hcwa-2026
  */
@@ -17,16 +19,16 @@ get_header();
 
 while ( have_posts() ) :
 	the_post();
-	$hcwa_content = str_replace( ']]>', ']]&gt;', (string) apply_filters( 'the_content', get_the_content() ) );
-	// One H1 per page: the hero pattern carries it; if the editor removed the hero, keep a hidden one.
-	if ( false === stripos( $hcwa_content, '<h1' ) ) {
-		echo '<h1 class="sr-only">' . esc_html( wp_strip_all_tags( get_bloginfo( 'name' ) ) ) . '</h1>';
+	$hcwa_post = get_post();
+	$hcwa_html = $hcwa_post instanceof WP_Post ? hcwa_theme_render_sections( $hcwa_post ) : '';
+	if ( '' === $hcwa_html && $hcwa_post instanceof WP_Post ) {
+		// A front page not built from the sections: its blocks through the_content (2.7).
+		$hcwa_html = '<div class="day day--donate"><div class="entry-content container">' . str_replace( ']]>', ']]&gt;', (string) apply_filters( 'the_content', get_the_content() ) ) . '</div></div>';
 	}
-	?>
-	<div class="entry-content entry-content--page entry-content--home">
-		<?php echo $hcwa_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the_content output. ?>
-	</div>
-	<?php
+	if ( false === stripos( $hcwa_html, '<h1' ) ) {
+		echo '<h1 class="sr-only">' . esc_html( hcwa_theme_names()['org'] ) . '</h1>';
+	}
+	echo $hcwa_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- block render output.
 endwhile;
 
 get_footer();

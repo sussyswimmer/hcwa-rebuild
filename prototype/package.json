@@ -21,7 +21,9 @@
     "check:sun": "node scripts/check-sun-crisp.mjs",
     "check:sunin": "node scripts/check-sunin.cjs http://localhost:4173 ../qa/m1/sunin",
     "check:contrast": "node scripts/light-contrast.mjs http://localhost:4173",
-    "check:tiles": "node scripts/check-tiles.cjs http://localhost:4173"
+    "check:tiles": "node scripts/check-tiles.cjs http://localhost:4173",
+    "preexport:wp": "npm run tokens",
+    "export:wp": "node scripts/export-wp.mjs"
   },
   "devDependencies": {
     "vite": "8.3.5"

@@ -43,14 +43,14 @@ if ( '' === $hcwa_read_url ) {
 }
 ?>
 <aside <?php echo get_block_wrapper_attributes( array( 'class' => 'lang-notice', 'lang' => $hcwa_notice_lang ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by WordPress. ?>>
-	<?php echo hcwa_blocks_icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
+	<?php echo hcwa_icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
 	<div>
 		<p><?php echo esc_html( hcwa_t_in( 'langNotice', $hcwa_notice_lang ) ); ?></p>
 		<p class="lang-notice__links">
 			<?php
-			echo hcwa_blocks_text_link( $hcwa_read_url, hcwa_t_in( 'langNoticeRead', $hcwa_notice_lang ), array( 'hreflang' => $hcwa_page_lang ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+			echo hcwa_text_link_html( $hcwa_read_url, hcwa_t_in( 'langNoticeRead', $hcwa_notice_lang ), 'hreflang="' . esc_attr( $hcwa_page_lang ) . '"' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 			echo ' ';
-			echo hcwa_blocks_text_link( hcwa_page_url( 'news', $hcwa_notice_lang ), hcwa_t_in( 'langNoticeHub', $hcwa_notice_lang ), array( 'hreflang' => $hcwa_notice_lang ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+			echo hcwa_text_link_html( hcwa_page_url( 'news', $hcwa_notice_lang ), hcwa_t_in( 'langNoticeHub', $hcwa_notice_lang ), 'hreflang="' . esc_attr( $hcwa_notice_lang ) . '"' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 			?>
 		</p>
 	</div>

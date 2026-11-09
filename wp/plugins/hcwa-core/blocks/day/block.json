@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/day",
+	"title": "Day",
+	"category": "hcwa",
+	"icon": "image-filter",
+	"description": "The day gradient behind the sections of an inner page.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"variant": {
+			"type": "string",
+			"enum": [
+				"hub",
+				"involve",
+				"donate",
+				"contact",
+				"gap"
+			],
+			"default": "involve"
+		},
+		"templateLock": {
+			"type": "string",
+			"enum": [
+				"all",
+				"contentOnly"
+			],
+			"default": "contentOnly"
+		}
+	},
+	"supports": {
+		"html": false,
+		"inserter": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

@@ -2,8 +2,8 @@
 Theme Name: HCWA 2026
 Theme URI: https://hcwa.org.vn
 Author: Maxwell (volunteer) for HCWA
-Description: Hybrid theme for the Ho Chi Minh City Child Welfare Association (Hội Bảo trợ Trẻ em TP. Hồ Chí Minh). PHP header, footer and templates; theme.json tokens; page bodies built from blocks and patterns. Needs the hcwa-core plugin and Polylang.
-Version: 0.1.0
+Description: Hybrid theme for the Ho Chi Minh City Child Welfare Association (Hội Bảo trợ Trẻ em TP. Hồ Chí Minh). PHP header, footer and templates around the Bông gió prototype's own CSS and JS (built into assets/dist by npm --prefix prototype run export:wp); page bodies built from locked block patterns. Needs the hcwa-core plugin and Polylang.
+Version: 0.2.0
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
@@ -12,4 +12,6 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: hcwa
 */
 
-/* Styles live in assets/css/site.css (front end and editor). This file only carries the theme header. */
+/* This file only carries the theme header. The styles are the prototype's bundle in assets/dist/
+   (inc/assets.php enqueues it from its manifest), plus assets/css/wp.css for WordPress-only pages
+   and assets/css/editor.css in the block editor. */

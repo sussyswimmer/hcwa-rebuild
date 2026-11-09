@@ -5,7 +5,7 @@
 	"title": "Latest news",
 	"category": "hcwa",
 	"icon": "megaphone",
-	"description": "A featured story and the latest posts in this language.",
+	"description": "The three latest posts in this language, and a featured story on staging.",
 	"textdomain": "hcwa",
 	"attributes": {
 		"featured": {
@@ -18,7 +18,8 @@
 		}
 	},
 	"supports": {
-		"html": false
+		"html": false,
+		"reusable": false
 	},
 	"editorScript": "file:./index.js",
 	"render": "file:./render.php"

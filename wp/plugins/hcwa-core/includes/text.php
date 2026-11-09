@@ -153,7 +153,7 @@ function hcwa_pcre( string $p ): string {
 	if ( '' === $p ) {
 		return '';
 	}
-	if ( preg_match( '#^([/~#%]).*\1[imsuxU]*$#s', $p ) ) {
+	if ( preg_match( '{^([/~#%]).*\1[imsuxU]*$}s', $p ) ) {
 		$p = false === strpos( substr( $p, (int) strrpos( $p, $p[0] ) ), 'u' ) ? $p . 'u' : $p;
 	} else {
 		$p = '~' . str_replace( '~', '\~', $p ) . '~u';

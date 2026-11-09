@@ -1,23 +1,25 @@
 <?php
 /**
- * The hcwa/* dynamic blocks: registration, the "HCWA" inserter category, the block UI
- * strings (front end via hcwa_t(), editor via wp.i18n) and the helpers the render.php
- * templates share.
+ * The hcwa/* dynamic blocks (11-WP-PORT.md 4.1): registration, the "HCWA" inserter
+ * category, the block UI strings (front end via hcwa_t(), editor via wp.i18n), and one PHP
+ * builder per prototype component (prototype/src/partials/components.mjs, layout.mjs,
+ * lit-header.mjs, louvers.mjs, pages/*.mjs), used by the blocks and, through the theme's
+ * hcwa_theme_* bridge, by the templates.
  *
- * Every block is server-rendered (blocks/<name>/render.php) with the class names of the
- * prototype components, so the theme's port of the prototype CSS styles it. The safety
- * gates live in the core plugin and are only called from here: hcwa_get_impact_figures()
- * and hcwa_impact_strip_visible() (figures), hcwa_image() (photos),
- * hcwa_partner_logo_allowed() (logos), hcwa_donation_details() (bank details),
- * hcwa_announcement() (announcement bar).
- *
- * Empty states: on the live site a block with nothing to show prints nothing; on staging
- * it prints a short bilingual note, so reviewers can see that the slot exists.
+ * Section blocks print the prototype's markup exactly and no wrapper element (2.1 rule 3):
+ * they never call get_block_wrapper_attributes(). Every text attribute passes
+ * hcwa_attr_text() and hcwa_draft_text() (2.1 rules 7 and 13). The safety gates are only
+ * called from here: hcwa_get_impact_figures() and hcwa_impact_strip_visible() (figures),
+ * hcwa_image() (photos), hcwa_partner_logo_allowed() (logos), hcwa_donation_details()
+ * (bank details), hcwa_announcement() (announcement bar), and the Little Rose switches in
+ * sections.php.
  *
  * @package hcwa-core
  */
 
 defined( 'ABSPATH' ) || exit;
+
+require_once __DIR__ . '/blocks-sections.php';
 
 /* -------------------------------------------------------------------------
  * Registration
@@ -101,21 +103,14 @@ add_filter( 'block_categories_all', 'hcwa_blocks_category' );
  */
 function hcwa_blocks_strings(): array {
 	return array(
-		// Empty states (staging only) and review hints.
-		'blk_noFigures'       => array( 'vi' => 'Chưa có số liệu tác động nào để hiển thị.', 'en' => 'No impact figures to show yet.' ),
-		'blk_hiddenOnLive'    => array( 'vi' => 'Trên trang chính thức, phần này chỉ hiện khi có ít nhất 2 số liệu đã được xác minh.', 'en' => 'On the live site, this section shows only once at least 2 figures are verified.' ),
-		'blk_noCenters'       => array( 'vi' => 'Chưa có cơ sở nào được đăng.', 'en' => 'No centers published yet.' ),
-		'blk_noPrograms'      => array( 'vi' => 'Chưa có dự án nào phù hợp.', 'en' => 'No matching programs yet.' ),
-		'blk_noReports'       => array( 'vi' => 'Chưa có báo cáo nào phù hợp.', 'en' => 'No matching reports yet.' ),
-		'blk_noPartners'      => array( 'vi' => 'Chưa có đối tác nào được chọn để hiển thị.', 'en' => 'No partners selected for display yet.' ),
-		'blk_noNews'          => array( 'vi' => 'Chưa có bài viết nào.', 'en' => 'No posts yet.' ),
-		'blk_noDonation'      => array( 'vi' => 'Chưa có thông tin ủng hộ nào được nhập.', 'en' => 'No donation details entered yet.' ),
-		'blk_noPhoto'         => array( 'vi' => 'Chưa có ảnh được duyệt', 'en' => 'No approved photo yet' ),
-		'blk_logoPermission'  => array( 'vi' => 'Chưa được phép hiển thị logo', 'en' => 'Logo permission pending' ),
-
-		// Donation methods.
-		'blk_payInVietnam'    => array( 'vi' => 'Chuyển khoản trong nước', 'en' => 'Bank transfer in Vietnam' ),
-		'blk_payFromAbroad'   => array( 'vi' => 'Ủng hộ từ nước ngoài', 'en' => 'Giving from abroad' ),
+		// The placeholder a center's "since" line shows until HCWA verifies the year (work.json sinceToken).
+		'blk_yearToken'       => array( 'vi' => '[năm]', 'en' => '[year]' ),
+		// The center page's evening band when the center has no heading of its own; a protected
+		// center is supported, never visited (moved here from the theme, which no longer prints it).
+		'visitTitle'          => array( 'vi' => 'Muốn đến thăm {name}?', 'en' => 'Want to visit {name}?' ),
+		'supportTitle'        => array( 'vi' => 'Muốn hỗ trợ {name}?', 'en' => 'Want to support {name}?' ),
+		// The heading of a page's password form.
+		'blk_protected'       => array( 'vi' => 'Trang này được bảo vệ bằng mật khẩu.', 'en' => 'This page is protected by a password.' ),
 
 		// Card labels. The theme has keys with the same text (cat_announcement, rt_*); these
 		// have their own names so neither side silently overrides the other.
@@ -141,7 +136,7 @@ add_filter( 'hcwa_strings', 'hcwa_blocks_add_strings' );
 
 /**
  * Vietnamese for the editor labels in blocks/*.js (wp.i18n, text domain "hcwa").
- * wp/tests/blocks-strings-test.php checks that every label has an entry.
+ * wp/tests/blocks-files-test.php checks that every label has an entry.
  *
  * @return array<string, string> English => Vietnamese.
  */
@@ -150,8 +145,77 @@ function hcwa_blocks_editor_vi(): array {
 		// Shared.
 		'Settings'                                    => 'Cài đặt',
 		'This page'                                   => 'Trang này',
+		'Words'                                       => 'Nội dung chữ',
+		'Heading'                                     => 'Tiêu đề',
+		'Intro'                                       => 'Giới thiệu',
+		'Text'                                        => 'Nội dung',
+		'Title'                                       => 'Tiêu đề',
+		'Item %d'                                     => 'Mục %d',
+		'Question'                                    => 'Câu hỏi',
+		'Amount'                                      => 'Số tiền',
+		'Little Rose'                                 => 'Hoa Hồng Nhỏ',
+		'Draft text shows only on staging. On the live site it is left out.' => 'Nội dung nháp chỉ hiện trên bản thử. Trên website chính thức, nội dung này được bỏ đi.',
 
-		// Impact strip.
+		// Containers.
+		'Page sections'                               => 'Các phần của trang',
+		'The locked sections of a page built from the prototype. Change the words inside each section; the sections themselves stay in place.' => 'Các phần đã khóa của một trang dựng theo bản mẫu. Hãy sửa chữ trong từng phần; bản thân các phần được giữ nguyên vị trí.',
+		'Day'                                         => 'Dải ngày',
+		'The day gradient behind the sections of an inner page.' => 'Dải màu một ngày phía sau các phần của trang con.',
+
+		// Headers and bands.
+		'Lit header'                                  => 'Đầu trang có ánh nắng',
+		'Page header with a picture from the world, the breadcrumb, the heading and an intro.' => 'Đầu trang có hình từ không gian 3D, đường dẫn trang, tiêu đề và đoạn giới thiệu.',
+		'Donate header'                               => 'Đầu trang Ủng hộ',
+		'The Donate page header with its jump links.' => 'Đầu trang Ủng hộ kèm các liên kết nhảy tới từng phần.',
+		'First button'                                => 'Nút đầu tiên',
+		'Jump to giving from abroad'                  => 'Liên kết tới phần ủng hộ từ nước ngoài',
+		'Jump to the form'                            => 'Liên kết tới biểu mẫu',
+		'Call us'                                     => 'Gọi cho chúng tôi',
+		'Write to us'                                 => 'Viết cho chúng tôi',
+		'Evening band'                                => 'Dải hoàng hôn',
+		'The dusk band at the end of a page: a heading, the contact lines and buttons.' => 'Dải hoàng hôn ở cuối trang: tiêu đề, thông tin liên hệ và các nút.',
+		'Note'                                        => 'Ghi chú',
+
+		// Home.
+		'Hero'                                        => 'Phần mở đầu',
+		'The first screen of the home page: heading, intro and two buttons.' => 'Màn hình đầu tiên của trang chủ: tiêu đề, giới thiệu và hai nút.',
+		'What we do'                                  => 'Chúng tôi làm gì',
+		'The passage into the light, with the statement read word by word.' => 'Lối đi vào vùng sáng, với câu giới thiệu được đọc từng chữ.',
+		'Statement'                                   => 'Câu giới thiệu',
+		'Centers corridor'                            => 'Hành lang các cơ sở',
+		'One door per published center, from the center pages. Little Rose follows the safeguarding rules.' => 'Mỗi cơ sở đã đăng là một cánh cửa, lấy từ trang của cơ sở. Hoa Hồng Nhỏ theo các quy tắc bảo vệ trẻ em.',
+		'Areas of work'                               => 'Lĩnh vực hoạt động',
+		'The four focus areas as a floor of cement tiles, the figures and the programs.' => 'Bốn lĩnh vực hoạt động như một nền gạch bông, cùng các số liệu và dự án.',
+		'Latest news'                                 => 'Tin mới nhất',
+		'The three latest posts in this language, and a featured story on staging.' => 'Ba bài viết mới nhất bằng ngôn ngữ này, và một câu chuyện nổi bật trên bản thử.',
+		'Shutters'                                    => 'Cửa chớp',
+		'The shutters opening onto the ways to help. Pictures only.' => 'Cửa chớp mở ra các cách giúp đỡ. Chỉ có hình ảnh.',
+		'How you can help'                            => 'Bạn có thể giúp như thế nào',
+		'The four ways to help as louver slats.'      => 'Bốn cách giúp đỡ dưới dạng các lá chớp.',
+		'Partner wall'                                => 'Tường logo đối tác',
+		'Approved one-tone partner logos, shown once at least four are allowed.' => 'Logo đối tác một màu đã được duyệt, chỉ hiện khi có ít nhất bốn logo được phép.',
+
+		// Inner pages.
+		'Our Work hub'                                => 'Trang Hoạt động',
+		'The filters, the wall of center doors and the program rows.' => 'Bộ lọc, bức tường cửa các cơ sở và danh sách dự án.',
+		'Centers lead'                                => 'Giới thiệu các cơ sở',
+		'Programs lead'                               => 'Giới thiệu các dự án',
+		'Ways to help'                                => 'Các cách giúp đỡ',
+		'Questions'                                   => 'Câu hỏi',
+		'Common questions with one answer each.'      => 'Các câu hỏi thường gặp, mỗi câu một câu trả lời.',
+		'Question %d'                                 => 'Câu hỏi %d',
+		'Answer'                                      => 'Câu trả lời',
+		'Gift examples'                               => 'Ví dụ khoản ủng hộ',
+		'What a gift does. Staging only until HCWA sets the amounts.' => 'Khoản ủng hộ giúp được gì. Chỉ hiện trên bản thử cho tới khi HCWA quyết định số tiền.',
+		'Amount %d'                                   => 'Số tiền %d',
+		'Donation methods'                            => 'Cách ủng hộ',
+		'The transfer slip and the "tell us you gave" form. Only details HCWA finance has confirmed ever show.' => 'Phiếu chuyển khoản và biểu mẫu báo cho Hội. Chỉ thông tin đã được bộ phận tài chính của Hội xác nhận mới được hiện.',
+		'Contact form and office'                     => 'Biểu mẫu liên hệ và văn phòng',
+		'The contact form on staging, and the office address and lines HCWA has confirmed.' => 'Biểu mẫu liên hệ trên bản thử, cùng địa chỉ văn phòng và thông tin liên hệ đã được HCWA xác nhận.',
+		'Contact: centers'                            => 'Liên hệ: các cơ sở',
+		'Each center with its way in. Little Rose has no address of its own.' => 'Từng cơ sở với cách liên hệ. Hoa Hồng Nhỏ không có địa chỉ riêng.',
+
+		// Kept blocks.
 		'Impact strip'                                => 'Dải số liệu tác động',
 		'Verified impact figures for the organization, a center or a program. Unverified figures never show on the live site.' => 'Số liệu tác động đã xác minh của Hội, của một cơ sở hoặc một dự án. Số liệu chưa xác minh không bao giờ hiện trên trang chính thức.',
 		'Figures for'                                 => 'Số liệu của',
@@ -161,16 +225,7 @@ function hcwa_blocks_editor_vi(): array {
 		'Center'                                      => 'Cơ sở',
 		'Program'                                     => 'Dự án',
 		'Number of figures'                           => 'Số lượng số liệu',
-		'Show the link to the impact page'            => 'Hiện liên kết đến trang Tác động',
 		'No figures to show. On the live site the strip needs at least 2 verified figures.' => 'Chưa có số liệu để hiển thị. Trên trang chính thức, dải số liệu cần ít nhất 2 số liệu đã xác minh.',
-
-		// Center grid.
-		'Center grid'                                 => 'Lưới cơ sở',
-		'Cards for the centers HCWA runs, with approved photos only.' => 'Thẻ giới thiệu các cơ sở của Hội, chỉ dùng ảnh đã được duyệt.',
-		'Number of centers'                           => 'Số lượng cơ sở',
-		'No published centers yet.'                   => 'Chưa có cơ sở nào được đăng.',
-
-		// Program list.
 		'Program list'                                => 'Danh sách dự án',
 		'Rows of projects and programs, active ones first.' => 'Danh sách dự án và chương trình, dự án đang hoạt động hiện trước.',
 		'Status'                                      => 'Trạng thái',
@@ -180,8 +235,6 @@ function hcwa_blocks_editor_vi(): array {
 		'Number of programs'                          => 'Số lượng dự án',
 		'All centers (on a center page: that center)' => 'Tất cả cơ sở (trên trang cơ sở: chính cơ sở đó)',
 		'No programs match these settings.'           => 'Không có dự án nào phù hợp với cài đặt này.',
-
-		// Report list.
 		'Report list'                                 => 'Danh sách báo cáo',
 		'Reports with a language badge and file size, newest year first.' => 'Báo cáo kèm nhãn ngôn ngữ và dung lượng tệp, năm mới nhất ở trên.',
 		'Report type'                                 => 'Loại báo cáo',
@@ -192,29 +245,6 @@ function hcwa_blocks_editor_vi(): array {
 		'Policy'                                      => 'Chính sách',
 		'Number of reports'                           => 'Số lượng báo cáo',
 		'No published reports match these settings.'  => 'Không có báo cáo nào phù hợp với cài đặt này.',
-
-		// Partner wall.
-		'Partner wall'                                => 'Tường logo đối tác',
-		'One-tone partner logos. On the live site a logo shows only with the partner\'s written permission.' => 'Logo đối tác một màu. Trên trang chính thức, logo chỉ hiện khi đối tác đã đồng ý bằng văn bản.',
-		'Only partners marked "Show on the home page"' => 'Chỉ các đối tác được đánh dấu “Hiển thị trên trang chủ”',
-		'Number of logos'                             => 'Số lượng logo',
-		'No partner logos to show. Check "Show on the home page" and "Permission to show the logo" on each partner.' => 'Chưa có logo đối tác nào để hiển thị. Hãy kiểm tra ô “Hiển thị trên trang chủ” và “Được phép hiển thị logo” ở từng đối tác.',
-
-		// Latest news.
-		'Latest news'                                 => 'Tin mới nhất',
-		'A featured story and the latest posts in this language.' => 'Một câu chuyện nổi bật và các bài viết mới nhất bằng ngôn ngữ của trang.',
-		'Show a featured story'                       => 'Hiện một câu chuyện nổi bật',
-		'A sticky post first, otherwise the latest story.' => 'Ưu tiên bài được ghim, nếu không có thì lấy câu chuyện mới nhất.',
-		'Number of news items'                        => 'Số lượng tin',
-		'No published posts in this language yet.'    => 'Chưa có bài viết nào được đăng bằng ngôn ngữ này.',
-
-		// Donation methods.
-		'Donation methods'                            => 'Cách ủng hộ',
-		'Bank transfer and giving from abroad. Shows only details HCWA finance has confirmed in Settings → HCWA.' => 'Chuyển khoản trong nước và ủng hộ từ nước ngoài. Chỉ hiện thông tin đã được bộ phận tài chính của Hội xác nhận trong Cài đặt → HCWA.',
-		'Open Settings → HCWA'                        => 'Mở Cài đặt → HCWA',
-		'Donation details appear here once HCWA finance has confirmed them in Settings → HCWA.' => 'Thông tin ủng hộ sẽ hiện ở đây sau khi bộ phận tài chính của Hội xác nhận trong Cài đặt → HCWA.',
-
-		// Language notice.
 		'Language notice'                             => 'Thông báo ngôn ngữ',
 		'Tells visitors that an article exists in one language only, with links to it and to the news page.' => 'Báo cho khách rằng bài viết chỉ có bằng một ngôn ngữ, kèm liên kết đến bài và trang tin tức.',
 		'Preview for a visitor who asked for'         => 'Xem trước cho khách đã chọn',
@@ -223,11 +253,10 @@ function hcwa_blocks_editor_vi(): array {
 		'Vietnamese'                                  => 'Tiếng Việt',
 		'English'                                     => 'Tiếng Anh',
 		'Shows only to visitors the language switch sends here because this post has no translation in their language. Choose a language under "Preview for a visitor who asked for" to see it.' => 'Chỉ hiện cho khách được nút chuyển ngôn ngữ đưa đến đây vì bài viết chưa có bản dịch bằng ngôn ngữ của họ. Chọn một ngôn ngữ ở mục “Xem trước cho khách đã chọn” để xem thử.',
-
-		// Announcement bar.
 		'Announcement bar'                            => 'Thanh thông báo',
 		'The one-line announcement above the header. Edit it in Settings → HCWA.' => 'Dòng thông báo ngắn phía trên phần đầu trang. Chỉnh sửa trong Cài đặt → HCWA.',
 		'The announcement bar is switched off, or has no text in this language.' => 'Thanh thông báo đang tắt, hoặc chưa có nội dung bằng ngôn ngữ này.',
+		'Nothing to show here yet.'                   => 'Chưa có gì để hiển thị ở đây.',
 	);
 }
 
@@ -330,6 +359,31 @@ function hcwa_blocks_bool( array $attributes, string $key, bool $default ): bool
 }
 
 /**
+ * A text attribute as it prints (2.1 rules 7 and 13): plain text, unwrapped off production,
+ * '' on production when it is draft.
+ *
+ * @param array  $attributes Block attributes.
+ * @param string $key        Attribute name.
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_blocks_text( array $attributes, string $key ): array {
+	$value = $attributes[ $key ] ?? '';
+	return hcwa_draft_text( hcwa_attr_text( is_scalar( $value ) ? (string) $value : '' ) );
+}
+
+/**
+ * A text attribute inside an array item (ways[], faq[], gifts[]).
+ *
+ * @param mixed  $item Array item.
+ * @param string $key  Field name.
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_blocks_item_text( $item, string $key ): array {
+	$value = is_array( $item ) ? ( $item[ $key ] ?? '' ) : '';
+	return hcwa_draft_text( hcwa_attr_text( is_scalar( $value ) ? (string) $value : '' ) );
+}
+
+/**
  * The post the block is shown on: block context, then the global post (set by the loop,
  * the theme's single templates and the editor preview), then the queried object.
  *
@@ -384,225 +438,11 @@ function hcwa_blocks_in_lang( int $post_id ): int {
 	return $post_id;
 }
 
-/* -------------------------------------------------------------------------
- * Small markup helpers
- * ---------------------------------------------------------------------- */
-
 /**
- * Lucide outline icon (ISC licence), the same set and paths as the prototype.
+ * Library IDs referenced by posts' meta, for one cache warm-up.
  *
- * @param string $name  arrow | chevron | close | copy | info.
- * @param string $class CSS class.
- */
-function hcwa_blocks_icon( string $name, string $class = 'icon' ): string {
-	$paths = array(
-		'arrow'   => '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
-		'chevron' => '<path d="m6 9 6 6 6-6"/>',
-		'close'   => '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-		'copy'    => '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
-		'info'    => '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
-	);
-	if ( ! isset( $paths[ $name ] ) ) {
-		return '';
-	}
-	return '<svg class="' . esc_attr( $class ) . '" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $paths[ $name ] . '</svg>';
-}
-
-/**
- * Text link with arrow (prototype textLink()).
- *
- * @param string $url   Link target.
- * @param string $label Visible text (unescaped).
- * @param array  $attrs Extra attributes, name => value (unescaped).
- */
-function hcwa_blocks_text_link( string $url, string $label, array $attrs = array() ): string {
-	$extra = '';
-	foreach ( $attrs as $name => $value ) {
-		$extra .= ' ' . esc_attr( (string) $name ) . '="' . esc_attr( (string) $value ) . '"';
-	}
-	return '<a class="text-link" href="' . esc_url( $url ) . '"' . $extra . '><span>' . esc_html( $label ) . '</span>' . hcwa_blocks_icon( 'arrow' ) . '</a>';
-}
-
-/**
- * ' data-draft' when any text still holds a draft marker, on staging only (the theme
- * outlines [data-draft] there; production refuses to publish draft text anyway).
- *
- * @param bool   $production Whether this is the live site.
- * @param string ...$texts   Texts to check.
- */
-function hcwa_blocks_draft_attr( bool $production, string ...$texts ): string {
-	if ( $production || ! function_exists( 'hcwa_contains_draft' ) ) {
-		return '';
-	}
-	foreach ( $texts as $text ) {
-		if ( hcwa_contains_draft( $text ) ) {
-			return ' data-draft';
-		}
-	}
-	return '';
-}
-
-/**
- * The staging-only note for a block with nothing to show; '' on the live site.
- * Must be called while the block renders (it uses get_block_wrapper_attributes()).
- *
- * @param string $key hcwa_t() key.
- */
-function hcwa_blocks_empty_note( string $key ): string {
-	if ( hcwa_is_production() ) {
-		return '';
-	}
-	return '<p ' . get_block_wrapper_attributes(
-		array(
-			'class'      => 'empty-state',
-			'data-draft' => '',
-		)
-	) . '>' . esc_html( hcwa_t( $key ) ) . '</p>';
-}
-
-/**
- * Card title: tags and leading emoji removed (05-DESIGN: no emoji in UI).
- *
- * @param WP_Post $post Post.
- */
-function hcwa_blocks_title( WP_Post $post ): string {
-	return trim( hcwa_strip_leading_emoji( wp_strip_all_tags( get_the_title( $post ) ) ) );
-}
-
-/**
- * Short text for a card: the "Short summary" field, else the excerpt, else the start of
- * the content.
- *
- * @param WP_Post $post  Post.
- * @param int     $words Words to keep from the content.
- */
-function hcwa_blocks_summary( WP_Post $post, int $words = 28 ): string {
-	$summary = trim( (string) get_post_meta( $post->ID, 'hcwa_summary', true ) );
-	if ( '' !== $summary ) {
-		return $summary;
-	}
-	if ( has_excerpt( $post ) ) {
-		return trim( wp_strip_all_tags( get_the_excerpt( $post ) ) );
-	}
-	return trim( wp_trim_words( wp_strip_all_tags( strip_shortcodes( $post->post_content ) ), $words, '…' ) );
-}
-
-/**
- * Focus area key for the Our Work ?area= filter: the term slug without a language
- * suffix (contract: VI terms may get "-vi" when Polylang needs distinct slugs).
- *
- * @param string $slug Term slug.
- */
-function hcwa_blocks_area_key( string $slug ): string {
-	return (string) preg_replace( '/-(vi|en)$/', '', $slug );
-}
-
-/**
- * Focus area keys of a post, for data-areas.
- *
- * @param int $post_id Post ID.
- * @return string[]
- */
-function hcwa_blocks_post_areas( int $post_id ): array {
-	$terms = get_the_terms( $post_id, 'hcwa_focus_area' );
-	if ( ! is_array( $terms ) ) {
-		return array();
-	}
-	$keys = array();
-	foreach ( $terms as $term ) {
-		if ( $term instanceof WP_Term ) {
-			$keys[] = hcwa_blocks_area_key( function_exists( 'hcwa_original_term_slug' ) ? hcwa_original_term_slug( $term ) : $term->slug );
-		}
-	}
-	return array_values( array_unique( $keys ) );
-}
-
-/**
- * ' data-areas="…"' or ''.
- *
- * @param string[] $areas Focus area keys.
- */
-function hcwa_blocks_areas_attr( array $areas ): string {
-	$areas = array_filter( array_map( 'strval', $areas ), 'strlen' );
-	return $areas ? ' data-areas="' . esc_attr( implode( ' ', $areas ) ) . '"' : '';
-}
-
-/* -------------------------------------------------------------------------
- * Impact strip
- * ---------------------------------------------------------------------- */
-
-/**
- * Decimal places to show: none for whole numbers, otherwise up to 2.
- *
- * @param float $value Number.
- */
-function hcwa_blocks_decimals( float $value ): int {
-	if ( floor( $value ) === $value ) {
-		return 0;
-	}
-	return abs( round( $value, 1 ) - $value ) < 0.000001 ? 1 : 2;
-}
-
-/**
- * The big number of a figure: formatted value + suffix, or the "[N]" placeholder token
- * (staging only: production never receives a figure without a verified value).
- *
- * @param array  $figure Figure from hcwa_get_impact_figures().
- * @param string $lang   'vi' or 'en'.
- */
-function hcwa_blocks_figure_value( array $figure, string $lang ): string {
-	$value = $figure['value'] ?? null;
-	if ( ! is_numeric( $value ) ) {
-		return '[N]';
-	}
-	$value = (float) $value;
-	return hcwa_number_in( $value, $lang, hcwa_blocks_decimals( $value ) ) . (string) ( $figure['suffix'] ?? '' );
-}
-
-/**
- * One impact figure (prototype figure()). Unverified figures carry the pending chip,
- * which the theme shows on staging only.
- *
- * @param array  $figure     Figure from hcwa_get_impact_figures().
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_figure_html( array $figure, string $lang, bool $production ): string {
-	$label = trim( hcwa_strip_leading_emoji( wp_strip_all_tags( (string) ( $figure['label'] ?? '' ) ) ) );
-	$year  = isset( $figure['year'] ) && is_numeric( $figure['year'] ) && (int) $figure['year'] > 0 ? (int) $figure['year'] : 0;
-
-	$html  = '<div class="figure"' . hcwa_blocks_draft_attr( $production, $label ) . '>';
-	$html .= '<p class="figure__value">' . esc_html( hcwa_blocks_figure_value( $figure, $lang ) ) . '</p>';
-	$html .= '<p class="figure__label">' . esc_html( $label );
-	if ( $year ) {
-		$html .= ' <span class="figure__year">(' . esc_html( (string) $year ) . ')</span>';
-	}
-	$html .= '</p>';
-	if ( empty( $figure['verified'] ) ) {
-		$html .= '<span class="chip-pending" data-pending>' . esc_html( hcwa_t_in( 'pending', $lang ) ) . '</span>';
-	}
-	return $html . '</div>';
-}
-
-/* -------------------------------------------------------------------------
- * Centers
- * ---------------------------------------------------------------------- */
-
-/**
- * Accent for the unit color band; unknown values fall back to HCWA blue.
- *
- * @param string $accent Stored hcwa_accent.
- */
-function hcwa_blocks_accent( string $accent ): string {
-	return in_array( $accent, array( 'green-bamboo', 'little-rose', 'cau-han', 'blue' ), true ) ? $accent : 'blue';
-}
-
-/**
- * Attachment IDs some posts point to through meta keys (the featured image by default),
- * each once. get_posts() has already loaded the posts' meta, so this reads no database.
- *
- * @param WP_Post[] $posts Posts (anything else is skipped).
- * @param string[]  $keys  Meta keys that hold one attachment ID.
+ * @param WP_Post[] $posts Posts.
+ * @param string[]  $keys  Meta keys holding one ID or a list of IDs.
  * @return int[]
  */
 function hcwa_blocks_attachment_ids( array $posts, array $keys = array( '_thumbnail_id' ) ): array {
@@ -612,690 +452,838 @@ function hcwa_blocks_attachment_ids( array $posts, array $keys = array( '_thumbn
 			continue;
 		}
 		foreach ( $keys as $key ) {
-			$id = (int) get_post_meta( $post->ID, $key, true );
-			if ( $id > 0 ) {
-				$ids[] = $id;
+			foreach ( hcwa_id_list( (array) get_post_meta( $post->ID, $key, true ) ) as $id ) {
+				$ids[ $id ] = true;
 			}
 		}
 	}
-	return array_values( array_unique( $ids ) );
+	return array_keys( $ids );
 }
 
 /**
- * Loads the attachments a block is about to print in one query for the posts, one for
- * their meta and one for their terms, instead of several per image: hcwa_image() reads
- * the approval flags and, for the identifiable-child check, the attachment's Polylang
- * translations (kept in terms); wp_get_attachment_image() reads the metadata for srcset.
- * _prime_post_caches() is core's (wp-includes/post.php:8502) and skips cached posts.
+ * Loads the attachments the posts print in one go (core's _prime_post_caches()).
  *
- * @param WP_Post[] $posts Posts whose attachments will be printed.
- * @param string[]  $keys  Meta keys that hold one attachment ID.
+ * @param WP_Post[] $posts Posts.
+ * @param string[]  $keys  Meta keys holding attachment IDs.
  */
 function hcwa_blocks_prime_attachments( array $posts, array $keys = array( '_thumbnail_id' ) ): void {
 	$ids = hcwa_blocks_attachment_ids( $posts, $keys );
-	if ( $ids && function_exists( '_prime_post_caches' ) ) {
+	if ( count( $ids ) > 1 && function_exists( '_prime_post_caches' ) ) {
 		_prime_post_caches( $ids, true, true );
 	}
 }
 
 /**
- * Data for one center card. The cover photo goes through hcwa_image() with the center as
- * context, so Little Rose never shows an identifiable child.
+ * Card title: tags and leading emoji removed (05-DESIGN: no emoji in UI).
  *
- * @param WP_Post $center Center in the current language.
- * @return array{title: string, url: string, since: int, serves: string, accent: string, areas: string[], image: string}
+ * @param WP_Post $post Post.
  */
-function hcwa_blocks_center_data( WP_Post $center ): array {
-	return array(
-		'title'  => hcwa_blocks_title( $center ),
-		'url'    => (string) get_permalink( $center ),
-		'since'  => (int) get_post_meta( $center->ID, 'hcwa_since_year', true ),
-		'serves' => hcwa_blocks_summary( $center, 20 ),
-		'accent' => (string) get_post_meta( $center->ID, 'hcwa_accent', true ),
-		'areas'  => hcwa_blocks_post_areas( $center->ID ),
-		'image'  => hcwa_image(
-			(int) get_post_thumbnail_id( $center ),
-			'medium_large',
-			array(
-				'loading' => 'lazy',
-				'sizes'   => '(min-width: 900px) 33vw, 82vw',
-			),
-			$center
-		),
-	);
-}
-
-/**
- * Center card (prototype centerCard()). Without an approved photo: nothing on the live
- * site, a labelled slot on staging.
- *
- * @param array  $c          From hcwa_blocks_center_data().
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_center_card( array $c, string $lang, bool $production ): string {
-	$title  = (string) ( $c['title'] ?? '' );
-	$serves = (string) ( $c['serves'] ?? '' );
-	$image  = (string) ( $c['image'] ?? '' );
-	$since  = (int) ( $c['since'] ?? 0 );
-
-	$html = '<article class="center-card" style="--unit:var(--color-unit-' . esc_attr( hcwa_blocks_accent( (string) ( $c['accent'] ?? '' ) ) ) . ')"' . hcwa_blocks_areas_attr( (array) ( $c['areas'] ?? array() ) ) . '>';
-
-	if ( '' !== $image ) {
-		$html .= '<div class="center-card__media">' . $image . '</div>';
-	} elseif ( ! $production ) {
-		$html .= '<div class="ph" role="img" aria-label="' . esc_attr( hcwa_t_in( 'blk_noPhoto', $lang ) ) . '" style="--ratio:4/3"><span class="ph__label">' . esc_html( hcwa_t_in( 'blk_noPhoto', $lang ) ) . '</span></div>';
-	}
-
-	$html .= '<div class="center-card__body">';
-	$html .= '<h3 class="center-card__name"><a href="' . esc_url( (string) ( $c['url'] ?? '' ) ) . '">' . esc_html( $title ) . '</a></h3>';
-	if ( $since > 0 ) {
-		$html .= '<p class="center-card__since">' . esc_html( hcwa_t_in( 'since', $lang ) . ' ' . $since ) . '</p>';
-	}
-	if ( '' !== $serves ) {
-		$html .= '<p class="center-card__serves"' . hcwa_blocks_draft_attr( $production, $serves ) . '>' . esc_html( $serves ) . '</p>';
-	}
-	// The whole card is the link (title ::after); this line is visual only.
-	$html .= '<span class="text-link" aria-hidden="true"><span>' . esc_html( hcwa_t_in( 'visitCenter', $lang ) ) . '</span>' . hcwa_blocks_icon( 'arrow' ) . '</span>';
-
-	return $html . '</div></article>';
+function hcwa_blocks_title( WP_Post $post ): string {
+	return trim( hcwa_strip_leading_emoji( hcwa_attr_text( (string) get_the_title( $post ) ) ) );
 }
 
 /* -------------------------------------------------------------------------
- * Programs
+ * Markup helpers (prototype partials/components.mjs)
  * ---------------------------------------------------------------------- */
 
 /**
- * Years of a program: "2023–2026", "2023–" (still running) or "".
- * Same rule as the theme's hcwa_theme_year_range().
+ * ' data-draft' when the flag is set, else ''.
  *
- * @param int $start Start year.
- * @param int $end   End year.
+ * @param bool $draft Whether the element carries draft text.
  */
-function hcwa_blocks_year_range( int $start, int $end ): string {
-	if ( $start <= 0 ) {
-		return $end > 0 ? (string) $end : '';
-	}
-	if ( $end <= 0 ) {
-		return $start . '–';
-	}
-	return $start === $end ? (string) $start : $start . '–' . $end;
+function hcwa_draft_attr( bool $draft ): string {
+	return $draft ? ' data-draft' : '';
 }
 
 /**
- * Sort rank of a program status: active first, then planned, then completed.
+ * Button (prototype button()): an <a> with href, else a <button type=button>.
  *
- * @param string $status Program status.
+ * @param string $href  Link target, '' for a button.
+ * @param string $label Visible text (plain).
+ * @param string $kind  primary | secondary | on-dusk.
+ * @param string $attrs Extra attributes, already escaped (' data-donate').
+ * @param string $cls   Extra classes.
  */
-function hcwa_blocks_status_rank( string $status ): int {
-	$ranks = array(
-		'active'    => 0,
-		'planned'   => 1,
-		'completed' => 2,
-	);
-	return $ranks[ $status ] ?? 3;
-}
-
-/**
- * Programs ordered by status rank, keeping the query order inside each status
- * (06-PAGES: "Show active ones first").
- *
- * @param array[] $rows Rows with a 'status' key.
- * @return array[]
- */
-function hcwa_blocks_sort_programs( array $rows ): array {
-	$indexed = array();
-	foreach ( array_values( $rows ) as $i => $row ) {
-		$indexed[] = array( hcwa_blocks_status_rank( (string) ( $row['status'] ?? '' ) ), $i, $row );
+function hcwa_button_html( string $href, string $label, string $kind = 'primary', string $attrs = '', string $cls = '' ): string {
+	$class = 'btn btn--' . $kind . ( '' !== $cls ? ' ' . $cls : '' );
+	$attrs = '' !== $attrs ? ' ' . ltrim( $attrs ) : '';
+	if ( '' !== $href ) {
+		return '<a class="' . esc_attr( $class ) . '" href="' . esc_url( $href ) . '"' . $attrs . '>' . esc_html( $label ) . '</a>';
 	}
-	usort(
-		$indexed,
-		static function ( $a, $b ) {
-			return array( $a[0], $a[1] ) <=> array( $b[0], $b[1] );
-		}
-	);
-	return array_map( static fn( $item ) => $item[2], $indexed );
+	return '<button class="' . esc_attr( $class ) . '" type="button"' . $attrs . '>' . esc_html( $label ) . '</button>';
 }
 
 /**
- * Status of a program: active, completed or planned. A program saved without one (or
- * with an unknown value) is active.
+ * Text link with arrow (prototype textLink()).
+ *
+ * @param string $href  Link target.
+ * @param string $label Visible text (plain).
+ * @param string $attrs Extra attributes, already escaped.
+ */
+function hcwa_text_link_html( string $href, string $label, string $attrs = '' ): string {
+	return '<a class="text-link" href="' . esc_url( $href ) . '"' . ( '' !== $attrs ? ' ' . ltrim( $attrs ) : '' ) . '><span>' . esc_html( $label ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>';
+}
+
+/**
+ * The dashed "Pending verification" chip; '' on production (no data-pending there).
+ */
+function hcwa_pending_chip_html(): string {
+	return hcwa_is_production() ? '' : '<span class="chip-pending" data-pending>' . esc_html( hcwa_t( 'pending' ) ) . '</span>';
+}
+
+/**
+ * Status pill (prototype statusPill()).
+ *
+ * @param string $status active | completed | planned.
+ */
+function hcwa_status_pill_html( string $status ): string {
+	return '<span class="status status--' . esc_attr( $status ) . '">' . esc_html( hcwa_t( 'status_' . $status ) ) . '</span>';
+}
+
+/**
+ * Breadcrumb (prototype breadcrumb()): Home, then the trail; the last item is the page.
+ *
+ * @param array<int, array{0: string, 1?: string}> $trail [label, url] pairs, the last without url.
+ */
+function hcwa_breadcrumb_html( array $trail ): string {
+	$items = '';
+	$last  = count( $trail ) - 1;
+	foreach ( array_values( $trail ) as $i => $step ) {
+		$label  = (string) ( $step[0] ?? '' );
+		$items .= '<li>' . ( $i === $last || empty( $step[1] ) ? '<span aria-current="page">' . esc_html( $label ) . '</span>' : '<a href="' . esc_url( (string) $step[1] ) . '">' . esc_html( $label ) . '</a>' ) . '</li>';
+	}
+	return '<nav class="breadcrumb" aria-label="' . esc_attr( hcwa_t( 'breadcrumb' ) ) . '">' . "\n  <ol>\n    "
+		. '<li><a href="' . esc_url( hcwa_page_url( 'home' ) ) . '">' . esc_html( hcwa_t( 'home' ) ) . '</a></li>' . "\n    "
+		. $items . "\n  </ol>\n</nav>";
+}
+
+/**
+ * The WCAG 2.2.2 pause button (prototype pauseToggle()).
+ *
+ * @param string $cls       Extra class.
+ * @param string $text_safe data-text-safe value, '' for none.
+ */
+function hcwa_pause_toggle_html( string $cls = '', string $text_safe = '' ): string {
+	return '<button class="pause-toggle' . ( '' !== $cls ? ' ' . esc_attr( $cls ) : '' ) . '" type="button" data-paused="false" data-motion-toggle' . ( '' !== $text_safe ? ' data-text-safe="' . esc_attr( $text_safe ) . '"' : '' ) . ">\n  "
+		. hcwa_icon( 'pause', 'icon pause-toggle__pause' ) . hcwa_icon( 'play', 'icon pause-toggle__play' ) . '<span class="pause-toggle__label">' . esc_html( hcwa_t( 'motionPause' ) ) . "</span>\n</button>";
+}
+
+/**
+ * Unit colour and emblem of a center for inline style.
+ *
+ * @param array $c From hcwa_center_view().
+ */
+function hcwa_unit_style( array $c ): string {
+	return '--unit:' . $c['color'];
+}
+
+/* -------------------------------------------------------------------------
+ * Data readers
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Published centers in the current language, in menu order.
+ *
+ * @return WP_Post[]
+ */
+function hcwa_blocks_centers(): array {
+	static $cache = array();
+	$lang = hcwa_lang();
+	if ( ! isset( $cache[ $lang ] ) ) {
+		$args            = hcwa_blocks_query_args( 'hcwa_center', 50 );
+		$args['orderby'] = array(
+			'menu_order' => 'ASC',
+			'ID'         => 'ASC',
+		);
+		$cache[ $lang ] = array_values( array_filter( (array) get_posts( $args ), static fn( $p ) => $p instanceof WP_Post ) );
+	}
+	return $cache[ $lang ];
+}
+
+/**
+ * Published programs in the current language: active first, then completed, then planned,
+ * each in menu order (prototype STATUSES order).
+ *
+ * @return WP_Post[]
+ */
+function hcwa_blocks_programs(): array {
+	static $cache = array();
+	$lang = hcwa_lang();
+	if ( ! isset( $cache[ $lang ] ) ) {
+		$args            = hcwa_blocks_query_args( 'hcwa_program', 100 );
+		$args['orderby'] = array(
+			'menu_order' => 'ASC',
+			'ID'         => 'ASC',
+		);
+		$posts = array_values( array_filter( (array) get_posts( $args ), static fn( $p ) => $p instanceof WP_Post ) );
+		$rank  = array(
+			'active'    => 0,
+			'completed' => 1,
+			'planned'   => 2,
+		);
+		$order = array_flip( array_map( static fn( WP_Post $p ) => $p->ID, $posts ) );
+		usort(
+			$posts,
+			static fn( WP_Post $a, WP_Post $b ) => array( $rank[ hcwa_program_status( $a->ID ) ] ?? 3, $order[ $a->ID ] ) <=> array( $rank[ hcwa_program_status( $b->ID ) ] ?? 3, $order[ $b->ID ] )
+		);
+		$cache[ $lang ] = $posts;
+	}
+	return $cache[ $lang ];
+}
+
+/**
+ * A program's status (shared field), active by default.
  *
  * @param int $program_id Program ID.
  */
-function hcwa_blocks_program_status( int $program_id ): string {
-	$status = (string) hcwa_meta( $program_id, 'hcwa_status' );
+function hcwa_program_status( int $program_id ): string {
+	$status = (string) get_post_meta( $program_id, 'hcwa_status', true );
 	return in_array( $status, array( 'active', 'completed', 'planned' ), true ) ? $status : 'active';
 }
 
 /**
- * The programs a list shows: those with the wanted status, active first (query order
- * inside a status), at most $limit. Reads only the status, from meta get_posts() already
- * loaded, so rows (partners, links, summaries) are built just for the programs shown.
+ * Focus area key of a term slug (education-vi → education); '' when not one of the four.
  *
- * @param array  $programs Programs in query order (WP_Post; anything else is skipped).
- * @param string $status   'any', 'active' or 'completed'.
- * @param int    $limit    Maximum number of programs.
- * @return WP_Post[]
+ * @param string $slug Term slug.
  */
-function hcwa_blocks_pick_programs( array $programs, string $status, int $limit ): array {
-	$rows = array();
-	foreach ( $programs as $program ) {
-		if ( ! $program instanceof WP_Post ) {
-			continue;
+function hcwa_area_key( string $slug ): string {
+	$key = (string) preg_replace( '/-(vi|en)$/', '', $slug );
+	return in_array( $key, hcwa_area_keys(), true ) ? $key : '';
+}
+
+/**
+ * The focus areas of a post, as keys in the order they were given.
+ *
+ * @param int $post_id Post ID.
+ * @return string[]
+ */
+function hcwa_post_areas( int $post_id ): array {
+	$terms = get_the_terms( $post_id, 'hcwa_focus_area' );
+	$keys  = array();
+	foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+		$key = hcwa_area_key( (string) $term->slug );
+		if ( '' === $key && function_exists( 'hcwa_original_term_slug' ) ) {
+			$key = hcwa_area_key( hcwa_original_term_slug( $term ) );
 		}
-		$program_status = hcwa_blocks_program_status( $program->ID );
-		if ( 'any' === $status || $status === $program_status ) {
-			$rows[] = array(
-				'post'   => $program,
-				'status' => $program_status,
+		$keys[] = $key;
+	}
+	// In the order the areas were given (the taxonomy sorts by term_order).
+	return array_values( array_unique( array_filter( $keys ) ) );
+}
+
+/**
+ * The four focus areas in the current language, in display order: key, name and text as
+ * they print. An area without a term in this language is left out.
+ *
+ * @return array<int, array{key: string, name: array, text: array}>
+ */
+function hcwa_blocks_areas(): array {
+	$terms = get_terms(
+		array(
+			'taxonomy'   => 'hcwa_focus_area',
+			'hide_empty' => false,
+			'lang'       => function_exists( 'pll_get_term' ) ? hcwa_lang() : '',
+		)
+	);
+	$by = array();
+	foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+		$key = hcwa_area_key( (string) $term->slug );
+		if ( '' === $key && function_exists( 'hcwa_original_term_slug' ) ) {
+			$key = hcwa_area_key( hcwa_original_term_slug( $term ) );
+		}
+		if ( '' !== $key && ! isset( $by[ $key ] ) ) {
+			$by[ $key ] = array(
+				'key'  => $key,
+				'name' => hcwa_draft_text( hcwa_attr_text( (string) $term->name ) ),
+				'text' => hcwa_draft_text( hcwa_attr_text( (string) $term->description ) ),
 			);
 		}
 	}
-	return array_column( array_slice( hcwa_blocks_sort_programs( $rows ), 0, max( 0, $limit ) ), 'post' );
-}
-
-/**
- * Partner IDs (the stored Vietnamese originals) of some programs, each once.
- *
- * @param WP_Post[] $programs Programs.
- * @return int[]
- */
-function hcwa_blocks_partner_ids( array $programs ): array {
-	$ids = array();
-	foreach ( $programs as $program ) {
-		$ids = array_merge( $ids, hcwa_id_list( get_post_meta( $program->ID, 'hcwa_partner_ids', true ) ) );
-	}
-	return array_values( array_unique( $ids ) );
-}
-
-/**
- * Loads the partners of the programs shown in at most three queries in all, instead of
- * two per partner in hcwa_blocks_program_data() (translation lookup, then status and title).
- *
- * @param WP_Post[] $programs Programs about to be shown.
- */
-function hcwa_blocks_prime_partners( array $programs ): void {
-	$ids = hcwa_blocks_partner_ids( $programs );
-	if ( ! $ids || ! function_exists( '_prime_post_caches' ) ) {
-		return;
-	}
-	// The originals with their terms: Polylang keeps a post's language and translation group in terms.
-	_prime_post_caches( $ids, true, false );
-	if ( function_exists( 'pll_get_post' ) ) {
-		$lang       = hcwa_lang();
-		$translated = array_filter( array_map( static fn( int $id ): int => (int) pll_get_post( $id, $lang ), $ids ) );
-		if ( $translated ) {
-			_prime_post_caches( array_values( array_unique( $translated ) ), false, false );
+	$out = array();
+	foreach ( hcwa_area_keys() as $key ) {
+		if ( isset( $by[ $key ] ) ) {
+			$out[] = $by[ $key ];
 		}
 	}
+	return $out;
 }
 
 /**
- * Data for one program row. Partner names come from the shared hcwa_partner_ids (VI
- * originals), shown in the current language when a translation exists.
+ * A meta text as it prints.
+ *
+ * @param int    $post_id Post ID.
+ * @param string $key     Meta key.
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_meta_text( int $post_id, string $key ): array {
+	return hcwa_draft_text( hcwa_attr_text( (string) get_post_meta( $post_id, $key, true ) ) );
+}
+
+/**
+ * A one-item-per-line meta as it prints: each line through hcwa_draft_text(), empty lines
+ * (draft on production) dropped.
+ *
+ * @param int    $post_id Post ID.
+ * @param string $key     Meta key.
+ * @return array<int, array{text: string, draft: bool}>
+ */
+function hcwa_meta_text_lines( int $post_id, string $key ): array {
+	$out = array();
+	foreach ( hcwa_meta_lines( $post_id, $key ) as $line ) {
+		$shown = hcwa_draft_text( hcwa_attr_text( $line ) );
+		if ( '' !== $shown['text'] ) {
+			$out[] = $shown;
+		}
+	}
+	return $out;
+}
+
+/**
+ * The "since" line of a center: the verified year (both environments), else off production
+ * the token "{since} [năm]" marked draft; null on production without a verified year.
+ *
+ * @param int $center_id Center ID.
+ * @return array{text: string, draft: bool}|null
+ */
+function hcwa_center_since( int $center_id ): ?array {
+	$year     = (int) get_post_meta( $center_id, 'hcwa_since_year', true );
+	$verified = in_array( get_post_meta( $center_id, 'hcwa_since_verified', true ), array( true, 1, '1', 'true' ), true );
+	if ( $year > 0 && $verified ) {
+		return array(
+			'text'  => hcwa_t( 'since' ) . ' ' . $year,
+			'draft' => false,
+		);
+	}
+	if ( hcwa_is_production() ) {
+		return null;
+	}
+	return array(
+		'text'  => hcwa_t( 'since' ) . ' ' . ( $year > 0 ? (string) $year : hcwa_t( 'blk_yearToken' ) ),
+		'draft' => true,
+	);
+}
+
+/**
+ * Everything the templates print about one center.
+ *
+ * @param WP_Post $center Center in the current language.
+ * @return array
+ */
+function hcwa_center_view( WP_Post $center ): array {
+	static $cache = array();
+	if ( isset( $cache[ $center->ID ] ) ) {
+		return $cache[ $center->ID ];
+	}
+	$unit      = hcwa_center_unit( $center->ID );
+	$protected = hcwa_center_is_protected( $center->ID );
+	$short     = hcwa_meta_text( $center->ID, 'hcwa_short_name' );
+	$name      = hcwa_draft_text( hcwa_blocks_title( $center ) );
+
+	$cache[ $center->ID ] = array(
+		'id'        => $center->ID,
+		'post'      => $center,
+		'unit'      => $unit,
+		'key'       => '' !== $unit ? $unit : (string) $center->post_name,
+		'color'     => hcwa_unit_color( $unit ),
+		'emblem'    => hcwa_unit_emblem( $unit ),
+		'protected' => $protected,
+		'name'      => $name,
+		'short'     => '' !== $short['text'] ? $short : $name,
+		'url'       => (string) get_permalink( $center ),
+		'serves'    => hcwa_meta_text( $center->ID, 'hcwa_who_we_serve' ),
+		'location'  => $protected ? array(
+			'text'  => '',
+			'draft' => false,
+		) : hcwa_meta_text( $center->ID, 'hcwa_location' ),
+		'areas'     => hcwa_post_areas( $center->ID ),
+		'since'     => hcwa_center_since( $center->ID ),
+	);
+	return $cache[ $center->ID ];
+}
+
+/**
+ * The years line of a program: start–end when both are set, else the years label (tokens
+ * until HCWA confirms the years).
+ *
+ * @param int $program_id Program ID.
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_program_years( int $program_id ): array {
+	$start = (int) get_post_meta( $program_id, 'hcwa_start_year', true );
+	$end   = (int) get_post_meta( $program_id, 'hcwa_end_year', true );
+	if ( $start > 0 && $end > 0 ) {
+		return array(
+			'text'  => $start . '–' . $end,
+			'draft' => false,
+		);
+	}
+	return hcwa_meta_text( $program_id, 'hcwa_years_label' );
+}
+
+/**
+ * Everything the templates print about one program.
  *
  * @param WP_Post $program Program in the current language.
- * @return array{title: string, url: string, status: string, years: string, summary: string, partners: string[], areas: string[]}
+ * @return array
  */
-function hcwa_blocks_program_data( WP_Post $program ): array {
+function hcwa_program_view( WP_Post $program ): array {
+	static $cache = array();
+	if ( isset( $cache[ $program->ID ] ) ) {
+		return $cache[ $program->ID ];
+	}
 	$partners = array();
-	foreach ( hcwa_id_list( get_post_meta( $program->ID, 'hcwa_partner_ids', true ) ) as $partner_id ) {
-		$partner_id = hcwa_blocks_in_lang( $partner_id );
-		if ( 'publish' === get_post_status( $partner_id ) ) {
-			$name = trim( wp_strip_all_tags( get_the_title( $partner_id ) ) );
-			if ( '' !== $name ) {
-				$partners[] = $name;
-			}
+	foreach ( hcwa_id_list( get_post_meta( $program->ID, 'hcwa_partner_ids', true ) ) as $id ) {
+		$local = hcwa_blocks_in_lang( $id );
+		if ( 'publish' === get_post_status( $local ) ) {
+			$partners[] = hcwa_attr_text( (string) get_the_title( $local ) );
 		}
 	}
-
-	return array(
-		'title'    => hcwa_blocks_title( $program ),
+	$centers = array();
+	foreach ( hcwa_program_center_ids( $program->ID ) as $id ) {
+		$post = get_post( $id );
+		if ( $post instanceof WP_Post ) {
+			$centers[] = hcwa_center_view( $post );
+		}
+	}
+	$cache[ $program->ID ] = array(
+		'id'       => $program->ID,
+		'post'     => $program,
+		'name'     => hcwa_draft_text( hcwa_blocks_title( $program ) ),
+		'full'     => hcwa_meta_text( $program->ID, 'hcwa_full_name' ),
 		'url'      => (string) get_permalink( $program ),
-		'status'   => hcwa_blocks_program_status( $program->ID ),
-		'years'    => hcwa_blocks_year_range( (int) get_post_meta( $program->ID, 'hcwa_start_year', true ), (int) get_post_meta( $program->ID, 'hcwa_end_year', true ) ),
-		'summary'  => hcwa_blocks_summary( $program, 28 ),
-		'partners' => $partners,
-		'areas'    => hcwa_blocks_post_areas( $program->ID ),
+		'status'   => hcwa_program_status( $program->ID ),
+		'years'    => hcwa_program_years( $program->ID ),
+		'summary'  => hcwa_meta_text( $program->ID, 'hcwa_summary' ),
+		'partners' => array_values( array_filter( $partners, 'strlen' ) ),
+		'centers'  => $centers,
+		'areas'    => hcwa_post_areas( $program->ID ),
 	);
-}
-
-/**
- * Program row (prototype programRow()).
- *
- * @param array  $p          From hcwa_blocks_program_data().
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_program_row( array $p, string $lang, bool $production ): string {
-	$status   = in_array( $p['status'] ?? '', array( 'active', 'completed', 'planned' ), true ) ? $p['status'] : 'active';
-	$summary  = (string) ( $p['summary'] ?? '' );
-	$years    = (string) ( $p['years'] ?? '' );
-	$partners = array_filter( array_map( 'strval', (array) ( $p['partners'] ?? array() ) ), 'strlen' );
-
-	$html  = '<li class="program-row"' . hcwa_blocks_areas_attr( (array) ( $p['areas'] ?? array() ) ) . ' data-status="' . esc_attr( $status ) . '">';
-	$html .= '<div class="program-row__meta"><span class="status status--' . esc_attr( $status ) . '">' . esc_html( hcwa_t_in( 'status_' . $status, $lang ) ) . '</span>';
-	if ( '' !== $years ) {
-		$html .= '<span class="program-row__years">' . esc_html( $years ) . '</span>';
-	}
-	$html .= '</div>';
-	$html .= '<div class="program-row__main">';
-	$html .= '<h3 class="program-row__name"><a href="' . esc_url( (string) ( $p['url'] ?? '' ) ) . '">' . esc_html( (string) ( $p['title'] ?? '' ) ) . '</a></h3>';
-	if ( '' !== $summary ) {
-		$html .= '<p' . hcwa_blocks_draft_attr( $production, $summary ) . '>' . esc_html( $summary ) . '</p>';
-	}
-	if ( $partners ) {
-		$html .= '<p class="program-row__partners">' . esc_html( implode( ', ', $partners ) ) . '</p>';
-	}
-	$html .= '</div>';
-	$html .= hcwa_blocks_icon( 'arrow', 'icon program-row__arrow' );
-
-	return $html . '</li>';
+	return $cache[ $program->ID ];
 }
 
 /* -------------------------------------------------------------------------
- * Reports
+ * Shared components (11-WP-PORT.md 2.6)
  * ---------------------------------------------------------------------- */
 
 /**
- * Report types (contract meta hcwa_report_type).
+ * Door chip of a center in a program row (prototype doorChip(), 3.4). Every chip carries
+ * data-unit (2.8). A protected center's chip before the door is approved on production:
+ * the short name only, no door span and no --unit.
  *
- * @return string[]
+ * @param array $c From hcwa_center_view().
  */
-function hcwa_blocks_report_types(): array {
-	return array( 'annual', 'financial', 'program', 'policy' );
+function hcwa_door_chip_html( array $c ): string {
+	$name = esc_html( $c['short']['text'] );
+	if ( $c['protected'] && ! hcwa_little_rose_door_allowed() ) {
+		return '<li class="door-chip" data-unit="' . esc_attr( $c['key'] ) . '">' . $name . '</li>';
+	}
+	return '<li class="door-chip" data-unit="' . esc_attr( $c['key'] ) . '" style="' . esc_attr( hcwa_unit_style( $c ) ) . '"><span class="door-chip__door" aria-hidden="true"></span>' . $name . '</li>';
 }
 
 /**
- * Rows ordered by 'year', newest first; rows without a year (0) last. The incoming order
- * (newest published first) breaks ties.
+ * Program row (prototype programRow()): rows, never cards; its areas as a strip of tiles;
+ * the centers as door chips.
  *
- * @param array[] $rows Rows with a 'year' key.
- * @return array[]
+ * @param array $p From hcwa_program_view().
  */
-function hcwa_blocks_sort_by_year( array $rows ): array {
-	$indexed = array();
-	foreach ( array_values( $rows ) as $i => $row ) {
-		$year      = (int) ( $row['year'] ?? 0 );
-		$indexed[] = array( $year > 0 ? 0 : 1, -$year, $i, $row );
+function hcwa_program_row_html( array $p ): string {
+	$art   = hcwa_art();
+	$strip = $p['areas'] ? $art->gach_strip( $p['areas'], 'gach-strip program-row__tiles' ) : '';
+	$facts = '';
+	if ( $p['partners'] || $p['centers'] ) {
+		$facts = "\n    " . '<dl class="program-row__facts">' . "\n      "
+			. ( $p['partners'] ? '<div><dt>' . esc_html( hcwa_t( 'fundedBy' ) ) . '</dt><dd>' . esc_html( implode( ', ', $p['partners'] ) ) . '</dd></div>' : '' ) . "\n      "
+			. ( $p['centers'] ? '<div><dt>' . esc_html( hcwa_t( 'runsAt' ) ) . '</dt><dd><ul class="door-chips">' . implode( '', array_map( 'hcwa_door_chip_html', $p['centers'] ) ) . '</ul></dd></div>' : '' ) . "\n    "
+			. '</dl>';
 	}
-	usort(
-		$indexed,
-		static function ( $a, $b ) {
-			return array( $a[0], $a[1], $a[2] ) <=> array( $b[0], $b[1], $b[2] );
-		}
-	);
-	return array_map( static fn( $item ) => $item[3], $indexed );
+	$years = '' !== $p['years']['text'] ? '<span class="program-row__years"' . hcwa_draft_attr( $p['years']['draft'] ) . '>' . esc_html( $p['years']['text'] ) . '</span>' : '';
+	$sum   = '' !== $p['summary']['text'] ? '<p class="program-row__summary"' . hcwa_draft_attr( $p['summary']['draft'] ) . '>' . esc_html( $p['summary']['text'] ) . '</p>' : '';
+
+	return '<li class="program-row" data-areas="' . esc_attr( implode( ' ', $p['areas'] ) ) . '" data-status="' . esc_attr( $p['status'] ) . '">' . "\n  "
+		. '<div class="program-row__head">' . "\n    "
+		. ( '' !== $strip ? '<span class="program-row__floor" aria-hidden="true">' . $art->gach_sprite_once() . $strip . '</span>' : '' ) . "\n    "
+		. '<p class="program-row__meta">' . hcwa_status_pill_html( $p['status'] ) . $years . '</p>' . "\n    "
+		. '<h3 class="program-row__name"><a href="' . esc_url( $p['url'] ) . '">' . esc_html( hcwa_vi_keep( $p['name']['text'] ) ) . '</a></h3>' . "\n  "
+		. '</div>' . "\n  "
+		. '<div class="program-row__body">' . "\n    "
+		. $sum
+		. $facts . "\n  "
+		. '</div>' . "\n  "
+		. hcwa_icon( 'arrow', 'icon program-row__arrow' ) . "\n"
+		. '</li>';
 }
 
 /**
- * File size in the page language: "820 KB", "1,2 MB" (vi) / "1.2 MB" (en); '' for 0.
+ * Dated post (prototype datedPost(), 2.8: local permalinks, no external label or icon).
  *
- * @param int    $bytes Size in bytes.
- * @param string $lang  'vi' or 'en'.
+ * @param WP_Post $post Post in the current language.
  */
-function hcwa_blocks_file_size( int $bytes, string $lang ): string {
-	if ( $bytes <= 0 ) {
-		return '';
-	}
-	$kb = $bytes / 1024;
-	if ( $kb < 1000 ) {
-		return hcwa_number_in( max( 1, (int) round( $kb ) ), $lang ) . ' KB';
-	}
-	$mb = $kb / 1024;
-	return hcwa_number_in( round( $mb, 1 ), $lang, $mb < 10 ? 1 : 0 ) . ' MB';
+function hcwa_dated_post_html( WP_Post $post ): string {
+	$date  = substr( (string) $post->post_date, 0, 10 );
+	$parts = hcwa_date_parts( $date );
+	$title = hcwa_draft_text( hcwa_blocks_title( $post ) );
+	$cat   = hcwa_post_category_label( $post );
+	return '<li class="dated">' . "\n  "
+		. '<time class="dated__date" datetime="' . esc_attr( $date ) . '"><span class="dated__dm">' . esc_html( $parts[0] ) . '</span><span class="sr-only">' . esc_html( $parts[1] ) . '</span><span class="dated__y">' . esc_html( $parts[2] ) . '</span></time>' . "\n  "
+		. '<div class="dated__body">' . "\n    "
+		. ( '' !== $cat ? '<p class="dated__cat">' . esc_html( $cat ) . '</p>' : '' ) . "\n    "
+		. '<h3 class="dated__title"' . hcwa_draft_attr( $title['draft'] ) . '><a href="' . esc_url( (string) get_permalink( $post ) ) . '">' . esc_html( $title['text'] ) . '</a></h3>' . "\n  "
+		. '</div>' . "\n"
+		. '</li>';
 }
 
 /**
- * Document badge: "PDF · Tiếng Việt". Language names are endonyms with their own lang
- * attribute (07-BILINGUAL: every PDF link shows its language).
+ * The section label of a post: news, story, event or announcement (cat_* keys), else the
+ * first category's name.
  *
- * @param string $format   File extension, e.g. 'pdf'.
- * @param string $doc_lang vi | en | both.
+ * @param WP_Post $post Post.
  */
-function hcwa_blocks_doc_badge( string $format, string $doc_lang ): string {
-	$langs = 'both' === $doc_lang ? array( 'vi', 'en' ) : ( in_array( $doc_lang, array( 'vi', 'en' ), true ) ? array( $doc_lang ) : array() );
-	$parts = array();
-	foreach ( $langs as $lang ) {
-		$parts[] = '<span lang="' . esc_attr( $lang ) . '">' . esc_html( hcwa_language_name( $lang ) ) . '</span>';
-	}
-	$format = '' !== $format ? strtoupper( $format ) : 'PDF';
-	return '<span class="badge">' . esc_html( $format ) . ( $parts ? ' · ' . implode( ', ', $parts ) : '' ) . '</span>';
-}
-
-/**
- * Data for one report row. The link goes to the file when there is one.
- *
- * @param WP_Post $report Report in the current language.
- * @return array{title: string, url: string, year: int, type: string, doc_lang: string, format: string, bytes: int, cover: string}
- */
-function hcwa_blocks_report_data( WP_Post $report ): array {
-	$file_id  = (int) get_post_meta( $report->ID, 'hcwa_file_id', true );
-	$file_url = $file_id > 0 ? (string) wp_get_attachment_url( $file_id ) : '';
-	$format   = '' !== $file_url ? strtolower( (string) pathinfo( (string) wp_parse_url( $file_url, PHP_URL_PATH ), PATHINFO_EXTENSION ) ) : '';
-
-	// WordPress stores the size at upload; read the file only for older uploads.
-	$meta  = $file_id > 0 ? wp_get_attachment_metadata( $file_id ) : false;
-	$bytes = is_array( $meta ) && ! empty( $meta['filesize'] ) ? (int) $meta['filesize'] : 0;
-	if ( ! $bytes && $file_id > 0 ) {
-		$path  = (string) get_attached_file( $file_id );
-		$bytes = ( '' !== $path && is_readable( $path ) ) ? (int) filesize( $path ) : 0;
-	}
-
-	return array(
-		'title'    => hcwa_blocks_title( $report ),
-		'url'      => '' !== $file_url ? $file_url : (string) get_permalink( $report ),
-		'year'     => (int) get_post_meta( $report->ID, 'hcwa_year', true ),
-		'type'     => (string) hcwa_meta( $report->ID, 'hcwa_report_type' ),
-		'doc_lang' => (string) hcwa_meta( $report->ID, 'hcwa_doc_language' ),
-		'format'   => '' !== $format ? $format : 'pdf',
-		'bytes'    => $bytes,
-		'cover'    => hcwa_image(
-			(int) get_post_thumbnail_id( $report ),
-			'thumbnail',
-			array(
-				'class'   => 'report-row__cover',
-				'loading' => 'lazy',
-				'alt'     => '',
-			),
-			$report
-		),
-	);
-}
-
-/**
- * Report row (prototype reportRow(), theme template-parts/report-row.php).
- *
- * @param array  $r          From hcwa_blocks_report_data().
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_report_row( array $r, string $lang, bool $production ): string {
-	$title  = (string) ( $r['title'] ?? '' );
-	$type   = in_array( $r['type'] ?? '', hcwa_blocks_report_types(), true ) ? $r['type'] : '';
-	$year   = (int) ( $r['year'] ?? 0 );
-	$format = (string) ( $r['format'] ?? 'pdf' );
-	$meta   = implode( ' · ', array_filter( array( $year > 0 ? (string) $year : '', '' !== $type ? hcwa_t_in( 'blk_type_' . $type, $lang ) : '' ), 'strlen' ) );
-	$cover  = (string) ( $r['cover'] ?? '' );
-
-	$html = '<li class="report-row"' . hcwa_blocks_draft_attr( $production, $title ) . '>';
-	if ( '' !== $cover ) {
-		$html .= $cover;
-	} else {
-		$html .= '<span class="report-row__cover report-row__cover--empty" aria-hidden="true">' . esc_html( strtoupper( '' !== $format ? $format : 'pdf' ) ) . '</span>';
-	}
-	$html .= '<div><h3 class="report-row__title"><a href="' . esc_url( (string) ( $r['url'] ?? '' ) ) . '">' . esc_html( $title ) . '</a></h3>';
-	if ( '' !== $meta ) {
-		$html .= '<p class="report-row__meta">' . esc_html( $meta ) . '</p>';
-	}
-	$html .= '</div>';
-	$html .= hcwa_blocks_doc_badge( $format, (string) ( $r['doc_lang'] ?? '' ) );
-	$html .= '<span class="report-row__size">' . esc_html( hcwa_blocks_file_size( (int) ( $r['bytes'] ?? 0 ), $lang ) ) . '</span>';
-
-	return $html . '</li>';
-}
-
-/* -------------------------------------------------------------------------
- * Partners
- * ---------------------------------------------------------------------- */
-
-/**
- * Data for one partner logo, or null when it must not show. Live site: only with
- * "Permission to show the logo" and a logo (contract rule 5). Staging: every partner,
- * marked when permission is missing.
- *
- * @param WP_Post $partner    Partner in the current language.
- * @param bool    $production Whether this is the live site.
- * @return array{name: string, url: string, logo: string, permitted: bool}|null
- */
-function hcwa_blocks_partner_data( WP_Post $partner, bool $production ): ?array {
-	$permitted = hcwa_partner_logo_allowed( $partner->ID, true );
-	if ( $production && ! $permitted ) {
-		return null;
-	}
-
-	$name    = trim( wp_strip_all_tags( get_the_title( $partner ) ) );
-	$logo_id = (int) get_post_thumbnail_id( $partner );
-	$logo    = $logo_id > 0 ? (string) wp_get_attachment_image(
-		$logo_id,
-		'medium',
-		false,
-		array(
-			'class'   => 'partner-logo',
-			'alt'     => $name,
-			'loading' => 'lazy',
-		)
-	) : '';
-
-	if ( $production && '' === $logo ) {
-		return null;
-	}
-
-	return array(
-		'name'      => $name,
-		'url'       => (string) get_post_meta( $partner->ID, 'hcwa_website', true ),
-		'logo'      => $logo,
-		'permitted' => $permitted,
-	);
-}
-
-/**
- * One logo in the wall. The logo's alt text is the partner name (05-DESIGN).
- *
- * @param array  $p    From hcwa_blocks_partner_data().
- * @param string $lang 'vi' or 'en'.
- */
-function hcwa_blocks_partner_item( array $p, string $lang ): string {
-	$name = (string) ( $p['name'] ?? '' );
-	$logo = (string) ( $p['logo'] ?? '' );
-	$url  = (string) ( $p['url'] ?? '' );
-
-	if ( '' !== $logo ) {
-		$inner = '' !== $url ? '<a href="' . esc_url( $url ) . '">' . $logo . '</a>' : $logo;
-	} else {
-		$inner = '<span class="ph ph--logo" role="img" aria-label="' . esc_attr( $name ) . '"><span class="ph__label">' . esc_html( $name ) . '</span></span>';
-	}
-	if ( empty( $p['permitted'] ) ) {
-		$inner .= ' <span class="chip-pending" data-pending>' . esc_html( hcwa_t_in( 'blk_logoPermission', $lang ) ) . '</span>';
-	}
-
-	return '<li>' . $inner . '</li>';
-}
-
-/* -------------------------------------------------------------------------
- * News
- * ---------------------------------------------------------------------- */
-
-/**
- * Seeded post categories: logical key => slugs in both languages (contract Names). The map
- * lives in core (hcwa_category_slugs()), shared with the theme and `wp hcwa coverage`.
- *
- * @return array<string, string[]>
- */
-function hcwa_blocks_category_slugs(): array {
-	return hcwa_category_slugs();
-}
-
-/**
- * Logical key for a category from its slugs (any language, with or without a -vi/-en
- * suffix): a seeded section, 'stories' for a legacy story category, or '' for any other
- * category (hcwa_category_key()).
- *
- * @param string[] $slugs Slugs of one category and its translations.
- */
-function hcwa_blocks_category_key( array $slugs ): string {
-	return hcwa_category_key( $slugs );
-}
-
-/**
- * hcwa_t() key of the card label for a category key ('' if none).
- *
- * @param string $key Logical category key.
- */
-function hcwa_blocks_category_label_key( string $key ): string {
-	$map = array(
+function hcwa_post_category_label( WP_Post $post ): string {
+	$map      = array(
 		'news'          => 'cat_news',
 		'stories'       => 'cat_story',
 		'events'        => 'cat_event',
 		'announcements' => 'blk_catAnnouncement',
 	);
-	return $map[ $key ] ?? '';
-}
-
-/**
- * Category of a post for its card: the first seeded category, else the first real one.
- *
- * @param WP_Post $post Post.
- * @return array{key: string, label: string}
- */
-function hcwa_blocks_post_category( WP_Post $post ): array {
 	$fallback = '';
 	foreach ( (array) get_the_category( $post->ID ) as $term ) {
-		if ( ! $term instanceof WP_Term ) {
-			continue;
-		}
-		if ( 'uncategorized' === $term->slug && (int) get_option( 'default_category' ) === (int) $term->term_id ) {
+		if ( ! $term instanceof WP_Term || ( 'uncategorized' === $term->slug && (int) get_option( 'default_category' ) === (int) $term->term_id ) ) {
 			continue;
 		}
 		$slugs = array( $term->slug );
 		if ( function_exists( 'hcwa_original_term_slug' ) ) {
 			$slugs[] = hcwa_original_term_slug( $term );
 		}
-		$key = hcwa_blocks_category_key( $slugs );
-		if ( '' !== $key ) {
-			return array(
-				'key'   => $key,
-				'label' => hcwa_t( hcwa_blocks_category_label_key( $key ) ),
-			);
+		$key = hcwa_category_key( $slugs );
+		if ( isset( $map[ $key ] ) ) {
+			return hcwa_t( $map[ $key ] );
 		}
 		if ( '' === $fallback ) {
-			$fallback = $term->name;
+			$fallback = hcwa_attr_text( (string) $term->name );
 		}
 	}
-	return array(
-		'key'   => '',
-		'label' => $fallback,
+	return $fallback;
+}
+
+/**
+ * The dusk still above a dusk band (prototype duskStill()): '' until the still is rendered.
+ */
+function hcwa_dusk_still_html(): string {
+	$still = hcwa_art()->still( 'dusk', array( 'cls' => 'dusk__img' ) );
+	return '' !== $still ? '<div class="dusk__still" aria-hidden="true">' . $still . '</div>' : '';
+}
+
+/**
+ * Dusk band (prototype duskBand(), 2.6).
+ *
+ * @param array $a anchor (section id, '' for none), title_id, title (plain), draft, body (HTML).
+ */
+function hcwa_dusk_band_html( array $a ): string {
+	$anchor   = (string) ( $a['anchor'] ?? '' );
+	$title_id = (string) ( $a['title_id'] ?? '' );
+	$title    = (string) ( $a['title'] ?? '' );
+	$label    = '' !== $title ? ' aria-labelledby="' . esc_attr( $title_id ) . '"' : '';
+	return '<section class="dusk"' . ( '' !== $anchor ? ' id="' . esc_attr( $anchor ) . '"' : '' ) . $label . ">\n  "
+		. hcwa_dusk_still_html() . "\n  "
+		. '<div class="container dusk__inner">' . "\n    "
+		. ( '' !== $title ? '<h2 class="dusk__title" id="' . esc_attr( $title_id ) . '"' . hcwa_draft_attr( ! empty( $a['draft'] ) ) . '>' . esc_html( hcwa_vi_keep( $title ) ) . '</h2>' : '' ) . "\n    "
+		. (string) ( $a['body'] ?? '' ) . "\n  "
+		. '</div>' . "\n"
+		. '</section>';
+}
+
+/**
+ * Contact lines as a dl (dusk__lines, office__lines): only lines rule 12 prints; the list
+ * carries data-draft only when one of its lines is draft; '' when none is left.
+ *
+ * @param string[] $which phone | email | sponsorship.
+ * @param string   $cls   Class of the dl.
+ * @param string   $extra Extra rows before the contact lines (already escaped HTML).
+ * @param bool     $extra_draft Whether the extra rows are draft.
+ */
+function hcwa_contact_lines_html( array $which, string $cls, string $extra = '', bool $extra_draft = false ): string {
+	$rows  = $extra;
+	$draft = $extra_draft;
+	foreach ( $which as $key ) {
+		$line = hcwa_contact_line( $key );
+		if ( '' === $line['text'] ) {
+			continue;
+		}
+		$draft = $draft || $line['draft'];
+		$label = 'phone' === $key ? hcwa_t( 'phone' ) : hcwa_t( 'email' );
+		$rows .= "\n      " . '<div><dt>' . esc_html( $label ) . '</dt><dd><a href="' . esc_url( $line['href'], array( 'tel', 'mailto' ) ) . '">' . esc_html( $line['text'] ) . '</a></dd></div>';
+	}
+	if ( '' === $rows ) {
+		return '';
+	}
+	return '<dl class="' . esc_attr( $cls ) . '"' . hcwa_draft_attr( $draft ) . '>' . $rows . "\n    </dl>";
+}
+
+/**
+ * Lit header (prototype litHeader(), 2.5).
+ *
+ * @param array $a still, trail, title (plain, or ['main' => …, 'sub' => …]), intro (plain),
+ *                 intro_draft, meta (HTML), extra (HTML), unit_color ('' for none), size.
+ */
+function hcwa_lit_header_html( array $a ): string {
+	$still = (string) ( $a['still'] ?? '' );
+	$size  = (string) ( $a['size'] ?? '' );
+	$unit  = (string) ( $a['unit_color'] ?? '' );
+	$title = $a['title'] ?? '';
+	$t     = is_array( $title )
+		? '<span class="lit-head__main">' . esc_html( hcwa_vi_keep( (string) $title['main'] ) ) . '</span><span class="sr-only">: </span><span class="lit-head__sub">' . esc_html( (string) $title['sub'] ) . '</span>'
+		: esc_html( hcwa_vi_keep( (string) $title ) );
+	$lit   = '' !== $still ? hcwa_art()->lit_still( $still ) : '';
+	$media = '' !== $lit ? $lit : '<div class="lit lit--still" aria-hidden="true"></div>';
+	$meta  = (string) ( $a['meta'] ?? '' );
+	$intro = (string) ( $a['intro'] ?? '' );
+
+	return '<header class="lit-head' . ( '' !== $size ? ' lit-head--' . esc_attr( $size ) : '' ) . ( '' !== $unit ? ' lit-head--unit' : '' ) . '"' . ( '' !== $unit ? ' style="--unit:' . esc_attr( $unit ) . '"' : '' ) . ">\n  "
+		. '<div class="lit-head__media" data-still="' . esc_attr( $still ) . '">' . $media . '</div>' . "\n  "
+		. '<div class="container lit-head__text">' . "\n    "
+		. hcwa_breadcrumb_html( (array) ( $a['trail'] ?? array() ) ) . "\n    "
+		. ( '' !== $meta ? '<div class="lit-head__meta">' . $meta . '</div>' : '' ) . "\n    "
+		. '<h1 class="lit-head__title">' . $t . '</h1>' . "\n    "
+		. ( '' !== $intro ? '<p class="lit-head__intro"' . hcwa_draft_attr( ! empty( $a['intro_draft'] ) ) . '>' . esc_html( $intro ) . '</p>' : '' ) . "\n    "
+		. (string) ( $a['extra'] ?? '' ) . "\n  "
+		. '</div>' . "\n"
+		. '</header>';
+}
+
+/**
+ * Sun head (prototype donate header, 2.5 P5). Jump links are printed only when their target
+ * is (2.1 rule 11): pass them only for printed panels.
+ *
+ * @param array $a title, trail (defaults to the title alone), intro, intro_draft, go
+ *                 (['href', 'label'] or null), jumps ([href, label] pairs).
+ */
+function hcwa_sun_head_html( array $a ): string {
+	$title = (string) ( $a['title'] ?? '' );
+	$trail = (array) ( $a['trail'] ?? array( array( $title ) ) );
+	$intro = (string) ( $a['intro'] ?? '' );
+	$go    = $a['go'] ?? null;
+	$jumps = (array) ( $a['jumps'] ?? array() );
+	$side  = '';
+	if ( '' !== $intro ) {
+		$side .= "\n      " . '<p class="sun-head__intro"' . hcwa_draft_attr( ! empty( $a['intro_draft'] ) ) . '>' . esc_html( $intro ) . '</p>';
+	}
+	if ( is_array( $go ) && '' !== (string) ( $go['label'] ?? '' ) ) {
+		$side .= "\n      " . hcwa_button_html( (string) $go['href'], (string) $go['label'], 'primary', '', 'sun-head__go' );
+	}
+	if ( $jumps ) {
+		$side .= "\n      " . '<ul class="sun-head__jump">';
+		foreach ( $jumps as $jump ) {
+			$side .= "\n        <li>" . hcwa_text_link_html( (string) $jump[0], (string) $jump[1] ) . '</li>';
+		}
+		$side .= "\n      </ul>";
+	}
+	return '<header class="sun-head">' . "\n  "
+		. '<span class="sun-layer sun-layer--donate" aria-hidden="true"></span>' . "\n  "
+		. '<div class="container sun-head__inner">' . "\n    "
+		. hcwa_breadcrumb_html( $trail ) . "\n    "
+		. '<h1 class="sun-head__title">' . esc_html( hcwa_vi_keep( $title ) ) . '</h1>' . "\n    "
+		. ( '' !== $side ? '<div class="sun-head__side">' . $side . "\n    </div>" : '' ) . "\n  "
+		. '</div>' . "\n"
+		. '</header>';
+}
+
+/**
+ * Counts (prototype figuresFor(), 2.6): unverified figures only off production, with the
+ * pending chip; '' when none is visible. Never animated.
+ *
+ * @param array[] $figures From hcwa_get_impact_figures().
+ * @param string  $title   Heading (plain).
+ * @param string  $id      Heading id.
+ * @param bool    $nested  h3 inside a story section instead of a section of its own.
+ */
+function hcwa_counts_html( array $figures, string $title, string $id, bool $nested = false ): string {
+	$items = '';
+	foreach ( $figures as $f ) {
+		$label    = hcwa_draft_text( hcwa_attr_text( (string) ( $f['label'] ?? '' ) ) );
+		$verified = ! empty( $f['verified'] ) && null !== ( $f['value'] ?? null );
+		if ( '' === $label['text'] || ( ! $verified && hcwa_is_production() ) ) {
+			continue;
+		}
+		$value  = $verified ? hcwa_number( (float) $f['value'] ) . (string) ( $f['suffix'] ?? '' ) : hcwa_figure_token( $f );
+		$items .= '<li class="count"' . hcwa_draft_attr( $label['draft'] || ! $verified ) . ">\n    "
+			. '<p class="count__value num">' . esc_html( $value ) . '</p>' . "\n    "
+			. '<p class="count__label">' . esc_html( $label['text'] ) . '</p>' . "\n    "
+			. ( $verified ? '' : hcwa_pending_chip_html() ) . "\n  "
+			. '</li>';
+	}
+	if ( '' === $items ) {
+		return '';
+	}
+	$h = $nested ? 'h3' : 'h2';
+	return '<section class="counts' . ( $nested ? ' counts--nested' : ' container' ) . '" aria-labelledby="' . esc_attr( $id ) . '">' . "\n  "
+		. '<' . $h . ' class="counts__title" id="' . esc_attr( $id ) . '">' . esc_html( $title ) . '</' . $h . '>' . "\n  "
+		. '<ul class="counts__list">' . $items . '</ul>' . "\n"
+		. '</section>';
+}
+
+/**
+ * The token an unverified figure shows instead of its number ([N]).
+ *
+ * @param array $f Figure.
+ */
+function hcwa_figure_token( array $f ): string {
+	return isset( $f['token'] ) && '' !== (string) $f['token'] ? (string) $f['token'] : '[N]';
+}
+
+/**
+ * One louver row (prototype louver()): the title is the link, except on the donate row,
+ * which carries the page's one sun button.
+ *
+ * @param array $w     id, title, text (plain or {text, draft}).
+ * @param int   $level Heading level (3 under the home H2, 2 on Get Involved).
+ */
+function hcwa_louver_html( array $w, int $level = 3 ): string {
+	$routes = array(
+		'donate'    => 'donate',
+		'volunteer' => 'volunteer',
+		'partner'   => 'partner',
+		'in-kind'   => 'inKind',
 	);
+	$id     = (string) ( $w['id'] ?? '' );
+	$donate = 'donate' === $id;
+	$title  = hcwa_blocks_item_text( $w, 'title' );
+	$text   = hcwa_blocks_item_text( $w, 'text' );
+	$label  = '<span class="louver__label">' . esc_html( hcwa_vi_keep( $title['text'] ) ) . '</span>';
+	$h      = 'h' . max( 2, min( 4, $level ) );
+	$extra  = '';
+	if ( $donate ) {
+		$extra = hcwa_button_html( hcwa_page_url( 'donate' ), hcwa_t( 'donate' ), 'primary', '', 'louver__btn' );
+	} elseif ( 'in-kind' === $id ) {
+		$extra = '<a class="text-link louver__extra" href="' . esc_url( hcwa_page_url( 'bakery' ) ) . '"><span>' . esc_html( hcwa_t( 'bakery' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</a>';
+	}
+	return '<li class="louver' . ( $donate ? ' louver--donate' : '' ) . '" data-way="' . esc_attr( $id ) . '">' . "\n    "
+		. '<span class="louver__face" aria-hidden="true"></span>' . "\n    "
+		. '<' . $h . ' class="louver__title">' . ( $donate || ! isset( $routes[ $id ] ) ? $label : '<a href="' . esc_url( hcwa_page_url( $routes[ $id ] ) ) . '">' . $label . '</a>' ) . '</' . $h . '>' . "\n    "
+		. '<div class="louver__body">' . "\n      "
+		. ( '' !== $text['text'] ? '<p class="louver__text"' . hcwa_draft_attr( $text['draft'] ) . '>' . esc_html( $text['text'] ) . '</p>' : '' ) . "\n      "
+		. $extra . "\n    "
+		. '</div>' . "\n    "
+		. ( $donate ? '' : hcwa_icon( 'arrow', 'icon louver__go' ) ) . "\n  "
+		. '</li>';
 }
 
 /**
- * Which row is the featured story: the first sticky post, else the first story, else the
- * newest post. -1 when there are no rows.
+ * The louver rows (prototype louvers()).
  *
- * @param array[] $rows Rows with 'sticky' (bool) and 'category' (logical key), newest first.
+ * @param array[] $ways  Ways to help.
+ * @param int     $level Heading level.
+ * @param string  $cls   Extra class.
  */
-function hcwa_blocks_pick_featured( array $rows ): int {
-	$rows = array_values( $rows );
-	foreach ( $rows as $i => $row ) {
-		if ( ! empty( $row['sticky'] ) ) {
-			return $i;
+function hcwa_louvers_html( array $ways, int $level = 3, string $cls = '' ): string {
+	$items = '';
+	foreach ( $ways as $w ) {
+		if ( is_array( $w ) ) {
+			$items .= hcwa_louver_html( $w, $level );
 		}
 	}
-	foreach ( $rows as $i => $row ) {
-		if ( 'stories' === ( $row['category'] ?? '' ) ) {
-			return $i;
-		}
-	}
-	return $rows ? 0 : -1;
-}
-
-/**
- * Data for a news card or row.
- *
- * @param WP_Post $post       Post in the current language.
- * @param bool    $with_image Whether to build the (gated) image and excerpt (featured card).
- * @return array{title: string, url: string, date: string, label: string, category: string, excerpt: string, image: string}
- */
-function hcwa_blocks_news_data( WP_Post $post, bool $with_image = false ): array {
-	$category = hcwa_blocks_post_category( $post );
-	return array(
-		'title'    => hcwa_blocks_title( $post ),
-		'url'      => (string) get_permalink( $post ),
-		'date'     => substr( (string) $post->post_date, 0, 10 ),
-		'label'    => $category['label'],
-		'category' => $category['key'],
-		'excerpt'  => $with_image ? hcwa_blocks_summary( $post, 28 ) : '',
-		'image'    => $with_image ? hcwa_image(
-			(int) get_post_thumbnail_id( $post ),
-			'medium_large',
-			array(
-				'loading' => 'lazy',
-				'sizes'   => '(min-width: 900px) 58vw, 100vw',
-			),
-			$post
-		) : '',
-	);
-}
-
-/**
- * Meta line of a news card: category label and localized date.
- *
- * @param array  $n     From hcwa_blocks_news_data().
- * @param string $lang  'vi' or 'en'.
- * @param string $class CSS class of the line.
- */
-function hcwa_blocks_news_meta( array $n, string $lang, string $class ): string {
-	$html  = '<p class="' . esc_attr( $class ) . '">';
-	$label = (string) ( $n['label'] ?? '' );
-	if ( '' !== $label ) {
-		$html .= '<span class="label">' . esc_html( $label ) . '</span>';
-	}
-	$date = (string) ( $n['date'] ?? '' );
-	if ( '' !== $date ) {
-		$html .= '<time datetime="' . esc_attr( $date ) . '">' . esc_html( hcwa_date_in( $date, $lang ) ) . '</time>';
-	}
-	return $html . '</p>';
-}
-
-/**
- * Featured story card (prototype storyCard()). Stories carry the "names changed" line
- * (CLAUDE.md safeguarding). Without an approved photo the media slot is left out on
- * the live site.
- *
- * @param array  $n          From hcwa_blocks_news_data( $post, true ).
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_story_card( array $n, string $lang, bool $production ): string {
-	$title   = (string) ( $n['title'] ?? '' );
-	$excerpt = (string) ( $n['excerpt'] ?? '' );
-	$image   = (string) ( $n['image'] ?? '' );
-
-	$html = '<article class="story-card story-card--featured"' . hcwa_blocks_draft_attr( $production, $title, $excerpt ) . '>';
-	if ( '' !== $image ) {
-		$html .= '<div class="story-card__media">' . $image . '</div>';
-	} elseif ( ! $production ) {
-		$html .= '<div class="story-card__media story-card__media--empty" aria-hidden="true"></div>';
-	}
-	$html .= hcwa_blocks_news_meta( $n, $lang, 'story-card__meta' );
-	$html .= '<h3 class="story-card__title"><a href="' . esc_url( (string) ( $n['url'] ?? '' ) ) . '">' . esc_html( $title ) . '</a></h3>';
-	if ( '' !== $excerpt ) {
-		$html .= '<p class="story-card__excerpt">' . esc_html( $excerpt ) . '</p>';
-	}
-	if ( 'stories' === ( $n['category'] ?? '' ) ) {
-		$html .= '<p class="story-card__note">' . esc_html( hcwa_t_in( 'namesChanged', $lang ) ) . '</p>';
-	}
-	return $html . '</article>';
-}
-
-/**
- * Compact news row (prototype newsItem()).
- *
- * @param array  $n          From hcwa_blocks_news_data().
- * @param string $lang       'vi' or 'en'.
- * @param bool   $production Whether this is the live site.
- */
-function hcwa_blocks_news_item( array $n, string $lang, bool $production ): string {
-	$title = (string) ( $n['title'] ?? '' );
-	$html  = '<li class="news-item"' . hcwa_blocks_draft_attr( $production, $title ) . '>';
-	$html .= hcwa_blocks_news_meta( $n, $lang, 'news-item__meta' );
-	$html .= '<h3 class="news-item__title"><a href="' . esc_url( (string) ( $n['url'] ?? '' ) ) . '">' . esc_html( $title ) . '</a></h3>';
-	return $html . '</li>';
+	return '<ul class="louvers' . ( '' !== $cls ? ' ' . esc_attr( $cls ) : '' ) . '" data-reveal="stagger">' . $items . '</ul>';
 }
 
 /* -------------------------------------------------------------------------
- * Language notice
+ * Form controls (prototype field(), choiceField(), consentField(), formSent(), copyButton())
+ * ---------------------------------------------------------------------- */
+
+/**
+ * One form field: label above, helper, error below, tied with aria-describedby.
+ *
+ * @param array $f id, name (defaults to id), label, type, required, help, error, autocomplete,
+ *                 options ['placeholder', 'items' => [[value, label]]], rows.
+ */
+function hcwa_field_html( array $f ): string {
+	$id       = (string) $f['id'];
+	$name     = (string) ( $f['name'] ?? $id );
+	$help     = (string) ( $f['help'] ?? '' );
+	$describe = trim( ( '' !== $help ? $id . '-help ' : '' ) . $id . '-error' );
+	$common   = 'id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" aria-describedby="' . esc_attr( $describe ) . '"' . ( ! empty( $f['required'] ) ? ' required' : '' ) . ( ! empty( $f['autocomplete'] ) ? ' autocomplete="' . esc_attr( (string) $f['autocomplete'] ) . '"' : '' );
+	if ( ! empty( $f['options'] ) ) {
+		$options = '<option value="">' . esc_html( (string) $f['options']['placeholder'] ) . '</option>';
+		foreach ( (array) $f['options']['items'] as $item ) {
+			$options .= '<option value="' . esc_attr( (string) $item[0] ) . '">' . esc_html( (string) $item[1] ) . '</option>';
+		}
+		$control = '<span class="select"><select ' . $common . '>' . $options . '</select></span>';
+	} elseif ( ! empty( $f['rows'] ) ) {
+		$control = '<textarea ' . $common . ' rows="' . (int) $f['rows'] . '"></textarea>';
+	} else {
+		$control = '<input type="' . esc_attr( (string) ( $f['type'] ?? 'text' ) ) . '" ' . $common . '>';
+	}
+	return '<div class="field" data-field>' . "\n    "
+		. '<label for="' . esc_attr( $id ) . '">' . esc_html( (string) $f['label'] ) . '</label>' . "\n    "
+		. ( '' !== $help ? '<p class="field__help" id="' . esc_attr( $id ) . '-help">' . esc_html( $help ) . '</p>' : '' ) . "\n    "
+		. $control . "\n    "
+		. '<p class="field__error" id="' . esc_attr( $id ) . '-error" data-error="' . esc_attr( (string) ( $f['error'] ?? '' ) ) . '" hidden>' . hcwa_icon( 'alert' ) . '<span></span></p>' . "\n  "
+		. '</div>';
+}
+
+/**
+ * Radio choices as pills (contact topics). The first radio carries the group id.
+ *
+ * @param array $f id, name, label, items [[value, label]], required, error.
+ */
+function hcwa_choice_field_html( array $f ): string {
+	$id    = (string) $f['id'];
+	$name  = (string) ( $f['name'] ?? $id );
+	$items = '';
+	foreach ( array_values( (array) $f['items'] ) as $i => $item ) {
+		$items .= '<label class="choice"><input type="radio" id="' . esc_attr( $i ? $id . '-' . $item[0] : $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( (string) $item[0] ) . '"' . ( ! empty( $f['required'] ) ? ' required' : '' ) . '><span>' . esc_html( (string) $item[1] ) . '</span></label>';
+	}
+	return '<fieldset class="field field--choices" data-field aria-describedby="' . esc_attr( $id ) . '-error">' . "\n    "
+		. '<legend>' . esc_html( (string) $f['label'] ) . '</legend>' . "\n    "
+		. '<div class="choices">' . $items . '</div>' . "\n    "
+		. '<p class="field__error" id="' . esc_attr( $id ) . '-error" data-error="' . esc_attr( (string) ( $f['error'] ?? '' ) ) . '" hidden>' . hcwa_icon( 'alert' ) . '<span></span></p>' . "\n  "
+		. '</fieldset>';
+}
+
+/**
+ * The consent line every form ends on (its wording is HCWA's to approve: draft).
+ *
+ * @param string $id   Field id.
+ * @param string $name Field name.
+ */
+function hcwa_consent_field_html( string $id = 'consent', string $name = '' ): string {
+	$name = '' !== $name ? $name : $id;
+	return '<div class="field field--check" data-field>' . "\n    "
+		. '<input type="checkbox" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" required aria-describedby="' . esc_attr( $id ) . '-error">' . "\n    "
+		. '<label for="' . esc_attr( $id ) . '"><span data-draft>' . esc_html( hcwa_t( 'f_consent' ) ) . '</span> <a href="' . esc_url( hcwa_page_url( 'privacy' ) ) . '">' . esc_html( hcwa_t( 'privacy' ) ) . '</a></label>' . "\n    "
+		. '<p class="field__error" id="' . esc_attr( $id ) . '-error" data-error="' . esc_attr( hcwa_t( 'e_consent' ) ) . '" hidden>' . hcwa_icon( 'alert' ) . '<span></span></p>' . "\n  "
+		. '</div>';
+}
+
+/**
+ * A form's sent state (the prototype says plainly that nothing left the browser).
+ *
+ * @param string $message Plain text.
+ * @param bool   $draft   Whether the message is draft.
+ */
+function hcwa_form_sent_html( string $message, bool $draft = false ): string {
+	return '<div class="form__success" data-success tabindex="-1" role="status" hidden>' . "\n    "
+		. hcwa_icon( 'check' ) . "\n    "
+		. '<div class="form__success-text">' . "\n      "
+		. '<p class="form__sent"' . hcwa_draft_attr( $draft ) . '>' . esc_html( $message ) . '</p>' . "\n      "
+		. ( hcwa_is_production() ? '' : '<p class="form__note">' . esc_html( hcwa_t( 'f_prototypeSent' ) ) . '</p>' ) . "\n      "
+		. '<button class="text-link form__again" type="button" data-form-again><span>' . esc_html( hcwa_t( 'f_sendAnother' ) ) . '</span>' . hcwa_icon( 'arrow' ) . '</button>' . "\n    "
+		. '</div>' . "\n  "
+		. '</div>';
+}
+
+/**
+ * Copy button (prototype copyButton()): disabled until there is a value to copy.
+ *
+ * @param string $label       The row's label (plain).
+ * @param string $value       Value to copy, '' while not confirmed.
+ * @param string $described_by Id of the line saying why it is disabled.
+ */
+function hcwa_copy_button_html( string $label, string $value = '', string $described_by = '' ): string {
+	return '<button class="copy-btn" type="button" data-copy="' . esc_attr( $value ) . '"' . ( '' === $value ? ' disabled' : '' ) . ' aria-label="' . esc_attr( hcwa_t( 'copy' ) . ': ' . $label ) . '"' . ( '' !== $described_by ? ' aria-describedby="' . esc_attr( $described_by ) . '"' : '' ) . '>'
+		. hcwa_icon( 'copy', 'icon copy-btn__copy' ) . hcwa_icon( 'check', 'icon copy-btn__done' ) . '<span>' . esc_html( hcwa_t( 'copy' ) ) . '</span></button>';
+}
+
+/* -------------------------------------------------------------------------
+ * Language notice (kept block)
  * ---------------------------------------------------------------------- */
 
 /**
@@ -1349,143 +1337,4 @@ function hcwa_blocks_notice_claim( bool $reset = false ): bool {
 	$first   = ! $claimed;
 	$claimed = true;
 	return $first;
-}
-
-/* -------------------------------------------------------------------------
- * Donation methods
- * ---------------------------------------------------------------------- */
-
-/**
- * Anchor IDs of the two methods in each language (links may point at them).
- *
- * @param string $lang 'vi' or 'en'.
- * @return array{in_vietnam: string, abroad: string}
- */
-function hcwa_blocks_method_ids( string $lang ): array {
-	return 'en' === $lang
-		? array(
-			'in_vietnam' => 'in-vietnam',
-			'abroad'     => 'from-abroad',
-		)
-		: array(
-			'in_vietnam' => 'trong-nuoc',
-			'abroad'     => 'quoc-te',
-		);
-}
-
-/**
- * Rows of the labelled placeholder panel (staging, before finance confirms): the same
- * rows as hcwa_donation_details_from(), without values.
- *
- * @param string $lang 'vi' or 'en'.
- * @return array{in_vietnam: array[], abroad: array[]}
- */
-function hcwa_blocks_placeholder_rows( string $lang ): array {
-	$row = static fn( string $id, string $label, bool $copy, string $hint = '' ): array => array(
-		'id'    => $id,
-		'label' => hcwa_t_in( $label, $lang ),
-		'value' => '',
-		'copy'  => $copy,
-		'hint'  => '' !== $hint ? hcwa_t_in( $hint, $lang ) : '',
-	);
-	return array(
-		'in_vietnam' => array(
-			$row( 'bank', 'pay_bank', false ),
-			$row( 'account', 'pay_account', true ),
-			$row( 'holder', 'pay_holder', false ),
-			$row( 'note', 'pay_note', true, 'pay_noteHint' ),
-		),
-		'abroad'     => array(
-			$row( 'bank', 'pay_bank', false ),
-			$row( 'swift', 'pay_swift', true ),
-			$row( 'account', 'pay_accountAbroad', true ),
-			$row( 'holder', 'pay_holder', false ),
-		),
-	);
-}
-
-/**
- * Payment detail rows with copy buttons (prototype detailRows()). A row without a value
- * is a placeholder: "Waiting for HCWA finance" and a disabled copy button.
- *
- * The copy button sits inside the <dd>, after the value: a <div> in a <dl> may hold only
- * <dt> and <dd> (HTML, axe "definition-list").
- *
- * @param array[] $rows Rows: id, label, value, copy, hint.
- * @param string  $lang 'vi' or 'en'.
- */
-function hcwa_blocks_pay_rows( array $rows, string $lang ): string {
-	$html = '<dl class="pay-details">';
-	foreach ( $rows as $row ) {
-		$label = (string) ( $row['label'] ?? '' );
-		$value = (string) ( $row['value'] ?? '' );
-		$hint  = (string) ( $row['hint'] ?? '' );
-		$copy  = ! empty( $row['copy'] );
-
-		$html .= '<div class="pay-details__row"><dt>' . esc_html( $label ) . '</dt><dd>';
-		if ( '' === $value ) {
-			$html .= '<span class="pending-value" data-donation-placeholder>' . esc_html( hcwa_t_in( 'pendingFinance', $lang ) ) . '</span>';
-		} elseif ( $copy ) {
-			$html .= '<code>' . esc_html( $value ) . '</code>';
-		} else {
-			$html .= esc_html( $value );
-		}
-		if ( '' !== $hint ) {
-			$html .= '<span class="pay-details__hint">' . esc_html( $hint ) . '</span>';
-		}
-		if ( $copy ) {
-			$html .= '<button class="btn btn--small btn--secondary" type="button" data-copy="' . esc_attr( $value ) . '"' . ( '' === $value ? ' disabled' : '' ) . ' aria-label="' . esc_attr( hcwa_t_in( 'copy', $lang ) . ': ' . $label ) . '">' . hcwa_blocks_icon( 'copy' ) . '<span>' . esc_html( hcwa_t_in( 'copy', $lang ) ) . '</span></button>';
-		}
-		$html .= '</dd></div>';
-	}
-	return $html . '</dl>';
-}
-
-/**
- * One payment method as an accordion item (prototype method()).
- *
- * @param string $id    Anchor ID.
- * @param string $title Summary text (unescaped).
- * @param string $body  Inner HTML (already escaped).
- * @param bool   $open  Open on load.
- */
-function hcwa_blocks_method( string $id, string $title, string $body, bool $open = false ): string {
-	return '<details class="method" id="' . esc_attr( $id ) . '"' . ( $open ? ' open' : '' ) . '><summary><span>' . esc_html( $title ) . '</span>' . hcwa_blocks_icon( 'chevron' ) . '</summary><div class="method__body">' . $body . '</div></details>';
-}
-
-/**
- * The methods, from finance-confirmed details or as the labelled placeholder panel.
- * Returns '' when there is nothing to show; render.php decides about empty states.
- *
- * @param array|null $details hcwa_donation_details(), or null for the placeholder panel.
- * @param string     $lang    'vi' or 'en'.
- * @param string     $qr_html VietQR <img> (confirmed details only), '' for none.
- */
-function hcwa_blocks_donation_methods( ?array $details, string $lang, string $qr_html = '' ): string {
-	$ids         = hcwa_blocks_method_ids( $lang );
-	$placeholder = null === $details;
-
-	if ( $placeholder ) {
-		$rows    = hcwa_blocks_placeholder_rows( $lang );
-		$qr_html = '<div class="ph pay__qr" role="img" aria-label="' . esc_attr( hcwa_t_in( 'pay_qr', $lang ) . ': ' . hcwa_t_in( 'pendingFinance', $lang ) ) . '" style="--ratio:1/1" data-donation-placeholder><span class="ph__code">C6</span><span class="ph__label">' . esc_html( hcwa_t_in( 'pendingFinance', $lang ) ) . '</span></div>';
-		$paypal  = '<p class="method__alt"><button class="btn btn--secondary btn--small" type="button" disabled data-donation-placeholder>' . esc_html( hcwa_t_in( 'pay_paypal', $lang ) ) . '</button></p>';
-	} else {
-		$rows       = array(
-			'in_vietnam' => array_values( (array) ( $details['in_vietnam'] ?? array() ) ),
-			'abroad'     => array_values( (array) ( $details['abroad'] ?? array() ) ),
-		);
-		$paypal_url = (string) ( $details['paypal_url'] ?? '' );
-		$paypal     = '' !== $paypal_url ? '<p class="method__alt"><a class="btn btn--secondary btn--small" href="' . esc_url( $paypal_url ) . '">' . esc_html( hcwa_t_in( 'pay_paypal', $lang ) ) . '</a></p>' : '';
-	}
-
-	$html = '';
-	if ( $rows['in_vietnam'] || '' !== $qr_html ) {
-		$body  = '<div class="pay">' . ( $rows['in_vietnam'] ? hcwa_blocks_pay_rows( $rows['in_vietnam'], $lang ) : '' ) . $qr_html . '</div>';
-		$html .= hcwa_blocks_method( $ids['in_vietnam'], hcwa_t_in( 'blk_payInVietnam', $lang ), $body, true );
-	}
-	if ( $rows['abroad'] || '' !== $paypal ) {
-		$body  = ( $rows['abroad'] ? hcwa_blocks_pay_rows( $rows['abroad'], $lang ) : '' ) . $paypal;
-		$html .= hcwa_blocks_method( $ids['abroad'], hcwa_t_in( 'blk_payFromAbroad', $lang ), $body, '' === $html );
-	}
-	return $html;
 }

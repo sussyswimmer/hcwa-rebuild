@@ -10,7 +10,11 @@
 	"attributes": {
 		"scopeType": {
 			"type": "string",
-			"enum": [ "organization", "center", "program" ],
+			"enum": [
+				"organization",
+				"center",
+				"program"
+			],
 			"default": "organization"
 		},
 		"scopeId": {
@@ -24,9 +28,17 @@
 		"showLink": {
 			"type": "boolean",
 			"default": true
+		},
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
 		}
 	},
-	"usesContext": [ "postId", "postType" ],
+	"usesContext": [
+		"postId",
+		"postType"
+	],
 	"supports": {
 		"html": false
 	},

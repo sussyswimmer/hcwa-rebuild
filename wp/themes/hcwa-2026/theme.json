@@ -13,18 +13,14 @@
 			"duotone": [],
 			"gradients": [],
 			"palette": [
-				{ "name": "Paper", "slug": "paper", "color": "#FBF8F3" },
-				{ "name": "Surface", "slug": "surface", "color": "#FFFFFF" },
-				{ "name": "Sunken", "slug": "sunken", "color": "#F3EEE6" },
-				{ "name": "Ink", "slug": "ink", "color": "#1C2333" },
-				{ "name": "Ink 2", "slug": "ink-2", "color": "#4A5265" },
-				{ "name": "Ink 3", "slug": "ink-3", "color": "#5F6679" },
-				{ "name": "Blue 900", "slug": "blue-900", "color": "#23236A" },
+				{ "name": "Ink 900", "slug": "ink-900", "color": "#1D2131" },
+				{ "name": "Ink 700", "slug": "ink-700", "color": "#434859" },
 				{ "name": "Blue 700", "slug": "blue-700", "color": "#313188" },
-				{ "name": "Blue 100", "slug": "blue-100", "color": "#ECECF7" },
+				{ "name": "Blue 900", "slug": "blue-900", "color": "#20205A" },
 				{ "name": "Sun 400", "slug": "sun-400", "color": "#FFC42E" },
-				{ "name": "Sun 500", "slug": "sun-500", "color": "#F2B312" },
-				{ "name": "Sun 100", "slug": "sun-100", "color": "#FFF4D6" }
+				{ "name": "Sun 100", "slug": "sun-100", "color": "#FFF3D3" },
+				{ "name": "Lime 50", "slug": "lime-50", "color": "#F7F2E9" },
+				{ "name": "Lime 100", "slug": "lime-100", "color": "#EFE7DA" }
 			]
 		},
 		"layout": {
@@ -33,9 +29,7 @@
 		},
 		"shadow": {
 			"defaultPresets": false,
-			"presets": [
-				{ "name": "Card", "slug": "card", "shadow": "0 1px 2px rgba(28, 35, 51, .06), 0 4px 12px rgba(28, 35, 51, .06)" }
-			]
+			"presets": []
 		},
 		"spacing": {
 			"customSpacingSize": false,
@@ -67,45 +61,21 @@
 			"textTransform": false,
 			"fontFamilies": [
 				{
-					"name": "Fraunces",
+					"name": "Archivo HCWA",
 					"slug": "display",
-					"fontFamily": "\"Fraunces\", \"Iowan Old Style\", \"Georgia\", serif",
+					"fontFamily": "\"Archivo HCWA\", \"Archivo HCWA Fallback\", \"Arial Narrow\", sans-serif",
 					"fontFace": [
-						{
-							"fontFamily": "Fraunces",
-							"fontStyle": "normal",
-							"fontWeight": "500 700",
-							"fontDisplay": "swap",
-							"src": [ "file:./assets/fonts/fraunces-vf.woff2" ]
-						}
+						{ "fontFamily": "Archivo HCWA", "fontStyle": "normal", "fontWeight": "600 700", "fontDisplay": "swap", "src": [ "file:./assets/dist/fonts/archivo-w78-600-700.woff2" ] }
 					]
 				},
 				{
 					"name": "Be Vietnam Pro",
 					"slug": "body",
-					"fontFamily": "\"Be Vietnam Pro\", \"Segoe UI\", system-ui, sans-serif",
+					"fontFamily": "\"Be Vietnam Pro\", \"Be Vietnam Pro Fallback\", system-ui, sans-serif",
 					"fontFace": [
-						{
-							"fontFamily": "Be Vietnam Pro",
-							"fontStyle": "normal",
-							"fontWeight": "400",
-							"fontDisplay": "swap",
-							"src": [ "file:./assets/fonts/be-vietnam-pro-400.woff2" ]
-						},
-						{
-							"fontFamily": "Be Vietnam Pro",
-							"fontStyle": "normal",
-							"fontWeight": "500",
-							"fontDisplay": "swap",
-							"src": [ "file:./assets/fonts/be-vietnam-pro-500.woff2" ]
-						},
-						{
-							"fontFamily": "Be Vietnam Pro",
-							"fontStyle": "normal",
-							"fontWeight": "600",
-							"fontDisplay": "swap",
-							"src": [ "file:./assets/fonts/be-vietnam-pro-600.woff2" ]
-						}
+						{ "fontFamily": "Be Vietnam Pro", "fontStyle": "normal", "fontWeight": "400", "fontDisplay": "swap", "src": [ "file:./assets/dist/fonts/be-vietnam-pro-400.woff2" ] },
+						{ "fontFamily": "Be Vietnam Pro", "fontStyle": "normal", "fontWeight": "500", "fontDisplay": "swap", "src": [ "file:./assets/dist/fonts/be-vietnam-pro-500.woff2" ] },
+						{ "fontFamily": "Be Vietnam Pro", "fontStyle": "normal", "fontWeight": "600", "fontDisplay": "swap", "src": [ "file:./assets/dist/fonts/be-vietnam-pro-600.woff2" ] }
 					]
 				}
 			],
@@ -120,61 +90,6 @@
 				{ "name": "Heading 1", "slug": "heading-1", "size": "clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem)" },
 				{ "name": "Figure", "slug": "stat", "size": "clamp(2.5rem, 2rem + 2vw, 3.5rem)" }
 			]
-		}
-	},
-	"styles": {
-		"color": {
-			"background": "var(--wp--preset--color--paper)",
-			"text": "var(--wp--preset--color--ink)"
-		},
-		"typography": {
-			"fontFamily": "var(--wp--preset--font-family--body)",
-			"fontSize": "var(--wp--preset--font-size--base)",
-			"fontWeight": "400",
-			"lineHeight": "1.65",
-			"textTransform": "none"
-		},
-		"elements": {
-			"heading": {
-				"color": { "text": "var(--wp--preset--color--ink)" },
-				"typography": {
-					"fontFamily": "var(--wp--preset--font-family--display)",
-					"fontWeight": "600",
-					"lineHeight": "1.2",
-					"textTransform": "none"
-				}
-			},
-			"h1": { "typography": { "fontSize": "var(--wp--preset--font-size--heading-1)", "letterSpacing": "-0.01em" } },
-			"h2": { "typography": { "fontSize": "var(--wp--preset--font-size--heading-2)", "letterSpacing": "-0.01em" } },
-			"h3": { "typography": { "fontSize": "var(--wp--preset--font-size--heading-3)" } },
-			"h4": { "typography": { "fontSize": "var(--wp--preset--font-size--heading-4)" } },
-			"link": {
-				"color": { "text": "var(--wp--preset--color--blue-700)" }
-			},
-			"button": {
-				"color": {
-					"background": "var(--wp--preset--color--sun-400)",
-					"text": "var(--wp--preset--color--ink)"
-				},
-				"border": { "radius": "999px", "width": "0" },
-				"spacing": {
-					"padding": { "top": "12px", "right": "24px", "bottom": "12px", "left": "24px" }
-				},
-				"typography": {
-					"fontFamily": "var(--wp--preset--font-family--body)",
-					"fontSize": "var(--wp--preset--font-size--base)",
-					"fontWeight": "600",
-					"lineHeight": "1.25",
-					"textTransform": "none"
-				},
-				":hover": {
-					"color": { "background": "var(--wp--preset--color--sun-500)" }
-				}
-			},
-			"caption": {
-				"color": { "text": "var(--wp--preset--color--ink-2)" },
-				"typography": { "fontSize": "var(--wp--preset--font-size--meta)" }
-			}
 		}
 	}
 }

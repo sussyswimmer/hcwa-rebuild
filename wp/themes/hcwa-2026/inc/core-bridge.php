@@ -531,3 +531,236 @@ function hcwa_theme_drop_library_img_tag( $image, $context, $attachment_id ) {
 function hcwa_theme_drop_gallery( $output ) {
 	return ' ';
 }
+
+/* -------------------------------------------------------------------------
+ * Bridge to the port's core builders (11-WP-PORT.md 2.6). Each degrades to plain markup or
+ * nothing when hcwa-core is inactive.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * A text as it prints (2.1 rule 7): ['text' => …, 'draft' => bool]. Without hcwa-core a
+ * text with a draft marker prints nowhere on the live site.
+ *
+ * @param string $text Stored text.
+ * @return array{text: string, draft: bool}
+ */
+function hcwa_theme_draft_text( string $text ): array {
+	if ( function_exists( 'hcwa_draft_text' ) && function_exists( 'hcwa_attr_text' ) ) {
+		return hcwa_draft_text( hcwa_attr_text( $text ) );
+	}
+	$draft = hcwa_theme_contains_draft( $text );
+	return array(
+		'text'  => $draft && hcwa_theme_is_production() ? '' : trim( wp_strip_all_tags( $text ) ),
+		'draft' => $draft,
+	);
+}
+
+/**
+ * Heading text with the no-break glossary (plain text; escape at output).
+ *
+ * @param string $text Plain text.
+ */
+function hcwa_theme_vi_keep( string $text ): string {
+	return function_exists( 'hcwa_vi_keep' ) ? hcwa_vi_keep( $text ) : $text;
+}
+
+/**
+ * The Hoa thị quatrefoil SVG ('' without hcwa-core).
+ *
+ * @param string $cls Class.
+ */
+function hcwa_theme_quatrefoil( string $cls ): string {
+	return function_exists( 'hcwa_quatrefoil' ) ? hcwa_quatrefoil( $cls ) : '';
+}
+
+/**
+ * One contact line through hcwa_contact_line(); empty without hcwa-core.
+ *
+ * @param string $which phone | email | sponsorship.
+ * @return array{text: string, href: string, draft: bool}
+ */
+function hcwa_theme_contact_line( string $which ): array {
+	if ( function_exists( 'hcwa_contact_line' ) ) {
+		return hcwa_contact_line( $which );
+	}
+	return array(
+		'text'  => '',
+		'href'  => '',
+		'draft' => true,
+	);
+}
+
+/**
+ * The pause toggle (WCAG 2.2.2).
+ *
+ * @param string $cls       Extra class.
+ * @param string $text_safe data-text-safe value.
+ */
+function hcwa_theme_pause_toggle( string $cls = '', string $text_safe = '' ): string {
+	return function_exists( 'hcwa_pause_toggle_html' ) ? hcwa_pause_toggle_html( $cls, $text_safe ) : '';
+}
+
+/**
+ * Breadcrumb: Home, then the trail.
+ *
+ * @param array $trail [label, url] pairs, the last without url.
+ */
+function hcwa_theme_breadcrumb( array $trail ): string {
+	return function_exists( 'hcwa_breadcrumb_html' ) ? hcwa_breadcrumb_html( $trail ) : '';
+}
+
+/**
+ * The sun head of a WordPress-only page (2.7): breadcrumb and H1.
+ *
+ * @param array $args title, trail, intro.
+ */
+function hcwa_theme_sun_head( array $args ): string {
+	if ( function_exists( 'hcwa_sun_head_html' ) ) {
+		return hcwa_sun_head_html( $args );
+	}
+	return '<header class="sun-head"><div class="container sun-head__inner"><h1 class="sun-head__title">' . esc_html( (string) ( $args['title'] ?? '' ) ) . '</h1></div></header>';
+}
+
+/**
+ * A named still from the art provider, '' when not ready or without hcwa-core.
+ *
+ * @param string $name Still name.
+ * @param array  $o    cls, sizes, eager.
+ */
+function hcwa_theme_still( string $name, array $o = array() ): string {
+	return function_exists( 'hcwa_art' ) ? hcwa_art()->still( $name, $o ) : '';
+}
+
+/**
+ * A page built from hcwa/sections (2.1 rule 4); '' without hcwa-core or without the block.
+ *
+ * @param WP_Post $post Page.
+ */
+function hcwa_theme_render_sections( WP_Post $post ): string {
+	return function_exists( 'hcwa_render_sections' ) ? hcwa_render_sections( $post ) : '';
+}
+
+/**
+ * Whether a page is a sections page.
+ *
+ * @param WP_Post|null $post Page.
+ */
+function hcwa_theme_is_sections_page( ?WP_Post $post ): bool {
+	return function_exists( 'hcwa_is_sections_page' ) && hcwa_is_sections_page( $post );
+}
+
+/**
+ * A post as a dated list row (2.6).
+ *
+ * @param WP_Post $post Post.
+ */
+function hcwa_theme_dated_post( WP_Post $post ): string {
+	return function_exists( 'hcwa_dated_post_html' ) ? hcwa_dated_post_html( $post ) : '';
+}
+
+/**
+ * A report as an li.doc row.
+ *
+ * @param WP_Post $report Report.
+ */
+function hcwa_theme_doc_row( WP_Post $report ): string {
+	if ( function_exists( 'hcwa_doc_row_html' ) && function_exists( 'hcwa_report_view' ) ) {
+		return hcwa_doc_row_html( hcwa_report_view( $report ) );
+	}
+	return '';
+}
+
+/**
+ * The orgName and shortName of the site in the current language (2.3, 1.2 #4).
+ *
+ * @return array{org: string, short: string}
+ */
+function hcwa_theme_names(): array {
+	$org   = trim( wp_strip_all_tags( (string) get_bloginfo( 'name' ) ) );
+	$short = hcwa_theme_setting_l( 'short_name' );
+	return array(
+		'org'   => $org,
+		'short' => '' !== $short ? $short : $org,
+	);
+}
+
+/**
+ * The page context (11-WP-PORT.md 6.4), decided once per request before <html> prints:
+ * body class, whether the page opens on a lit header, carries the world, starts with the
+ * header over the hero.
+ *
+ * @return array{lit: bool, world: bool, header_over: bool, body_class: string}
+ */
+function hcwa_theme_page_context(): array {
+	static $context = null;
+	if ( null !== $context && ! defined( 'HCWA_TESTS' ) ) {
+		return $context;
+	}
+	$context = array(
+		'lit'         => false,
+		'world'       => false,
+		'header_over' => false,
+		'body_class'  => 'page-wp',
+	);
+	if ( is_404() ) {
+		$context['body_class'] = 'page-gap';
+	} elseif ( is_front_page() && ! is_home() ) {
+		$context = array(
+			'lit'         => true,
+			'world'       => true,
+			'header_over' => true,
+			'body_class'  => 'page-home',
+		);
+	} elseif ( is_singular( 'hcwa_center' ) || is_singular( 'hcwa_program' ) ) {
+		$context['lit']        = true;
+		$context['body_class'] = is_singular( 'hcwa_center' ) ? 'page-center' : 'page-program';
+	} elseif ( is_page() ) {
+		$post = get_queried_object();
+		if ( $post instanceof WP_Post && hcwa_theme_is_sections_page( $post ) ) {
+			$context = array_merge( $context, hcwa_theme_sections_context( (string) $post->post_content ) );
+		}
+	}
+	return $context;
+}
+
+/**
+ * Page class and lit flag of a sections page, from its first blocks: hcwa/lit-header first
+ * means lit, hcwa/sun-head first means not lit, the first hcwa/day's variant gives the class.
+ *
+ * @param string $content Post content.
+ * @return array{lit: bool, body_class: string}
+ */
+function hcwa_theme_sections_context( string $content ): array {
+	$classes = array(
+		'hub'     => 'page-work',
+		'involve' => 'page-involve',
+		'donate'  => 'page-donate',
+		'contact' => 'page-contact',
+		'gap'     => 'page-gap',
+	);
+	$out     = array(
+		'lit'        => false,
+		'body_class' => 'page-wp',
+	);
+	$blocks  = function_exists( 'parse_blocks' ) ? parse_blocks( $content ) : array();
+	foreach ( $blocks as $block ) {
+		if ( 'hcwa/sections' !== ( $block['blockName'] ?? '' ) ) {
+			continue;
+		}
+		$first = true;
+		foreach ( (array) $block['innerBlocks'] as $inner ) {
+			$name = (string) ( $inner['blockName'] ?? '' );
+			if ( $first ) {
+				$out['lit'] = 'hcwa/lit-header' === $name;
+				$first      = false;
+			}
+			if ( 'hcwa/day' === $name ) {
+				$variant           = (string) ( $inner['attrs']['variant'] ?? 'involve' );
+				$out['body_class'] = $classes[ $variant ] ?? 'page-wp';
+				break;
+			}
+		}
+		break;
+	}
+	return $out;
+}

@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/contact-reach",
+	"title": "Contact form and office",
+	"category": "hcwa",
+	"icon": "email",
+	"description": "The contact form on staging, and the office address and lines HCWA has confirmed.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"formTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"officeTitle": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"chat": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"chatPending": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

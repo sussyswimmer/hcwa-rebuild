@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/corridor",
+	"title": "Centers corridor",
+	"category": "hcwa",
+	"icon": "building",
+	"description": "One door per published center, from the center pages. Little Rose follows the safeguarding rules.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"intro": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

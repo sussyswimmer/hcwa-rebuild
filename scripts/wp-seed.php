@@ -567,15 +567,22 @@ function hcwa_seed_languages( array $site ): void {
 	if ( '' !== $name_vi ) {
 		update_option( 'blogname', $name_vi );
 	}
-	update_option( 'blogdescription', '' );
+	// The tagline is site.json's description (the footer's brand line, 11-WP-PORT.md 3.1), draft
+	// until HCWA approves it: the theme prints it through hcwa_draft_text(), never on production.
+	$desc_vi = hcwa_seed_text( $site['description'] ?? '', 'vi' );
+	$desc_en = hcwa_seed_text( $site['description'] ?? '', 'en' );
+	update_option( 'blogdescription', $desc_vi );
 	update_option( 'timezone_string', 'Asia/Ho_Chi_Minh' );
 
-	// The English site title is a Polylang string translation of blogname (src/mo.php).
+	// The English site title and tagline are Polylang string translations (src/mo.php).
 	$en = $model->languages->get( 'en' );
 	if ( $en && '' !== $name_vi && '' !== $name_en && class_exists( 'PLL_MO' ) ) {
 		$mo = new PLL_MO();
 		$mo->import_from_db( $en );
 		$mo->add_entry( $mo->make_entry( $name_vi, $name_en ) );
+		if ( '' !== $desc_vi && '' !== $desc_en ) {
+			$mo->add_entry( $mo->make_entry( $desc_vi, $desc_en ) );
+		}
 		$mo->export_to_db( $en );
 	}
 
@@ -605,6 +612,7 @@ function hcwa_seed_content( array $data, string $manifest ): void {
 	$centers    = hcwa_seed_centers( $data['work'], $focus );
 	hcwa_seed_news_tags( $data['work'], $centers );
 	$fixtures   = array( 'refused_photo' => hcwa_seed_little_rose_photo( $centers ) );
+	hcwa_seed_unit_logos( $centers );
 	$partners   = hcwa_seed_partners( $data['work'] );
 	$programs   = hcwa_seed_programs( $data['work'], $focus, $centers, $partners );
 	$reports    = hcwa_seed_program_reports( $data['work'], $programs );
@@ -1312,6 +1320,63 @@ function hcwa_seed_news_tags( array $work, array $centers ): array {
 }
 
 /**
+ * The unit logos the prototype has (prototype/public/img/unit-<id>.png: today only Green
+ * Bamboo's), uploaded once as each center's hcwa_logo_id, which the center page's lit header
+ * prints (11-WP-PORT.md 2.5 P2). A logo is not a photo of a child; it is printed without the
+ * photo approval, like partner logos (contract rule 5).
+ *
+ * @param array $centers hcwa_seed_centers() result.
+ */
+function hcwa_seed_unit_logos( array $centers ): void {
+	global $wpdb;
+	$done = 0;
+	foreach ( $centers as $id => $pair ) {
+		$file = dirname( __DIR__ ) . '/prototype/public/img/unit-' . $id . '.png';
+		if ( empty( $pair['vi'] ) || ! is_readable( $file ) ) {
+			continue;
+		}
+		$seed_id = 'media:unit-logo:' . $id;
+		$logo    = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
+				WHERE m.meta_key = '_hcwa_seed_id' AND m.meta_value = %s AND p.post_type = 'attachment' ORDER BY p.ID LIMIT 1",
+				$seed_id
+			)
+		);
+		if ( 0 === $logo ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			$tmp = wp_tempnam( 'hcwa-logo.png' );
+			copy( $file, $tmp );
+			$logo = media_handle_sideload(
+				array(
+					'name'     => 'unit-logo.png',
+					'tmp_name' => $tmp,
+				),
+				(int) $pair['vi'],
+				null,
+				array( 'post_title' => 'Unit logo' )
+			);
+			if ( is_file( $tmp ) ) {
+				wp_delete_file( $tmp );
+			}
+			if ( is_wp_error( $logo ) ) {
+				WP_CLI::warning( "The $id unit logo could not be uploaded: " . $logo->get_error_message() );
+				continue;
+			}
+			$logo = (int) $logo;
+			hcwa_seed_meta( $logo, array( '_hcwa_seed_id' => $seed_id ) );
+		}
+		foreach ( $pair as $post_id ) {
+			hcwa_seed_meta( (int) $post_id, array( 'hcwa_logo_id' => $logo ) );
+		}
+		++$done;
+	}
+	WP_CLI::log( sprintf( 'Unit logos: %d from prototype/public/img.', $done ) );
+}
+
+/**
  * A synthetic test photo (one flat colour, no person in it) uploaded the way staff upload
  * (media_handle_sideload(), so it passes hcwa-core's upload filters), for checks that need
  * a real WordPress:
@@ -1984,7 +2049,10 @@ function hcwa_seed_settings( array $site, array $pages, array $work = array(), a
 
 	foreach ( $defaults as $key => $default ) {
 		list( $type, $value ) = $default;
-		if ( isset( $settings[ $key ] ) && '' !== $settings[ $key ] && null !== $settings[ $key ] ) {
+		// Filled-in fields are kept, except a seeded placeholder still carrying its draft marker:
+		// that one follows site.json (and the seed's current [DRAFT: …] format).
+		$stored = $settings[ $key ] ?? null;
+		if ( null !== $stored && '' !== $stored && ! ( is_string( $stored ) && hcwa_contains_draft( $stored ) && $stored !== $value ) ) {
 			continue;
 		}
 		$settings[ $key ] = function_exists( 'hcwa_sanitize_setting_value' ) ? hcwa_sanitize_setting_value( $type, $value ) : $value;

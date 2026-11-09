@@ -1,0 +1,37 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/louvers",
+	"title": "Ways to help",
+	"category": "hcwa",
+	"icon": "list-view",
+	"description": "The four ways to help as louver slats.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"ways": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"text": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

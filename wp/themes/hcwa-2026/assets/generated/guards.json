@@ -1,0 +1,48 @@
+{
+	"blockers": [
+		{
+			"source": "data-draft",
+			"flags": "",
+			"why": "draft text (data-draft)"
+		},
+		{
+			"source": "\\[DRAFT",
+			"flags": "",
+			"why": "[DRAFT marker"
+		},
+		{
+			"source": "data-pending",
+			"flags": "",
+			"why": "unverified figure"
+		},
+		{
+			"source": "data-donation-placeholder",
+			"flags": "",
+			"why": "donation placeholder"
+		},
+		{
+			"source": ">[^<]*\\[[^\\]<]{1,80}\\][^<]*<",
+			"flags": "",
+			"why": "bracket placeholder token in text"
+		},
+		{
+			"source": "data-story-placeholder",
+			"flags": "",
+			"why": "featured story placeholder"
+		},
+		{
+			"source": "data-partners-pending",
+			"flags": "",
+			"why": "partners placeholder strip"
+		}
+	],
+	"littleRoseDoor": {
+		"source": "data-unit=\"little-rose\"[^>]*\\sdata-door=\"|(?:door|bay)-little-rose-|hub-doors-wide",
+		"flags": ""
+	},
+	"footnote": {
+		"source": "^\\[\\d+\\]$",
+		"flags": ""
+	},
+	"minPartnerLogos": 4
+}

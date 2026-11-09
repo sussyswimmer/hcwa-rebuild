@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/sun-head",
+	"title": "Donate header",
+	"category": "hcwa",
+	"icon": "money-alt",
+	"description": "The Donate page header with its jump links.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"intro": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"go": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"jumpAbroad": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"jumpTell": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

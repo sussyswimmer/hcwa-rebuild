@@ -1,0 +1,28 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/work-hub",
+	"title": "Our Work hub",
+	"category": "hcwa",
+	"icon": "networking",
+	"description": "The filters, the wall of center doors and the program rows.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"centersLead": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"programsLead": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

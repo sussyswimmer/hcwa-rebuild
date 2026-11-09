@@ -1,0 +1,61 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/dusk-band",
+	"title": "Evening band",
+	"category": "hcwa",
+	"icon": "format-status",
+	"description": "The dusk band at the end of a page: a heading, the contact lines and buttons.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"anchor": {
+			"type": "string",
+			"default": ""
+		},
+		"titleId": {
+			"type": "string",
+			"default": ""
+		},
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"lines": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "string",
+				"enum": [
+					"phone",
+					"email",
+					"sponsorship"
+				]
+			}
+		},
+		"actions": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "string",
+				"enum": [
+					"donate",
+					"volunteer",
+					"partner",
+					"contact"
+				]
+			}
+		},
+		"note": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

@@ -13,7 +13,19 @@ import { defineConfig } from "vite";
 // Run through `npm run export:wp` (scripts/export-wp.mjs), which also writes the generated files.
 const here = import.meta.dirname;
 
+// Vite adds its modulepreload polyfill only to HTML entries, so the prototype's pages get it and a JS
+// entry does not. Vite's backend-integration guide has the entry import it instead; this plugin does
+// that for src/main.js in this build only, so the WordPress bundle carries the same code as the
+// prototype's without touching the source.
+const preloadPolyfill = {
+  name: "hcwa-wp-modulepreload-polyfill",
+  transform(code, id) {
+    if (id === resolve(here, "src/main.js")) return { code: `import "vite/modulepreload-polyfill";\n${code}`, map: null };
+  },
+};
+
 export default defineConfig({
+  plugins: [preloadPolyfill],
   root: here,
   base: "./",
   publicDir: resolve(here, "public"),

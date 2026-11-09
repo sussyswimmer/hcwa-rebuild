@@ -1,0 +1,3712 @@
+{
+	"nothing": null,
+	"stills": {
+		"bay-cau-han": {
+			"kind": "frame",
+			"unit": "cau-han",
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-cau-han-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/bay-cau-han-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-cau-han-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/bay-cau-han-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-cau-han-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/bay-cau-han-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-cau-han-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/bay-cau-han-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-cau-han-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/bay-cau-han-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-cau-han-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/bay-cau-han-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/bay-cau-han-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"bay-green-bamboo": {
+			"kind": "frame",
+			"unit": "green-bamboo",
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/bay-green-bamboo-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/bay-green-bamboo-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/bay-green-bamboo-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/bay-green-bamboo-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/bay-green-bamboo-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-green-bamboo-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/bay-green-bamboo-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/bay-green-bamboo-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"bay-little-rose": {
+			"kind": "frame",
+			"unit": "little-rose",
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-little-rose-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/bay-little-rose-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-little-rose-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/bay-little-rose-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/bay-little-rose-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/bay-little-rose-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-little-rose-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/bay-little-rose-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-little-rose-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/bay-little-rose-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/bay-little-rose-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/bay-little-rose-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/bay-little-rose-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"door-cau-han": {
+			"kind": "card",
+			"unit": "cau-han",
+			"page": null,
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.3333333333333333,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "card",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-cau-han-card-still-480.avif",
+									480
+								],
+								[
+									"posters/door-cau-han-card-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-cau-han-card-still-480.webp",
+									480
+								],
+								[
+									"posters/door-cau-han-card-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-cau-han-card-still-480.jpg",
+									480
+								],
+								[
+									"posters/door-cau-han-card-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						}
+					],
+					"img": {
+						"src": "posters/door-cau-han-card-still-800.jpg",
+						"width": 800,
+						"height": 600
+					}
+				}
+			}
+		},
+		"door-green-bamboo": {
+			"kind": "card",
+			"unit": "green-bamboo",
+			"page": null,
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.3333333333333333,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "card",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-green-bamboo-card-still-480.avif",
+									480
+								],
+								[
+									"posters/door-green-bamboo-card-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-green-bamboo-card-still-480.webp",
+									480
+								],
+								[
+									"posters/door-green-bamboo-card-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-green-bamboo-card-still-480.jpg",
+									480
+								],
+								[
+									"posters/door-green-bamboo-card-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						}
+					],
+					"img": {
+						"src": "posters/door-green-bamboo-card-still-800.jpg",
+						"width": 800,
+						"height": 600
+					}
+				}
+			}
+		},
+		"door-little-rose": {
+			"kind": "card",
+			"unit": "little-rose",
+			"page": null,
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.3333333333333333,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "card",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-little-rose-card-still-480.avif",
+									480
+								],
+								[
+									"posters/door-little-rose-card-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-little-rose-card-still-480.webp",
+									480
+								],
+								[
+									"posters/door-little-rose-card-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "card",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/door-little-rose-card-still-480.jpg",
+									480
+								],
+								[
+									"posters/door-little-rose-card-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						}
+					],
+					"img": {
+						"src": "posters/door-little-rose-card-still-800.jpg",
+						"width": 800,
+						"height": 600
+					}
+				}
+			}
+		},
+		"dusk": {
+			"kind": "band",
+			"unit": null,
+			"page": null,
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/dusk-desk-still-800.avif",
+									800
+								],
+								[
+									"posters/dusk-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/dusk-desk-still-800.webp",
+									800
+								],
+								[
+									"posters/dusk-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/dusk-desk-still-800.jpg",
+									800
+								],
+								[
+									"posters/dusk-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/dusk-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/dusk-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/dusk-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/dusk-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/dusk-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/dusk-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 600
+						}
+					],
+					"img": {
+						"src": "posters/dusk-mobile-still-800.jpg",
+						"width": 800,
+						"height": 600
+					}
+				}
+			}
+		},
+		"gallery-wall": {
+			"kind": "wall",
+			"unit": null,
+			"page": "center",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 2.3333333333333335,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/gallery-wall-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/gallery-wall-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 686
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/gallery-wall-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/gallery-wall-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 686
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/gallery-wall-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/gallery-wall-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 686
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/gallery-wall-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/gallery-wall-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 500
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/gallery-wall-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/gallery-wall-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 500
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/gallery-wall-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/gallery-wall-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 500
+						}
+					],
+					"img": {
+						"src": "posters/gallery-wall-mobile-still-800.jpg",
+						"width": 800,
+						"height": 500
+					}
+				}
+			}
+		},
+		"header-contact": {
+			"kind": "header",
+			"unit": null,
+			"page": "contact",
+			"motion": null,
+			"layers": [
+				"base",
+				"lightroom",
+				"lightscreen"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-contact-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-contact-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-contact-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-contact-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-contact-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-contact-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-contact-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-contact-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-contact-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-contact-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-contact-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-contact-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightscreen": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-lightscreen-960.avif",
+									960
+								],
+								[
+									"posters/header-contact-desk-lightscreen-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-contact-desk-lightscreen-960.webp",
+									960
+								],
+								[
+									"posters/header-contact-desk-lightscreen-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-lightscreen-480.avif",
+									480
+								],
+								[
+									"posters/header-contact-mobile-lightscreen-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-contact-mobile-lightscreen-480.webp",
+									480
+								],
+								[
+									"posters/header-contact-mobile-lightscreen-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-contact-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-get-involved": {
+			"kind": "header",
+			"unit": null,
+			"page": "get-involved",
+			"motion": "louver",
+			"layers": [
+				"base",
+				"lightroom",
+				"lightscreen"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-get-involved-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-get-involved-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightscreen": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-lightscreen-960.avif",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-lightscreen-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-get-involved-desk-lightscreen-960.webp",
+									960
+								],
+								[
+									"posters/header-get-involved-desk-lightscreen-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-lightscreen-480.avif",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-lightscreen-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-get-involved-mobile-lightscreen-480.webp",
+									480
+								],
+								[
+									"posters/header-get-involved-mobile-lightscreen-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-get-involved-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-green-bamboo": {
+			"kind": "header",
+			"unit": "green-bamboo",
+			"page": "center",
+			"motion": "drift",
+			"layers": [
+				"base",
+				"lightroom",
+				"lightscreen"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-green-bamboo-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-green-bamboo-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightscreen": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-lightscreen-960.avif",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-lightscreen-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-green-bamboo-desk-lightscreen-960.webp",
+									960
+								],
+								[
+									"posters/header-green-bamboo-desk-lightscreen-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-lightscreen-480.avif",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-lightscreen-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-green-bamboo-mobile-lightscreen-480.webp",
+									480
+								],
+								[
+									"posters/header-green-bamboo-mobile-lightscreen-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-green-bamboo-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-our-work": {
+			"kind": "header",
+			"unit": null,
+			"page": "our-work",
+			"motion": null,
+			"layers": [
+				"base",
+				"lightroom",
+				"lightscreen"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-our-work-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-our-work-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-our-work-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-our-work-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-our-work-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-our-work-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-our-work-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightscreen": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-lightscreen-960.avif",
+									960
+								],
+								[
+									"posters/header-our-work-desk-lightscreen-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-our-work-desk-lightscreen-960.webp",
+									960
+								],
+								[
+									"posters/header-our-work-desk-lightscreen-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-lightscreen-480.avif",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-lightscreen-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-our-work-mobile-lightscreen-480.webp",
+									480
+								],
+								[
+									"posters/header-our-work-mobile-lightscreen-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-our-work-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-thrive-together": {
+			"kind": "header",
+			"unit": null,
+			"page": "program",
+			"motion": "drift",
+			"layers": [
+				"base",
+				"lightroom"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-thrive-together-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-thrive-together-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-thrive-together-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-thrive-together-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-thrive-together-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-thrive-together-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-thrive-together-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-thrive-together-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-thrive-together-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-thrive-together-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-thrive-together-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-thrive-together-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-thrive-together-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-thrive-together-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-thrive-together-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-thrive-together-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-thrive-together-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-thrive-together-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-thrive-together-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-thrive-together-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-thrive-together-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-thrive-together-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"hub-door-cau-han": {
+			"kind": "door",
+			"unit": "cau-han",
+			"page": "our-work",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 0.8,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "door",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-cau-han-door-still-480.avif",
+									480
+								],
+								[
+									"posters/hub-door-cau-han-door-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-cau-han-door-still-480.webp",
+									480
+								],
+								[
+									"posters/hub-door-cau-han-door-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-cau-han-door-still-480.jpg",
+									480
+								],
+								[
+									"posters/hub-door-cau-han-door-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						}
+					],
+					"img": {
+						"src": "posters/hub-door-cau-han-door-still-800.jpg",
+						"width": 800,
+						"height": 1000
+					}
+				}
+			}
+		},
+		"hub-door-green-bamboo": {
+			"kind": "door",
+			"unit": "green-bamboo",
+			"page": "our-work",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 0.8,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "door",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-green-bamboo-door-still-480.avif",
+									480
+								],
+								[
+									"posters/hub-door-green-bamboo-door-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-green-bamboo-door-still-480.webp",
+									480
+								],
+								[
+									"posters/hub-door-green-bamboo-door-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-green-bamboo-door-still-480.jpg",
+									480
+								],
+								[
+									"posters/hub-door-green-bamboo-door-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						}
+					],
+					"img": {
+						"src": "posters/hub-door-green-bamboo-door-still-800.jpg",
+						"width": 800,
+						"height": 1000
+					}
+				}
+			}
+		},
+		"hub-door-little-rose": {
+			"kind": "door",
+			"unit": "little-rose",
+			"page": "our-work",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 0.8,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "door",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-little-rose-door-still-480.avif",
+									480
+								],
+								[
+									"posters/hub-door-little-rose-door-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-little-rose-door-still-480.webp",
+									480
+								],
+								[
+									"posters/hub-door-little-rose-door-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						},
+						{
+							"crop": "door",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-door-little-rose-door-still-480.jpg",
+									480
+								],
+								[
+									"posters/hub-door-little-rose-door-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1000
+						}
+					],
+					"img": {
+						"src": "posters/hub-door-little-rose-door-still-800.jpg",
+						"width": 800,
+						"height": 1000
+					}
+				}
+			}
+		},
+		"hub-doors-wide": {
+			"kind": "pano",
+			"unit": null,
+			"page": "our-work",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 2.3333333333333335,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "wide",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-doors-wide-wide-still-1600.avif",
+									1600
+								],
+								[
+									"posters/hub-doors-wide-wide-still-2400.avif",
+									2400
+								]
+							],
+							"width": 2400,
+							"height": 1029
+						},
+						{
+							"crop": "wide",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-doors-wide-wide-still-1600.webp",
+									1600
+								],
+								[
+									"posters/hub-doors-wide-wide-still-2400.webp",
+									2400
+								]
+							],
+							"width": 2400,
+							"height": 1029
+						},
+						{
+							"crop": "wide",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/hub-doors-wide-wide-still-1600.jpg",
+									1600
+								],
+								[
+									"posters/hub-doors-wide-wide-still-2400.jpg",
+									2400
+								]
+							],
+							"width": 2400,
+							"height": 1029
+						}
+					],
+					"img": {
+						"src": "posters/hub-doors-wide-wide-still-2400.jpg",
+						"width": 2400,
+						"height": 1029
+					}
+				}
+			}
+		},
+		"not-found": {
+			"kind": "square",
+			"unit": null,
+			"page": "not-found",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "square",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/not-found-square-still-480.avif",
+									480
+								],
+								[
+									"posters/not-found-square-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 800
+						},
+						{
+							"crop": "square",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/not-found-square-still-480.webp",
+									480
+								],
+								[
+									"posters/not-found-square-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 800
+						},
+						{
+							"crop": "square",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/not-found-square-still-480.jpg",
+									480
+								],
+								[
+									"posters/not-found-square-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 800
+						}
+					],
+					"img": {
+						"src": "posters/not-found-square-still-800.jpg",
+						"width": 800,
+						"height": 800
+					}
+				}
+			}
+		},
+		"passage-corridor": {
+			"kind": "frame",
+			"unit": null,
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": true,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/passage-corridor-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/passage-corridor-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/passage-corridor-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/passage-corridor-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/passage-corridor-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/passage-corridor-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/passage-corridor-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/passage-corridor-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/passage-corridor-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/passage-corridor-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/passage-corridor-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/passage-corridor-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/passage-corridor-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"shutters-closed": {
+			"kind": "frame",
+			"unit": null,
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-closed-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/shutters-closed-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-closed-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/shutters-closed-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-closed-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/shutters-closed-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-closed-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/shutters-closed-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-closed-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/shutters-closed-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-closed-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/shutters-closed-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/shutters-closed-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"shutters-louvers": {
+			"kind": "frame",
+			"unit": null,
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-louvers-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/shutters-louvers-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-louvers-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/shutters-louvers-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-louvers-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/shutters-louvers-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-louvers-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/shutters-louvers-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-louvers-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/shutters-louvers-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-louvers-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/shutters-louvers-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/shutters-louvers-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"shutters-open": {
+			"kind": "frame",
+			"unit": null,
+			"page": "home",
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.6,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-open-desk-still-960.avif",
+									960
+								],
+								[
+									"posters/shutters-open-desk-still-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-open-desk-still-960.webp",
+									960
+								],
+								[
+									"posters/shutters-open-desk-still-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-aspect-ratio: 1/1)",
+							"srcset": [
+								[
+									"posters/shutters-open-desk-still-960.jpg",
+									960
+								],
+								[
+									"posters/shutters-open-desk-still-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 1000
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-open-mobile-still-480.avif",
+									480
+								],
+								[
+									"posters/shutters-open-mobile-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-open-mobile-still-480.webp",
+									480
+								],
+								[
+									"posters/shutters-open-mobile-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/shutters-open-mobile-still-480.jpg",
+									480
+								],
+								[
+									"posters/shutters-open-mobile-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 1067
+						}
+					],
+					"img": {
+						"src": "posters/shutters-open-mobile-still-800.jpg",
+						"width": 800,
+						"height": 1067
+					}
+				}
+			}
+		},
+		"story": {
+			"kind": "story",
+			"unit": null,
+			"page": null,
+			"motion": null,
+			"layers": [
+				"still"
+			],
+			"aspect": 1.5,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"still": {
+					"sources": [
+						{
+							"crop": "story",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/story-story-still-480.avif",
+									480
+								],
+								[
+									"posters/story-story-still-800.avif",
+									800
+								]
+							],
+							"width": 800,
+							"height": 533
+						},
+						{
+							"crop": "story",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/story-story-still-480.webp",
+									480
+								],
+								[
+									"posters/story-story-still-800.webp",
+									800
+								]
+							],
+							"width": 800,
+							"height": 533
+						},
+						{
+							"crop": "story",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/story-story-still-480.jpg",
+									480
+								],
+								[
+									"posters/story-story-still-800.jpg",
+									800
+								]
+							],
+							"width": 800,
+							"height": 533
+						}
+					],
+					"img": {
+						"src": "posters/story-story-still-800.jpg",
+						"width": 800,
+						"height": 533
+					}
+				}
+			}
+		}
+	},
+	"hero": {
+		"base": {
+			"sources": [
+				{
+					"bucket": "portrait",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-base-480.avif",
+							480
+						],
+						[
+							"posters/hero-portrait-base-960.avif",
+							960
+						],
+						[
+							"posters/hero-portrait-base-1600.avif",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "portrait",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-base-480.webp",
+							480
+						],
+						[
+							"posters/hero-portrait-base-960.webp",
+							960
+						],
+						[
+							"posters/hero-portrait-base-1600.webp",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "portrait",
+					"type": "image/jpeg",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-base-480.jpg",
+							480
+						],
+						[
+							"posters/hero-portrait-base-960.jpg",
+							960
+						],
+						[
+							"posters/hero-portrait-base-1600.jpg",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-base-480.avif",
+							480
+						],
+						[
+							"posters/hero-tablet-base-960.avif",
+							960
+						],
+						[
+							"posters/hero-tablet-base-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-base-480.webp",
+							480
+						],
+						[
+							"posters/hero-tablet-base-960.webp",
+							960
+						],
+						[
+							"posters/hero-tablet-base-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/jpeg",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-base-480.jpg",
+							480
+						],
+						[
+							"posters/hero-tablet-base-960.jpg",
+							960
+						],
+						[
+							"posters/hero-tablet-base-1600.jpg",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-base-480.avif",
+							480
+						],
+						[
+							"posters/hero-landscape-base-960.avif",
+							960
+						],
+						[
+							"posters/hero-landscape-base-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-base-480.webp",
+							480
+						],
+						[
+							"posters/hero-landscape-base-960.webp",
+							960
+						],
+						[
+							"posters/hero-landscape-base-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/jpeg",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-base-480.jpg",
+							480
+						],
+						[
+							"posters/hero-landscape-base-960.jpg",
+							960
+						],
+						[
+							"posters/hero-landscape-base-1600.jpg",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/avif",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-base-480.avif",
+							480
+						],
+						[
+							"posters/hero-wide-base-960.avif",
+							960
+						],
+						[
+							"posters/hero-wide-base-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/webp",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-base-480.webp",
+							480
+						],
+						[
+							"posters/hero-wide-base-960.webp",
+							960
+						],
+						[
+							"posters/hero-wide-base-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/jpeg",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-base-480.jpg",
+							480
+						],
+						[
+							"posters/hero-wide-base-960.jpg",
+							960
+						],
+						[
+							"posters/hero-wide-base-1600.jpg",
+							1600
+						]
+					],
+					"sizes": null
+				}
+			],
+			"img": {
+				"src": "posters/hero-wide-base-960.jpg",
+				"width": 1600,
+				"height": 900
+			}
+		},
+		"lightroom": {
+			"sources": [
+				{
+					"bucket": "portrait",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-lightroom-480.avif",
+							480
+						],
+						[
+							"posters/hero-portrait-lightroom-960.avif",
+							960
+						],
+						[
+							"posters/hero-portrait-lightroom-1600.avif",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "portrait",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-lightroom-480.webp",
+							480
+						],
+						[
+							"posters/hero-portrait-lightroom-960.webp",
+							960
+						],
+						[
+							"posters/hero-portrait-lightroom-1600.webp",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-lightroom-480.avif",
+							480
+						],
+						[
+							"posters/hero-tablet-lightroom-960.avif",
+							960
+						],
+						[
+							"posters/hero-tablet-lightroom-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-lightroom-480.webp",
+							480
+						],
+						[
+							"posters/hero-tablet-lightroom-960.webp",
+							960
+						],
+						[
+							"posters/hero-tablet-lightroom-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-lightroom-480.avif",
+							480
+						],
+						[
+							"posters/hero-landscape-lightroom-960.avif",
+							960
+						],
+						[
+							"posters/hero-landscape-lightroom-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-lightroom-480.webp",
+							480
+						],
+						[
+							"posters/hero-landscape-lightroom-960.webp",
+							960
+						],
+						[
+							"posters/hero-landscape-lightroom-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/avif",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-lightroom-480.avif",
+							480
+						],
+						[
+							"posters/hero-wide-lightroom-960.avif",
+							960
+						],
+						[
+							"posters/hero-wide-lightroom-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/webp",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-lightroom-480.webp",
+							480
+						],
+						[
+							"posters/hero-wide-lightroom-960.webp",
+							960
+						],
+						[
+							"posters/hero-wide-lightroom-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				}
+			],
+			"img": {
+				"src": "posters/hero-wide-lightroom-960.webp",
+				"width": 1600,
+				"height": 900
+			}
+		},
+		"lightscreen": {
+			"sources": [
+				{
+					"bucket": "portrait",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-lightscreen-480.avif",
+							480
+						],
+						[
+							"posters/hero-portrait-lightscreen-960.avif",
+							960
+						],
+						[
+							"posters/hero-portrait-lightscreen-1600.avif",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "portrait",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 10/17)",
+					"srcset": [
+						[
+							"posters/hero-portrait-lightscreen-480.webp",
+							480
+						],
+						[
+							"posters/hero-portrait-lightscreen-960.webp",
+							960
+						],
+						[
+							"posters/hero-portrait-lightscreen-1600.webp",
+							1600
+						]
+					],
+					"sizes": "80vw"
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-lightscreen-480.avif",
+							480
+						],
+						[
+							"posters/hero-tablet-lightscreen-960.avif",
+							960
+						],
+						[
+							"posters/hero-tablet-lightscreen-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "tablet",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 12/11)",
+					"srcset": [
+						[
+							"posters/hero-tablet-lightscreen-480.webp",
+							480
+						],
+						[
+							"posters/hero-tablet-lightscreen-960.webp",
+							960
+						],
+						[
+							"posters/hero-tablet-lightscreen-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/avif",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-lightscreen-480.avif",
+							480
+						],
+						[
+							"posters/hero-landscape-lightscreen-960.avif",
+							960
+						],
+						[
+							"posters/hero-landscape-lightscreen-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "landscape",
+					"type": "image/webp",
+					"media": "(max-aspect-ratio: 27/16)",
+					"srcset": [
+						[
+							"posters/hero-landscape-lightscreen-480.webp",
+							480
+						],
+						[
+							"posters/hero-landscape-lightscreen-960.webp",
+							960
+						],
+						[
+							"posters/hero-landscape-lightscreen-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/avif",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-lightscreen-480.avif",
+							480
+						],
+						[
+							"posters/hero-wide-lightscreen-960.avif",
+							960
+						],
+						[
+							"posters/hero-wide-lightscreen-1600.avif",
+							1600
+						]
+					],
+					"sizes": null
+				},
+				{
+					"bucket": "wide",
+					"type": "image/webp",
+					"media": null,
+					"srcset": [
+						[
+							"posters/hero-wide-lightscreen-480.webp",
+							480
+						],
+						[
+							"posters/hero-wide-lightscreen-960.webp",
+							960
+						],
+						[
+							"posters/hero-wide-lightscreen-1600.webp",
+							1600
+						]
+					],
+					"sizes": null
+				}
+			],
+			"img": {
+				"src": "posters/hero-wide-lightscreen-960.webp",
+				"width": 1600,
+				"height": 900
+			}
+		}
+	}
+}

@@ -52,8 +52,6 @@ function hcwa_theme_strings(): array {
 		'centerFigures'    => array( 'vi' => 'Kết quả tại {name}', 'en' => '{name} in numbers' ),
 		'helpCenter'       => array( 'vi' => 'Cách giúp {name}', 'en' => 'How to help {name}' ),
 		'donateTo'         => array( 'vi' => 'Ủng hộ {name}', 'en' => 'Donate to {name}' ),
-		'visitTitle'       => array( 'vi' => 'Muốn đến thăm {name}?', 'en' => 'Want to visit {name}?' ),
-		'supportTitle'     => array( 'vi' => 'Muốn hỗ trợ {name}?', 'en' => 'Want to support {name}?' ),
 		'unitLogo'         => array( 'vi' => 'Logo {name}', 'en' => '{name} logo' ),
 
 		// Program page.

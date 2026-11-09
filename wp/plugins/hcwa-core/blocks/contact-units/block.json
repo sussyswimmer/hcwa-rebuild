@@ -1,0 +1,28 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/contact-units",
+	"title": "Contact: centers",
+	"category": "hcwa",
+	"icon": "location",
+	"description": "Each center with its way in. Little Rose has no address of its own.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"littleRose": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"centerPending": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

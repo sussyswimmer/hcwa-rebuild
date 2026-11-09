@@ -5,9 +5,14 @@
 	"title": "Partner wall",
 	"category": "hcwa",
 	"icon": "groups",
-	"description": "One-tone partner logos. On the live site a logo shows only with the partner's written permission.",
+	"description": "Approved one-tone partner logos, shown once at least four are allowed.",
 	"textdomain": "hcwa",
 	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
 		"homeOnly": {
 			"type": "boolean",
 			"default": true
@@ -18,7 +23,8 @@
 		}
 	},
 	"supports": {
-		"html": false
+		"html": false,
+		"reusable": false
 	},
 	"editorScript": "file:./index.js",
 	"render": "file:./render.php"
