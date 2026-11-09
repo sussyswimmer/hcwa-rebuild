@@ -5,9 +5,11 @@
  *
  * parse_blocks() is a small block-comment parser with the shape WordPress returns
  * (blockName, attrs, innerBlocks, innerHTML, innerContent; freeform HTML between top-level
- * blocks is a block named null). render_block() prints innerContent with each inner block
- * rendered in its place, wraps an hcwa/* block's output in <name>…</name> so a test can see
- * which blocks printed, and runs the render_block filter like WordPress does.
+ * blocks is a block named null). render_block() runs the pre_render_block filter, prints
+ * innerContent with each inner block rendered in its place, wraps an hcwa/* block's output
+ * in <name>…</name> so a test can see which blocks printed, and runs the render_block
+ * filter like WordPress does. A core/block (synced pattern) renders the parsed content in
+ * $GLOBALS['hcwa_test']['synced'][ref] through render_block(), as core's render callback does.
  *
  * Extra test state (cleared by hcwa_test_reset() with the rest):
  *   $GLOBALS['hcwa_test']['password'][post_id] => true for post_password_required()
@@ -111,12 +113,23 @@ if ( ! function_exists( 'render_block' ) ) {
 	 * @param array $parsed Parsed block.
 	 */
 	function render_block( $parsed ) {
+		// Like WordPress: a non-null pre_render_block result is the block's output.
+		$pre = hcwa_test_run_filters( 'pre_render_block', null, $parsed, null );
+		if ( null !== $pre ) {
+			return (string) $pre;
+		}
 		$html  = '';
 		$index = 0;
 		foreach ( (array) ( $parsed['innerContent'] ?? array() ) as $chunk ) {
 			$html .= is_string( $chunk ) ? $chunk : render_block( $parsed['innerBlocks'][ $index++ ] ?? array() );
 		}
 		$name = (string) ( $parsed['blockName'] ?? '' );
+		if ( 'core/block' === $name ) {
+			$ref = (int) ( $parsed['attrs']['ref'] ?? 0 );
+			foreach ( parse_blocks( (string) ( $GLOBALS['hcwa_test']['synced'][ $ref ] ?? '' ) ) as $synced ) {
+				$html .= render_block( $synced );
+			}
+		}
 		if ( 0 === strpos( $name, 'hcwa/' ) ) {
 			$tag  = substr( $name, 5 );
 			$html = "<$tag>" . $html . "</$tag>";
@@ -190,5 +203,60 @@ if ( ! function_exists( 'get_post_field' ) ) {
 	function get_post_field( $field, $post = null, $context = 'display' ) {
 		$post = get_post( $post );
 		return $post && isset( $post->$field ) ? $post->$field : '';
+	}
+}
+
+if ( ! class_exists( 'HCWA_Test_Query' ) ) {
+	/**
+	 * The parts of WP_Query the 404 refusals touch, with set_404() doing what WordPress 7.1.4
+	 * does (class-wp-query.php:1843-1849): every query flag is cleared except is_feed, which
+	 * is kept, and is_embed, which init_query_flags() does not list; the found posts stay.
+	 * A bare `is_404 = true` stub hid that a refused feed still printed its items (fix round 2).
+	 */
+	class HCWA_Test_Query {
+		public $is_single         = false;
+		public $is_page           = false;
+		public $is_archive        = false;
+		public $is_search         = false;
+		public $is_tax            = false;
+		public $is_feed           = false;
+		public $is_comment_feed   = false;
+		public $is_home           = false;
+		public $is_404            = false;
+		public $is_attachment     = false;
+		public $is_singular       = false;
+		public $is_embed          = false;
+		public $posts             = array();
+		public $post              = null;
+		public $post_count        = 0;
+		public $found_posts       = 0;
+		public $max_num_pages     = 0;
+		public $comments          = array();
+		public $comment_count     = 0;
+		public $queried_object    = null;
+		public $queried_object_id = null;
+
+		/**
+		 * @param array<string,bool> $flags Query flags, e.g. array( 'is_feed' => true ).
+		 * @param WP_Post[]          $posts Found posts (the first is $post).
+		 */
+		public function __construct( array $flags = array(), array $posts = array() ) {
+			foreach ( $flags as $flag => $value ) {
+				$this->$flag = (bool) $value;
+			}
+			$this->posts       = $posts;
+			$this->post        = $posts[0] ?? null;
+			$this->post_count  = count( $posts );
+			$this->found_posts = count( $posts );
+		}
+
+		public function set_404() {
+			$is_feed = $this->is_feed;
+			foreach ( array( 'is_single', 'is_page', 'is_archive', 'is_search', 'is_tax', 'is_feed', 'is_comment_feed', 'is_home', 'is_404', 'is_attachment', 'is_singular' ) as $flag ) {
+				$this->$flag = false;
+			}
+			$this->is_404  = true;
+			$this->is_feed = $is_feed;
+		}
 	}
 }

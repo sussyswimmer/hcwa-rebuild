@@ -62,6 +62,7 @@ import gzip
 import html as htmllib
 import importlib.util
 import json
+import math
 import os
 import re
 import signal
@@ -92,9 +93,9 @@ except ImportError:  # the module still loads for its pure helpers (wp/tests/run
     PlaywrightError, sync_playwright = Exception, None
 
 try:
-    from PIL import Image, ImageChops
+    from PIL import Image, ImageChops, ImageDraw
 except ImportError:
-    Image = ImageChops = None
+    Image = ImageChops = ImageDraw = None
 
 # Mode → how the page is loaded (5.2). "compare" modes get the structure, text and links diff; "shots"
 # modes also get the per-section screenshot comparison.
@@ -121,6 +122,18 @@ HASHED = re.compile(r"-[A-Za-z0-9_-]{8}(?=\.(?:js|css)$)")
 PIXEL_FAR = 24        # a pixel differs when one channel is off by more than this (0-255)
 PIXEL_SHARE = 1.0     # percent of differing pixels a section may have
 HEIGHT_SLACK = 2      # px
+UPLOAD_URL = re.compile(r"/wp-content/uploads/")  # media-library images, blurred on the WordPress side
+MASK_PAD = 1          # px around a masked image box (sub-pixel edges)
+SECTION_IMGS_JS = """(i) => {
+    const s = document.querySelector(`[data-parity-section="${i}"]`);
+    if (!s) return [];
+    const r = s.getBoundingClientRect();
+    return [...s.querySelectorAll('img')].map(im => {
+        const b = im.getBoundingClientRect();
+        return { src: im.currentSrc || im.getAttribute('src') || '', cls: (im.getAttribute('class') || '').trim(),
+                 x: b.left - r.left, y: b.top - r.top, w: b.width, h: b.height };
+    }).filter(b => b.w >= 1 && b.h >= 1);
+}"""
 STRIP_SHARE = 1.0     # percent of differing pixels a home strip frame may have between sides (5.5)
 HARD_STEP = 10.0      # a "hard line" (05-DESIGN 0.5, gate 7.14): rows whose colour steps by more than this
 HARD_SPAN = 0.9       # ... across at least this share of the width, between the 3 rows above and the 3 below
@@ -344,7 +357,7 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
             return { load, before: performance.getEntriesByType('resource').filter(e => e.startTime <= load).map(e => ({ url: e.name, type: e.initiatorType })) };
         }""")
         if shot_dir is not None:
-            out["shots"] = shoot_sections(page, data["sections"], shot_dir)
+            out["shots"], out["shotImgs"] = shoot_sections(page, data["sections"], shot_dir)
         if mode == "reduced" and shot_dir is not None:
             # Gate 7.14 "no hard line between sections": one full page at rest, scanned row by row.
             # Taken after the section shots: a full-page capture resizes the layout for a moment,
@@ -374,11 +387,12 @@ def load_page(browsers, side: str, route: dict, width: str, mode: str, shot_dir:
     return out
 
 
-def shoot_sections(page, sections: list[dict], shot_dir: Path) -> dict:
+def shoot_sections(page, sections: list[dict], shot_dir: Path) -> tuple[dict, dict]:
     """An element screenshot of every section root (header first, at the top of the page; the
-    header is hidden for the others so a sticky header does not cover them)."""
+    header is hidden for the others so a sticky header does not cover them), and the boxes of
+    the images in each section relative to its screenshot (for mask_boxes())."""
     shot_dir.mkdir(parents=True, exist_ok=True)
-    shots = {}
+    shots, imgs = {}, {}
     hidden = False
     for s in sections:
         if s.get("shallow") or s["key"] == "menu-sheet":
@@ -394,9 +408,10 @@ def shoot_sections(page, sections: list[dict], shot_dir: Path) -> dict:
                 continue
             loc.screenshot(path=str(path), animations="disabled", timeout=30000)
             shots[s["key"]] = str(path)
+            imgs[s["key"]] = page.evaluate(SECTION_IMGS_JS, s["index"])
         except PlaywrightError as exc:
             shots[s["key"]] = "error: " + str(exc).splitlines()[0][:160]
-    return shots
+    return shots, imgs
 
 
 def php_errors(body: str) -> list[str]:
@@ -533,8 +548,40 @@ def diff_lists(a: list[str], b: list[str], kind: str, route: str, section: str,
     return {"pass": not changes, "changes": len(changes), "allowed": dropped, "diff": kept[:400]}
 
 
+def mask_boxes(proto_imgs: list[dict], wp_imgs: list[dict]) -> list[list[int]]:
+    """Boxes [x, y, w, h] (section-relative CSS px, padded) left out of the pixel count: every
+    WordPress image served from /wp-content/uploads/ (new_context() blurs those, as the smoke
+    test does; this repo is public), and the prototype image with the same class in the same
+    section, which is the same picture served sharp from /img/ (critic round 2: the approved
+    center logo). Nothing else is masked, so any other change in the section still counts."""
+    boxes, used = [], set()
+    for im in wp_imgs or []:
+        if not UPLOAD_URL.search(str(im.get("src") or "")):
+            continue
+        boxes.append(im)
+        cls = str(im.get("cls") or "")
+        if not cls:
+            continue
+        for i, pim in enumerate(proto_imgs or []):
+            if i not in used and str(pim.get("cls") or "") == cls:
+                used.add(i)
+                boxes.append(pim)
+                break
+    out = []
+    for b in boxes:
+        x0, y0 = math.floor(float(b["x"])) - MASK_PAD, math.floor(float(b["y"])) - MASK_PAD
+        x1, y1 = math.ceil(float(b["x"]) + float(b["w"])) + MASK_PAD, math.ceil(float(b["y"]) + float(b["h"])) + MASK_PAD
+        box = [max(0, x0), max(0, y0), x1 - max(0, x0), y1 - max(0, y0)]
+        if box[2] > 0 and box[3] > 0 and box not in out:
+            out.append(box)
+    return out
+
+
 def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str,
-                   width: str | None = None, mode: str | None = None) -> dict:
+                   width: str | None = None, mode: str | None = None, masks: list | None = None) -> dict:
+    """Gate 7.9 for one section: heights within HEIGHT_SLACK and at most PIXEL_SHARE percent of
+    pixels off by more than PIXEL_FAR, counted outside the masked boxes (mask_boxes()) and over
+    the unmasked area."""
     if Image is None:
         return {"pass": False, "why": "Pillow is not installed"}
     A, B = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
@@ -545,8 +592,19 @@ def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str,
     ca, cb = A.crop((0, 0, w, h)), B.crop((0, 0, w, h))
     r, g, bl = ImageChops.difference(ca, cb).split()
     mask = ImageChops.lighter(ImageChops.lighter(r, g), bl).point(lambda v: 255 if v > PIXEL_FAR else 0)
+    ignore, masked = None, 0
+    if masks:
+        ignore = Image.new("L", (w, h), 0)
+        draw = ImageDraw.Draw(ignore)
+        for x, y, bw, bh in masks:
+            draw.rectangle([x, y, x + bw - 1, y + bh - 1], fill=255)
+        masked = ignore.histogram()[255]
+        mask = ImageChops.subtract(mask, ignore)
+        res["masked"] = [list(m) for m in masks]
+        res["maskedShare"] = round(100 * masked / (w * h), 2)
     far = mask.histogram()[255]
-    share = round(100 * far / (w * h), 2)
+    area = w * h - masked
+    share = round(100 * far / area, 2) if area > 0 else 0.0
     height_ok = abs(A.height - B.height) <= HEIGHT_SLACK and abs(A.width - B.width) <= HEIGHT_SLACK
     ok = height_ok and share <= PIXEL_SHARE
     res.update({"share": share, "heightOk": height_ok})
@@ -558,6 +616,8 @@ def compare_pixels(a: str, b: str, diff_path: Path, route: str, section: str,
         diff_path.parent.mkdir(parents=True, exist_ok=True)
         canvas = Image.new("RGB", (max(A.width, B.width), max(A.height, B.height)), (255, 0, 255))
         base = ImageChops.multiply(ca.convert("L").convert("RGB"), Image.new("RGB", (w, h), (200, 200, 200)))
+        if ignore is not None:  # masked boxes in blue, so a reader sees what was left out
+            base.paste(Image.new("RGB", (w, h), (60, 110, 230)), mask=ignore)
         base.paste(Image.new("RGB", (w, h), (230, 30, 30)), mask=mask)
         canvas.paste(base, (0, 0))
         canvas.save(diff_path)
@@ -694,12 +754,41 @@ def page_checks(route: dict, mode: str, page: dict, three: dict) -> list[str]:
     return fails
 
 
+HEAD_META = (("name", "description"), ("property", "og:title"), ("property", "og:description"), ("property", "og:locale"))
+
+
+def head_meta(doc: str) -> dict:
+    """<meta name=description>, og:title, og:description and og:locale of a document's <head>,
+    unescaped with whitespace collapsed (the first of each; quotes of either kind)."""
+    head = re.split(r"</head\s*>", doc or "", maxsplit=1, flags=re.I)[0]
+    out = {}
+    for tag in re.findall(r"<meta\b[^>]*>", head, re.I):
+        attrs = {}
+        for key, dq, sq in re.findall(r"""([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""", tag):
+            attrs.setdefault(key.lower(), htmllib.unescape(dq if dq or not sq else sq))
+        for kind, name in HEAD_META:
+            if attrs.get(kind, "").lower() == name and name not in out:
+                out[name] = " ".join(attrs.get("content", "").split())
+    return out
+
+
+def head_meta_diff(proto_doc: str, wp_doc: str) -> list[str]:
+    """The head tags of HEAD_META where WordPress differs from the prototype (critic round 2:
+    the description printed the draft tagline with its brackets, and no og tags at all)."""
+    a, b = head_meta(proto_doc), head_meta(wp_doc)
+    return [f"{name}: {b.get(name)!r} (prototype {a.get(name)!r})" for _, name in HEAD_META if a.get(name) != b.get(name)]
+
+
 def wp_only_checks(route: dict, mode: str, pages: dict) -> list[str]:
-    """Gate 7.10 items measured on WordPress alone, with the prototype's value for reference."""
+    """Gate 7.10 items measured on WordPress alone, with the prototype's value for reference,
+    and the head description and Open Graph tags against the prototype's."""
     fails = []
     p, q = pages["wp"], pages["proto"]
     if p.get("loadError"):
         return fails
+    meta = head_meta_diff(q.get("doc", ""), p.get("doc", "")) if q.get("doc") else []
+    if meta:
+        fails.append("head meta differs from the prototype: " + "; ".join(meta))
     if p.get("headStyleBytes", 0) > BUDGET["head_style_bytes"]:
         fails.append(f"inline <style> in <head>: {p['headStyleBytes']} bytes (max {BUDGET['head_style_bytes']}; prototype {q.get('headStyleBytes')})")
     if mode == "tier0":
@@ -790,7 +879,8 @@ def compare_view(route: dict, width: str, mode: str, pages: dict, shot_root: Pat
         if MODES[mode]["shots"] and shot_root is not None:
             pa, pb = (a.get("shots") or {}).get(key), (b.get("shots") or {}).get(key)
             if pa and pb and not pa.startswith("error") and not pb.startswith("error"):
-                row["pixels"] = compare_pixels(pa, pb, shot_root / "diff" / (slug(key) + ".png"), rkey, key, width, mode)
+                masks = mask_boxes((a.get("shotImgs") or {}).get(key, []), (b.get("shotImgs") or {}).get(key, []))
+                row["pixels"] = compare_pixels(pa, pb, shot_root / "diff" / (slug(key) + ".png"), rkey, key, width, mode, masks)
                 row["pixels"]["protoShot"], row["pixels"]["wpShot"] = pa, pb
             elif pa or pb:
                 row["pixels"] = {"pass": False, "why": "screenshot on one side only", "protoShot": pa, "wpShot": pb}
@@ -1424,9 +1514,12 @@ def production_asserts(base: str, instance: Path | None, out: Path) -> dict:
                 for f in fails:
                     print(f"       - {f}", flush=True)
         browser.close()
-    # The refused Little Rose attachment through every query that names it (5.7): 404, no Location.
+    # The refused Little Rose attachment through every query that names it (5.7): 404, no
+    # Location, and a body without its file name or the Little Rose path; each query also as
+    # an rss2, atom and comments-rss2 feed with no item. The center, program and search feeds
+    # list nothing, and the any-type feed lists no center or program (critic round 2).
     probes = [pr for pr in SMOKE.gate_probes(manifest.get("urls", []), manifest.get("fixtures") or {})
-              if pr["id"].startswith("gate:refused-attachment-")]
+              if pr["id"].startswith(("gate:refused-attachment-", "gate:feed-"))]
     if not probes:
         res["probes"] = [{"id": "gate:refused-attachment", "path": "-", "fails": ["no refused_photo fixture in seed-urls.json (re-seed)"]}]
     else:
@@ -1578,7 +1671,7 @@ def main() -> int:
         bad = [r for r in res["routes"] if r["fails"]]
         bad_probes = [r for r in res.get("probes", []) if r["fails"]]
         print(f"\nProduction assertions: {len(res['routes']) - len(bad)} of {len(res['routes'])} route views pass; "
-              f"{len(res.get('probes', [])) - len(bad_probes)} of {len(res.get('probes', []))} attachment probes pass. Report: {out / 'production-asserts.json'}")
+              f"{len(res.get('probes', [])) - len(bad_probes)} of {len(res.get('probes', []))} attachment and feed probes pass. Report: {out / 'production-asserts.json'}")
         return 0 if res["pass"] else 1
 
     widths = [w for w in args.widths.split(",") if w in ROUTES["widths"]]

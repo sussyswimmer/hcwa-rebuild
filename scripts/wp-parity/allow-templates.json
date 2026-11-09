@@ -125,6 +125,7 @@
       "route": "/en/",
       "section": "main>section#news.wall",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
       "owner": "templates"
@@ -133,6 +134,7 @@
       "route": "/en/",
       "section": "main>section#shutters.shutters",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
       "owner": "templates"
@@ -141,6 +143,7 @@
       "route": "/en/",
       "section": "main>section#help.wall",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
       "owner": "templates"
@@ -149,6 +152,7 @@
       "route": "/en/",
       "section": "main>section#partners.wall",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
       "owner": "templates"
@@ -157,6 +161,7 @@
       "route": "/en/our-work/centers/green-bamboo/",
       "section": "main>.day>section.related",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
       "owner": "templates"
@@ -165,6 +170,7 @@
       "route": "/en/our-work/centers/green-bamboo/",
       "section": "footer",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
       "owner": "templates"
@@ -173,6 +179,7 @@
       "route": "/en/our-work/programs/thrive-together/",
       "section": "main>.day>section.related",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "At 390 the prototype's external-link icon after an English post title wraps onto a line of its own, so the dated list is taller there; WordPress links its own posts without that icon (11-WP-PORT.md 2.8 'News list'). Same text, same rows, 29 px less height.",
       "owner": "templates"
@@ -181,8 +188,18 @@
       "route": "/en/our-work/programs/thrive-together/",
       "section": "footer",
       "kind": "pixels",
+      "width": "390",
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), and the one page-length day gradient (05-DESIGN 0.5) is laid over the whole page, so this section's background tone shifts by that fraction. Same markup and height.",
+      "owner": "templates"
+    },
+    {
+      "route": "/en/",
+      "section": "footer",
+      "kind": "pixels",
+      "width": "390",
+      "match": "",
+      "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), so the frame strip (5.5) lands the footer's lines a fraction of a pixel apart (WordPress sits 28.8 px higher, 13538.95 against 13567.75) and anti-aliased text differs by 1.26% in the band; the one page-length day gradient (05-DESIGN 0.5) also shifts its tone by that fraction. Same markup and height; the matrix's own footer shot differs by 0.12%.",
       "owner": "templates"
     },
     {

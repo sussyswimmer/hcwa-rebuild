@@ -62,7 +62,11 @@ Port checks (docs/plan/11-WP-PORT.md 5.7), on every seeded view unless --legacy:
   - --unpublished <file>: every URL listed answers 404 (and is dropped from the pages checked)
   - the refused Little Rose photo: /?attachment_id=, /?p= and /?page_id= with its id, the
     same through post_type=attachment (p, page_id, name, and post_type[]), and /?attachment=
-    with its slug all answer 404 with no Location header
+    with its slug all answer 404 with no Location header and a body without the photo's
+    file name or the Little Rose path; each of them also as an rss2, atom and comments-rss2
+    feed, with no <item> or <entry> in the body
+  - feeds: the center and program type feeds and the search feeds answer 404 with no item;
+    the any-type feed lists no center or program page
 The production scans read wp/themes/hcwa-2026/assets/generated/guards.json and stills.json;
 until the export has written guards.json they read the same constants from
 prototype/src/render.mjs through node, and without stills.json the still scan fails.
@@ -816,6 +820,37 @@ def without_unpublished(targets: list[dict], gone: list[dict]) -> list[dict]:
     return [t for t in targets if t["path"] not in paths]
 
 
+# Feed formats a refused attachment is probed in, and what marks an item in any of them.
+REFUSED_FEEDS = ("rss2", "atom", "comments-rss2")
+FEED_ITEMS = ["<item>", "<item ", "<entry>", "<entry "]
+
+
+def feed_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
+    """Feeds that must list nothing of ours (critic round 2): the center and program type feeds
+    and the search feeds answer 404 with no item, and the any-type feed lists no center,
+    program or refused photo (it may list the news posts /feed/ lists)."""
+    fixtures = fixtures or {}
+    probes = []
+    for ptype in ("hcwa_center", "hcwa_program"):
+        for feed in ("rss2", "atom"):
+            probes.append({"id": f"gate:feed-type-{ptype.replace('_', '-')}-{feed}", "path": f"/?feed={feed}&post_type={ptype}",
+                           "status": 404, "no_location": True, "body_absent": FEED_ITEMS})
+    for feed in ("rss2", "atom"):
+        probes.append({"id": f"gate:feed-search-{feed}", "path": f"/?s=a&feed={feed}", "status": 404,
+                       "no_location": True, "body_absent": FEED_ITEMS})
+    # An item's own link (RSS <link>, Atom <link href>) naming one of the seeded center or
+    # program pages; a news post that only links to one in its text still passes.
+    ours = sorted({str(u["path"]) for u in urls if u.get("kind") in ("center", "program") and u.get("path")})
+    links = [r"<link>[^<]*" + re.escape(p) + r"</link>" for p in ours]
+    links += [r"<link[^>]*\bhref=[\"'][^\"']*" + re.escape(p) + r"[\"']" for p in ours]
+    name = str(fixtures.get("refused_photo_file") or "")
+    for feed in ("rss2", "atom"):
+        probes.append({"id": f"gate:feed-type-any-{feed}", "path": f"/?feed={feed}&post_type=any", "status": [200, 404],
+                       "no_location": True, "body_absent": [name] if name else [],
+                       "body_absent_re": links + [r"post_type=hcwa_(?:center|program)\b", r"[?&]attachment_id="]})
+    return probes
+
+
 def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
     """HTTP-only checks built from the seed's URL list: embeds off, the media REST route
     closed to visitors (core routes REST case-insensitively, so an upper-case variant
@@ -826,7 +861,7 @@ def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
 
     A probe's "status" is one code, a list of allowed codes, or None for any; "no_location"
     fails on any Location header; "body_absent" lists text the response body must not
-    contain."""
+    contain and "body_absent_re" regular expressions it must not match."""
     fixtures = fixtures or {}
     probes = [
         {"id": "gate:rest-media", "path": "/wp-json/wp/v2/media", "status": 401},
@@ -838,26 +873,33 @@ def gate_probes(urls: list[dict], fixtures: dict | None = None) -> list[dict]:
     ]
     photo = int(fixtures.get("refused_photo") or 0)
     if photo > 0:
-        probes.append({"id": "gate:refused-attachment-page", "path": f"/?attachment_id={photo}", "status": 404,
-                       "no_location": True})
-        # The same attachment through the other id query vars (11-WP-PORT.md 6.3: core's
-        # redirect_canonical turned each into a 301 to the Little Rose page path).
-        for var in ("p", "page_id"):
-            probes.append({"id": f"gate:refused-attachment-{var.replace('_', '-')}", "path": f"/?{var}={photo}",
-                           "status": 404, "no_location": True})
-        # And through a post_type=attachment query, which skips the attachment_id path in core
-        # (critic round 1: /?post_type=attachment&p=<id> rendered the attachment page).
-        slug = str(fixtures.get("refused_photo_slug") or fixtures.get("refused_photo_file") or "")
-        typed = [("pt-p", f"/?post_type=attachment&p={photo}"), ("pt-page-id", f"/?post_type=attachment&page_id={photo}"),
-                 ("pt-array-p", f"/?post_type%5B%5D=attachment&p={photo}")]
-        if slug:
-            typed += [("pt-name", f"/?post_type=attachment&name={slug}"), ("attachment-name", f"/?attachment={slug}")]
-        for key, path in typed:
-            probes.append({"id": f"gate:refused-attachment-{key}", "path": path, "status": 404, "no_location": True})
         name = str(fixtures.get("refused_photo_file") or "")
+        slug = str(fixtures.get("refused_photo_slug") or name)
+        # What a refused answer must never print (critic round 2): the photo's slug and file
+        # name (so no upload URL and no attachment permalink) and the Little Rose page path.
+        hidden = [t for t in dict.fromkeys([slug, name, "/hoa-hong-nho/", "/little-rose/"]) if t]
+        # The attachment by id, then through the other id query vars (11-WP-PORT.md 6.3: core's
+        # redirect_canonical turned each into a 301 to the Little Rose page path), then through
+        # a post_type=attachment query, which skips the attachment_id path in core (critic
+        # round 1: /?post_type=attachment&p=<id> rendered the attachment page), then by slug.
+        refused = [("page", f"/?attachment_id={photo}"), ("p", f"/?p={photo}"), ("page-id", f"/?page_id={photo}"),
+                   ("pt-p", f"/?post_type=attachment&p={photo}"), ("pt-page-id", f"/?post_type=attachment&page_id={photo}"),
+                   ("pt-array-p", f"/?post_type%5B%5D=attachment&p={photo}")]
+        if slug:
+            refused += [("pt-name", f"/?post_type=attachment&name={slug}"), ("attachment-name", f"/?attachment={slug}")]
+        for key, path in refused:
+            probes.append({"id": f"gate:refused-attachment-{key}", "path": path, "status": 404,
+                           "no_location": True, "body_absent": hidden})
+        # Each of those as a feed (critic round 2: /?attachment_id=<id>&feed=rss2 answered 404
+        # with the Little Rose item still in the body). The comments feed of the attachment too.
+        for key, path in refused:
+            for feed in REFUSED_FEEDS:
+                probes.append({"id": f"gate:refused-attachment-{key}-feed-{feed}", "path": f"{path}&feed={feed}",
+                               "status": 404, "no_location": True, "body_absent": FEED_ITEMS + hidden})
         page = str(fixtures.get("refused_photo_page") or "")
         if name and page:
             probes.append({"id": "gate:refused-photo-on-page", "path": page, "status": 200, "body_absent": [name]})
+    probes += feed_probes(urls, fixtures)
     vi_centers = [u for u in urls if u.get("kind") == "center" and u.get("lang") == "vi" and u.get("path")]
     if vi_centers:
         probes.append({"id": "gate:embed", "path": vi_centers[0]["path"].rstrip("/") + "/embed/", "status": 404})
@@ -885,6 +927,10 @@ def check_probe(probe: dict, base: str, status: int | None, location: str, body:
     for text in probe.get("body_absent", []):
         if text and text in body:
             fails.append(f"{probe['id']}: the response contains {text!r}")
+    for pattern in probe.get("body_absent_re", []):
+        m = re.search(pattern, body or "")
+        if m:
+            fails.append(f"{probe['id']}: the response contains {m.group(0)[:120]!r}")
     want = probe.get("location")
     if want is not None and status == probe["status"]:
         got = urlsplit(location or "")
@@ -925,7 +971,7 @@ def fetch_status(url: str, read_body: bool = False) -> tuple[int | None, str, st
 def run_probes(base: str, probes: list[dict]) -> list[dict]:
     results = []
     for probe in probes:
-        status, location, body = fetch_status(base + probe["path"], bool(probe.get("body_absent")))
+        status, location, body = fetch_status(base + probe["path"], bool(probe.get("body_absent") or probe.get("body_absent_re")))
         fails = check_probe(probe, base, status, location, body)
         results.append({"id": probe["id"], "lang": "-", "path": probe["path"], "viewport": "http",
                         "status": status, "location": location, "fails": fails})

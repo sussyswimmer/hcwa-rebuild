@@ -381,3 +381,123 @@ hcwa_assert_contains( 'item.hidden = false;', $hcwa_share, 'reveals li[data-shar
 
 // ---------- Meta description (moved verbatim from theme-gates-test.php) ----------
 hcwa_assert_contains( 'hcwa_theme_public_text( trim( wp_strip_all_tags( (string) $description ) ) )', $hcwa_read( 'inc/assets.php' ), 'meta description goes through the draft check' );
+
+// ---------- Meta description and Open Graph tags, as the prototype prints them ----------
+// prototype/src/partials/layout.mjs: <meta name=description>, og:title (the browser title),
+// og:description (the same text) and og:locale. The description is the page's own (a sections
+// page's intro, a center's "who we serve", the 404 text), never with [DRAFT: ] brackets, and
+// nothing on production while it is draft.
+if ( ! function_exists( 'hcwa_page_description' ) ) {
+	hcwa_test_skip( 'meta description cases: hcwa-core not loaded' );
+} else {
+	$hcwa_head_meta = static function (): array {
+		ob_start();
+		hcwa_theme_meta_description();
+		$html = (string) ob_get_clean();
+		preg_match_all( '/<meta (?:name|property)="([^"]+)" content="([^"]*)">\n/', $html, $m, PREG_SET_ORDER );
+		$tags = array();
+		foreach ( $m as $tag ) {
+			$tags[ $tag[1] ] = html_entity_decode( $tag[2], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		}
+		return array( $html, $tags );
+	};
+	$hcwa_intro = 'Hội vận hành các cơ sở lâu dài & triển khai các dự án có thời hạn cùng đối tác.';
+	$hcwa_serve = 'Trẻ em và gia đình có hoàn cảnh khó khăn, hỗ trợ ngay tại cộng đồng';
+	$hcwa_nf    = 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.';
+	hcwa_test_post( array( 'ID' => 7801, 'post_type' => 'page', 'post_title' => 'Hoạt động', 'post_content' => '<!-- wp:hcwa/sections --><!-- wp:hcwa/lit-header {"intro":"[DRAFT: ' . $hcwa_intro . ']"} /--><!-- /wp:hcwa/sections -->' ) );
+	hcwa_test_post( array( 'ID' => 7802, 'post_type' => 'hcwa_center', 'post_title' => 'Tre Xanh' ), array( 'hcwa_who_we_serve' => '[DRAFT: ' . $hcwa_serve . ']', 'hcwa_summary' => 'A ready summary the prototype never prints here.' ) );
+	hcwa_test_post( array( 'ID' => 7803, 'post_type' => 'page', 'post_title' => 'Chung tay', 'post_content' => '<!-- wp:hcwa/sections --><!-- wp:hcwa/lit-header {"intro":"[DRAFT: Phần mở đầu]"} /--><!-- /wp:hcwa/sections -->', 'post_excerpt' => 'Đoạn trích đã sẵn sàng.' ) );
+	$GLOBALS['hcwa_test']['options']['blogdescription'] = '[DRAFT: Tổ chức xã hội tự nguyện, phi lợi nhuận]';
+
+	// A sections page, staging.
+	$GLOBALS['hcwa_test']['env']               = 'staging';
+	$GLOBALS['hcwa_test']['is']['is_singular'] = true;
+	$GLOBALS['hcwa_test']['queried']           = get_post( 7801 );
+	$GLOBALS['hcwa_test']['document_title']    = 'Hoạt động | Hội Bảo trợ Trẻ em TP.HCM';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( array( 'description', 'og:title', 'og:description', 'og:locale' ), array_keys( $hcwa_tags ), 'sections page: description, og:title, og:description, og:locale in the prototype\'s order' );
+	hcwa_assert_same( $hcwa_intro, $hcwa_tags['description'] ?? null, 'sections page, staging: the intro without the draft brackets (not the tagline)' );
+	hcwa_assert_same( $hcwa_intro, $hcwa_tags['og:description'] ?? null, 'sections page: og:description is the same text' );
+	hcwa_assert_same( 'Hoạt động | Hội Bảo trợ Trẻ em TP.HCM', $hcwa_tags['og:title'] ?? null, 'og:title is the browser title' );
+	hcwa_assert_same( 'vi_VN', $hcwa_tags['og:locale'] ?? null, 'Vietnamese page: og:locale vi_VN' );
+	hcwa_assert_false( str_contains( $hcwa_html, '[DRAFT' ), 'staging: no draft brackets in any head tag' );
+	hcwa_assert_contains( 'content="Hội vận hành các cơ sở lâu dài &amp; triển khai', $hcwa_html, 'description escaped once for the attribute' );
+
+	// The same page on production: the draft intro is left out, and so is the draft tagline.
+	$GLOBALS['hcwa_test']['env'] = 'production';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( array( 'og:title', 'og:locale' ), array_keys( $hcwa_tags ), 'production, draft intro and tagline: no description and no og:description; og:title and og:locale stay' );
+	$GLOBALS['hcwa_test']['queried'] = get_post( 7803 );
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( 'Đoạn trích đã sẵn sàng.', $hcwa_tags['description'] ?? null, 'production, draft intro: a ready hand-written excerpt fills in' );
+	$GLOBALS['hcwa_test']['env'] = 'staging';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( 'Phần mở đầu', $hcwa_tags['description'] ?? null, 'staging: the intro wins over the excerpt, as in the prototype' );
+
+	// A center: who it serves, not its summary.
+	$GLOBALS['hcwa_test']['queried']        = get_post( 7802 );
+	$GLOBALS['hcwa_test']['document_title'] = 'Cơ sở Bảo trợ Xã hội Tre Xanh | Hội Bảo trợ Trẻ em TP.HCM';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( $hcwa_serve, $hcwa_tags['description'] ?? null, 'center, staging: "who we serve" without brackets' );
+	hcwa_assert_same( $hcwa_serve, $hcwa_tags['og:description'] ?? null, 'center: og:description the same' );
+	hcwa_assert_same( 'Cơ sở Bảo trợ Xã hội Tre Xanh | Hội Bảo trợ Trẻ em TP.HCM', $hcwa_tags['og:title'] ?? null, 'center: og:title is the browser title' );
+	$GLOBALS['hcwa_test']['env'] = 'production';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( 'A ready summary the prototype never prints here.', $hcwa_tags['description'] ?? null, 'center, production, draft "who we serve": a ready summary fills in' );
+	$GLOBALS['hcwa_test']['env'] = 'staging';
+	unset( $GLOBALS['hcwa_test']['is']['is_singular'], $GLOBALS['hcwa_test']['queried'] );
+
+	// The 404 page: the not-found text, as the prototype's 404.html.
+	$GLOBALS['hcwa_test']['is']['is_404']   = true;
+	$GLOBALS['hcwa_test']['document_title'] = 'Không tìm thấy trang | Hội Bảo trợ Trẻ em TP.HCM';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( $hcwa_nf, $hcwa_tags['description'] ?? null, '404: the not-found text' );
+	hcwa_assert_same( $hcwa_nf, $hcwa_tags['og:description'] ?? null, '404: og:description the same' );
+	hcwa_assert_same( 'Không tìm thấy trang | Hội Bảo trợ Trẻ em TP.HCM', $hcwa_tags['og:title'] ?? null, '404: og:title' );
+	$GLOBALS['hcwa_test']['env'] = 'production';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( $hcwa_nf, $hcwa_tags['description'] ?? null, '404, production: the interface string is not draft, so it prints' );
+	$GLOBALS['hcwa_test']['env'] = 'staging';
+	unset( $GLOBALS['hcwa_test']['is']['is_404'] );
+
+	// A page with nothing of its own (an archive): the tagline, through the draft rule.
+	$GLOBALS['hcwa_test']['document_title'] = 'Tin & sự kiện | HCWA';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( 'Tổ chức xã hội tự nguyện, phi lợi nhuận', $hcwa_tags['description'] ?? null, 'no own description, staging: the tagline without the [DRAFT: ] brackets' );
+	hcwa_assert_contains( '<meta property="og:title" content="Tin &amp; sự kiện | HCWA">', $hcwa_html, 'og:title: the escaped browser title decoded, then escaped once' );
+	$GLOBALS['hcwa_test']['env'] = 'production';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_false( isset( $hcwa_tags['description'] ) || isset( $hcwa_tags['og:description'] ), 'no own description, production, draft tagline: no description tag at all' );
+	$GLOBALS['hcwa_test']['options']['blogdescription'] = 'Ready tagline.';
+	list( $hcwa_html, $hcwa_tags ) = $hcwa_head_meta();
+	hcwa_assert_same( 'Ready tagline.', $hcwa_tags['description'] ?? null, 'production: a ready tagline prints' );
+	$GLOBALS['hcwa_test']['env'] = 'staging';
+	unset( $GLOBALS['hcwa_test']['document_title'], $GLOBALS['hcwa_test']['options']['blogdescription'] );
+	hcwa_assert_same( 1, $hcwa_hooked( 'wp_head', 'hcwa_theme_meta_description' ), 'printed from wp_head at priority 1, after the title tag' );
+
+	// English, in its own process: Polylang's current language is 'en' there only.
+	$hcwa_iso = 'function pll_current_language( $field = "slug" ) { return "en"; }
+require ' . var_export( $hcwa_theme_dir . '/functions.php', true ) . ';
+hcwa_test_post( array( "ID" => 7811, "post_type" => "page", "post_content" => "<!-- wp:hcwa/sections --><!-- wp:hcwa/lit-header {\"intro\":\"[DRAFT: HCWA runs long-term centers and carries out time-bound projects with partners.]\"} /--><!-- /wp:hcwa/sections -->" ) );
+$out = array();
+foreach ( array( "page" => array( "is_singular", 7811, "Our Work | HCWA" ), "404" => array( "is_404", 0, "Page not found | HCWA" ) ) as $case => $c ) {
+	$GLOBALS["hcwa_test"]["is"] = array( $c[0] => true );
+	$GLOBALS["hcwa_test"]["queried"] = $c[1] ? get_post( $c[1] ) : null;
+	$GLOBALS["hcwa_test"]["document_title"] = $c[2];
+	ob_start(); hcwa_theme_meta_description(); $out[ $case ] = ob_get_clean();
+}
+echo json_encode( $out );';
+	[ $hcwa_exit, $hcwa_out ] = hcwa_test_isolated( $hcwa_iso );
+	$hcwa_en = json_decode( trim( (string) $hcwa_out ), true );
+	hcwa_assert_same( 0, $hcwa_exit, 'English meta tags: the isolated run ends cleanly' );
+	hcwa_assert_same(
+		"<meta name=\"description\" content=\"HCWA runs long-term centers and carries out time-bound projects with partners.\">\n<meta property=\"og:title\" content=\"Our Work | HCWA\">\n<meta property=\"og:description\" content=\"HCWA runs long-term centers and carries out time-bound projects with partners.\">\n<meta property=\"og:locale\" content=\"en_GB\">\n",
+		$hcwa_en['page'] ?? null,
+		'English sections page: the four tags as the prototype\'s dist/en/our-work/ prints them'
+	);
+	hcwa_assert_same(
+		"<meta name=\"description\" content=\"The page you&#039;re looking for doesn&#039;t exist or has moved.\">\n<meta property=\"og:title\" content=\"Page not found | HCWA\">\n<meta property=\"og:description\" content=\"The page you&#039;re looking for doesn&#039;t exist or has moved.\">\n<meta property=\"og:locale\" content=\"en_GB\">\n",
+		$hcwa_en['404'] ?? null,
+		'English 404: the not-found text and en_GB, as the prototype\'s dist/en/404.html'
+	);
+}

@@ -387,18 +387,17 @@ function hcwa_feed_shows_our_types(): bool {
 }
 
 /**
- * Those feeds answer a plain 404 (same steps as core's WP::handle_404()). On 'wp', before
- * template-loader.php serves the feed: set_404() clears is_feed (class-wp-query.php
- * init_query_flags()), so the 404 template prints instead.
+ * Those feeds answer a plain 404 and print the 404 template. On 'wp', before
+ * template-loader.php serves the feed. WP_Query::set_404() keeps is_feed
+ * (class-wp-query.php:1843-1849) and the found posts, so a bare set_404() only changed the
+ * status and the feed still printed every item (found on real WordPress, fix round 2);
+ * hcwa_end_as_404() clears the feed flags and the posts too.
  */
 function hcwa_refuse_our_feeds(): void {
 	if ( ! hcwa_feed_shows_our_types() ) {
 		return;
 	}
-	global $wp_query;
-	$wp_query->set_404();
-	status_header( 404 );
-	nocache_headers();
+	hcwa_end_as_404();
 }
 add_action( 'wp', 'hcwa_refuse_our_feeds', 5, 0 );
 

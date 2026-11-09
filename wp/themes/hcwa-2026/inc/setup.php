@@ -161,20 +161,19 @@ add_action( 'wp', 'hcwa_theme_refuse_attachment_page', 5, 0 );
 /**
  * Attachment page of a photo the approval gate refuses in its context (or of any photo
  * without hcwa-core): a plain 404, so neither the photo nor its title or caption, which
- * often carry a child's name, is printed. Same steps as core's WP::handle_404(). With
- * hcwa-core active the plugin's copy has already run (same hook and priority, loaded
- * first), so this one finds no attachment left and does nothing. The attachment is read
- * from the queried object, not from is_attachment(): ?post_type=attachment&p=N shows it
- * as a single post (is_single), and single.php would print it.
+ * often carry a child's name, is printed. With hcwa-core active the plugin's copy has
+ * already run (same hook and priority, loaded first); running the same steps again changes
+ * nothing. The attachment is read from the queried object and the query vars
+ * (hcwa_theme_request_attachment_ids()), not from is_attachment(): ?post_type=attachment&p=N
+ * shows it as a single post (is_single), and ?p=N&feed=rss2 is its comment feed.
  */
 function hcwa_theme_refuse_attachment_page(): void {
-	if ( ! hcwa_theme_attachment_refused( hcwa_theme_queried_attachment_id() ) ) {
-		return;
+	foreach ( hcwa_theme_request_attachment_ids() as $id ) {
+		if ( hcwa_theme_attachment_refused( $id ) ) {
+			hcwa_theme_end_as_404();
+			return;
+		}
 	}
-	global $wp_query;
-	$wp_query->set_404();
-	status_header( 404 );
-	nocache_headers();
 }
 
 /**
@@ -187,6 +186,63 @@ function hcwa_theme_queried_attachment_id(): int {
 		return (int) $object->ID;
 	}
 	return is_attachment() ? (int) get_queried_object_id() : 0;
+}
+
+/**
+ * Attachments a request names: the queried attachment and the IDs in the p, page_id and
+ * attachment_id query vars and the attachment slug. Same rule as hcwa-core's
+ * hcwa_request_attachment_ids().
+ *
+ * @return int[]
+ */
+function hcwa_theme_request_attachment_ids(): array {
+	$ids = array( hcwa_theme_queried_attachment_id() );
+	foreach ( array( 'p', 'page_id', 'attachment_id' ) as $var ) {
+		$value = get_query_var( $var );
+		$ids[] = is_scalar( $value ) ? absint( $value ) : 0;
+	}
+	$slug = get_query_var( 'attachment' );
+	if ( is_string( $slug ) && '' !== $slug ) {
+		$found = get_page_by_path( sanitize_title( $slug ), OBJECT, 'attachment' );
+		$ids[] = $found instanceof WP_Post ? (int) $found->ID : 0;
+	}
+	return array_values( array_unique( array_filter( $ids ) ) );
+}
+
+/**
+ * Ends the main query as a plain 404 that prints the 404 template: core's
+ * WP::handle_404() steps, plus clearing what WP_Query::set_404() keeps (is_feed, is_embed,
+ * the found posts), so a refused photo's feed (?attachment_id=N&feed=rss2) cannot print
+ * it as an item under the 404. Same steps as hcwa-core's hcwa_end_as_404(), so the theme
+ * holds without the plugin.
+ */
+function hcwa_theme_end_as_404(): void {
+	global $wp_query;
+	if ( ! is_object( $wp_query ) ) {
+		return;
+	}
+	$was_feed = ! empty( $wp_query->is_feed );
+	$wp_query->set_404();
+	$wp_query->is_feed           = false;
+	$wp_query->is_comment_feed   = false;
+	$wp_query->is_embed          = false;
+	$wp_query->posts             = array();
+	$wp_query->post              = null;
+	$wp_query->post_count        = 0;
+	$wp_query->found_posts       = 0;
+	$wp_query->max_num_pages     = 0;
+	$wp_query->comments          = array();
+	$wp_query->comment_count     = 0;
+	$wp_query->queried_object    = null;
+	$wp_query->queried_object_id = null;
+	$GLOBALS['post']             = null;
+	status_header( 404 );
+	nocache_headers();
+	if ( $was_feed && ! headers_sent() ) {
+		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+		header_remove( 'ETag' );
+		header_remove( 'Last-Modified' );
+	}
 }
 
 add_action( 'template_redirect', 'hcwa_theme_lang_notice_redirect' );

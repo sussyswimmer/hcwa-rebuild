@@ -104,3 +104,9 @@ if ( ! function_exists( 'is_page' ) ) {
 		return hcwa_test_is( 'is_page' );
 	}
 }
+if ( ! function_exists( 'wp_get_document_title' ) ) {
+	/** The browser title as core returns it, HTML-escaped; a test sets $GLOBALS['hcwa_test']['document_title']. */
+	function wp_get_document_title() {
+		return esc_html( (string) ( $GLOBALS['hcwa_test']['document_title'] ?? '' ) );
+	}
+}

@@ -1192,26 +1192,51 @@ function hcwa_queried_attachment_id(): int {
 }
 
 /**
+ * Attachments a request names: the attachment the main query shows
+ * (hcwa_queried_attachment_id()), the IDs in its p, page_id and attachment_id query vars,
+ * and its attachment slug. ?p=40&feed=rss2 finds no post (p means a post there), yet it is
+ * the comment feed of attachment 40 and answered 200 (found on real WordPress, fix round 2),
+ * so a refused photo is refused however the request names it.
+ *
+ * @return int[]
+ */
+function hcwa_request_attachment_ids(): array {
+	$ids = array( hcwa_queried_attachment_id() );
+	foreach ( array( 'p', 'page_id', 'attachment_id' ) as $var ) {
+		$value = get_query_var( $var );
+		$ids[] = is_scalar( $value ) ? absint( $value ) : 0;
+	}
+	$slug = get_query_var( 'attachment' );
+	if ( is_string( $slug ) && '' !== $slug ) {
+		$found = get_page_by_path( sanitize_title( $slug ), OBJECT, 'attachment' );
+		$ids[] = $found instanceof WP_Post ? (int) $found->ID : 0;
+	}
+	return array_values( array_unique( array_filter( $ids ) ) );
+}
+
+/**
  * The attachment page of a refused photo is a plain 404, whatever the theme: the default
  * attachment template prints the image, its title and caption (which often carry a
- * child's name) with wp_get_attachment_image(), past the gate. Same steps as core's
- * WP::handle_404(). It runs on 'wp' (class-wp.php:839), before every template_redirect
- * callback: redirect_canonical (default-filters.php:687, priority 10) and Yoast SEO's
- * attachment redirect (priority 1) would otherwise answer 301 to the raw file when
- * attachment pages are off (canonical.php:551-552), and ?attachment_id=N is a public query
- * var (class-wp.php:18). set_404() clears is_attachment (class-wp-query.php:1846 and :525),
- * so those redirects, and hcwa-2026's own copy of this check (inc/setup.php), do nothing.
- * The attachment is found through hcwa_queried_attachment_id(), so a post_type query that
- * shows it as a single post is refused too.
+ * child's name) with wp_get_attachment_image(), past the gate. It runs on 'wp'
+ * (class-wp.php:839), before every template_redirect callback: redirect_canonical
+ * (default-filters.php:687, priority 10) and Yoast SEO's attachment redirect (priority 1)
+ * would otherwise answer 301 to the raw file when attachment pages are off
+ * (canonical.php:551-552), and ?attachment_id=N is a public query var (class-wp.php:18).
+ * set_404() clears is_attachment (class-wp-query.php:1846 and :525), so those redirects,
+ * and hcwa-2026's own copy of this check (inc/setup.php), do nothing. set_404() keeps
+ * is_feed, though, and the photo's feeds (&feed=rss2, atom, rdf, comments-rss2) printed it as
+ * an item under the 404 (fix round 2), so hcwa_end_as_404() also clears the feed flags and
+ * the found posts. The attachment is found through hcwa_request_attachment_ids(), so a
+ * post_type query that shows it as a single post, and its comment feed by ?p=N, are
+ * refused too.
  */
 function hcwa_refuse_attachment_page(): void {
-	if ( ! hcwa_attachment_page_refused( hcwa_queried_attachment_id() ) ) {
-		return;
+	foreach ( hcwa_request_attachment_ids() as $id ) {
+		if ( hcwa_attachment_page_refused( $id ) ) {
+			hcwa_end_as_404();
+			return;
+		}
 	}
-	global $wp_query;
-	$wp_query->set_404();
-	status_header( 404 );
-	nocache_headers();
 }
 add_action( 'wp', 'hcwa_refuse_attachment_page', 5, 0 );
 

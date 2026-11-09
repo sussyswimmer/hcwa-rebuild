@@ -60,28 +60,38 @@ hcwa_assert_false( $hcwa_feed_case( array( 'is_feed' => true ), array() ), 'feed
 hcwa_assert_false( $hcwa_feed_case( array( 'is_feed' => true ), array( 'category_name' => 'tin-tuc' ) ), 'feed: a category feed stays' );
 hcwa_assert_false( $hcwa_feed_case( array(), array( 'post_type' => 'hcwa_center' ) ), 'feed: the center archive page itself is not a feed' );
 
-$GLOBALS['wp_query'] = new class() {
-	public $is_404 = false;
-
-	public function set_404() {
-		$this->is_404 = true;
-	}
-};
-unset( $GLOBALS['hcwa_test']['status'] );
-$hcwa_feed_case( array( 'is_feed' => true ), array( 'post_type' => 'hcwa_program' ) );
-hcwa_refuse_our_feeds();
-hcwa_assert_true( $GLOBALS['wp_query']->is_404, 'feed: a refused feed becomes a 404' );
-hcwa_assert_same( 404, $GLOBALS['hcwa_test']['status'] ?? null, 'feed: status 404' );
-$GLOBALS['wp_query'] = new class() {
-	public $is_404 = false;
-
-	public function set_404() {
-		$this->is_404 = true;
-	}
-};
+// WP_Query::set_404() keeps is_feed and the found posts (HCWA_Test_Query does the same), so
+// a refused feed must clear them itself or template-loader.php still prints every item.
+$hcwa_feed_items = array(
+	hcwa_test_post( array( 'ID' => 610, 'post_type' => 'hcwa_center', 'post_title' => 'Mái ấm Hoa Hồng Nhỏ' ) ),
+	hcwa_test_post( array( 'ID' => 611, 'post_type' => 'hcwa_program', 'post_title' => '[DRAFT: Dự án]' ) ),
+);
+foreach ( array(
+	'post_type=hcwa_program' => array( array( 'is_feed' => true, 'is_archive' => true ), array( 'post_type' => 'hcwa_program' ), null ),
+	'post_type=hcwa_center'  => array( array( 'is_feed' => true, 'is_archive' => true ), array( 'post_type' => 'hcwa_center' ), null ),
+	's=a (search feed)'      => array( array( 'is_feed' => true, 'is_search' => true ), array( 's' => 'a' ), null ),
+	'a center comment feed'  => array( array( 'is_feed' => true, 'is_comment_feed' => true, 'is_single' => true, 'is_singular' => true ), array(), $hcwa_feed_items[0] ),
+) as $hcwa_label => $hcwa_feed_args ) {
+	$GLOBALS['wp_query'] = new HCWA_Test_Query( $hcwa_feed_args[0], $hcwa_feed_items );
+	$GLOBALS['post']     = $hcwa_feed_items[0];
+	unset( $GLOBALS['hcwa_test']['status'] );
+	$hcwa_feed_case( $hcwa_feed_args[0], $hcwa_feed_args[1], $hcwa_feed_args[2] );
+	hcwa_refuse_our_feeds();
+	$hcwa_q = $GLOBALS['wp_query'];
+	hcwa_assert_true( $hcwa_q->is_404, "feed $hcwa_label: a refused feed becomes a 404" );
+	hcwa_assert_same( 404, $GLOBALS['hcwa_test']['status'] ?? null, "feed $hcwa_label: status 404" );
+	hcwa_assert_false( $hcwa_q->is_feed || $hcwa_q->is_comment_feed, "feed $hcwa_label: is_feed cleared, so template-loader prints the 404 template, not the feed" );
+	hcwa_assert_same( array( array(), null, 0, 0 ), array( $hcwa_q->posts, $hcwa_q->post, $hcwa_q->post_count, $hcwa_q->found_posts ), "feed $hcwa_label: no item left to print" );
+	hcwa_assert_same( null, $hcwa_q->queried_object, "feed $hcwa_label: no queried object left" );
+	hcwa_assert_same( null, $GLOBALS['post'], "feed $hcwa_label: no global post left" );
+}
+$GLOBALS['wp_query'] = new HCWA_Test_Query( array( 'is_feed' => true, 'is_home' => true ), array( hcwa_test_post( array( 'ID' => 612, 'post_type' => 'post' ) ) ) );
 $hcwa_feed_case( array( 'is_feed' => true ), array() );
 hcwa_refuse_our_feeds();
 hcwa_assert_false( $GLOBALS['wp_query']->is_404, 'feed: the news feed is served' );
+hcwa_assert_true( $GLOBALS['wp_query']->is_feed && 1 === $GLOBALS['wp_query']->post_count, 'feed: the news feed keeps its flag and items' );
+hcwa_assert_false( str_contains( (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/post-types.php' ), 'set_404() clears is_feed' ), 'feed: the wrong note about set_404() is gone' );
+unset( $GLOBALS['post'] );
 $hcwa_feed_hooked = array_filter( $GLOBALS['hcwa_test']['hooks']['wp'] ?? array(), static fn( $h ) => 'hcwa_refuse_our_feeds' === $h[0] );
 hcwa_assert_true( (bool) $hcwa_feed_hooked, 'feed: refused on "wp", before template-loader serves it' );
 $GLOBALS['hcwa_test']['is']         = $hcwa_saved_is;

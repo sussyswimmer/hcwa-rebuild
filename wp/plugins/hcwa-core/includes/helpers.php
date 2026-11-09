@@ -407,3 +407,44 @@ function hcwa_strip_leading_emoji( string $s ): string {
 
 	return null === $out ? $s : $out;
 }
+
+/**
+ * Ends the main query as a plain 404 that prints the 404 template and nothing of what the
+ * query found: the same steps as core's WP::handle_404(), plus the ones set_404() leaves out.
+ * WP_Query::set_404() keeps is_feed (class-wp-query.php:1843-1849, WordPress 7.1.4) and
+ * leaves the found posts in place, so template-loader.php still called do_feed() and
+ * printed every refused post as a feed item under a 404 status (found on real WordPress,
+ * fix round 2: ?attachment_id=40&feed=rss2 printed a refused Little Rose photo with its
+ * file URL and its page path). It also keeps is_embed. So the feed and embed flags, the
+ * posts, the comments of a comment feed and the queried object are cleared, as on a normal
+ * 404, and a feed's Content-Type and validators (set earlier by WP::send_headers()) are
+ * put back to those of an HTML page. Used on 'wp', before template_redirect.
+ */
+function hcwa_end_as_404(): void {
+	global $wp_query;
+	if ( ! is_object( $wp_query ) ) {
+		return;
+	}
+	$was_feed = ! empty( $wp_query->is_feed );
+	$wp_query->set_404();
+	$wp_query->is_feed           = false;
+	$wp_query->is_comment_feed   = false;
+	$wp_query->is_embed          = false;
+	$wp_query->posts             = array();
+	$wp_query->post              = null;
+	$wp_query->post_count        = 0;
+	$wp_query->found_posts       = 0;
+	$wp_query->max_num_pages     = 0;
+	$wp_query->comments          = array();
+	$wp_query->comment_count     = 0;
+	$wp_query->queried_object    = null;
+	$wp_query->queried_object_id = null;
+	$GLOBALS['post']             = null; // Set from the query by WP::register_globals().
+	status_header( 404 );
+	nocache_headers();
+	if ( $was_feed && ! headers_sent() ) {
+		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+		header_remove( 'ETag' );
+		header_remove( 'Last-Modified' );
+	}
+}

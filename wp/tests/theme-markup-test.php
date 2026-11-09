@@ -259,6 +259,58 @@ hcwa_assert_contains( 'post-password-form', $hcwa_locked, 'render: a password-pr
 hcwa_assert_false( str_contains( $hcwa_locked, '<hero>' ), 'render: and not its sections' );
 unset( $GLOBALS['hcwa_test']['password'], $GLOBALS['hcwa_test']['current_post'] );
 
+// Raw HTML through a synced pattern, and embeds (fix round 2): a core/block resolves its
+// content at render time, after the tree is cleaned, so its core/html printed raw markup and
+// an Instagram iframe between the sections. Each is gone, at any depth, and the embed never
+// renders (pre_render_block stops it before WordPress fetches anything).
+$GLOBALS['hcwa_test']['synced'][157] = "<!-- wp:html -->\n<p class=\"critic-leak\">RAWHTML-SYNCED</p><iframe src=\"https://www.instagram.com/p/x/embed\"></iframe>\n<!-- /wp:html -->\n\nloose synced text";
+$hcwa_leak_body                      = "<!-- wp:hcwa/sections -->\n<!-- wp:hcwa/day {\"variant\":\"involve\"} -->\n"
+	. "<!-- wp:html -->\n<p>RAWHTML-DIRECT</p>\n<!-- /wp:html -->\n"
+	. "<!-- wp:block {\"ref\":157} /-->\n"
+	. "<!-- wp:embed {\"url\":\"https://www.instagram.com/p/x/\",\"providerNameSlug\":\"instagram\"} -->\n<figure class=\"wp-block-embed is-provider-instagram\">https://www.instagram.com/p/x/</figure>\n<!-- /wp:embed -->\n"
+	. "<!-- wp:core-embed/instagram {\"url\":\"https://www.instagram.com/p/y/\"} -->\n<figure class=\"wp-block-embed\">https://www.instagram.com/p/y/</figure>\n<!-- /wp:core-embed/instagram -->\n"
+	. "<!-- wp:rss {\"feedURL\":\"https://www.instagram.com/feed\"} /-->\n"
+	. "<!-- wp:group -->\n<div class=\"wp-block-group\"><!-- wp:pattern {\"slug\":\"x/y\"} /--><!-- wp:template-part {\"slug\":\"footer\"} /--><!-- wp:post-content /--><!-- wp:paragraph -->\n<p>Kept paragraph</p>\n<!-- /wp:paragraph --></div>\n<!-- /wp:group -->\n"
+	. "<!-- /wp:hcwa/day -->\n<!-- /wp:hcwa/sections -->";
+$hcwa_leak_page                      = hcwa_test_post( array( 'ID' => 405, 'post_type' => 'page', 'post_content' => $hcwa_leak_body ) );
+$hcwa_leak_clean                     = hcwa_sections_clean( hcwa_sections_find( parse_blocks( $hcwa_leak_body ) ) );
+hcwa_assert_same( array( 'core/group' ), array_column( $hcwa_leak_clean['innerBlocks'][0]['innerBlocks'], 'blockName' ), 'clean: core/html, core/block, core/embed, core-embed/* and core/rss are removed from a day' );
+hcwa_assert_same( array( 'core/paragraph' ), array_column( $hcwa_leak_clean['innerBlocks'][0]['innerBlocks'][0]['innerBlocks'], 'blockName' ), 'clean: core/pattern, core/template-part and core/post-content are removed at any depth' );
+$hcwa_saved_pre    = $GLOBALS['hcwa_test']['hooks']['pre_render_block'] ?? null;
+$hcwa_saved_hooks  = $GLOBALS['hcwa_test']['hooks']['render_block'] ?? null;
+$hcwa_leak_html    = hcwa_render_sections( $hcwa_leak_page );
+$hcwa_pre_hooked   = (bool) array_filter( $GLOBALS['hcwa_test']['hooks']['pre_render_block'] ?? array(), static fn( $h ) => 'hcwa_sections_refuse_block' === $h[0] );
+foreach ( array( 'pre_render_block' => $hcwa_saved_pre, 'render_block' => $hcwa_saved_hooks ) as $hcwa_hook => $hcwa_saved ) {
+	if ( null === $hcwa_saved ) {
+		unset( $GLOBALS['hcwa_test']['hooks'][ $hcwa_hook ] );
+	} else {
+		$GLOBALS['hcwa_test']['hooks'][ $hcwa_hook ] = $hcwa_saved;
+	}
+}
+hcwa_assert_true( $hcwa_pre_hooked, 'render: banned blocks are stopped on pre_render_block while the page renders' );
+hcwa_assert_contains( 'Kept paragraph', $hcwa_leak_html, 'render: an ordinary core block in an unlocked section still prints' );
+foreach ( array( 'RAWHTML-DIRECT', 'RAWHTML-SYNCED', 'critic-leak', 'iframe', 'instagram', 'loose synced text', 'wp-block-embed' ) as $hcwa_gone ) {
+	hcwa_assert_false( str_contains( $hcwa_leak_html, $hcwa_gone ), "render: '$hcwa_gone' is not printed" );
+}
+hcwa_assert_contains( "remove_filter( 'pre_render_block', 'hcwa_sections_refuse_block', 10 );", (string) file_get_contents( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/sections.php' ), 'render: the block stop is removed after the page renders' );
+// The stop also holds for a synced pattern reached some other way (a block not in the page's tree).
+add_filter( 'pre_render_block', 'hcwa_sections_refuse_block', 10, 2 );
+hcwa_assert_same( '', render_block( array( 'blockName' => 'core/block', 'attrs' => array( 'ref' => 157 ), 'innerBlocks' => array(), 'innerHTML' => '', 'innerContent' => array() ) ), 'stop: a synced pattern prints nothing' );
+hcwa_assert_same( '<p>x</p>', render_block( array( 'blockName' => 'core/paragraph', 'attrs' => array(), 'innerBlocks' => array(), 'innerHTML' => '<p>x</p>', 'innerContent' => array( '<p>x</p>' ) ) ), 'stop: other blocks render' );
+if ( null === $hcwa_saved_pre ) {
+	unset( $GLOBALS['hcwa_test']['hooks']['pre_render_block'] );
+} else {
+	$GLOBALS['hcwa_test']['hooks']['pre_render_block'] = $hcwa_saved_pre;
+}
+hcwa_assert_same( 'kept', hcwa_sections_refuse_block( 'kept', array( 'blockName' => 'core/html' ) ), 'stop: an earlier filter result is kept' );
+foreach ( array( 'core/html', 'core/freeform', 'core/shortcode', null, 'core/block', 'core/pattern', 'core/template-part', 'core/post-content', 'core/embed', 'core-embed/instagram', 'core-embed/facebook', 'core/rss' ) as $hcwa_name ) {
+	hcwa_assert_true( hcwa_sections_block_banned( $hcwa_name ), 'banned: ' . var_export( $hcwa_name, true ) );
+}
+foreach ( array( 'core/paragraph', 'core/image', 'core/group', 'hcwa/day', 'core/embedded', 'core/blocks' ) as $hcwa_name ) {
+	hcwa_assert_false( hcwa_sections_block_banned( $hcwa_name ), "not banned: $hcwa_name" );
+}
+unset( $GLOBALS['hcwa_test']['synced'] );
+
 // ---------- The attachment redirect (6.3: ?attachment_id, ?p and ?page_id answer 404, no Location) ----------
 hcwa_test_post( array( 'ID' => 40, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg', 'post_parent' => 310 ), array( 'hcwa_approved_for_web' => '' ) );
 hcwa_test_post( array( 'ID' => 41, 'post_type' => 'attachment', 'post_mime_type' => 'image/jpeg' ), array( 'hcwa_approved_for_web' => '1' ) );
@@ -291,14 +343,8 @@ require_once $hcwa_theme_dir . '/inc/template-tags.php';
 require_once $hcwa_theme_dir . '/inc/setup.php';
 // ?post_type=attachment&p=40 (and page_id, name, post_type[]) makes WP_Query set is_single,
 // not is_attachment; the refusal reads the queried object, so each one is a 404 too.
-$hcwa_404_query = static function () {
-	return new class() {
-		public $is_404 = false;
-
-		public function set_404() {
-			$this->is_404 = true;
-		}
-	};
+$hcwa_404_query = static function ( array $flags = array(), array $posts = array() ) {
+	return new HCWA_Test_Query( $flags, $posts );
 };
 $hcwa_saved_is = $GLOBALS['hcwa_test']['is'] ?? array();
 foreach ( array( 'p', 'page_id', 'name' ) as $hcwa_var ) {
@@ -336,6 +382,70 @@ foreach ( $GLOBALS['hcwa_test']['hooks']['single_template_hierarchy'] ?? array()
 	$hcwa_refuse_hook = $hcwa_refuse_hook || 'hcwa_theme_single_attachment_template' === $hcwa_entry[0];
 }
 hcwa_assert_true( $hcwa_refuse_hook, 'the attachment template filter is on single_template_hierarchy' );
+
+// ---------- Feeds of a refused photo (fix round 2) ----------
+// WP_Query::set_404() keeps is_feed and the found posts, so ?attachment_id=40&feed=rss2 (and
+// atom, rdf, comments-rss2, a post_type=attachment query, the attachment slug, /en/) printed
+// the photo as a feed item under a 404: its file URL, its Little Rose page path, its caption.
+// ?p=40&feed=rss2 found no post (p means a post there) and answered 200 as its comment feed.
+// Each now ends as a plain 404: no feed flag, no post, no queried object.
+hcwa_test_post( array( 'ID' => 312, 'post_type' => 'post' ) );
+$GLOBALS['hcwa_test']['page_paths']['hcwa-20261109-v1lzeuoz'] = 40;
+$hcwa_feed_requests = array(
+	'attachment_id=40&feed=rss2'               => array( array( 'is_feed' => true, 'is_attachment' => true, 'is_single' => true, 'is_singular' => true ), array( 'attachment_id' => '40', 'feed' => 'rss2' ), 40, true ),
+	'attachment_id=40&feed=atom'               => array( array( 'is_feed' => true, 'is_attachment' => true, 'is_single' => true, 'is_singular' => true ), array( 'attachment_id' => '40', 'feed' => 'atom' ), 40, true ),
+	'attachment_id=40&feed=comments-rss2'      => array( array( 'is_feed' => true, 'is_comment_feed' => true, 'is_attachment' => true, 'is_singular' => true ), array( 'attachment_id' => '40', 'feed' => 'comments-rss2' ), 40, true ),
+	'post_type=attachment&p=40&feed=rss2'      => array( array( 'is_feed' => true, 'is_comment_feed' => true, 'is_single' => true, 'is_singular' => true ), array( 'post_type' => 'attachment', 'p' => '40', 'feed' => 'rss2' ), 40, true ),
+	'attachment=<slug>&feed=rss2'              => array( array( 'is_feed' => true, 'is_attachment' => true, 'is_singular' => true ), array( 'attachment' => 'hcwa-20261109-v1lzeuoz', 'feed' => 'rss2' ), null, true ),
+	'p=40&feed=rss2 (comment feed, no post)'   => array( array( 'is_feed' => true, 'is_comment_feed' => true, 'is_single' => true, 'is_singular' => true ), array( 'p' => '40', 'feed' => 'rss2' ), null, false ),
+	'page_id=40&feed=atom (no post)'           => array( array( 'is_feed' => true, 'is_comment_feed' => true, 'is_page' => true, 'is_singular' => true ), array( 'page_id' => '40', 'feed' => 'atom' ), null, false ),
+);
+foreach ( $hcwa_feed_requests as $hcwa_label => $hcwa_req ) {
+	foreach ( array( 'hcwa_refuse_attachment_page', 'hcwa_theme_refuse_attachment_page' ) as $hcwa_refuser ) {
+		$GLOBALS['hcwa_test']['is']         = $hcwa_req[0];
+		$GLOBALS['hcwa_test']['query_vars'] = $hcwa_req[1];
+		$GLOBALS['hcwa_test']['queried']    = null === $hcwa_req[2] ? null : get_post( $hcwa_req[2] );
+		$GLOBALS['wp_query']                = $hcwa_404_query( $hcwa_req[0], $hcwa_req[3] ? array( get_post( 40 ) ) : array() );
+		$GLOBALS['post']                    = $hcwa_req[3] ? get_post( 40 ) : null;
+		unset( $GLOBALS['hcwa_test']['status'] );
+		$hcwa_refuser();
+		$hcwa_q = $GLOBALS['wp_query'];
+		hcwa_assert_true( $hcwa_q->is_404, "feed $hcwa_label: $hcwa_refuser makes it a 404" );
+		hcwa_assert_same( 404, $GLOBALS['hcwa_test']['status'] ?? null, "feed $hcwa_label: $hcwa_refuser sends status 404" );
+		hcwa_assert_false( $hcwa_q->is_feed || $hcwa_q->is_comment_feed, "feed $hcwa_label: $hcwa_refuser clears is_feed, so the 404 template prints instead of the feed" );
+		hcwa_assert_same( array( array(), null, 0 ), array( $hcwa_q->posts, $hcwa_q->post, $hcwa_q->post_count ), "feed $hcwa_label: $hcwa_refuser leaves no post to print" );
+		hcwa_assert_same( array( null, null ), array( $hcwa_q->queried_object, $GLOBALS['post'] ), "feed $hcwa_label: $hcwa_refuser leaves no queried object or global post" );
+	}
+}
+// An approved photo's feed and the news feed are untouched.
+foreach ( array(
+	'attachment_id=41&feed=rss2' => array( array( 'attachment_id' => '41', 'feed' => 'rss2' ), get_post( 41 ), get_post( 41 ) ),
+	'feed=rss2 (news)'           => array( array( 'feed' => 'rss2' ), null, get_post( 312 ) ),
+	'p=312&feed=rss2'            => array( array( 'p' => '312', 'feed' => 'rss2' ), get_post( 312 ), get_post( 312 ) ),
+) as $hcwa_label => $hcwa_req ) {
+	foreach ( array( 'hcwa_refuse_attachment_page', 'hcwa_theme_refuse_attachment_page' ) as $hcwa_refuser ) {
+		$GLOBALS['hcwa_test']['is']         = array( 'is_feed' => true );
+		$GLOBALS['hcwa_test']['query_vars'] = $hcwa_req[0];
+		$GLOBALS['hcwa_test']['queried']    = $hcwa_req[1];
+		$GLOBALS['wp_query']                = $hcwa_404_query( array( 'is_feed' => true ), array( $hcwa_req[2] ) );
+		$hcwa_refuser();
+		hcwa_assert_true( ! $GLOBALS['wp_query']->is_404 && $GLOBALS['wp_query']->is_feed && 1 === $GLOBALS['wp_query']->post_count, "feed $hcwa_label: $hcwa_refuser serves it as usual" );
+	}
+}
+hcwa_assert_same( array( 40 ), ( static function () {
+	$GLOBALS['hcwa_test']['queried']    = null;
+	$GLOBALS['hcwa_test']['is']         = array();
+	$GLOBALS['hcwa_test']['query_vars'] = array( 'p' => '40', 'page_id' => '40', 'attachment_id' => array( 'x' ) );
+	return hcwa_request_attachment_ids();
+} )(), 'request ids: each named ID once; a non-scalar query var is ignored' );
+hcwa_assert_same( array( 40 ), hcwa_theme_request_attachment_ids(), 'request ids: the theme reads the same' );
+foreach ( array( 'wp/plugins/hcwa-core/includes/post-types.php', 'wp/plugins/hcwa-core/includes/media-approval.php', 'wp/themes/hcwa-2026/inc/setup.php' ) as $hcwa_file ) {
+	$hcwa_src = (string) file_get_contents( dirname( __DIR__, 2 ) . '/' . $hcwa_file );
+	hcwa_assert_false( str_contains( $hcwa_src, 'set_404() clears is_feed' ), "$hcwa_file: no note claims set_404() clears is_feed" );
+	hcwa_assert_same( 0, preg_match( '/\$wp_query->set_404\(\);\s*status_header/', $hcwa_src ), "$hcwa_file: no bare set_404() refusal left (it keeps the feed and its posts)" );
+}
+unset( $GLOBALS['post'], $GLOBALS['hcwa_test']['page_paths']['hcwa-20261109-v1lzeuoz'] );
+
 $GLOBALS['hcwa_test']['is']         = $hcwa_saved_is;
 $GLOBALS['hcwa_test']['query_vars'] = array();
 unset( $GLOBALS['hcwa_test']['queried'], $GLOBALS['wp_query'], $GLOBALS['hcwa_test']['status'] );
@@ -474,3 +584,29 @@ hcwa_assert_same( hcwa_theme_t( 'nf_text' ), hcwa_theme_own_description(), 'them
 $GLOBALS['hcwa_test']['is'] = $hcwa_saved_is;
 $GLOBALS['hcwa_test']['env'] = $hcwa_saved_env;
 unset( $GLOBALS['hcwa_test']['queried'] );
+
+// ---------- wp hcwa draft-scan --format=urls (fix round 2, 11-WP-PORT.md 5.9 step 2) ----------
+// The production procedure needs the public URLs of the raw rows before they are set to draft
+// (a draft's permalink is ?p=N). Loaded in its own process with a WP_CLI stand-in.
+[ $hcwa_code, $hcwa_out ] = hcwa_test_isolated(
+	'$hcwa_cli_file = ' . var_export( dirname( __DIR__ ) . '/plugins/hcwa-core/includes/cli.php', true ) . ";\n" . <<<'PHP'
+class WP_CLI {
+	public static function add_command( $name, $callable ) {}
+	public static function line( $text = '' ) { echo $text, "\n"; }
+}
+require $hcwa_cli_file;
+hcwa_test_post( array( 'ID' => 51, 'post_type' => 'page', 'post_name' => 'gioi-thieu' ) );
+hcwa_test_post( array( 'ID' => 52, 'post_type' => 'post', 'post_name' => 'tin-mau' ) );
+hcwa_test_post( array( 'ID' => 53, 'post_type' => 'nav_menu_item', 'post_name' => '53' ) );
+$rows = array(
+	array( 'type' => 'page', 'id' => 51, 'status' => 'publish' ),
+	array( 'type' => 'page', 'id' => 51, 'status' => 'publish' ),
+	array( 'type' => 'post', 'id' => 52, 'status' => 'publish' ),
+	array( 'type' => 'nav_menu_item', 'id' => 53, 'status' => 'publish' ),
+	array( 'type' => 'category', 'id' => 7, 'status' => 'term' ),
+	array( 'type' => 'setting', 'id' => 0, 'status' => 'option' ),
+);
+echo json_encode( array( hcwa_cli_draft_post_ids( $rows ), hcwa_cli_draft_urls( $rows ) ), JSON_UNESCAPED_SLASHES );
+PHP
+);
+hcwa_assert_same( array( 0, '[[51,52,53],["https://hcwa.test/gioi-thieu/","https://hcwa.test/tin-mau/"]]' ), array( $hcwa_code, trim( $hcwa_out ) ), 'draft-scan: ids once each (no terms or settings); urls are the permalinks, without menu items' );

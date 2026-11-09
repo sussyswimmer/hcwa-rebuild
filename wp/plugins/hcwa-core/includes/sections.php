@@ -233,12 +233,42 @@ function hcwa_body_parts( string $content ): array {
 
 /**
  * Block names removed from a sections page wherever they sit: raw HTML, classic content and
- * shortcodes could carry an unapproved image or any markup between the sections.
+ * shortcodes could carry an unapproved image or any markup between the sections. Blocks
+ * that pull in other content when they render (a synced pattern, core/block; a pattern,
+ * template part or post content) are removed too: their inner core/html is resolved after
+ * the tree is cleaned and printed raw markup and an Instagram iframe between the sections
+ * (found on a scratch instance, fix round 2). Embeds and the RSS block are removed because
+ * the site never embeds a live feed or an outside page (CLAUDE.md: no live social feeds);
+ * the pre-5.6 core-embed/* names are matched by hcwa_sections_block_banned().
  *
  * @return array<int, string|null>
  */
 function hcwa_sections_banned_blocks(): array {
-	return array( 'core/html', 'core/freeform', 'core/shortcode', null );
+	return array(
+		'core/html',
+		'core/freeform',
+		'core/shortcode',
+		null,
+		'core/block',
+		'core/pattern',
+		'core/template-part',
+		'core/post-content',
+		'core/embed',
+		'core/rss',
+	);
+}
+
+/**
+ * Whether a block name is removed from a sections page (hcwa_sections_banned_blocks(), or
+ * an old core-embed/* embed).
+ *
+ * @param mixed $name Block name, null for classic HTML.
+ */
+function hcwa_sections_block_banned( $name ): bool {
+	if ( in_array( $name, hcwa_sections_banned_blocks(), true ) ) {
+		return true;
+	}
+	return is_string( $name ) && 0 === strpos( $name, 'core-embed/' );
 }
 
 /**
@@ -269,7 +299,6 @@ function hcwa_sections_find( array $blocks ): ?array {
  */
 function hcwa_sections_clean( array $block ): array {
 	$container = in_array( $block['blockName'] ?? null, array( 'hcwa/sections', 'hcwa/day' ), true );
-	$banned    = hcwa_sections_banned_blocks();
 	$inner     = array();
 	$content   = array();
 	$index     = 0;
@@ -283,7 +312,7 @@ function hcwa_sections_clean( array $block ): array {
 		}
 		$child = $block['innerBlocks'][ $index ] ?? null;
 		++$index;
-		if ( ! is_array( $child ) || in_array( $child['blockName'] ?? null, $banned, true ) ) {
+		if ( ! is_array( $child ) || hcwa_sections_block_banned( $child['blockName'] ?? null ) ) {
 			continue;
 		}
 		$inner[]   = hcwa_sections_clean( $child );
@@ -296,6 +325,24 @@ function hcwa_sections_clean( array $block ): array {
 		$block['innerHTML'] = '';
 	}
 	return $block;
+}
+
+/**
+ * pre_render_block filter while a sections page renders: a banned block prints nothing at
+ * any depth, also when another block renders it later (the inner blocks of a synced
+ * pattern, or of anything else that calls do_blocks() at render time), which
+ * hcwa_sections_clean() cannot see in the page's own tree. Returning '' stops WordPress
+ * before it renders the block, so an embed is never fetched either.
+ *
+ * @param string|null $pre   Output so far (null: render as usual).
+ * @param array       $block Parsed block.
+ * @return string|null
+ */
+function hcwa_sections_refuse_block( $pre, $block ) {
+	if ( null !== $pre || ! is_array( $block ) ) {
+		return $pre;
+	}
+	return hcwa_sections_block_banned( $block['blockName'] ?? null ) ? '' : $pre;
 }
 
 /**
@@ -319,8 +366,9 @@ function hcwa_sections_gate_block( $html, $block ) {
 /**
  * Prints a page built from hcwa/* blocks (2.1 rule 4). A password-protected page gets its
  * header and the password form. Otherwise only the first hcwa/sections block is rendered,
- * after hcwa_sections_clean(), with hcwa_sections_gate_block() on every block that is not
- * ours. Returns '' when the page has no hcwa/sections block.
+ * after hcwa_sections_clean(), with hcwa_sections_refuse_block() stopping a banned block at
+ * any depth and hcwa_sections_gate_block() on every block that is not ours. Returns '' when
+ * the page has no hcwa/sections block.
  *
  * @param WP_Post $post Page.
  */
@@ -335,9 +383,11 @@ function hcwa_render_sections( WP_Post $post ): string {
 		return '';
 	}
 
+	add_filter( 'pre_render_block', 'hcwa_sections_refuse_block', 10, 2 );
 	add_filter( 'render_block', 'hcwa_sections_gate_block', 10, 2 );
 	$html = render_block( hcwa_sections_clean( $sections ) );
 	remove_filter( 'render_block', 'hcwa_sections_gate_block', 10 );
+	remove_filter( 'pre_render_block', 'hcwa_sections_refuse_block', 10 );
 
 	return $html;
 }

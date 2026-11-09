@@ -345,6 +345,8 @@ hcwa_meta_flag_any( int $post_id, string $key ): bool // protective flag set on 
 hcwa_center_media_ids( int $center_id ): array        // featured image, logo, gallery
 hcwa_attachment_no_identifiable( int $attachment_id ): bool  // a photo's own context (rule 2)
 hcwa_attachment_page_refused( int $attachment_id ): bool     // its attachment page must 404
+hcwa_request_attachment_ids(): array       // attachments a request names (queried object, p, page_id, attachment_id, slug)
+hcwa_end_as_404(): void                    // 404 template, no feed, no posts (set_404() keeps is_feed)
 
 // Added in review round 2:
 hcwa_category_slugs(): array               // news | stories | events | announcements => [en, vi]
@@ -377,6 +379,7 @@ hcwa_traces_on( ?bool $production = null ): bool  // world_traces_enabled and no
 hcwa_program_center_ids( int $program_id ): array  // hcwa_center_ids (else hcwa_center_id), current language, published
 hcwa_forms_enabled(): bool                 // false until task 2.7 (filter hcwa_forms_enabled)
 hcwa_render_sections( WP_Post $post ): string  // rule 8
+hcwa_sections_block_banned( $name ): bool  // removed from a sections page at any depth (rule 8)
 hcwa_is_sections_page( ?WP_Post $post ): bool
 hcwa_page_description( $post = null ): array   // a page's own description ['text', 'draft'] (intro, serves, summary)
 hcwa_page_is_published( string $key, ?string $lang = null ): bool
@@ -450,8 +453,15 @@ editable in Polylang.
      `attachment.php`, never `single.php`. A `redirect_canonical` filter
      (`hcwa_refused_attachment_canonical()`) stops core turning that 404 into a 301 to
      the pretty attachment path for `attachment_id`, `p`, `page_id` and `attachment` (the
-     path named the Little Rose page; found on real WordPress, 9 Nov). Embeds and the
-     oEmbed endpoint are off.
+     path named the Little Rose page; found on real WordPress, 9 Nov). Feeds of a refused
+     photo are refused too: `&feed=rss2|atom|rss|rdf|comments-rss2` on any of those query
+     forms, and `?p=N&feed=…`, its comment feed, which finds no post. The refusal reads the
+     `p`, `page_id`, `attachment_id` and `attachment` query vars as well as the queried
+     object (`hcwa_request_attachment_ids()`) and ends the request with
+     `hcwa_end_as_404()`: `WP_Query::set_404()` keeps `is_feed` and the found posts, so
+     every refusal also clears the feed flags, the posts and the queried object, and the
+     404 template prints as HTML, never a feed item (found on real WordPress, fix round 2).
+     Embeds and the oEmbed endpoint are off.
    - **Center logo.** `hcwa_logo_id` is center media: the lit header prints it only when
      `hcwa_image_allowed()` passes in the center's context (`hcwa_center_logo_html()`),
      with the prototype's plain `<img>`. The seed marks its own drawn unit logos approved.
@@ -512,10 +522,12 @@ editable in Polylang.
      only through it (sections-page blocks, center and program meta and bodies, focus
      areas, Settings → HCWA, the tagline `blogdescription`). `--printed=raw|guarded` and
      `--format=ids` drive the production procedure (11-WP-PORT.md 5.9): unpublish the raw
-     rows; guarded rows stay published.
+     rows; guarded rows stay published. `--format=urls` prints the public URLs of the rows'
+     posts as a JSON list for `wp-smoke.py --unpublished`; write it before unpublishing.
    - **Feeds and the REST index.** Feeds that would list centers, programs, reports,
      impact figures or partners (`post_type=…`, `post_type=any`, search results, a
-     center's comment feed) answer 404 (`hcwa_refuse_our_feeds()`, on `wp`). On
+     center's comment feed) answer 404 with the 404 template and no item
+     (`hcwa_refuse_our_feeds()`, on `wp`, through `hcwa_end_as_404()`). On
      production, feed titles, bodies and excerpts with a draft marker print nothing, and
      the tagline is left out of feeds (`get_bloginfo_rss`) and of the REST index
      (`rest_index`) while it is draft.
@@ -531,7 +543,11 @@ editable in Polylang.
 8. **Sections pages print through `hcwa_render_sections( WP_Post $post )`**, never through
    `the_content`: the password form when the page needs one; only the first
    `hcwa/sections` block; `core/html`, `core/freeform`, `core/shortcode`, nameless
-   (classic) blocks and literal HTML between sections are removed at any depth; every
+   (classic) blocks, blocks that pull in other content at render time (`core/block`,
+   `core/pattern`, `core/template-part`, `core/post-content`), embeds (`core/embed`,
+   `core-embed/*`, `core/rss`) and literal HTML between sections are removed at any depth
+   (`hcwa_sections_block_banned()`; a `pre_render_block` filter also stops them inside a
+   synced pattern while the page renders); every
    block whose name does not start with `hcwa/` runs through `wp_filter_content_tags()`
    and `hcwa_content_strip_refused()`, so an image staff add after unlocking a section
    meets the photo gate. Our own blocks are not filtered (the gate would refuse the theme

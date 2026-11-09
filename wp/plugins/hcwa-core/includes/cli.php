@@ -772,7 +772,9 @@ function hcwa_cli_post_language_counts(): array {
  * ## OPTIONS
  *
  * [--format=<format>]
- * : table, csv, json, yaml, count, or ids (the post IDs of the rows, space-separated).
+ * : table, csv, json, yaml, count, ids (the post IDs of the rows, space-separated), or urls
+ * (a JSON list of the public URLs of those posts, for wp-smoke.py --unpublished). Write the
+ * URLs before unpublishing: once a post is a draft, its permalink falls back to ?p=N.
  * ---
  * default: table
  * ---
@@ -788,6 +790,7 @@ function hcwa_cli_post_language_counts(): array {
  * ## EXAMPLES
  *
  *     wp hcwa draft-scan
+ *     wp hcwa draft-scan --printed=raw --format=urls > unpublished.json
  *     wp post update $(wp hcwa draft-scan --printed=raw --format=ids) --post_status=draft
  *
  * @param array $args       Positional arguments (unused).
@@ -901,10 +904,14 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 	}
 
 	if ( 'ids' === $format ) {
-		$ids = array_values( array_unique( array_filter( array_map( static fn( array $row ): int => in_array( $row['status'], array( 'term', 'option' ), true ) ? 0 : (int) $row['id'], $rows ) ) ) );
+		$ids = hcwa_cli_draft_post_ids( $rows );
 		if ( $ids ) {
 			WP_CLI::line( implode( ' ', $ids ) );
 		}
+		return;
+	}
+	if ( 'urls' === $format ) {
+		WP_CLI::line( (string) wp_json_encode( hcwa_cli_draft_urls( $rows ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) );
 		return;
 	}
 
@@ -915,6 +922,41 @@ function hcwa_cli_draft_scan( $args, $assoc_args ): void {
 
 	WP_CLI\Utils\format_items( $format, $rows, array( 'type', 'id', 'field', 'status', 'printed', 'excerpt' ) );
 	WP_CLI::error( sprintf( '%d places still contain draft markers.', count( $rows ) ) );
+}
+
+/**
+ * Post IDs of draft-scan rows, once each (terms and settings have none).
+ *
+ * @param array[] $rows Draft-scan rows (hcwa_cli_draft_row()).
+ * @return int[]
+ */
+function hcwa_cli_draft_post_ids( array $rows ): array {
+	$ids = array_map( static fn( array $row ): int => in_array( $row['status'], array( 'term', 'option' ), true ) ? 0 : (int) $row['id'], $rows );
+	return array_values( array_unique( array_filter( $ids ) ) );
+}
+
+/**
+ * The public URL of each post in draft-scan rows, as visitors reach it while it is published:
+ * the pretty permalink, or ?post_type=…&p=N for a type without pages (impact figures). Menu
+ * items have no page of their own and are left out. 11-WP-PORT.md 5.9 step 2 writes this
+ * list before the posts are set to draft, because a draft's permalink is ?p=N (found by the
+ * critics in fix round 2: a list written afterwards made 52 smoke views fail).
+ *
+ * @param array[] $rows Draft-scan rows.
+ * @return string[]
+ */
+function hcwa_cli_draft_urls( array $rows ): array {
+	$urls = array();
+	foreach ( hcwa_cli_draft_post_ids( $rows ) as $id ) {
+		if ( 'nav_menu_item' === get_post_type( $id ) ) {
+			continue;
+		}
+		$url = (string) get_permalink( $id );
+		if ( '' !== $url ) {
+			$urls[] = $url;
+		}
+	}
+	return array_values( array_unique( $urls ) );
 }
 
 /**

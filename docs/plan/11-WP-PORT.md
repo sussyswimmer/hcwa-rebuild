@@ -243,6 +243,11 @@ plugin and asserts no error.
    3. before rendering, cleans the parsed tree: inside `hcwa/sections` and `hcwa/day`, every literal
       HTML string between inner blocks is dropped, and every inner block named `core/html`,
       `core/freeform`, `core/shortcode` or with no name (classic HTML) is removed, at any depth;
+      so are the blocks that pull in other content when they render (`core/block`, a synced
+      pattern; `core/pattern`, `core/template-part`, `core/post-content`) and embeds (`core/embed`,
+      the old `core-embed/*`, `core/rss`: no live feed or outside page). A `pre_render_block` filter
+      prints nothing for any of them while the page renders, so one reached at render time (the
+      `core/html` inside a synced pattern, found in fix round 2) is stopped too;
    4. while rendering, a `render_block` filter runs on the output of every block whose name does not
       start with `hcwa/` (core blocks staff may add after unlocking a section, for example a paragraph
       with an inline image): `wp_filter_content_tags()` and then `hcwa_content_strip_refused()`, so the
@@ -932,9 +937,11 @@ run in a fresh clone because their inputs are committed, 1.1):
   `reset`, `setup` or `env` on `main`.
 - **Production pass**, on a throwaway instance:
   1. `setup scratch-prod 8890`, `seed scratch-prod`, `env scratch-prod production`, `start scratch-prod`.
-  2. CONTRACT rule 4's procedure after a database push: `wp hcwa draft-scan --printed=raw --format=ids`;
-     write the permalinks of those posts to `qa/wp-port/scratch-prod/unpublished.json`; set each to
-     draft with `wp post update <ids> --post_status=draft`. `guarded` rows stay published: that their
+  2. CONTRACT rule 4's procedure after a database push: first
+     `wp hcwa draft-scan --printed=raw --format=urls > qa/wp-port/scratch-prod/unpublished.json` (the
+     public URLs of those posts, written while they are still published: a draft's permalink is
+     `?p=N`), then `wp hcwa draft-scan --printed=raw --format=ids` and set each to draft with
+     `wp post update <ids> --post_status=draft`. `guarded` rows stay published: that their
      draft text never renders on production is exactly what the pass proves.
   3. `smoke scratch-prod -- --unpublished qa/wp-port/scratch-prod/unpublished.json` (production mode,
      without `--allow-draft`).

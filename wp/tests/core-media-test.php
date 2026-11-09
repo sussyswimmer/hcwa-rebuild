@@ -291,13 +291,7 @@ hcwa_assert_same( 1, count( $attachment_hook ), 'refused attachment pages become
 hcwa_assert_same( 0, $attachment_hook[0][2] ?? null, 'called without arguments' );
 hcwa_assert_same( array(), array_values( array_filter( $GLOBALS['hcwa_test']['hooks']['template_redirect'] ?? array(), static fn( $h ) => 'hcwa_refuse_attachment_page' === $h[0] ) ), 'not on template_redirect any more' );
 
-$GLOBALS['wp_query'] = new class() {
-	public $is_404 = false;
-
-	public function set_404() {
-		$this->is_404 = true;
-	}
-};
+$GLOBALS['wp_query'] = new HCWA_Test_Query( array( 'is_attachment' => true ) );
 unset( $GLOBALS['hcwa_test']['status'] );
 $GLOBALS['hcwa_test']['is']['is_attachment'] = true;
 hcwa_refuse_attachment_page(); // get_queried_object_id() is 0 in the stubs: nothing to refuse.

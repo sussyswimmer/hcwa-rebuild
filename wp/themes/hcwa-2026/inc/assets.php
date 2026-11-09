@@ -367,12 +367,19 @@ function hcwa_theme_seo_plugin_active(): bool {
 }
 
 /**
- * Description of the current page from its own fields, at most 160 characters: the summary
- * (centers, programs, reports), else a hand-written excerpt; a photo's caption only when
- * staff wrote it (hcwa_theme_attachment_text()); a category or term description. '' when
- * the page has none.
+ * Description of the current page, at most 160 characters. First the description the
+ * prototype prints for the page (hcwa_theme_own_description(): a sections page's intro, a
+ * center's "who we serve", a program's summary, the 404 text), which comes without draft
+ * brackets on staging and is '' on production while draft. Otherwise the page's own fields:
+ * the summary (centers, programs, reports), else a hand-written excerpt; a photo's caption
+ * only when staff wrote it (hcwa_theme_attachment_text()); a category or term description.
+ * '' when the page has none.
  */
 function hcwa_theme_page_description(): string {
+	$own = function_exists( 'hcwa_theme_own_description' ) ? trim( wp_strip_all_tags( hcwa_theme_own_description() ) ) : '';
+	if ( '' !== $own ) {
+		return wp_html_excerpt( $own, 160, '…' );
+	}
 	$description = '';
 	if ( is_singular() ) {
 		$post = get_queried_object();
@@ -394,8 +401,13 @@ function hcwa_theme_page_description(): string {
 }
 
 /**
- * Basic meta description when no SEO plugin is active: the page's own description, else
- * the tagline.
+ * The description and Open Graph tags when no SEO plugin is active, as the prototype prints
+ * them (prototype/src/partials/layout.mjs): <meta name=description> with the page's own
+ * description, else the tagline; og:title with the browser title; og:description with the
+ * same description; og:locale vi_VN or en_GB. The tagline goes through
+ * hcwa_theme_draft_text(), so staging prints it without the [DRAFT: …] brackets and
+ * production prints nothing while it is draft. With no description, neither description
+ * tag is printed.
  */
 function hcwa_theme_meta_description(): void {
 	if ( hcwa_theme_seo_plugin_active() ) {
@@ -403,11 +415,22 @@ function hcwa_theme_meta_description(): void {
 	}
 	$description = hcwa_theme_page_description();
 	if ( '' === $description ) {
-		$description = wp_html_excerpt( hcwa_theme_public_text( trim( wp_strip_all_tags( get_bloginfo( 'description' ) ) ) ), 160, '…' );
+		// get_bloginfo( 'description' ) is this same option (Polylang translates it).
+		$tagline     = hcwa_theme_draft_text( trim( wp_strip_all_tags( (string) get_option( 'blogdescription', '' ) ) ) );
+		$description = wp_html_excerpt( (string) $tagline['text'], 160, '…' );
 	}
 	if ( '' !== $description ) {
 		printf( '<meta name="description" content="%s">' . "\n", esc_attr( $description ) );
 	}
+	// wp_get_document_title() returns the title HTML-escaped; decode it once for the attribute.
+	$title = trim( html_entity_decode( wp_strip_all_tags( (string) wp_get_document_title() ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+	if ( '' !== $title ) {
+		printf( '<meta property="og:title" content="%s">' . "\n", esc_attr( $title ) );
+	}
+	if ( '' !== $description ) {
+		printf( '<meta property="og:description" content="%s">' . "\n", esc_attr( $description ) );
+	}
+	printf( '<meta property="og:locale" content="%s">' . "\n", 'en' === hcwa_theme_lang() ? 'en_GB' : 'vi_VN' );
 }
 
 /**
