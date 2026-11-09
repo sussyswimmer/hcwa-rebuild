@@ -553,8 +553,11 @@ mapped = parity.map_positions(pb, wb, [0, 450, 1000, 1499, 1600, 2300, 3000])
 pl = parity.place_lines([{"y": 900}, {"y": 1450}, {"y": 1500}], pb)
 wl = parity.place_lines([{"y": 900}, {"y": 1421}, {"y": 1471}, {"y": 1800}], wb)
 lines = {"wpOnly": [l["y"] for l in parity.wp_only_lines(pl, wl)], "placed": [[l["section"], l["offset"], l["offsetEnd"]] for l in wl]}
+# A viewport frame at the news/help seam: each section's band on both sides, WordPress rows taken at
+# the same offsets into the section (news is 29 px shorter there, so help starts 29 px higher).
+bands = [[b["section"], b["rowsProto"], b["rowsWp"]] for b in parity.frame_bands(1200, 1171, 844, pb, wb)]
 print(json.dumps({
-    "mapped": mapped, "lines": lines,
+    "mapped": mapped, "lines": lines, "bands": bands,
     "key": parity.line_key("vi-1440-t2: drawing buffers ~33.4 MB <= 48 MB (D6.7)"),
     "missing": [r["text"] for r in cmp["missing"]], "only": cmp["prototypeOnly"], "protoFails": cmp["protoFails"],
     "allowed": [d1["pass"], d1["allowed"]], "plain": [d2["pass"], d2["changes"]],
@@ -576,6 +579,7 @@ hcwa_assert_same( array( true, 1 ), $hcwa_parity['allowed'] ?? null, 'parity: an
 hcwa_assert_same( array( false, 2 ), $hcwa_parity['plain'] ?? null, 'parity: other differences stay' );
 hcwa_assert_same( 16, $hcwa_parity['routes'] ?? null, 'parity: 16 routes' );
 hcwa_assert_same( array( 0, 450, 1000, 1470, 1571, 2271, 3000 ), $hcwa_parity['mapped'] ?? null, 'parity strips: WordPress frames sit at the same offset into the same section, capped at a shorter section' );
+hcwa_assert_same( array( array( 'main>section#news.wall', array( 0, 300 ), array( 29, 300 ) ), array( 'main>section#help.wall', array( 300, 844 ), array( 300, 844 ) ) ), $hcwa_parity['bands'] ?? null, 'parity strips: a frame is compared section by section, each band at the same offsets into its section' );
 hcwa_assert_same( array( 1800 ), $hcwa_parity['lines']['wpOnly'] ?? null, 'parity 7.14: a hard line only WordPress has is reported; lines at the same offset from the section top or bottom are not' );
 hcwa_assert_same( array( array( 'main>section#news.wall', 0, 571 ), array( 'main>section#news.wall', 521, 50 ), array( 'main>section#help.wall', 0, 800 ), array( 'main>section#help.wall', 329, 471 ) ), $hcwa_parity['lines']['placed'] ?? null, 'parity 7.14: lines placed by section, offset and distance to the section end' );
 hcwa_assert_same( array( '1440', '390' ), $hcwa_parity['widths'] ?? null, 'parity: 390 and 1440' );

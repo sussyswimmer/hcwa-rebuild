@@ -25,9 +25,10 @@ What it does, in order:
     embed, global-styles or block-library assets.
  5. --full only: frame strips of home (5.5) and mobile LCP through the gzip proxy (5.5, gate 7.11).
     Strip frames: 24 prototype positions to its footer, and on WordPress the same offsets into the
-    same sections; each shot waits for in-view reveals and transitions to finish; each frame's pixel
-    difference between the sides is recorded and gated at STRIP_SHARE (sections with a pixel allow
-    entry for that route and width excepted).
+    same sections; each shot waits for in-view reveals and transitions to finish; each frame is
+    compared section band by section band (the rows a section takes in the frame, at the same
+    offsets into that section on both sides) and gated at STRIP_SHARE, sections with a pixel allow
+    entry for that route and width excepted; the whole-frame share is recorded too.
  6. debug.log of the instance: no new warning, notice or deprecation naming hcwa-2026 or hcwa-core.
  7. Gate 7.14 "no hard line between sections" (05-DESIGN 0.5): in the reduced mode the driver also
     takes a full-page capture of each side and scans it row by row (hard_lines: the colour steps by
@@ -1082,9 +1083,9 @@ def frame_strips(browser, out: Path) -> dict:
     The prototype is captured first at 24 positions spread to its footer top. WordPress is then
     captured at the same offsets into the same sections (map_positions), so a section that is a
     few px taller on one side does not shift every later frame. Before each shot the driver waits
-    until no reveal is pending in view and no transition runs (at most 1.5 s). Each frame's pixel
-    share between the sides is recorded; a frame over STRIP_SHARE fails its strip's gate unless
-    its section has a pixel allow entry for that route and width."""
+    until no reveal is pending in view and no transition runs (at most 1.5 s). Each frame is then
+    compared per section band (strip_frame_shares); a band over STRIP_SHARE fails its strip's gate
+    unless its section has a pixel allow entry for that route and width."""
     out.mkdir(parents=True, exist_ok=True)
     res = {"strips": [], "gates": {}}
     for path in ("/", "/en/"):
@@ -1120,16 +1121,7 @@ def frame_strips(browser, out: Path) -> dict:
             name = f"{'vi' if path == '/' else 'en'}-{width}-t{tier}"
             strip = out / f"strip-{name}.png"
             compose_strip(frames, strip, width)
-            shares = []
-            boxes = ((meta.get("proto") or {}).get("geo") or {}).get("boxes", [])
-            for i in range(min(len(frames["proto"]), len(frames["wp"]))):
-                a, b = frames["proto"][i], frames["wp"][i]
-                box = section_at(a["y"], boxes)
-                key = box["key"] if box else None
-                share = pixel_share(a["file"], b["file"])
-                accepted = bool(key and allowed("pixels", path, key, width, None))
-                shares.append({"i": i, "yProto": a["y"], "yWp": b["y"], "section": key, "share": share, "allowed": accepted,
-                               "pass": share is not None and (share <= STRIP_SHARE or accepted)})
+            shares = strip_frame_shares(frames, meta, path, width)
             res["strips"].append({"name": name, "file": str(strip), "meta": meta, "frameShares": shares,
                                   "frames": {s: [{k: f[k] for k in ("y", "scrollY", "settleMs", "nonBackground")} for f in frames[s]] for s in SIDES}})
             for side in SIDES:
@@ -1141,6 +1133,67 @@ def frame_strips(browser, out: Path) -> dict:
             res["gates"][f"strip {name}: 24 frames within {STRIP_SHARE}% between sides (outside allowed sections)"] = (
                 len(shares) == 24 and all(r["pass"] for r in shares))
     return res
+
+
+def crop_share(a: str, b: str, rows_a: tuple[int, int], rows_b: tuple[int, int]) -> float | None:
+    """pixel_share() of two horizontal bands of equal height, one from each frame."""
+    if Image is None:
+        return None
+    A, B = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
+    h = min(rows_a[1] - rows_a[0], rows_b[1] - rows_b[0])
+    w = min(A.width, B.width)
+    if h <= 0 or w <= 0:
+        return None
+    ca = A.crop((0, rows_a[0], w, rows_a[0] + h))
+    cb = B.crop((0, rows_b[0], w, rows_b[0] + h))
+    r, g, bl = ImageChops.difference(ca, cb).split()
+    mask = ImageChops.lighter(ImageChops.lighter(r, g), bl).point(lambda v: 255 if v > PIXEL_FAR else 0)
+    return round(100 * mask.histogram()[255] / (w * h), 2)
+
+
+def frame_bands(sy_a: int, sy_b: int, vh: int, boxes_a: list[dict], boxes_b: list[dict], min_rows: int = 8) -> list[dict]:
+    """For one strip frame, the band of rows each section takes on each side: the prototype rows a
+    section covers in its frame, and the WordPress rows at the same offsets into that section."""
+    wp = {b["key"]: b for b in boxes_b}
+    bands = []
+    for box in boxes_a:
+        top, bottom = max(sy_a, box["top"]), min(sy_a + vh, box["top"] + box["height"])
+        if bottom - top < min_rows:
+            continue
+        other = wp.get(box["key"])
+        band = {"section": box["key"], "rowsProto": [top - sy_a, bottom - sy_a], "rowsWp": None}
+        if other:
+            start = other["top"] + (top - box["top"]) - sy_b
+            end = min(start + (bottom - top), other["top"] + other["height"] - sy_b, vh)
+            if end - max(start, 0) >= min_rows and start >= 0:
+                band["rowsWp"] = [start, end]
+        bands.append(band)
+    return bands
+
+
+def strip_frame_shares(frames: dict, meta: dict, path: str, width: str) -> list[dict]:
+    """Per strip frame: the pixel share between the sides over the whole viewport, and per section
+    band (frame_bands). A frame passes when every band is within STRIP_SHARE, or its section has a
+    pixel allow entry for this route and width; a section missing on WordPress fails."""
+    out = []
+    geo_a = (meta.get("proto") or {}).get("geo") or {}
+    geo_b = (meta.get("wp") or {}).get("geo") or {}
+    vh = int(geo_a.get("vh") or 0)
+    for i in range(min(len(frames.get("proto", [])), len(frames.get("wp", [])))):
+        a, b = frames["proto"][i], frames["wp"][i]
+        row = {"i": i, "yProto": a["y"], "yWp": b["y"], "share": pixel_share(a["file"], b["file"]), "bands": []}
+        sa, sb = a.get("scrollY", a["y"]), b.get("scrollY", b["y"])
+        for band in frame_bands(sa, sb, vh, geo_a.get("boxes", []), geo_b.get("boxes", [])):
+            accepted = bool(allowed("pixels", path, band["section"], width, None))
+            share = crop_share(a["file"], b["file"], tuple(band["rowsProto"]), tuple(band["rowsWp"])) if band["rowsWp"] else None
+            band.update(share=share, allowed=accepted, ok=accepted or (share is not None and share <= STRIP_SHARE))
+            row["bands"].append(band)
+        top = section_at(a["y"], geo_a.get("boxes", []))
+        row["section"] = top["key"] if top else None
+        row["allowed"] = any(bd["allowed"] for bd in row["bands"])
+        row["pass"] = bool(row["bands"]) and all(bd["ok"] for bd in row["bands"]) if vh else (row["share"] is not None and row["share"] <= STRIP_SHARE)
+        out.append(row)
+    return out
 
 
 def non_background(path: Path) -> float:
@@ -1281,7 +1334,9 @@ PROD_JS = r"""
       slip: document.querySelectorAll('section.slip').length,
       tell: document.querySelectorAll('section.tell').length,
       trust: document.querySelectorAll('nav.trust').length,
-      dusk: document.querySelectorAll('section.dusk .dusk__title').length,
+      dusk: document.querySelectorAll('section.dusk').length,
+      duskTitle: document.querySelectorAll('section.dusk .dusk__title').length,
+      duskLabelled: document.querySelectorAll('section.dusk[aria-labelledby]').length,
       duskBtn: document.querySelectorAll('section.dusk a.btn').length,
     },
   };
@@ -1358,7 +1413,11 @@ def production_asserts(base: str, instance: Path | None, out: Path) -> dict:
                 c, dn = d["contact"], d["donate"]
                 if route["page"] == "contact" and (c["litActions"] or c["reachWrite"] or c["office"] or not c["units"] or c["footContact"]):
                     fails.append(f"Contact differs from 3.5 (actions {c['litActions']}, write {c['reachWrite']}, office {c['office']}, units {c['units']}, footer contact {c['footContact']})")
-                if route["page"] == "donate" and (dn["go"] or dn["jump"] or dn["slip"] or dn["tell"] or not dn["trust"] or not dn["dusk"] or not dn["duskBtn"]):
+                # 3.5: the dusk band keeps its title and its Contact button. A title that is draft
+                # text is left out on production (2.1 rules 7 and 10), and then the band carries no
+                # aria-labelledby; the dangling-label check above covers the other case.
+                dusk_ok = dn["dusk"] and dn["duskBtn"] and (dn["duskTitle"] or not dn["duskLabelled"])
+                if route["page"] == "donate" and (dn["go"] or dn["jump"] or dn["slip"] or dn["tell"] or not dn["trust"] or not dusk_ok):
                     fails.append(f"Donate differs from 3.5 ({json.dumps(dn)})")
                 res["routes"].append({"route": route["path"], "width": width, "fails": fails})
                 print(f"{'ok  ' if not fails else 'FAIL'} {width:>4} {route['path']}", flush=True)
