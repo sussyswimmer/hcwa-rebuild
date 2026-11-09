@@ -17,3 +17,5 @@ qa/m2/
 # Richness-pass QA working captures (strips, critic evidence, matrices): local only, about 365 MB.
 # A curated review set is committed separately once the pass is final.
 qa/m3/
+# WordPress port QA working captures (parity renders, critic evidence): local only.
+qa/wp-port/
