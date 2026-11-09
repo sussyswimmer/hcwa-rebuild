@@ -1100,3 +1100,19 @@ cross-stream needs and re-ran every gate on one final build.
    two by two under 58rem of `.site-footer__cols` (a new wrapper, `container-type: inline-size`); the toggle sits under
    the buttons under 56rem of `.hero__inner`. 200%, 1024/1100/1280/1440, VI and EN, home, Our Work, Contact: no
    sideways scroll (`qa/m3/final/evidence/footer-1024-en-text100-text200.png`).
+4. **Gates on the final build** (`qa/m3/final/logs/`): `npm test` 104/104; `npm run build`, `build:pages` (svg masks
+   rebased) pass; `PROD=1` blocked only on drafts and guards (59: data-draft, [DRAFT, bracket tokens, the donation
+   placeholder, the Little Rose door guard, the traces guard). `light-contrast.mjs` 212 lines, 0 below; live probe
+   (Tier 1 and 2, VI and EN, 390 and 1440, stage 0.04/0.17/0.22/0.50/0.78) 304 lines, worst running text 7.58, 0 real
+   lines below (3 rail labels read 1.00 on one Tier 2 shot where SwiftShader kept the hidden text layer; the same
+   labels measure 11.55 or more in every other shot); seam scan: 40 px bands at the seam 11.9 levels at most, least
+   non-background share 24.8%. `check-tiles`, `check-bays`, `check-sun-crisp` (corridor still skipped) pass;
+   `check-page` 24/24 run alone (its velocity check misses its 6 s settle under four parallel SwiftShader browsers);
+   `check-hero` 2 FAIL, both "the world moves with no input" at 390 Tier 1 (0.37% / 0.16% against 0.6%: the first
+   touch cloud falls outside the 1 s window; m2's final run failed the same two at 0%, the run before this one passed
+   at 0.97%). Every page VI/EN at 390/1440: 96 views, 0 console errors, 0 4xx, one H1 each, no overflow at 320 (JS on
+   and off), no hidden text in the reduced, Tier 0 and no-JS home and Our Work. Strips (24 + 6 back, both sizes, both
+   tiers, VI and EN): 0 errors. Mobile LCP median of 3: 2240 / 2160 / 2184 ms (world off / on / default), under 2.5 s,
+   over the 1.8 s goal; lcp.cjs's first-10 s long-task rule still fails (285 ms; 210-332 across runs). Tastegate on
+   all 18 pages: 0 fail (warnings as in m2: no button in the first desktop screen on inner pages, example.com on the
+   components page). Budgets: live chunk 16.31 KB gzip (+0.09), main CSS 28.97 KB (+0.07), corridor 9.18 KB.
