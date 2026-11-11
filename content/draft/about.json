@@ -1,0 +1,104 @@
+{
+  "_note": "PLAN-M4 4.1-4.5: About pages (who we are, our story, team, partners, policies). Everything is draft until HCWA approves it. No founding year, no numbers: every year in the story is a [năm] / [year] token and production leaves the years out. 'source' notes where wording came from; it never renders.",
+  "whoWeAre": {
+    "aimTitle": { "vi": "Tôn chỉ mục đích", "en": "What we work for" },
+    "aim": { "vi": "Trẻ em và thanh thiếu niên có hoàn cảnh khó khăn tại TP. Hồ Chí Minh được sống an toàn và hạnh phúc.", "en": "Disadvantaged children and young people in Ho Chi Minh City live safe and happy lives.", "draft": true, "source": "current About page, 'Tôn chỉ mục đích' / 'Our general objective'" },
+    "visionTitle": { "vi": "Tầm nhìn", "en": "Our vision" },
+    "vision": { "vi": "Một xã hội nơi mọi trẻ em được bảo vệ, chăm sóc, giáo dục và được nói lên tiếng nói của mình, và tiếng nói ấy được tôn trọng.", "en": "A society where every child is protected, cared for and educated, and has a voice that is heard and respected.", "draft": true, "source": "condensed from 'Tầm nhìn' / 'Our vision' on the current About page" },
+    "missionTitle": { "vi": "Sứ mạng", "en": "Our mission" },
+    "mission": { "vi": "Là tổ chức xã hội tự nguyện, phi lợi nhuận, không sử dụng ngân sách nhà nước, Hội góp phần mang lại lợi ích tốt nhất cho trẻ em qua vận động chính sách, nâng cao năng lực và dịch vụ xã hội, cùng chính quyền, các tổ chức xã hội và cộng đồng.", "en": "As a voluntary, non-profit social organization that takes no state budget, HCWA works for the best interests of children through policy advocacy, capacity building and social services, together with local government, other social organizations and communities.", "draft": true, "source": "condensed from 'Sứ mạng' / 'Our mission' on the current About page" },
+    "valuesTitle": { "vi": "Giá trị", "en": "Our values" },
+    "values": [
+      { "vi": "Bình đẳng", "en": "Equality", "draft": true },
+      { "vi": "Quyền trẻ em", "en": "Children's rights", "draft": true },
+      { "vi": "Chuyên nghiệp", "en": "Professionalism", "draft": true },
+      { "vi": "Bền vững", "en": "Sustainability", "draft": true },
+      { "vi": "Cam kết", "en": "Commitment", "draft": true }
+    ],
+    "legalTitle": { "vi": "Tư cách pháp lý", "en": "Legal status" },
+    "legal": { "vi": "Hội hoạt động theo pháp luật Việt Nam và Điều lệ Hội.", "en": "HCWA works under Vietnamese law and its own charter.", "draft": true, "source": "current About page; HCWA to confirm the wording and which authority manages it" },
+    "storyLead": { "vi": "Các cơ sở, các dự án và những người đã cùng Hội đi qua từng chặng đường.", "en": "The centers, the projects and the people who carried HCWA from one step to the next.", "draft": true },
+    "ctaTitle": { "vi": "Cùng Hội chăm lo cho trẻ em", "en": "Stand with the children HCWA serves", "draft": true }
+  },
+  "story": {
+    "intro": { "vi": "Từng chặng đường của Hội. Các năm sẽ được ghi khi HCWA xác minh.", "en": "HCWA's road so far. The years go in once HCWA has verified them.", "draft": true },
+    "steps": [
+      { "id": "founding", "title": { "vi": "Hội Bảo trợ Trẻ em TP. Hồ Chí Minh ra đời", "en": "HCWA is founded" }, "text": { "vi": "Những người sáng lập cùng chính quyền địa phương bắt đầu chăm lo cho trẻ em có hoàn cảnh khó khăn của thành phố.", "en": "Its founders and the local authorities start caring for the city's disadvantaged children.", "draft": true, "source": "current Charity Class page (history); the founding year is disputed on the current site, so it stays a token" } },
+      { "id": "little-rose", "route": "littleRose", "title": { "vi": "Mái ấm Hoa Hồng Nhỏ", "en": "The Little Rose Warm Shelter" }, "text": { "vi": "Một mái ấm an toàn cho trẻ em gái đã trải qua hoặc có nguy cơ bị xâm hại tình dục.", "en": "A safe home for girls who survived or are at risk of sexual abuse.", "draft": true } },
+      { "id": "cau-muoi", "route": "greenBamboo", "title": { "vi": "Câu lạc bộ Cầu Muối, tiền thân của Tre Xanh", "en": "The Cầu Muối club, later Green Bamboo" }, "text": { "vi": "Câu lạc bộ sau đó trở thành mái ấm cho trẻ trai không nơi nương tựa.", "en": "The club later became a shelter for homeless boys.", "draft": true, "source": "current Green Bamboo page" } },
+      { "id": "cau-han", "route": "cauHan", "title": { "vi": "Dự án Cầu Hàn", "en": "The Cau Han Project" }, "text": { "vi": "Một dự án dựa vào cộng đồng cho trẻ em và gia đình khó khăn, về sau có thêm lớp học tình thương.", "en": "A community-based project for children and families in hardship, which later added its own charity classes.", "draft": true, "source": "current Cau Han and Charity Class pages" } },
+      { "id": "green-bamboo-model", "route": "greenBamboo", "title": { "vi": "Tre Xanh đổi mô hình", "en": "Green Bamboo changes its model" }, "text": { "vi": "Tre Xanh trở thành cơ sở bảo trợ xã hội, hỗ trợ trẻ và gia đình ngay tại cộng đồng.", "en": "Green Bamboo becomes a social protection center that supports children and families in their community.", "draft": true, "source": "current Green Bamboo page" } },
+      { "id": "today", "route": "ourWork", "title": { "vi": "Hôm nay", "en": "Today" }, "text": { "vi": "Hội vận hành các cơ sở lâu dài và triển khai các dự án có thời hạn cùng đối tác.", "en": "HCWA runs long-term centers and carries out time-bound projects with partners.", "draft": true } }
+    ]
+  },
+  "team": {
+    "intro": { "vi": "Hội sẽ giới thiệu ở đây những thành viên ban lãnh đạo và nhân viên đồng ý được nêu tên.", "en": "HCWA will list the board members and staff who agree to be named here.", "draft": true },
+    "slots": 3,
+    "slotsNote": { "vi": "Chỗ dành cho từng người, khi họ đồng ý.", "en": "A place for each person, once they agree.", "draft": true },
+    "joinTitle": { "vi": "Muốn cùng làm việc với Hội?", "en": "Want to work alongside HCWA?" },
+    "joinText": { "vi": "Hãy bắt đầu bằng việc tình nguyện, hoặc viết cho chúng tôi.", "en": "Start by volunteering, or write to us.", "draft": true }
+  },
+  "partners": {
+    "intro": { "vi": "Doanh nghiệp, tổ chức và cơ quan đã đồng hành cùng Hội, theo từng nhóm.", "en": "The companies, organizations and agencies that work with HCWA, by group.", "draft": true },
+    "_groupsNote": "04-SITEMAP Partner type. A group renders only once it has an entry HCWA approved (logo one tone, permission to show). None yet.",
+    "groups": [
+      { "id": "corporate", "name": { "vi": "Doanh nghiệp", "en": "Companies" }, "entries": [] },
+      { "id": "ngo", "name": { "vi": "Tổ chức phi chính phủ", "en": "NGOs" }, "entries": [] },
+      { "id": "government", "name": { "vi": "Cơ quan nhà nước", "en": "Government" }, "entries": [] },
+      { "id": "foundation", "name": { "vi": "Quỹ", "en": "Foundations" }, "entries": [] },
+      { "id": "academic", "name": { "vi": "Trường học và viện nghiên cứu", "en": "Schools and universities" }, "entries": [] }
+    ],
+    "fundersNote": { "vi": "Tên nhà tài trợ chỉ được đăng khi HCWA xác nhận đã được phép.", "en": "A funder's name goes up only once HCWA confirms it may be listed.", "draft": true },
+    "ctaTitle": { "vi": "Cùng Hội làm một điều cụ thể cho trẻ em", "en": "Do something concrete for children, with HCWA", "draft": true }
+  },
+  "policies": {
+    "intro": { "vi": "Các quy định Hội đặt ra cho mình: bảo vệ trẻ em, quyền riêng tư của bạn và cách dùng trang web.", "en": "The rules HCWA holds itself to: protecting children, your privacy and how this website may be used.", "draft": true },
+    "sections": [
+      {
+        "key": "safeguarding",
+        "id": { "vi": "bao-ve-tre-em", "en": "safeguarding" },
+        "summary": [
+          { "vi": "Trên trang web này, tên của trẻ trong các câu chuyện luôn được thay đổi, kèm một dòng ghi chú cho biết điều đó.", "en": "On this website, children's names in stories are always changed, with a note that says so.", "draft": true },
+          { "vi": "Không có ảnh nào có thể nhận ra một em được đăng nếu HCWA chưa duyệt ảnh đó.", "en": "No photo in which a child could be recognised goes up unless HCWA has approved it.", "draft": true },
+          { "vi": "Các em ở Mái ấm Hoa Hồng Nhỏ không bao giờ bị nhận diện: không ảnh, không tên, không địa chỉ.", "en": "Residents of the Little Rose Warm Shelter are never identifiable: no photos, no names, no address.", "draft": true }
+        ],
+        "outlineLead": { "vi": "[DRAFT: Toàn văn chính sách do HCWA cung cấp, gồm các phần:]", "en": "[DRAFT: The full policy, supplied by HCWA, will cover:]", "draft": true },
+        "outline": [
+          { "vi": "Phạm vi áp dụng", "en": "Who it covers", "draft": true },
+          { "vi": "Quy tắc ứng xử với trẻ", "en": "Code of conduct with children", "draft": true },
+          { "vi": "Báo cáo một mối lo ngại", "en": "Reporting a concern", "draft": true },
+          { "vi": "Người phụ trách", "en": "Who is responsible", "draft": true }
+        ]
+      },
+      {
+        "key": "privacy",
+        "id": { "vi": "quyen-rieng-tu", "en": "privacy" },
+        "summary": [
+          { "vi": "Các mẫu đơn trên trang hỏi họ tên, email, số điện thoại (không bắt buộc) và lời nhắn của bạn.", "en": "The forms on this site ask for your name, your email, your phone number (optional) and your message.", "draft": true },
+          { "vi": "Hội dùng các thông tin này để trả lời bạn.", "en": "HCWA uses these details to reply to you.", "draft": true }
+        ],
+        "outlineLead": { "vi": "[DRAFT: Toàn văn thông báo do HCWA cung cấp, gồm các phần:]", "en": "[DRAFT: The full notice, supplied by HCWA, will cover:]", "draft": true },
+        "outline": [
+          { "vi": "Thông tin chúng tôi thu thập", "en": "What we collect", "draft": true },
+          { "vi": "Cách chúng tôi sử dụng", "en": "How we use it", "draft": true },
+          { "vi": "Thời gian lưu giữ", "en": "How long we keep it", "draft": true },
+          { "vi": "Quyền của bạn", "en": "Your rights", "draft": true }
+        ]
+      },
+      {
+        "key": "terms",
+        "id": { "vi": "dieu-khoan", "en": "terms" },
+        "title": { "vi": "Điều khoản sử dụng", "en": "Terms of use" },
+        "summary": [
+          { "vi": "[DRAFT: Tóm tắt điều khoản sử dụng, HCWA cung cấp.]", "en": "[DRAFT: A summary of the terms of use, for HCWA to supply.]", "draft": true }
+        ],
+        "outlineLead": { "vi": "[DRAFT: Toàn văn điều khoản do HCWA cung cấp, gồm các phần:]", "en": "[DRAFT: The full terms, supplied by HCWA, will cover:]", "draft": true },
+        "outline": [
+          { "vi": "Sử dụng nội dung trên trang", "en": "Using this site's content", "draft": true },
+          { "vi": "Liên kết đến trang khác", "en": "Links to other sites", "draft": true },
+          { "vi": "Thay đổi điều khoản", "en": "Changes to these terms", "draft": true }
+        ]
+      }
+    ]
+  }
+}

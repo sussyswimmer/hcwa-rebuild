@@ -1116,3 +1116,13 @@ cross-stream needs and re-ran every gate on one final build.
    over the 1.8 s goal; lcp.cjs's first-10 s long-task rule still fails (285 ms; 210-332 across runs). Tastegate on
    all 18 pages: 0 fail (warnings as in m2: no button in the first desktop screen on inner pages, example.com on the
    components page). Budgets: live chunk 16.31 KB gzip (+0.09), main CSS 28.97 KB (+0.07), corridor 9.18 KB.
+
+**M4 plan (11 Nov 2026; planning).** Maxwell: "finish the rest of the pages; at the top of the contact and news
+pages there should be clean 3D scroll animations; make sure there are no more 'page can't be found'", plus his
+walls request ("too perfect … not play-doh"). The crawl of the built prototype found 36 dead targets (18 VI, 18
+EN, 638 links), all missing pages. `PLAN-M4.md` lists the 18 page pairs to build, who owns which file (pages,
+openings, walls) and the acceptance gates. Departures it decides: news cards keep linking to the live posts (no
+article bodies exist) and categories filter in-page; the Cầu Hàn EN URL becomes
+`/en/our-work/centers/cau-han-project/` (04-SITEMAP, wp/CONTRACT.md); Little Rose's page has no still and no
+door, only words and an abstract Hoa thị illustration; the two openings are CSS 3D on prerendered layers driven
+by native scroll, not live WebGL; the 404 page loses its "not in the prototype" note once the crawl is clean.

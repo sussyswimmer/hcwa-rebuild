@@ -1,0 +1,60 @@
+{
+  "_note": "PLAN-M4 4.7-4.9: the Get Involved subpages (volunteer, partner with us, in-kind gifts and the Little Rose Bakery). Everything is draft until HCWA approves it. No invented checks, partners, amounts or needs: what HCWA has not said is a [token].",
+  "volunteer": {
+    "intro": { "vi": "Thời gian và kỹ năng của bạn giúp các lớp học, câu lạc bộ và hoạt động của Hội.", "en": "Your time and skills help HCWA's classes, clubs and activities.", "draft": true },
+    "lookTitle": { "vi": "Hội cần ai", "en": "Who we look for" },
+    "areas": [
+      { "id": "children", "title": { "vi": "Hoạt động với trẻ", "en": "Activities with children" }, "text": { "vi": "Cùng tổ chức lớp học, câu lạc bộ và sinh hoạt tại các cơ sở.", "en": "Help run classes, clubs and activities at the centers.", "draft": true, "source": "current Support Us page: volunteering on projects" } },
+      { "id": "communications", "title": { "vi": "Truyền thông", "en": "Communications" }, "text": { "vi": "Viết, thiết kế và chăm sóc các kênh thông tin của Hội.", "en": "Write, design and look after HCWA's channels.", "draft": true, "source": "current Support Us page" } },
+      { "id": "fundraising", "title": { "vi": "Gây quỹ", "en": "Fundraising" }, "text": { "vi": "Cùng chuẩn bị các sự kiện và chiến dịch gây quỹ.", "en": "Help prepare fundraising events and campaigns.", "draft": true, "source": "current Support Us page" } },
+      { "id": "sponsors", "title": { "vi": "Quan hệ nhà tài trợ", "en": "Sponsor relations" }, "text": { "vi": "Hỗ trợ việc liên lạc và báo cáo với các nhà tài trợ.", "en": "Help keep in touch with sponsors and report back to them.", "draft": true, "source": "current Support Us page" } }
+    ],
+    "otherArea": { "vi": "Việc khác", "en": "Something else" },
+    "expectTitle": { "vi": "Bạn có thể mong đợi gì", "en": "What to expect" },
+    "expect": [
+      { "vi": "[Hội phản hồi trong bao lâu]", "en": "[How soon HCWA replies]", "draft": true },
+      { "vi": "[Buổi gặp và giới thiệu đầu tiên]", "en": "[The first meeting and introduction]", "draft": true },
+      { "vi": "[Thời gian tham gia tối thiểu]", "en": "[The minimum time to give]", "draft": true }
+    ],
+    "safetyTitle": { "vi": "An toàn của trẻ đi trước", "en": "Children's safety comes first" },
+    "safety": { "vi": "[DRAFT: Các bước kiểm tra và bộ quy tắc ứng xử HCWA áp dụng cho tình nguyện viên, do HCWA cung cấp.]", "en": "[DRAFT: The checks and code of conduct HCWA asks of volunteers, for HCWA to supply.]", "draft": true },
+    "formTitle": { "vi": "Đăng ký tình nguyện", "en": "Sign up to volunteer" },
+    "formLead": { "vi": "Cho Hội biết đôi chút về bạn, Hội sẽ liên hệ lại.", "en": "Tell us a little about yourself and HCWA will be in touch.", "draft": true },
+    "availability": [
+      ["weekdays", { "vi": "Ngày thường", "en": "Weekdays" }],
+      ["weekends", { "vi": "Cuối tuần", "en": "Weekends" }],
+      ["evenings", { "vi": "Buổi tối", "en": "Evenings" }],
+      ["flexible", { "vi": "Linh hoạt", "en": "Flexible" }]
+    ],
+    "thanks": { "vi": "Cảm ơn bạn đã đăng ký. Hội sẽ liên hệ lại qua email.", "en": "Thank you for signing up. HCWA will get back to you by email.", "draft": true },
+    "ctaTitle": { "vi": "Còn câu hỏi trước khi đăng ký?", "en": "Questions before you sign up?" }
+  },
+  "partner": {
+    "intro": { "vi": "Doanh nghiệp, trường học và tổ chức có thể cùng Hội chăm lo cho trẻ em theo nhiều cách.", "en": "Companies, schools and organizations can work with HCWA for children in several ways.", "draft": true },
+    "waysTitle": { "vi": "Các hình thức hợp tác", "en": "Ways to partner" },
+    "ways": [
+      { "id": "funding", "title": { "vi": "Tài trợ một chương trình", "en": "Fund a program" }, "text": { "vi": "Một chương trình có mục tiêu, thời gian và báo cáo rõ ràng.", "en": "A program with clear goals, a set period and reports.", "draft": true } },
+      { "id": "employees", "title": { "vi": "Nhân viên tình nguyện", "en": "Employee volunteering" }, "text": { "vi": "Một nhóm nhân viên cùng tham gia một hoạt động của Hội.", "en": "A team of your staff joins one of HCWA's activities.", "draft": true } },
+      { "id": "in-kind", "route": "inKind", "title": { "vi": "Tặng hiện vật", "en": "In-kind gifts" }, "text": { "vi": "Đồ dùng học tập, nhu yếu phẩm hoặc dịch vụ.", "en": "School supplies, everyday items or services.", "draft": true } },
+      { "id": "events", "title": { "vi": "Sự kiện", "en": "Events" }, "text": { "vi": "Cùng tổ chức một sự kiện gây quỹ hoặc một ngày hội.", "en": "Run a fundraising event or a fun day together.", "draft": true } }
+    ],
+    "examplesTitle": { "vi": "Những đối tác đã đồng hành", "en": "Partners who work with us" },
+    "contactTitle": { "vi": "Liên hệ quan hệ nhà tài trợ", "en": "Contact sponsor relations" },
+    "contactLead": { "vi": "Viết email cho chúng tôi, hoặc gửi vài dòng dưới đây.", "en": "Email us, or send a few lines below.", "draft": true },
+    "thanks": { "vi": "Cảm ơn bạn. Bộ phận quan hệ nhà tài trợ sẽ trả lời qua email.", "en": "Thank you. Sponsor relations will reply by email.", "draft": true }
+  },
+  "inKind": {
+    "intro": { "vi": "Đồ dùng học tập, nhu yếu phẩm và những món quà nhỏ có ích mỗi ngày ở các cơ sở.", "en": "School supplies, everyday items and small things that help at the centers every day.", "draft": true },
+    "needsTitle": { "vi": "Hội đang cần", "en": "What we need now" },
+    "needs": [
+      { "vi": "[Nhu cầu thứ nhất, ví dụ đồ dùng học tập]", "en": "[First need, for example school supplies]", "draft": true },
+      { "vi": "[Nhu cầu thứ hai, ví dụ sách cho thư viện]", "en": "[Second need, for example library books]", "draft": true },
+      { "vi": "[Nhu cầu thứ ba, ví dụ nhu yếu phẩm]", "en": "[Third need, for example everyday items]", "draft": true }
+    ],
+    "first": { "vi": "Hãy gọi hoặc email cho văn phòng trước khi gửi, để món quà đến đúng nơi đang cần.", "en": "Call or email the office before you send anything, so each gift goes where it is needed.", "draft": true },
+    "dropNote": { "vi": "Văn phòng nhận hiện vật vào [giờ làm việc].", "en": "The office receives gifts during [office hours].", "draft": true },
+    "bakery": { "vi": "Tiệm bánh Hoa Hồng Nhỏ là mô hình gây quỹ của Mái ấm Hoa Hồng Nhỏ. Mỗi đơn bánh góp phần chăm lo cho các em.", "en": "The Little Rose Bakery raises funds for the Little Rose Warm Shelter. Every order helps care for the girls.", "draft": true, "source": "current home page: the shelter's fundraising model 'Tiệm bánh Hoa Hồng Nhỏ'" },
+    "bakeryMenu": { "vi": "[Các loại bánh và cách nhận bánh, HCWA cung cấp]", "en": "[What the bakery makes and how orders reach you, from HCWA]", "draft": true },
+    "bakeryOrder": { "vi": "Mọi đơn đặt bánh đều qua văn phòng Hội: gọi điện, gửi email hoặc nhắn qua trang Liên hệ.", "en": "Every order goes through the HCWA office: call, email or send a message from the Contact page.", "draft": true }
+  }
+}

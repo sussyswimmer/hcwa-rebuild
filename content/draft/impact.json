@@ -75,5 +75,47 @@
       "year": null,
       "verified": false
     }
-  ]
+  ],
+  "page": {
+    "_note": "PLAN-M4 4.6. The Impact & Reports page's own strings. Figures above stay verified: false; the by-year table is tokens only and renders on staging only.",
+    "intro": {
+      "vi": "[DRAFT: Một câu về cách Hội đếm các con số này, do HCWA viết.]",
+      "en": "[DRAFT: One line on how HCWA counts these numbers, for HCWA to write.]",
+      "draft": true
+    },
+    "byYear": {
+      "columns": [
+        {
+          "vi": "Trẻ em được hỗ trợ",
+          "en": "Children supported"
+        },
+        {
+          "vi": "Gia đình được tư vấn",
+          "en": "Families counseled"
+        },
+        {
+          "vi": "Đối tác đồng hành",
+          "en": "Partners"
+        }
+      ],
+      "rows": 3,
+      "cell": "[N]"
+    },
+    "storiesLead": {
+      "vi": "Câu chuyện của trẻ và gia đình sẽ được đăng khi HCWA duyệt. Tên nhân vật luôn được thay đổi.",
+      "en": "Stories from children and families will appear once HCWA approves them. Names are always changed.",
+      "draft": true
+    },
+    "transparencyText": {
+      "vi": "[DRAFT: Ai kiểm toán và duyệt báo cáo tài chính của Hội, nếu HCWA muốn công bố.]",
+      "en": "[DRAFT: Who audits and approves HCWA's accounts, if HCWA wants to say.]",
+      "draft": true
+    },
+    "ctaTitle": {
+      "vi": "Giúp những con số này lớn lên",
+      "en": "Help these numbers grow",
+      "draft": true
+    }
+  },
+  "reports": []
 }
