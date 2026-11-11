@@ -46,9 +46,9 @@
 
 /* The stage. The still is pinned under the header (data-s3d-pin) for --run of scroll while the H1, intro
    and buttons scroll away at native speed (they never animate). The camera dollies a little toward the
-   bông gió screen and comes round to face it; the room's light and the canopy's flecks drift as the sun
-   moves toward 16:30, each at its own rate, so the light separates from the screen instead of the whole
-   picture growing. The still is never shown much past its own resolution: the stage is no taller than
+   bông gió screen and comes round to face it (a turn and a truck, so the screen's near and far columns
+   separate instead of the whole picture growing), while the canopy's flecks soften as the sun moves on.
+   The still is never shown much past its own resolution: the stage is no taller than
    the still is at about 1x (62svh on desktop, 48svh on phones) and the dolly stops at 1.16x (1.12x on
    phones). From the first pixel of scroll the page rises over the stage: its top is a fog of the day's
    first colour, so the stage is covered by light, never cut, and the form's title arrives while the
@@ -80,14 +80,12 @@ html.stages[data-motion="on"] .s3d--contact .lit {
   transform: translateX(calc(var(--truck) * var(--s3d-cam))) rotateY(calc(var(--turn) * var(--s3d-cam))) scale(calc(1 + var(--zoom) * var(--s3d-cam)));
   will-change: transform;
 }
-/* The canopy's flecks on the screen move with the sun at their own rate, so the light separates from the
-   blocks it falls on (Tier 2: the drift is richness, not content). The room's light stays registered with
-   the wall: its edge is the screen's shadow line, and moving it would bare the unlit wall beside it. */
-html.stages[data-motion="on"][data-tier="2"] .s3d--contact .lit__screen {
-  transform-origin: 100% 0;
-  transform: translate(calc(3% * var(--s3d-sun)), calc(-3% * var(--s3d-sun))) scale(calc(1 + 0.06 * var(--s3d-sun)));
-  will-change: transform;
-}
+/* The canopy's flecks on the screen soften as the sun moves on toward 16:30 (Tier 2: the light is
+   richness, not content). They fade rather than slide: the flecks are light through the screen's own
+   holes, and any shift doubles the quatrefoils. The room's light stays registered with the wall: its edge is
+   the screen's shadow line, and moving it would bare the unlit wall beside it. */
+/* (On the img: the sun-in owns the layer's own opacity.) */
+html.stages[data-motion="on"][data-tier="2"] .s3d--contact .lit__screen img { opacity: calc(1 - 0.35 * var(--s3d-sun)); }
 /* The page rises into the frame over the whole run: its top --pull (= the run) is a fog of sun-100 on
    eased stops, then the day's gradient (which starts on that colour). The fog is nearly whole a third of
    the way down, where the first words sit. */
@@ -162,8 +160,9 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 }
 .newswall__bg { position: absolute; inset: 0; z-index: -1; overflow: clip; pointer-events: none;
   mask-image: linear-gradient(to bottom, black calc(100% - max(24svh, 180px)), rgb(0 0 0 / 0.5) calc(100% - max(24svh, 180px) * 0.5), transparent); }
-/* The plaster sits on pseudo-elements: a decorative texture is never the page's largest paint (LCP stays
-   on the H1), and its noise is rasterised once per tile. */
+/* The plaster sits on pseudo-elements and is inline, so it paints in the first frame with the words
+   (Chrome may report the marks drawing as the LCP; it lands with the first paint, LCP = FCP), and its
+   noise is rasterised once per tile. */
 .newswall__plane { position: absolute; inset: 0; }
 .newswall__plane::before { content: ""; position: absolute; inset: 0; background: var(--wall-tex) 0 0 / var(--wall-tex-size) var(--wall-tex-size), var(--wall-wash) 0 0 / 487px 487px; }
 .newswall__plane::after { content: ""; position: absolute; inset: 0; background: var(--wall-marks) 50% 0 / cover no-repeat; }

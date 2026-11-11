@@ -161,3 +161,56 @@ test("404: no 'not part of the prototype' note; every link the site makes now ha
     }
   }
 });
+
+// Fix round (11 Nov): the camera follows the finger evenly, the still is never blown up, the notices stay
+// in the gutter, and the wall has no visible repeat.
+const peakRate = ([x1, y1, x2, y2]) => {
+  const at = (a, b, t) => ((1 - 3 * b + 3 * a) * t + (3 * b - 6 * a)) * t * t + 3 * a * t;
+  const f = (x) => { let lo = 0, hi = 1, t = 0.5; for (let i = 0; i < 40; i++) { t = (lo + hi) / 2; if (at(x1, x2, t) < x) lo = t; else hi = t; } return at(y1, y2, t); };
+  let m = 0; const N = 400;
+  for (let i = 0; i < N; i++) m = Math.max(m, (f((i + 1) / N) - f(i / N)) * N);
+  return m;
+};
+
+test("the camera and the notices ease evenly: no stretch of scroll runs faster than 1.6x the mean", () => {
+  assert.ok(peakRate(TRACKS.cam.ease) <= 1.6, `cam peak ${peakRate(TRACKS.cam.ease).toFixed(2)}`);
+  assert.ok(peakRate(TRACKS.cam.ease) > 0 && TRACKS.cam.ease[1] > 0, "the camera is moving from the first pixel of scroll");
+  assert.ok(TRACKS.cam.to <= 0.88 && TRACKS.cam.to >= 0.85, "the last 12-15% holds still");
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const name of ["notice-turn", "notice-shadow"]) {
+    const kf = plain.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?\\})\\s*\\}`))?.[1];
+    assert.ok(kf, name);
+    const e = kf.match(/cubic-bezier\(([^)]+)\)/)[1].split(",").map(Number);
+    assert.ok(peakRate(e) <= 1.6, `${name} peak ${peakRate(e).toFixed(2)}`);
+  }
+  // A notice turns about its pin only (no turn about the vertical axis, which shears the words).
+  assert.doesNotMatch(plain.match(/@keyframes notice-turn \{[\s\S]*?\}\s*\}/)[0], /rotateY|translateZ/);
+});
+
+test("the stages say what they pin, so the driver knows where each lets go", () => {
+  for (const [fn, key, sel] of [[contact, "contact", ".lit-head__media"], [news, "news", ".newswall__plane"]]) {
+    for (const lang of LANGS) assert.match(body(fn, lang, key), new RegExp(`data-scroll3d="${key}"[^>]*data-s3d-pin="\\${sel}"`));
+  }
+  assert.match(driver, /s3dPin/);
+});
+
+test("contact: the still is never blown up (short dolly, stage no taller than the still at about 1x)", () => {
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const zooms = [...plain.matchAll(/--zoom:\s*([\d.]+)/g)].map((m) => Number(m[1]));
+  assert.ok(zooms.length >= 2 && zooms.every((z) => z <= 0.2), `zooms ${zooms}`);
+  const runs = [...plain.matchAll(/--run:\s*([\d.]+)svh/g)].map((m) => Number(m[1]));
+  assert.ok(Math.min(...runs) <= 12, `phone run ${Math.min(...runs)}svh`);
+  assert.match(plain, /--stage-h: min\(100svh - var\(--hdr\), 62svh\)/);
+  assert.match(plain, /mask-composite: intersect/, "the desktop stage feathers into the header as well as the wall");
+});
+
+test("news: the wall's tiles share no short period, and there is a texture hook for the real plaster map", () => {
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const sizes = [Number(plain.match(/--wall-tex-size:\s*(\d+)px/)[1]), Number(plain.match(/var\(--wall-wash\) 0 0 \/ (\d+)px/)[1])];
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  assert.ok(gcd(...sizes) <= 8, `tile sizes ${sizes} repeat together every ${(sizes[0] * sizes[1]) / gcd(...sizes)} px`);
+  assert.match(plain, /var\(--wall-tex\) 0 0 \/ var\(--wall-tex-size\)/);
+  assert.match(plain, /--wall-marks:/, "the wall carries marks drawn once (cracks, patches), not only noise");
+  // The board itself never moves toward the camera (that pushed the notices past the gutter).
+  assert.doesNotMatch(plain, /\.notices \{[^}]*translateZ/);
+});

@@ -1257,3 +1257,57 @@ JS and `TRACKS` together. Departures and findings:
 - **needs (pages):** `.gap__proto` in `pages.css` is now unused; `ui/filters.js` `say()` could announce a news count
   (it only knows centers and programs, so News has no live region yet).
 - **needs (lead):** `wp/themes/hcwa-2026/404.php` still prints the `notInPrototype` note (wp/ is not ours).
+- **Fix round (11 Nov, critic issues for openings).** What changed and why:
+  - *Camera easing.* `--s3d-cam` was `cubic-bezier(0.77, 0, 0.175, 1)`: almost still for the first quarter, then
+    about 95 px of phone scroll did half the move (peak rate 4.8x the mean). It is now `(0.3, 0.1, 0.6, 1)`: moving
+    from the first pixel, peak 1.49x the mean, still done at 0.86 (the last 14% holds). `--s3d-sun` went from
+    `(0.16, 1, 0.3, 1)` (peak 6.2x) to a soft ease-out `(0.3, 0.45, 0.45, 1)` (peak 1.8x); the notices' turn, shadow
+    and sun keyframes use the same two curves. Departure from PLAN-M4 5 ("camera on `--ease-in-out`"): the house
+    in-out is too steep once it is mapped onto scroll. `openings.test.mjs` now fails any track or notice curve
+    whose peak rate passes 1.6x its mean.
+  - *Where a stage lets go.* The driver measured "wrapper bottom = screen bottom", which is only right for a pinned
+    layer as tall as the screen. Each stage now names its pinned layer (`data-s3d-pin`) and `--s3d-end` is the
+    wrapper's bottom minus that layer's sticky top and height. This also found that News's wall plane had never
+    pinned: `inset: auto` came after `top` and reset it, so the wall scrolled with the page. Fixed.
+  - *Contact: no more blown-up still.* The stage is no longer the full screen: 62svh on desktop (about the still's
+    own 1x at 1440) and 48svh on phones, so the form's title is always on screen below it. The dolly is 1.16x on
+    desktop and 1.12x on phones (was 1.55 and 1.42); the turn is 6° (4° on phones), the truck 4cqw. The run is 36svh
+    on desktop and 12svh on phones (was 76 and 32). `check-openings.cjs` now reports the still's css px per source
+    px at the middle of the picture: at most 1.22 at 1440 (was 3.0 at 0.8 of the run) and 0.63 at 390 (1.9 device
+    px per source px at 3x, was 4.8). The depth is the turn and the truck (near and far columns separate) and the
+    canopy's flecks softening with the sun; the flecks no longer slide (any shift doubles the quatrefoils, which
+    are light through the screen's own holes) and the room's light stays registered (moving it bared a grey strip
+    of unlit wall at the screen's shadow line).
+  - *Contact: hand-off.* The page rises over the stage from the first pixel of scroll (`--pull` = the run), its fog
+    is nearly whole a third of the way down, and the form sits 0.36 of the pull into it (was 0.8): every strip
+    frame at 390 and 1440 has text on screen (new check). The desktop stage now feathers on three sides
+    (`mask-composite: intersect`): into the header (48 px), the plain wall and the day. Measured with text hidden,
+    the brightness step across the header's edge over the stage's columns is 2.7-4.2 (mean) while pinned; after
+    the stage lets go the still's remaining top passes under the header's own 24 px foot like any picture does.
+  - *News: notices stay in the gutter and read flat.* The board no longer moves toward the camera (its translateZ
+    pushed the outer cards 18-111 px past the gutter) and nothing turns about the vertical axis (the shear on the
+    titles). Each notice now hangs from its pin: it arrives with its foot lifted at most 9° in its own perspective
+    (scaled 0.94 so its widest edge stays in the column), settles flat as it comes fully into view
+    (`entry 0% → contain 10%`), and the shadow it casts on the wall shortens and melts into the paper (a blurred
+    pseudo-element moving on transform and opacity only). Notices already in the first screen are flat at load.
+    `check-openings.cjs` fails a notice outside the board's box at any frame, or turned more than 3° in the first
+    screen.
+  - *News: the wall is no longer play-doh.* Until the walls stream's Higgsfield plaster map lands, the wall is three
+    inline SVG layers: grit and pores on a 320 px tile, cloudy lime wash on a 487 px tile (no common period on any
+    screen; the old single 320 px tile showed seams every 410 px at 1.28x), and one untiled drawing of the wall's
+    history (rain streaks from the top, two patched repairs, a damp stain, hairline cracks, scratches through the
+    wash, pits). Static, light (grain and wash 6% or less) and checked at 7:1 under running text in every strip
+    frame. The pinned plane recedes 1.22x to 1x; its cracks and patches are what make that read. `--wall-tex` and
+    `--wall-tex-size` take the real map. Mobile LCP may now land on the marks drawing (inline, painted with the
+    first frame): News 2.06 s median, Contact 2.08 s, CLS 0.
+  - *Featured story placeholder (News only).* Its edges feather into the day (two-axis mask) and its cool render
+    takes the day's hue (a `color` blend at 0.5), so it no longer sits as a blue-grey box on the warm wall.
+  - *Not done:* a dado band (05-DESIGN keeps text off the bare dado, and on a pinned plane it would cross every line
+    of text); the Contact still's own wear and the 2400 w desk layers (stills are the walls stream's).
+- **needs (walls), fix round:** (1) `header-contact` re-rendered with the breeze-block map (pores, flaking lime wash,
+  chipped edges): the screen is still uniform and clean; (2) its desk layers at 2400 w (the stage now shows the
+  1600 w layers at 1.05x at rest and 1.22x at the end, which is soft on a 2x screen); (3) the generated lime
+  plaster map as a WebP at 1024 px or more under `public/textures/`, which News takes through `--wall-tex` /
+  `--wall-tex-size` at an opacity of 6% or less (openings swaps it in, one line).
+- **needs (pages), fix round:** the Impact page's featured-story placeholder could take the same feather and warm
+  blend as News's (`.news-feature .feature__wall` in `openings.css`).
