@@ -23,3 +23,7 @@ qa/wp-port/
 qa/wp/
 # Finish-pages QA working captures (crawls, strips, critic evidence): local only.
 qa/m4/
+# Blender walls QA captures: local only.
+qa/m5/
+# Blender bake output (regenerate with prototype/blender/walls.py).
+prototype/blender/out/
