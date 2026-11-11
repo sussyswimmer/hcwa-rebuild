@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function (d, w) { var h = d.documentElement, n = navigator, q = new URLSearchParams(location.search); var get = function (s, k) { try { return w[s].getItem(k); } catch (e) { return null; } }; var mm = function (m) { return !!w.matchMedia && w.matchMedia(m).matches; }; var proto = true; var reduced = mm("(prefers-reduced-motion: reduce)"); var off = reduced || get("localStorage", "hcwa:motion") === "off" || (proto && q.get("motion") === "off"); var c = n.connection || {}, mem = n.deviceMemory; var tier = off || c.saveData || /2g/.test(c.effectiveType || "") || (mem && mem < 2) || get("sessionStorage", "hcwa:tier") === "0" || get("localStorage", "hcwa:gpu0") === n.userAgent ? 0 : mm("(pointer: fine)") && (!mem || mem >= 8) && (n.hardwareConcurrency || 0) >= 6 ? 2 : 1; if (proto && !off && /^[012]$/.test(q.get("tier") || "")) { tier = +q.get("tier"); h.setAttribute("data-tier-flag", ""); } h.setAttribute("data-tier", tier); h.setAttribute("data-motion", off ? "off" : "on"); if (reduced) h.setAttribute("data-reduced", ""); var cls = ["js"]; if (!off && h.hasAttribute("data-lit") && !get("sessionStorage", "hcwa:sun:" + location.pathname)) cls.push("sun-pending"); if (!off && tier > 0) cls.push("stages"); if (get("sessionStorage", "hcwa:wf")) cls.push("wf"); if (proto && (get("sessionStorage", "hcwa:drafts") === "shown" || q.get("drafts") === "1")) cls.push("drafts-shown"); h.className = (h.className + " " + cls.join(" ")).trim(); })(document, window);</script>
+<script>(function pageReveal() {
+  addEventListener("pagereveal", function (e) {
+    var type = null;
+    try { type = sessionStorage.getItem("hcwa:vt"); sessionStorage.removeItem("hcwa:vt"); } catch (x) { /* storage blocked: no type */ }
+    var vt = e.viewTransition;
+    if (!vt) return;
+    if (document.documentElement.getAttribute("data-motion") === "off") { vt.skipTransition(); return; }
+    var a = window.navigation && navigation.activation;
+    if (type === "lang") vt.types.add("lang");
+    else if (a && a.navigationType === "traverse" && a.from && a.entry && a.entry.index < a.from.index) vt.types.add("back");
+  });
+})();</script>
+<title>Who we are | HCWA</title>
+<meta name="description" content="A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="alternate" hreflang="vi" href="/hcwa-rebuild/ve-chung-toi/" >
+<link rel="alternate" hreflang="en" href="/hcwa-rebuild/en/about/" >
+<link rel="alternate" hreflang="x-default" href="/hcwa-rebuild/ve-chung-toi/" >
+<meta property="og:title" content="Who we are | HCWA">
+<meta property="og:description" content="A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.">
+<meta property="og:locale" content="en_GB">
+<link rel="preload" href="/hcwa-rebuild/fonts/archivo-w78-600-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/hcwa-rebuild/fonts/be-vietnam-pro-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/hcwa-rebuild/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/hcwa-rebuild/img/apple-touch-icon.png">
+<script type="application/json" id="i18n">{"copy":"Copy","copied":"Copied","copyFailed":"Couldn't copy. Select the text and copy it yourself.","f_sending":"Sending…","f_send":"Send","e_summary":"Fix these before sending:","close":"Close","motionPause":"Pause motion","motionPlay":"Play motion","draftHide":"Hide draft outlines","draftShow":"Show draft outlines"}</script>
+  <script type="module" crossorigin src="/hcwa-rebuild/assets/main-xNmlLdi7.js"></script>
+  <link rel="stylesheet" crossorigin href="/hcwa-rebuild/assets/main-C5rY2Cg3.css">
+</head>
+<body class="page-about">
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="proto-note"><div class="container proto-note__inner"><p><span class="proto-note__full">Prototype for HCWA review. Choose “Show draft outlines” to see draft text and figures waiting for HCWA approval.</span><span class="proto-note__short">Prototype for HCWA review.</span></p><button class="proto-note__toggle" type="button" data-draft-toggle>Show draft outlines</button></div></div>
+
+<div class="header-slot">
+  <header class="site-header" data-header>
+    <div class="container site-header__bar">
+      <a class="logo" href="/hcwa-rebuild/en/" data-text-safe>
+    <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="97" height="128" alt="Ho Chi Minh City Child Welfare Association"></picture>
+    <span class="logo__name" aria-hidden="true"><span>HCMC Child Welfare</span><span>Association</span></span>
+  </a>
+      <nav class="nav" aria-label="Main menu" data-text-safe>
+  <ul class="nav__list">
+    <li class="nav__item has-sub">
+        <a class="nav__link" href="/hcwa-rebuild/en/about/" aria-current="page">About Us</a>
+        <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="sub-0" aria-label="Show About Us pages"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button>
+          <ul class="nav__sub" id="sub-0" hidden><li><a href="/hcwa-rebuild/en/about/">Who we are</a></li><li><a href="/hcwa-rebuild/en/about/our-story/">Our story</a></li><li><a href="/hcwa-rebuild/en/about/team/">Team</a></li><li><a href="/hcwa-rebuild/en/about/partners/">Partners &amp; sponsors</a></li><li><a href="/hcwa-rebuild/en/about/policies/">Policies</a></li></ul>
+      </li><li class="nav__item has-sub">
+        <a class="nav__link" href="/hcwa-rebuild/en/our-work/">Our Work</a>
+        <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="sub-1" aria-label="Show Our Work pages"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button>
+          <ul class="nav__sub" id="sub-1" hidden><li><a href="/hcwa-rebuild/en/our-work/#centers">Centers</a></li><li><a href="/hcwa-rebuild/en/our-work/#programs">Projects &amp; programs</a></li><li><a href="/hcwa-rebuild/en/our-work/">All work</a></li></ul>
+      </li><li class="nav__item">
+        <a class="nav__link" href="/hcwa-rebuild/en/impact/">Impact &amp; Reports</a>
+        
+      </li><li class="nav__item">
+        <a class="nav__link" href="/hcwa-rebuild/en/news/">News</a>
+        
+      </li><li class="nav__item has-sub">
+        <a class="nav__link" href="/hcwa-rebuild/en/get-involved/">Get Involved</a>
+        <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="sub-4" aria-label="Show Get Involved pages"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button>
+          <ul class="nav__sub" id="sub-4" hidden><li><a href="/hcwa-rebuild/en/get-involved/donate/">Donate</a></li><li><a href="/hcwa-rebuild/en/get-involved/volunteer/">Volunteer</a></li><li><a href="/hcwa-rebuild/en/get-involved/partner/">Partner with us</a></li><li><a href="/hcwa-rebuild/en/get-involved/in-kind/">In-kind gifts</a></li><li><a href="/hcwa-rebuild/en/get-involved/in-kind/#bakery">Little Rose Bakery</a></li></ul>
+      </li><li class="nav__item">
+        <a class="nav__link" href="/hcwa-rebuild/en/contact/">Contact</a>
+        
+      </li>
+  </ul>
+</nav>
+      <div class="site-header__tools" data-text-safe>
+        <div class="lang-switch lang-switch--header" role="group" aria-label="Language" data-lang-switch><a href="/hcwa-rebuild/ve-chung-toi/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/about/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div>
+        <a class="btn btn--primary btn--header" href="/hcwa-rebuild/en/get-involved/donate/" data-donate>Donate</a>
+        <button class="menu-btn" type="button" aria-haspopup="dialog" aria-controls="menu-sheet" data-open-sheet>Menu</button>
+      </div>
+    </div>
+  </header>
+</div>
+
+<main id="main" tabindex="-1">
+
+<header class="sun-head sun-head--page sun-head--morning">
+  <span class="sun-layer sun-layer--page" aria-hidden="true"></span>
+  <div class="container sun-head__inner">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/hcwa-rebuild/en/">Home</a></li>
+    <li><span aria-current="page">About Us</span></li>
+  </ol>
+</nav>
+    
+    <h1 class="sun-head__title">Who we are</h1>
+    <div class="sun-head__side">
+      <p class="sun-head__intro" data-draft>A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.</p>
+      
+      
+    </div>
+  </div>
+</header>
+<div class="day day--about">
+  <section class="aim container" aria-labelledby="aim-title">
+    <h2 class="aim__label" id="aim-title"><svg class="aim__mark" viewBox="-156 -156 312 312" preserveAspectRatio="xMaxYMin slice" aria-hidden="true" focusable="false"><path class="block-icon__light" d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path class="block-icon__line" fill="none" d="M-150 -150H150V150H-150ZM56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/></svg>What we work for</h2>
+    <p class="aim__text" data-draft data-reveal>Disadvantaged children and young people in Ho Chi Minh City live safe and happy lives.</p>
+  </section>
+
+  <div class="creed container">
+    <section class="creed__vision" aria-labelledby="vision-title">
+      <h2 class="creed__title" id="vision-title" data-reveal="rise"><span>Our vision</span></h2>
+      <p class="creed__statement" data-draft data-reveal>A society where every child is protected, cared for and educated, and has a voice that is heard and respected.</p>
+    </section>
+    <section class="creed__mission" aria-labelledby="mission-title">
+      <h2 class="creed__title" id="mission-title" data-reveal="rise"><span>Our mission</span></h2>
+      <p class="creed__text" data-draft data-reveal>As a voluntary, non-profit social organization that takes no state budget, HCWA works for the best interests of children through policy advocacy, capacity building and social services, together with local government, other social organizations and communities.</p>
+    </section>
+  </div>
+
+  <section class="values container" aria-labelledby="values-title">
+    <h2 class="values__title" id="values-title">Our values</h2>
+    <ul class="values__list" data-reveal="stagger"><li data-draft><svg class="values__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Equality</span></li><li data-draft><svg class="values__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Children&#39;s rights</span></li><li data-draft><svg class="values__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Professionalism</span></li><li data-draft><svg class="values__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Sustainability</span></li><li data-draft><svg class="values__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Commitment</span></li></ul>
+  </section>
+
+  <section class="areas container" aria-labelledby="areas-title">
+  <svg class="gach-sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs><filter id="gach-wear" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 -4.1" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/></filter><clipPath id="gach-clip"><rect width="200" height="200"/></clipPath><path id="gach-b-hoaThi" d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z"/><path id="gach-b-matCao" d="M-101 -75L-75 -101L-49 -75L-75 -49ZM-101 0L-75 -26L-49 0L-75 26ZM-101 75L-75 49L-49 75L-75 101ZM-26 -75L0 -101L26 -75L0 -49ZM-26 0L0 -26L26 0L0 26ZM-26 75L0 49L26 75L0 101ZM49 -75L75 -101L101 -75L75 -49ZM49 0L75 -26L101 0L75 26ZM49 75L75 49L101 75L75 101Z"/><path id="gach-b-vongTron" d="M34 150A116 116 0 0 1 150 34L150 56A94 94 0 0 0 56 150ZM-34 150A116 116 0 0 0 -150 34L-150 56A94 94 0 0 1 -56 150ZM34 -150A116 116 0 0 0 150 -34L150 -56A94 94 0 0 1 56 -150ZM-34 -150A116 116 0 0 1 -150 -34L-150 -56A94 94 0 0 0 -56 -150Z"/><symbol id="gach-hoaThi"><rect width="200" height="200" style="fill:var(--cream)"/><rect x="2" y="2" width="196" height="196" rx="1.5" style="fill:var(--pig)"/><rect x="15" y="15" width="170" height="170" rx="1" fill="none" stroke-width="2.5" style="stroke:var(--cream)"/><path fill="none" stroke-width="4.4" stroke-linecap="round" stroke-dasharray="0 20" style="stroke:var(--acc)" d="M50 7.9H150M50 192.1H150M7.9 50V150M192.1 50V150"/><g stroke-width="3.5" style="fill:var(--cream);stroke:var(--cream)"><use href="#gach-b-hoaThi" transform="translate(65.7 65.7) scale(0.2289)"/><use href="#gach-b-hoaThi" transform="translate(134.3 65.7) scale(0.2289)"/><use href="#gach-b-hoaThi" transform="translate(65.7 134.3) scale(0.2289)"/><use href="#gach-b-hoaThi" transform="translate(134.3 134.3) scale(0.2289)"/></g><path style="fill:var(--acc)" d="M60.1 65.7A5.6 5.6 0 1 0 71.3 65.7A5.6 5.6 0 1 0 60.1 65.7ZM128.7 65.7A5.6 5.6 0 1 0 139.9 65.7A5.6 5.6 0 1 0 128.7 65.7ZM60.1 134.3A5.6 5.6 0 1 0 71.3 134.3A5.6 5.6 0 1 0 60.1 134.3ZM128.7 134.3A5.6 5.6 0 1 0 139.9 134.3A5.6 5.6 0 1 0 128.7 134.3Z"/><g clip-path="url(#gach-clip)"><path style="fill:var(--acc)" d="M-38 0A38 38 0 1 0 38 0A38 38 0 1 0 -38 0ZM162 0A38 38 0 1 0 238 0A38 38 0 1 0 162 0ZM-38 200A38 38 0 1 0 38 200A38 38 0 1 0 -38 200ZM162 200A38 38 0 1 0 238 200A38 38 0 1 0 162 200Z"/><path style="fill:var(--cream)" d="M0 0A13 13 0 1 0 26 0A13 13 0 1 0 0 0ZM-13 13A13 13 0 1 0 13 13A13 13 0 1 0 -13 13ZM174 0A13 13 0 1 0 200 0A13 13 0 1 0 174 0ZM187 13A13 13 0 1 0 213 13A13 13 0 1 0 187 13ZM0 200A13 13 0 1 0 26 200A13 13 0 1 0 0 200ZM-13 187A13 13 0 1 0 13 187A13 13 0 1 0 -13 187ZM174 200A13 13 0 1 0 200 200A13 13 0 1 0 174 200ZM187 187A13 13 0 1 0 213 187A13 13 0 1 0 187 187Z"/></g><rect x="2" y="2" width="196" height="196" rx="1.5" filter="url(#gach-wear)" style="fill:var(--cream);opacity:var(--wear)"/></symbol><symbol id="gach-matCao"><rect width="200" height="200" style="fill:var(--cream)"/><rect x="2" y="2" width="196" height="196" rx="1.5" style="fill:var(--pig)"/><rect x="15" y="15" width="170" height="170" rx="1" fill="none" stroke-width="2.5" style="stroke:var(--cream)"/><path fill="none" stroke-width="4.4" stroke-linecap="round" stroke-dasharray="0 20" style="stroke:var(--acc)" d="M50 7.9H150M50 192.1H150M7.9 50V150M192.1 50V150"/><g stroke-width="3.5" style="fill:var(--cream);stroke:var(--cream)"><use href="#gach-b-matCao" transform="translate(65.7 65.7) scale(0.2289)"/><use href="#gach-b-matCao" transform="translate(134.3 65.7) scale(0.2289)"/><use href="#gach-b-matCao" transform="translate(65.7 134.3) scale(0.2289)"/><use href="#gach-b-matCao" transform="translate(134.3 134.3) scale(0.2289)"/></g><path style="fill:var(--acc)" d="M62.3 65.7A3.4 3.4 0 1 0 69.1 65.7A3.4 3.4 0 1 0 62.3 65.7ZM130.9 65.7A3.4 3.4 0 1 0 137.7 65.7A3.4 3.4 0 1 0 130.9 65.7ZM62.3 134.3A3.4 3.4 0 1 0 69.1 134.3A3.4 3.4 0 1 0 62.3 134.3ZM130.9 134.3A3.4 3.4 0 1 0 137.7 134.3A3.4 3.4 0 1 0 130.9 134.3Z"/><g clip-path="url(#gach-clip)"><path style="fill:var(--acc)" d="M-38 0A38 38 0 1 0 38 0A38 38 0 1 0 -38 0ZM162 0A38 38 0 1 0 238 0A38 38 0 1 0 162 0ZM-38 200A38 38 0 1 0 38 200A38 38 0 1 0 -38 200ZM162 200A38 38 0 1 0 238 200A38 38 0 1 0 162 200Z"/><path style="fill:var(--cream)" d="M0 0A13 13 0 1 0 26 0A13 13 0 1 0 0 0ZM-13 13A13 13 0 1 0 13 13A13 13 0 1 0 -13 13ZM174 0A13 13 0 1 0 200 0A13 13 0 1 0 174 0ZM187 13A13 13 0 1 0 213 13A13 13 0 1 0 187 13ZM0 200A13 13 0 1 0 26 200A13 13 0 1 0 0 200ZM-13 187A13 13 0 1 0 13 187A13 13 0 1 0 -13 187ZM174 200A13 13 0 1 0 200 200A13 13 0 1 0 174 200ZM187 187A13 13 0 1 0 213 187A13 13 0 1 0 187 187Z"/></g><rect x="2" y="2" width="196" height="196" rx="1.5" filter="url(#gach-wear)" style="fill:var(--cream);opacity:var(--wear)"/></symbol><symbol id="gach-vongTron"><rect width="200" height="200" style="fill:var(--cream)"/><rect x="2" y="2" width="196" height="196" rx="1.5" style="fill:var(--pig)"/><rect x="15" y="15" width="170" height="170" rx="1" fill="none" stroke-width="2.5" style="stroke:var(--cream)"/><path fill="none" stroke-width="4.4" stroke-linecap="round" stroke-dasharray="0 20" style="stroke:var(--acc)" d="M50 7.9H150M50 192.1H150M7.9 50V150M192.1 50V150"/><g stroke-width="3.5" style="fill:var(--cream);stroke:var(--cream)"><use href="#gach-b-vongTron" transform="translate(65.7 65.7) scale(0.2289)"/><use href="#gach-b-vongTron" transform="translate(134.3 65.7) scale(0.2289)"/><use href="#gach-b-vongTron" transform="translate(65.7 134.3) scale(0.2289)"/><use href="#gach-b-vongTron" transform="translate(134.3 134.3) scale(0.2289)"/></g><path style="fill:var(--acc)" d="M60.1 65.7A5.6 5.6 0 1 0 71.3 65.7A5.6 5.6 0 1 0 60.1 65.7ZM128.7 65.7A5.6 5.6 0 1 0 139.9 65.7A5.6 5.6 0 1 0 128.7 65.7ZM60.1 134.3A5.6 5.6 0 1 0 71.3 134.3A5.6 5.6 0 1 0 60.1 134.3ZM128.7 134.3A5.6 5.6 0 1 0 139.9 134.3A5.6 5.6 0 1 0 128.7 134.3Z"/><g clip-path="url(#gach-clip)"><path style="fill:var(--acc)" d="M-38 0A38 38 0 1 0 38 0A38 38 0 1 0 -38 0ZM162 0A38 38 0 1 0 238 0A38 38 0 1 0 162 0ZM-38 200A38 38 0 1 0 38 200A38 38 0 1 0 -38 200ZM162 200A38 38 0 1 0 238 200A38 38 0 1 0 162 200Z"/><path style="fill:var(--cream)" d="M0 0A13 13 0 1 0 26 0A13 13 0 1 0 0 0ZM-13 13A13 13 0 1 0 13 13A13 13 0 1 0 -13 13ZM174 0A13 13 0 1 0 200 0A13 13 0 1 0 174 0ZM187 13A13 13 0 1 0 213 13A13 13 0 1 0 187 13ZM0 200A13 13 0 1 0 26 200A13 13 0 1 0 0 200ZM-13 187A13 13 0 1 0 13 187A13 13 0 1 0 -13 187ZM174 200A13 13 0 1 0 200 200A13 13 0 1 0 174 200ZM187 187A13 13 0 1 0 213 187A13 13 0 1 0 187 187Z"/></g><rect x="2" y="2" width="196" height="196" rx="1.5" filter="url(#gach-wear)" style="fill:var(--cream);opacity:var(--wear)"/></symbol><symbol id="gach-bacThang"><rect width="200" height="200" style="fill:var(--cream)"/><rect x="2" y="2" width="196" height="196" rx="1.5" style="fill:var(--pig)"/><rect x="15" y="15" width="170" height="170" rx="1" fill="none" stroke-width="2.5" style="stroke:var(--cream)"/><path fill="none" stroke-width="4.4" stroke-linecap="round" stroke-dasharray="0 20" style="stroke:var(--acc)" d="M50 7.9H150M50 192.1H150M7.9 50V150M192.1 50V150"/><path fill="none" stroke-width="8.6" stroke-linejoin="miter" style="stroke:var(--cream)" d="M16 172H40V148H64V124H88V100H112V76H136V52H160V28H184"/><path style="fill:var(--acc)" d="M36.6 148A3.4 3.4 0 1 0 43.4 148A3.4 3.4 0 1 0 36.6 148ZM60.6 124A3.4 3.4 0 1 0 67.4 124A3.4 3.4 0 1 0 60.6 124ZM84.6 100A3.4 3.4 0 1 0 91.4 100A3.4 3.4 0 1 0 84.6 100ZM108.6 76A3.4 3.4 0 1 0 115.4 76A3.4 3.4 0 1 0 108.6 76ZM132.6 52A3.4 3.4 0 1 0 139.4 52A3.4 3.4 0 1 0 132.6 52ZM156.6 28A3.4 3.4 0 1 0 163.4 28A3.4 3.4 0 1 0 156.6 28Z"/><g clip-path="url(#gach-clip)"><path style="fill:var(--acc)" d="M-38 0A38 38 0 1 0 38 0A38 38 0 1 0 -38 0ZM162 0A38 38 0 1 0 238 0A38 38 0 1 0 162 0ZM-38 200A38 38 0 1 0 38 200A38 38 0 1 0 -38 200ZM162 200A38 38 0 1 0 238 200A38 38 0 1 0 162 200Z"/><path style="fill:var(--cream)" d="M0 0A13 13 0 1 0 26 0A13 13 0 1 0 0 0ZM-13 13A13 13 0 1 0 13 13A13 13 0 1 0 -13 13ZM174 0A13 13 0 1 0 200 0A13 13 0 1 0 174 0ZM187 13A13 13 0 1 0 213 13A13 13 0 1 0 187 13ZM0 200A13 13 0 1 0 26 200A13 13 0 1 0 0 200ZM-13 187A13 13 0 1 0 13 187A13 13 0 1 0 -13 187ZM174 200A13 13 0 1 0 200 200A13 13 0 1 0 174 200ZM187 187A13 13 0 1 0 213 187A13 13 0 1 0 187 187Z"/></g><rect x="2" y="2" width="196" height="196" rx="1.5" filter="url(#gach-wear)" style="fill:var(--cream);opacity:var(--wear)"/></symbol></defs></svg>
+  <h2 class="areas__title" id="areas-title" data-draft data-reveal="rise"><span>Areas of work</span></h2>
+  <ul class="areas__list" data-reveal="stagger"><li class="area">
+    <svg class="gach-strip area__tile" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#gach-hoaThi" class="pig--education"/></svg>
+    <h3 class="area__name"><a href="/hcwa-rebuild/en/our-work/?area=education#f-education">Education</a></h3>
+    <p class="area__text" data-draft>Free classes, scholarships and life skills for children who can&#39;t attend school.</p>
+  </li><li class="area">
+    <svg class="gach-strip area__tile" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#gach-matCao" class="pig--protection"/></svg>
+    <h3 class="area__name"><a href="/hcwa-rebuild/en/our-work/?area=protection#f-protection">Child protection</a></h3>
+    <p class="area__text" data-draft>Safe shelter, counseling and support for children at risk of abuse or exploitation.</p>
+  </li><li class="area">
+    <svg class="gach-strip area__tile" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#gach-vongTron" class="pig--family"/></svg>
+    <h3 class="area__name"><a href="/hcwa-rebuild/en/our-work/?area=family#f-family">Family &amp; community support</a></h3>
+    <p class="area__text" data-draft>Family counseling, healthcare and access to social services in the community.</p>
+  </li><li class="area">
+    <svg class="gach-strip area__tile" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#gach-bacThang" class="pig--policy"/></svg>
+    <h3 class="area__name"><a href="/hcwa-rebuild/en/our-work/?area=policy#f-policy">Policy &amp; advocacy</a></h3>
+    <p class="area__text" data-draft>Working with local government and partners on better policies for children.</p>
+  </li></ul>
+</section>
+
+  <section class="legal container" aria-labelledby="legal-title">
+    <h2 class="legal__title" id="legal-title">Legal status</h2>
+    <p class="legal__text" data-draft>HCWA works under Vietnamese law and its own charter.</p>
+    <p class="legal__reg" data-draft>[DRAFT: legal status / decision number]</p>
+  </section>
+
+  <nav class="onward container" aria-labelledby="onward-title">
+    <h2 class="onward__title" id="onward-title" data-reveal="rise"><span>More about HCWA</span></h2>
+    <ul class="onward__list" data-reveal="stagger"><li class="onward__item">
+      <a class="onward__link" href="/hcwa-rebuild/en/about/our-story/"><span>Our story</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      <p class="onward__lead" data-draft>The centers, the projects and the people who carried HCWA from one step to the next.</p>
+    </li><li class="onward__item">
+      <a class="onward__link" href="/hcwa-rebuild/en/about/team/"><span>Team</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      
+    </li><li class="onward__item">
+      <a class="onward__link" href="/hcwa-rebuild/en/about/partners/"><span>Partners &amp; sponsors</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      
+    </li><li class="onward__item">
+      <a class="onward__link" href="/hcwa-rebuild/en/about/policies/"><span>Policies</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      
+    </li></ul>
+  </nav>
+</div>
+<section class="dusk" aria-labelledby="about-cta">
+  <div class="dusk__still" aria-hidden="true"><picture class="dusk__img"><source type="image/avif" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.avif 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="533"><source type="image/webp" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.webp 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="533"><source type="image/jpeg" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.jpg 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="533"><source type="image/avif" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.avif 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.avif 800w" sizes="100vw" width="800" height="600"><source type="image/webp" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.webp 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.webp 800w" sizes="100vw" width="800" height="600"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="600"><img src="/hcwa-rebuild/posters/dusk-mobile-still-800.jpg" alt="" width="800" height="600" loading="lazy" decoding="async" data-layer="still"></picture></div>
+  <div class="container dusk__inner">
+    <h2 class="dusk__title" id="about-cta" data-draft>Stand with the children HCWA serves</h2>
+    <div class="dusk__actions"><a class="btn btn--primary" href="/hcwa-rebuild/en/get-involved/donate/">Donate</a><a class="btn btn--on-dusk" href="/hcwa-rebuild/en/get-involved/volunteer/">Volunteer</a></div>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+    <div class="site-footer__still" aria-hidden="true"><picture class="site-footer__dusk"><source type="image/avif" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.avif 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.avif 1600w" sizes="100vw" width="1600" height="533"><source type="image/webp" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.webp 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.webp 1600w" sizes="100vw" width="1600" height="533"><source type="image/jpeg" media="(min-width: 600px)" srcset="/hcwa-rebuild/posters/dusk-desk-still-800.jpg 800w, /hcwa-rebuild/posters/dusk-desk-still-1600.jpg 1600w" sizes="100vw" width="1600" height="533"><source type="image/avif" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.avif 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.avif 800w" sizes="100vw" width="800" height="600"><source type="image/webp" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.webp 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.webp 800w" sizes="100vw" width="800" height="600"><source type="image/jpeg" srcset="/hcwa-rebuild/posters/dusk-mobile-still-480.jpg 480w, /hcwa-rebuild/posters/dusk-mobile-still-800.jpg 800w" sizes="100vw" width="800" height="600"><img src="/hcwa-rebuild/posters/dusk-mobile-still-800.jpg" alt="" width="800" height="600" loading="lazy" decoding="async" data-layer="still"></picture></div>
+    <div class="footer-edge" aria-hidden="true"></div>
+    <div class="container site-footer__sign">
+      <picture><source type="image/webp" srcset="/hcwa-rebuild/img/hcwa-logo.webp"><img src="/hcwa-rebuild/img/hcwa-logo.png" width="73" height="96" alt="" loading="lazy"></picture>
+      <p class="site-footer__name">Ho Chi Minh City Child Welfare Association</p>
+    </div>
+    <div class="site-footer__cols"><div class="container site-footer__grid">
+      <div class="foot-brand">
+        <p data-draft>A voluntary, non-profit social organization that cares for, protects and educates disadvantaged children in Ho Chi Minh City.</p>
+        <p class="foot-brand__reg" data-draft>[DRAFT: legal status / decision number]</p>
+      </div>
+      <div class="foot-col"><h2 class="foot-col__title"><span class="foot-col__label">Contact</span><button class="foot-col__toggle" type="button" aria-expanded="true" aria-controls="foot-col-1"><svg class="foot-col__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Contact</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button></h2><div class="foot-col__body" id="foot-col-1"><ul class="foot-contact" data-draft>
+        <li class="foot-contact__address"><svg class="foot-contact__sun" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>85/65 Pham Viet Chanh Street, Thanh My Tay Ward, Ho Chi Minh City</span></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:+842838401406">+84 28 3840 1406</a></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><a href="mailto:hcwa.vn@gmail.com">hcwa.vn@gmail.com</a></li>
+        <li><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><a href="https://www.google.com/maps/search/?api=1&amp;query=85%2F65+Ph%E1%BA%A1m+Vi%E1%BA%BFt+Ch%C3%A1nh%2C+TP.+H%E1%BB%93+Ch%C3%AD+Minh">Open map</a></li>
+      </ul></div></div>
+      <div class="foot-col"><h2 class="foot-col__title"><span class="foot-col__label">Explore</span><button class="foot-col__toggle" type="button" aria-expanded="true" aria-controls="foot-col-2"><svg class="foot-col__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Explore</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button></h2><div class="foot-col__body" id="foot-col-2"><ul><li><a href="/hcwa-rebuild/en/about/">About Us</a></li><li><a href="/hcwa-rebuild/en/our-work/">Our Work</a></li><li><a href="/hcwa-rebuild/en/impact/">Impact &amp; Reports</a></li><li><a href="/hcwa-rebuild/en/news/">News</a></li><li><a href="/hcwa-rebuild/en/get-involved/">Get Involved</a></li></ul></div></div>
+      <div class="foot-col"><h2 class="foot-col__title"><span class="foot-col__label">Reports &amp; policies</span><button class="foot-col__toggle" type="button" aria-expanded="true" aria-controls="foot-col-3"><svg class="foot-col__mark" viewBox="-112 -112 224 224" aria-hidden="true" focusable="false"><path d="M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56Z"/></svg><span>Reports &amp; policies</span><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></button></h2><div class="foot-col__body" id="foot-col-3"><ul>
+        <li><a href="/hcwa-rebuild/en/impact/#reports">Annual reports</a></li>
+        <li><a href="/hcwa-rebuild/en/about/policies/#safeguarding">Child safeguarding policy</a></li>
+        <li><a href="/hcwa-rebuild/en/about/policies/#privacy">Privacy notice</a></li>
+        <li><a href="/hcwa-rebuild/en/about/partners/">Partners &amp; sponsors</a></li>
+      </ul></div></div>
+    </div></div>
+    <div class="site-footer__bar">
+      <div class="container site-footer__bottom">
+        <p>© 2026 HCWA</p>
+        <p class="foot-social">Follow HCWA: <a href="https://www.facebook.com/hcwa.org.vn">Facebook</a></p>
+        <div class="lang-switch" role="group" aria-label="Language" data-lang-switch><a href="/hcwa-rebuild/ve-chung-toi/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/about/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div>
+        <button class="pause-toggle pause-toggle--dusk" type="button" data-paused="false" data-motion-toggle>
+  <svg class="icon pause-toggle__pause" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg><svg class="icon pause-toggle__play" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z"/></svg><span class="pause-toggle__label">Pause motion</span>
+</button>
+      </div>
+    </div>
+  </footer>
+<dialog class="sheet" id="menu-sheet" aria-labelledby="menu-title">
+  <div class="sheet__head">
+    <p class="sheet__title" id="menu-title">Menu</p>
+    <button class="icon-btn" type="button" data-close-sheet aria-label="Close"><svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  </div>
+  <nav aria-label="Main menu">
+    <ul class="sheet__list">
+      <li><details><summary>About Us<svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><ul>
+              <li><a href="/hcwa-rebuild/en/about/">About Us</a></li>
+              <li><a href="/hcwa-rebuild/en/about/">Who we are</a></li><li><a href="/hcwa-rebuild/en/about/our-story/">Our story</a></li><li><a href="/hcwa-rebuild/en/about/team/">Team</a></li><li><a href="/hcwa-rebuild/en/about/partners/">Partners &amp; sponsors</a></li><li><a href="/hcwa-rebuild/en/about/policies/">Policies</a></li></ul></details></li><li><details><summary>Our Work<svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><ul>
+              <li><a href="/hcwa-rebuild/en/our-work/">Our Work</a></li>
+              <li><a href="/hcwa-rebuild/en/our-work/#centers">Centers</a></li><li><a href="/hcwa-rebuild/en/our-work/#programs">Projects &amp; programs</a></li><li><a href="/hcwa-rebuild/en/our-work/">All work</a></li></ul></details></li><li><a class="sheet__link" href="/hcwa-rebuild/en/impact/">Impact &amp; Reports</a></li><li><a class="sheet__link" href="/hcwa-rebuild/en/news/">News</a></li><li><details><summary>Get Involved<svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary><ul>
+              <li><a href="/hcwa-rebuild/en/get-involved/">Get Involved</a></li>
+              <li><a href="/hcwa-rebuild/en/get-involved/donate/">Donate</a></li><li><a href="/hcwa-rebuild/en/get-involved/volunteer/">Volunteer</a></li><li><a href="/hcwa-rebuild/en/get-involved/partner/">Partner with us</a></li><li><a href="/hcwa-rebuild/en/get-involved/in-kind/">In-kind gifts</a></li><li><a href="/hcwa-rebuild/en/get-involved/in-kind/#bakery">Little Rose Bakery</a></li></ul></details></li><li><a class="sheet__link" href="/hcwa-rebuild/en/contact/">Contact</a></li>
+    </ul>
+  </nav>
+  <div class="sheet__foot"><a class="btn btn--primary" href="/hcwa-rebuild/en/get-involved/donate/">Donate</a><div class="lang-switch" role="group" aria-label="Language" data-lang-switch><a href="/hcwa-rebuild/ve-chung-toi/" lang="vi" hreflang="vi">VI<span class="sr-only"> (Tiếng Việt)</span></a><span aria-hidden="true">/</span><a href="/hcwa-rebuild/en/about/" lang="en" hreflang="en" aria-current="true">EN<span class="sr-only"> (English)</span></a></div></div>
+</dialog>
+</body>
+</html>
