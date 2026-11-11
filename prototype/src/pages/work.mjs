@@ -5,6 +5,7 @@ import { programRow, textLink, button, icon, statusPill, datedPost, pendingChip,
 import { litHeader } from "../partials/lit-header.mjs";
 import { blockIcon, gachStrip, gachSpriteOnce } from "../partials/blocks.mjs";
 import { still, hasStill, stillAspect } from "../partials/still.mjs";
+import { routes } from "../routes.mjs";
 
 // Our Work (PLAN P1-P3). Two kinds of work, two shapes that cannot be mistaken for each other:
 // centers are places (doors in one wall, unit paint, the emblem their transom throws), programs are
@@ -155,14 +156,22 @@ const spanOf = (c, p) => {
   return { start: start.trim(), end: end.trim(), at: Math.round(at * 1000) / 10, known, kind };
 };
 
-// One wide list: the date in its own 160 px column, the title running beside it.
-const relatedNews = (c, id) => html`<section class="related container" aria-labelledby="${id}">
+// One wide list: the date in its own 160 px column, the title running beside it. pick: the page's own
+// list of post URLs (VI) when it has one (news.json has no tags yet); an empty list hides the section.
+const relatedNews = (c, id, pick) => {
+  const posts = pick ? c.content.news.posts.filter((p) => pick.includes(p.url.vi)) : c.content.news.posts;
+  if (!posts.length) return "";
+  return html`<section class="related container" aria-labelledby="${id}">
   <h2 class="related__title" id="${id}" data-reveal="rise"><span>${c.t("relatedNews")}</span></h2>
-  <ol class="dated-list related__list" data-reveal="stagger">${c.content.news.posts.map((p) => datedPost(c, p))}</ol>
+  <ol class="dated-list related__list" data-reveal="stagger">${posts.map((p) => datedPost(c, p))}</ol>
   <p class="related__all">${textLink(c.url("news"), c.t("allNews"))}</p>
 </section>`;
+};
 
-// ---------- Center: Green Bamboo (P2) ----------
+// ---------- Center: Green Bamboo, Cầu Hàn (P2, PLAN-M4 4.10) ----------
+// One template for every center with a door (Little Rose has its own page: little-rose.mjs). The route
+// names the unit (routes.mjs unit); the id prefix keeps Green Bamboo's ids as they were.
+const PREFIX = { "green-bamboo": "gb", "cau-han": "ch", "thrive-together": "tt", "charity-class": "cc", "disability-pilot": "dp" };
 
 // A program run at the center: one lit band across the page (name, status and years on one baseline,
 // the span as a small louver bar lit up to today, the summary under it). Not the hub's program row.
@@ -195,18 +204,21 @@ const gallery = (c) => {
 
 export function center(c) {
   const { work, site } = c.content;
-  const gb = work.centers.find((x) => x.id === "green-bamboo");
-  const P = work.centerPages["green-bamboo"];
+  const unit = routes[c.routeKey].unit;
+  const gb = work.centers.find((x) => x.id === unit);
+  if (!gb || unit === "little-rose") throw new Error(`center(): no door page for "${unit}"`);
+  const P = work.centerPages[unit];
+  const pre = PREFIX[unit];
   const programs = work.programs.filter((p) => p.centers.includes(gb.id));
   const emblem = EMBLEM[gb.id];
-  const meta = html`<img class="lit-head__logo" src="${gb.logo}" width="56" height="56" alt="${c.tx(P.logoAlt)}">
+  const meta = html`${gb.logo ? html`<img class="lit-head__logo" src="${gb.logo}" width="56" height="56" alt="${c.tx(P.logoAlt)}">` : ""}
     <p class="lit-head__facts">
       ${c.prod ? "" : html`<span data-draft>${c.t("since")} ${c.tx(gb.sinceToken)}</span>`}
       <span${c.d(gb.location)}>${icon("pin")}${c.tx(gb.location)}</span>
     </p>`;
   const body = html`
 ${litHeader(c, {
-  still: "header-green-bamboo",
+  still: "header-" + gb.id,
   unit: gb.accent,
   trail: [[c.t("ourWork"), c.url("ourWork")], [c.t("centers"), c.url("ourWork") + "#" + A[c.lang].centers], [c.tx(gb.shortName)]],
   title: viKeep(c.tx(gb.name)),
@@ -241,18 +253,18 @@ ${litHeader(c, {
         <div class="more__body"><p${c.d(P.history)}>${c.tx(P.history)}</p></div>
       </details>
     </div>
-    ${figuresFor(c, gb.id, c.tx(P.figuresTitle), "gb-figures", { nested: true })}
+    ${figuresFor(c, gb.id, c.tx(P.figuresTitle), `${pre}-figures`, { nested: true })}
   </section>
 
   ${gallery(c)}
 
-  <section class="here container" aria-labelledby="gb-programs">
-    <h2 class="here__title" id="gb-programs" data-reveal="rise"><span>${c.t("programsHere")}</span></h2>
+  <section class="here container" aria-labelledby="${pre}-programs">
+    <h2 class="here__title" id="${pre}-programs" data-reveal="rise"><span>${c.t("programsHere")}</span></h2>
     <ul class="bands" data-reveal="stagger">${programs.map((p) => band(c, p))}</ul>
   </section>
 
-  <section class="give container" aria-labelledby="gb-help">
-    <h2 class="give__title" id="gb-help" data-reveal="rise"><span>${viKeep(c.tx(P.helpTitle))}</span></h2>
+  <section class="give container" aria-labelledby="${pre}-help">
+    <h2 class="give__title" id="${pre}-help" data-reveal="rise"><span>${viKeep(c.tx(P.helpTitle))}</span></h2>
     <ul class="give__needs" data-reveal="stagger">${P.needs.map((n) => html`<li${c.d(n)}>${quatrefoil("give__mark")}<span>${c.tx(n)}</span></li>`)}</ul>
     <div class="give__act">
       ${button({ href: c.url("donate") + "?center=" + gb.id, label: c.tx(P.donate), cls: "give__btn" })}
@@ -260,10 +272,10 @@ ${litHeader(c, {
     </div>
   </section>
 
-  ${relatedNews(c, "gb-news")}
+  ${relatedNews(c, `${pre}-news`, P.news)}
 </div>
 ${duskBand(c, {
-  id: "gb-visit",
+  id: `${pre}-visit`,
   title: c.tx(P.visitTitle),
   body: html`<dl class="dusk__lines">
       <div${c.d(P.contactPerson)}><dt>${c.t("contact")}</dt><dd>${c.tx(P.contactPerson)}</dd></div>
@@ -295,26 +307,34 @@ const placeDoor = (c, x) => {
 // until HCWA confirms them; "today" sits where the real years put it, in the middle until then.
 const timeBand = (c, p) => {
   const { start, end, at, known } = spanOf(c, p);
-  return html`<section class="span container" aria-labelledby="tt-span">
-  <h2 class="sr-only" id="tt-span">${c.t("years")}</h2>
+  return html`<section class="span container" aria-labelledby="span-title">
+  <h2 class="sr-only" id="span-title">${c.t("years")}</h2>
   <div class="timeband timeband--${p.status}" style="--at:${at}%"${known ? "" : raw(" data-draft")}>
     <p class="timeband__end timeband__end--start">${start}</p>
     <p class="timeband__bar"><span class="timeband__lit" aria-hidden="true"></span><span class="timeband__today">${c.t("today")}</span></p>
-    <p class="timeband__end">${end}</p>
+    ${end ? html`<p class="timeband__end">${end}</p>` : ""}
   </div>
 </section>`;
 };
 
+// Every program shares the template and the lam-stripe still (PLAN-M4 decision 8: the still is a pattern,
+// not a unit). Sections with nothing to show leave themselves out: results without scoped figures, where
+// it runs without centers, related news without posts. A completed project takes no new partners, so
+// its closing band asks for support and contact instead.
 export function program(c) {
   const { work } = c.content;
-  const p = work.programs.find((x) => x.id === "thrive-together");
-  const P = work.programPages["thrive-together"];
-  const centers = p.centers.map((id) => work.centers.find((x) => x.id === id)).filter(Boolean);
-  const [main, ...rest] = c.tx(p.fullName).split(": ");
+  const id = routes[c.routeKey].program;
+  const p = work.programs.find((x) => x.id === id);
+  if (!p) throw new Error(`program(): no program "${id}"`);
+  const P = work.programPages[id];
+  const pre = PREFIX[id];
+  const done = p.status === "completed";
+  const centers = p.centers.map((cid) => work.centers.find((x) => x.id === cid)).filter(Boolean);
+  const [main, ...rest] = c.tx(p.fullName ?? p.name).split(": ");
   const meta = html`${statusPill(c, p.status)}<span class="lit-head__years" data-draft>${c.tx(p.years)}</span>
-    <span class="lit-head__funder"><span class="lit-head__k">${c.t("fundedBy")}</span> ${p.partners.join(", ")}</span>`;
+    ${p.partners.length ? html`<span class="lit-head__funder"><span class="lit-head__k">${c.t("fundedBy")}</span> ${p.partners.join(", ")}</span>` : ""}`;
   const list = (items, id, lit = false) => html`<ol class="slats${lit ? " slats--lit" : ""}" aria-labelledby="${id}" data-reveal="stagger">${items.map((x, i) => html`<li class="slat"${c.d(x)}><span class="slat__n num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><span class="slat__text">${c.tx(x)}</span></li>`)}</ol>`;
-  const reports = c.prod
+  const reports = c.prod || !P.reports.length
     ? html`<p class="docs__empty"${c.d(c.content.ui.noDocuments)}>${c.t("noDocuments")} ${textLink(c.url("reports"), c.t("annualReports"))}</p>`
     : html`<ul class="docs__list">${P.reports.map((r) => html`<li class="doc" data-draft>
         ${icon("file", "icon doc__icon")}
@@ -331,49 +351,52 @@ ${litHeader(c, {
   extra: c.lang === "en" ? html`<p class="lit-head__vi" lang="vi">${p.name.vi}</p>` : "",
 })}
 <div class="day day--program">
-  <section class="brief container" aria-labelledby="tt-summary">
+  <section class="brief container" aria-labelledby="${pre}-summary">
     <span class="lam lam--brief" aria-hidden="true"></span>
-    <h2 class="sr-only" id="tt-summary">${c.t("summary")}</h2>
+    <h2 class="sr-only" id="${pre}-summary">${c.t("summary")}</h2>
     <p class="brief__lead"${c.d(p.summary)} data-reveal>${c.tx(p.summary)}</p>
     <p class="brief__focus"${c.d(P.focus)} data-reveal>${c.tx(P.focus)}</p>
+    ${done ? html`<p class="brief__ended">${c.t("status_ended")}</p>` : ""}
   </section>
 
   ${timeBand(c, p)}
 
-  <section class="aims container" aria-labelledby="tt-goals">
+  <section class="aims container" aria-labelledby="${pre}-goals">
     <div class="aims__col">
-      <h2 class="aims__title" id="tt-goals" data-reveal="rise"><span>${c.t("goals")}</span></h2>
-      ${list(P.goals, "tt-goals", true)}
+      <h2 class="aims__title" id="${pre}-goals" data-reveal="rise"><span>${c.t("goals")}</span></h2>
+      ${list(P.goals, `${pre}-goals`, true)}
     </div>
     <div class="aims__col aims__col--next">
-      <h2 class="aims__title" id="tt-activities" data-reveal="rise"><span>${c.t("activities")}</span></h2>
-      ${list(P.activities, "tt-activities")}
+      <h2 class="aims__title" id="${pre}-activities" data-reveal="rise"><span>${c.t("activities")}</span></h2>
+      ${list(P.activities, `${pre}-activities`)}
     </div>
   </section>
 
-  ${figuresFor(c, p.id, c.t("results"), "tt-results")}
+  ${figuresFor(c, p.id, c.t("results"), `${pre}-results`)}
 
-  <section class="where container" aria-labelledby="tt-where">
-    <h2 class="where__title" id="tt-where" data-reveal="rise"><span>${c.t("whereItRuns")}</span></h2>
+  ${centers.length ? html`<section class="where container" aria-labelledby="${pre}-where">
+    <h2 class="where__title" id="${pre}-where" data-reveal="rise"><span>${c.t("whereItRuns")}</span></h2>
     <ul class="places-row" data-reveal="stagger">${centers.map((x) => placeDoor(c, x))}</ul>
     <div class="where__notes">
       <p class="where__note"${c.d(P.runsAtNote)}>${c.tx(P.runsAtNote)}</p>
-      <p class="where__note"${c.d(work.littleRose.privacyNote)}>${c.tx(work.littleRose.privacyNote)}</p>
+      ${centers.some((x) => x.id === "little-rose") ? html`<p class="where__note"${c.d(work.littleRose.privacyNote)}>${c.tx(work.littleRose.privacyNote)}</p>` : ""}
     </div>
-  </section>
+  </section>` : ""}
 
-  <section class="docs container" aria-labelledby="tt-docs">
-    <h2 class="docs__title" id="tt-docs" data-reveal="rise"><span>${c.t("documents")}</span></h2>
+  <section class="docs container" aria-labelledby="${pre}-docs">
+    <h2 class="docs__title" id="${pre}-docs" data-reveal="rise"><span>${c.t("documents")}</span></h2>
     ${reports}
   </section>
 
-  ${relatedNews(c, "tt-news")}
+  ${relatedNews(c, `${pre}-news`, P.news)}
 </div>
 ${duskBand(c, {
-  id: "tt-cta",
+  id: `${pre}-cta`,
   title: c.tx(P.ctaTitle),
   draft: P.ctaTitle.draft,
-  body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${button({ href: c.url("partner"), label: c.tx(P.partner), kind: "on-dusk" })}</div>`,
+  body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${done
+    ? button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk" })
+    : button({ href: c.url("partner"), label: c.tx(P.partner), kind: "on-dusk" })}</div>`,
 })}`;
   return { title: c.tx(p.name), description: c.tx(p.summary), body, lit: true, bodyClass: "page-program" };
 }

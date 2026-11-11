@@ -15,6 +15,53 @@
       "vi": "Để bảo vệ sự riêng tư và an toàn của các em, chúng tôi không đăng hình ảnh, tên hay địa chỉ của mái ấm.",
       "en": "To protect the girls' privacy and safety, we never publish their photos, their names or the shelter's address.",
       "draft": true
+    },
+    "page": {
+      "_note": "PLAN-M4 4.11: words and an abstract illustration only. No location, no contact person, no phone of its own, no photos, no figures, no news, never 'visit'.",
+      "intro": {
+        "vi": "Một mái ấm an toàn, nơi các em gái được chăm sóc, đi học và lấy lại sự tự tin.",
+        "en": "A safe home where girls are cared for, go to school and regain their confidence.",
+        "draft": true,
+        "source": "condensed from the current Little Rose page"
+      },
+      "offers": [
+        {
+          "vi": "Chỗ ở an toàn",
+          "en": "A safe place to live",
+          "draft": true
+        },
+        {
+          "vi": "Chăm sóc sức khỏe và hỗ trợ tâm lý",
+          "en": "Healthcare and psychological support",
+          "draft": true
+        },
+        {
+          "vi": "Học chữ và học nghề",
+          "en": "Schooling and vocational training",
+          "draft": true
+        },
+        {
+          "vi": "Kỹ năng sống và hiểu biết về quyền trẻ em",
+          "en": "Life skills and knowing their rights",
+          "draft": true
+        },
+        {
+          "vi": "Hỗ trợ khi các em trở về với gia đình và cộng đồng",
+          "en": "Support when the girls return to their families and community",
+          "draft": true
+        }
+      ],
+      "_offersSource": "condensed from the current Little Rose page (activities); HCWA to confirm what the page may say. The 2021-2022 appeal is left out.",
+      "helpLead": {
+        "vi": "Ủng hộ chung cho Hội, đặt bánh từ tiệm bánh của mái ấm, hoặc tặng hiện vật qua văn phòng.",
+        "en": "Give to HCWA, order from the shelter's bakery, or send in-kind gifts through the office.",
+        "draft": true
+      },
+      "contactLine": {
+        "vi": "Mọi liên hệ về mái ấm xin gửi qua văn phòng Hội.",
+        "en": "Please contact the shelter through the HCWA office.",
+        "draft": true
+      }
     }
   },
   "focusAreas": [
@@ -119,7 +166,7 @@
     },
     {
       "id": "little-rose",
-      "built": false,
+      "built": true,
       "path": {
         "vi": "/hoat-dong/co-so/hoa-hong-nho/",
         "en": "/en/our-work/centers/little-rose/"
@@ -159,10 +206,10 @@
     },
     {
       "id": "cau-han",
-      "built": false,
+      "built": true,
       "path": {
         "vi": "/hoat-dong/co-so/cau-han/",
-        "en": "/en/our-work/centers/cau-han/"
+        "en": "/en/our-work/centers/cau-han-project/"
       },
       "accent": "cau-han",
       "name": {
@@ -176,6 +223,11 @@
       "sinceToken": {
         "vi": "[năm]",
         "en": "[year]"
+      },
+      "location": {
+        "vi": "[phường], TP. Hồ Chí Minh",
+        "en": "[ward], Ho Chi Minh City",
+        "draft": true
       },
       "serves": {
         "vi": "Trẻ em và gia đình bị ảnh hưởng bởi HIV/AIDS, gia đình di cư và trẻ đã nghỉ học",
@@ -238,7 +290,7 @@
     },
     {
       "id": "charity-class",
-      "built": false,
+      "built": true,
       "path": {
         "vi": "/hoat-dong/du-an/lop-hoc-tinh-thuong/",
         "en": "/en/our-work/programs/charity-class/"
@@ -269,7 +321,7 @@
     },
     {
       "id": "disability-pilot",
-      "built": false,
+      "built": true,
       "path": {
         "vi": "/hoat-dong/du-an/quyen-tre-em-khuyet-tat/",
         "en": "/en/our-work/programs/disability-rights-pilot/"
@@ -406,6 +458,103 @@
         "vi": "Logo Cơ sở Bảo trợ Xã hội Tre Xanh",
         "en": "Green Bamboo Social Protection Center logo"
       }
+    },
+    "cau-han": {
+      "activities": [
+        {
+          "vi": "Lớp học tình thương cho trẻ đã nghỉ học",
+          "en": "Charity classes for children who left school",
+          "draft": true
+        },
+        {
+          "vi": "Học bổng cho học sinh có nguy cơ bỏ học",
+          "en": "Scholarships for pupils at risk of dropping out",
+          "draft": true
+        },
+        {
+          "vi": "Tư vấn và hỗ trợ trực tiếp cho trẻ và gia đình",
+          "en": "Counseling and direct support for children and families",
+          "draft": true
+        },
+        {
+          "vi": "Định hướng nghề nghiệp và học bổng học nghề cho thanh niên",
+          "en": "Career guidance and vocational scholarships for young people",
+          "draft": true
+        },
+        {
+          "vi": "Giáo dục cộng đồng về quyền trẻ em và sức khỏe",
+          "en": "Community education on children's rights and health",
+          "draft": true
+        }
+      ],
+      "_activitiesSource": "condensed from the current Cau Han page; kept general so no line points at any child's or family's health",
+      "storyTitle": {
+        "vi": "Câu chuyện của Cầu Hàn",
+        "en": "Cau Han's story"
+      },
+      "story": [
+        {
+          "vi": "Cầu Hàn là một dự án phát triển dựa vào cộng đồng. Dự án giúp trẻ em và gia đình khó khăn trong khu vực tiếp cận giáo dục, các nhu cầu cơ bản và những dịch vụ thiết yếu.",
+          "en": "Cau Han is a community-based development project. It helps children and families in hardship nearby reach schooling, their basic needs and the services they rely on.",
+          "draft": true,
+          "source": "condensed from the current Cau Han page"
+        },
+        {
+          "vi": "Từ [năm], dự án mở lớp học tình thương cho những em không thể vào hoặc theo học trường công.",
+          "en": "Since [year] the project has run charity classes for children who can't enrol in or stay in public school.",
+          "draft": true,
+          "source": "current Charity Class page; year to verify"
+        }
+      ],
+      "history": {
+        "vi": "[Lịch sử đầy đủ do HCWA cung cấp, kèm các năm đã được xác minh.]",
+        "en": "[Full history supplied by HCWA, with verified years.]",
+        "draft": true
+      },
+      "figuresTitle": {
+        "vi": "Cầu Hàn qua các con số",
+        "en": "Cau Han in numbers"
+      },
+      "contactPerson": {
+        "vi": "[Người liên hệ và số điện thoại đã được duyệt]",
+        "en": "[Approved contact person and phone]",
+        "draft": true
+      },
+      "helpTitle": {
+        "vi": "Cách giúp Cầu Hàn",
+        "en": "How to help Cau Han"
+      },
+      "needs": [
+        {
+          "vi": "[Nhu cầu cụ thể thứ nhất, ví dụ học bổng]",
+          "en": "[First specific need, for example scholarships]",
+          "draft": true
+        },
+        {
+          "vi": "[Nhu cầu thứ hai, ví dụ sách vở cho lớp học]",
+          "en": "[Second need, for example books for the classes]",
+          "draft": true
+        },
+        {
+          "vi": "[Nhu cầu thứ ba, ví dụ giáo viên tình nguyện]",
+          "en": "[Third need, for example volunteer teachers]",
+          "draft": true
+        }
+      ],
+      "donate": {
+        "vi": "Ủng hộ Cầu Hàn",
+        "en": "Donate to Cau Han"
+      },
+      "visitTitle": {
+        "vi": "Muốn đến thăm Cầu Hàn?",
+        "en": "Want to visit Cau Han?"
+      },
+      "contactNote": {
+        "vi": "[Chỉ hiển thị thông tin liên hệ HCWA đã duyệt.]",
+        "en": "[Only contact details HCWA has approved.]",
+        "draft": true
+      },
+      "news": []
     }
   },
   "programPages": {
@@ -492,6 +641,115 @@
         "vi": "Hợp tác trong một dự án",
         "en": "Partner on a program"
       }
+    },
+    "charity-class": {
+      "focus": {
+        "vi": "Nhiều em không có đủ giấy tờ hoặc điều kiện để vào trường công. Lớp học giúp các em theo kịp các môn chính và giữ được việc học.",
+        "en": "Many of the children lack the papers or the means to enter public school. The classes help them keep up with the core subjects and stay in learning.",
+        "draft": true,
+        "source": "condensed from the current Charity Class page"
+      },
+      "goals": [
+        {
+          "vi": "Trẻ được học các môn chính của chương trình phổ thông",
+          "en": "Children learn the core subjects of the national curriculum",
+          "draft": true
+        },
+        {
+          "vi": "Trẻ theo kịp việc học và có thể chuyển lên lớp hoặc vào trường",
+          "en": "Children catch up and can move up or into school",
+          "draft": true
+        },
+        {
+          "vi": "Thanh thiếu niên được định hướng học nghề và việc làm",
+          "en": "Young people get guidance towards training and work",
+          "draft": true
+        }
+      ],
+      "activities": [
+        {
+          "vi": "Lớp học miễn phí các môn Toán, Văn, Khoa học",
+          "en": "Free classes in maths, literature and science",
+          "draft": true
+        },
+        {
+          "vi": "Sinh viên tình nguyện cùng giáo viên kèm học",
+          "en": "Student volunteers tutor alongside the teachers",
+          "draft": true
+        }
+      ],
+      "runsAtNote": {
+        "vi": "[Lịch học và địa điểm tại từng cơ sở, HCWA xác nhận]",
+        "en": "[Class times and rooms at each center, HCWA to confirm]",
+        "draft": true
+      },
+      "reports": [],
+      "reportType": {
+        "vi": "Báo cáo dự án",
+        "en": "Program report"
+      },
+      "ctaTitle": {
+        "vi": "Giúp một lớp học tiếp tục",
+        "en": "Help keep a class going",
+        "draft": true
+      },
+      "partner": {
+        "vi": "Hợp tác trong một dự án",
+        "en": "Partner on a program"
+      },
+      "news": []
+    },
+    "disability-pilot": {
+      "focus": {
+        "vi": "Dự án làm việc cùng trẻ em khuyết tật, người chăm sóc và cơ quan địa phương để các em biết và dùng được những chính sách dành cho mình.",
+        "en": "The project worked with children with disabilities, their caregivers and local agencies so the children could know and use the policies meant for them.",
+        "draft": true,
+        "source": "from the two 2026 news posts on the current site"
+      },
+      "goals": [
+        {
+          "vi": "Trẻ em khuyết tật và gia đình hiểu và tiếp cận được chính sách",
+          "en": "Children with disabilities and their families understand and reach the policies",
+          "draft": true
+        },
+        {
+          "vi": "Tiếng nói của trẻ được lắng nghe",
+          "en": "Children's voices are heard",
+          "draft": true
+        }
+      ],
+      "activities": [
+        {
+          "vi": "[Các hoạt động chính của dự án, HCWA cung cấp]",
+          "en": "[The project's main activities, from HCWA]",
+          "draft": true
+        },
+        {
+          "vi": "Hội nghị tổng kết dự án",
+          "en": "A closing review conference",
+          "draft": true
+        }
+      ],
+      "runsAtNote": {
+        "vi": "[Nơi dự án được thực hiện, HCWA xác nhận]",
+        "en": "[Where the project ran, HCWA to confirm]",
+        "draft": true
+      },
+      "reports": [],
+      "reportType": {
+        "vi": "Báo cáo dự án",
+        "en": "Program report"
+      },
+      "ctaTitle": {
+        "vi": "Đồng hành cùng những dự án như thế này",
+        "en": "Support work like this",
+        "draft": true
+      },
+      "news": [
+        "https://hcwa.org.vn/hoi-nghi-tong-ket-du-an-thi-diem-thuc-day-quyen-tre-em-khuyet-tat-tai-tp-ho-chi-minh/",
+        "https://hcwa.org.vn/tang-cuong-co-hoi-tiep-can-chinh-sach-cho-tre-em-khuyet-tat/"
+      ],
+      "_newsNote": "news.posts matched by their VI url (news.json has no tags yet)"
     }
   }
 }

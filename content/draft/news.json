@@ -58,5 +58,41 @@
         "en": "https://hcwa.org.vn/enhancing-access-to-policies-for-children-with-disabilities/"
       }
     }
-  ]
+  ],
+  "_hubNote": "News hub (/tin-tuc/, /en/news/; PLAN-M4 4.13, 5.2). The cards link to the live posts on hcwa.org.vn until the WordPress migration brings the articles; categories filter in place (no archive URLs).",
+  "hub": {
+    "intro": {
+      "vi": "Tin về hoạt động, sự kiện và câu chuyện của Hội.",
+      "en": "News of HCWA's work, events and stories.",
+      "draft": true
+    },
+    "skip": {
+      "vi": "Đến danh sách tin",
+      "en": "Skip to the news list"
+    },
+    "filterLabel": {
+      "vi": "Lọc theo loại tin",
+      "en": "Filter by type"
+    },
+    "listTitle": {
+      "vi": "Bài viết mới",
+      "en": "Latest posts"
+    },
+    "externalNote": {
+      "vi": "Các bài viết mở trên trang hcwa.org.vn hiện tại.",
+      "en": "Posts open on the current hcwa.org.vn site."
+    },
+    "empty": {
+      "vi": "Chưa có bài viết nào trong mục này.",
+      "en": "No posts in this category yet."
+    },
+    "showAll": {
+      "vi": "Xem tất cả tin",
+      "en": "Show all news"
+    },
+    "featuredTitle": {
+      "vi": "Câu chuyện nổi bật",
+      "en": "Featured story"
+    }
+  }
 }

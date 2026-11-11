@@ -1,5 +1,5 @@
 import { html, raw } from "../lib/html.mjs";
-import { routes } from "../routes.mjs";
+import { routes, PARENT } from "../routes.mjs";
 import { icon, button, pauseToggle, quatrefoil } from "./components.mjs";
 import { worldCanvas } from "./world.mjs";
 import { headInline } from "../lib/head-inline.mjs";
@@ -30,8 +30,7 @@ const child = (c, spec) => {
 };
 
 // "page" on the exact page, "true" on the parent hub of a child page.
-const isCurrent = (c, key) =>
-  c.routeKey === key ? "page" : (key === "ourWork" && ["greenBamboo", "thriveTogether"].includes(c.routeKey)) || (key === "getInvolved" && c.routeKey === "donate") ? "true" : "";
+const isCurrent = (c, key) => (c.routeKey === key ? "page" : PARENT[c.routeKey] === key ? "true" : "");
 
 const langSwitch = (c, cls = "") => {
   const r = routes[c.routeKey];

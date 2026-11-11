@@ -91,6 +91,7 @@
     "chat": { "vi": "Nhắn tin qua", "en": "Message us on", "draft": true },
     "chatPending": { "vi": "Chờ HCWA xác nhận", "en": "Waiting for HCWA" },
     "callUs": { "vi": "Gọi cho Hội", "en": "Call HCWA" },
-    "writeUs": { "vi": "Gửi email", "en": "Email HCWA" }
+    "writeUs": { "vi": "Gửi email", "en": "Email HCWA" },
+    "skipToForm": { "vi": "Đến biểu mẫu liên hệ", "en": "Skip to the contact form" }
   }
 }

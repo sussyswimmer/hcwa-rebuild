@@ -5,6 +5,7 @@ import { button, textLink, field, choiceField, consentField, formSent, copyButto
 import { litHeader } from "../partials/lit-header.mjs";
 import { louvers } from "../partials/louvers.mjs";
 import { litWall } from "../partials/still.mjs";
+import { stage, litStageVars, skipOpening } from "../partials/scroll3d.mjs";
 
 // Get Involved, Donate, Contact and the 404 (PLAN P4-P7). Same day as the rest of the site (05-DESIGN
 // D0.5): each page is one stretch of light from its header to the dusk, no section fills, no rules.
@@ -184,8 +185,11 @@ export function contact(c) {
   const { site, work, involve } = c.content;
   const P = involve.contactPage;
   const topics = ["donate", "partner", "volunteer", "media", "other"].map((k) => [k, c.t("topic_" + k)]);
+  // The opening (PLAN-M4 5.1, openings.css): on the stage the header's still fills the first screen and
+  // the camera dollies toward the screen while the late light floods in from the street; at rest (no JS,
+  // reduced motion, pause, ?tier=0) it is the lit header as before. The H1 never moves; it scrolls away.
   const body = html`
-${litHeader(c, {
+${stage("contact", litHeader(c, {
   still: "header-contact",
   trail: [[c.t("contact")]],
   title: viKeep(c.t("contact")),
@@ -196,8 +200,9 @@ ${litHeader(c, {
   extra: html`<p class="lit-head__actions" data-draft>
     <a class="btn btn--secondary" href="tel:${site.phone.tel}">${icon("phone")}<span>${c.tx(P.callUs)}</span></a>
     <a class="btn btn--secondary" href="mailto:${site.email.general}">${icon("mail")}<span>${c.tx(P.writeUs)}</span></a>
-  </p>`,
-})}
+  </p>
+  ${skipOpening("#form-title", c.tx(P.skipToForm))}`,
+}), litStageVars("header-contact"))}
 <div class="day day--contact">
   <div class="reach container">
     <section class="reach__write" aria-labelledby="form-title">

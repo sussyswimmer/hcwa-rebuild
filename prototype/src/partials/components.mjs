@@ -160,3 +160,12 @@ export const quatrefoil = (cls = "quatrefoil") => raw(`<svg class="${cls}" viewB
 export const pauseToggle = (c, cls = "", { textSafe } = {}) => html`<button class="pause-toggle${cls ? " " + cls : ""}" type="button" data-paused="false" data-motion-toggle${textSafe ? raw(` data-text-safe="${textSafe}"`) : ""}>
   ${icon("pause", "icon pause-toggle__pause")}${icon("play", "icon pause-toggle__play")}<span class="pause-toggle__label">${c.t("motionPause")}</span>
 </button>`;
+
+// The office's phone and email on the night of a dusk band (the same lines Get Involved ends on).
+export const reachLines = (c, email = c.content.site.email.general) => {
+  const { site } = c.content;
+  return html`<dl class="dusk__lines" data-draft>
+      <div><dt>${c.t("phone")}</dt><dd><a href="tel:${site.phone.tel}">${site.phone.display}</a></dd></div>
+      <div><dt>${c.t("email")}</dt><dd><a href="mailto:${email}">${email}</a></dd></div>
+    </dl>`;
+};
