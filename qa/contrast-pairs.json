@@ -383,5 +383,15 @@
   "texto": "--color-tile-brick",
   "fondo": "--color-lime-100",
   "tipo": "ui"
+ },
+ {
+  "texto": "--color-warn",
+  "fondo": "--color-lime-100",
+  "tipo": "texto"
+ },
+ {
+  "texto": "--color-gold-700",
+  "fondo": "--color-lime-100",
+  "tipo": "texto"
  }
 ]
