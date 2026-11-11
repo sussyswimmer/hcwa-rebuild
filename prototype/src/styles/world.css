@@ -34,9 +34,12 @@ html:not(.stages) .hero__media::after, html.stages:not(.world-live):has(.site-he
    feathered plate of plaster, so no line ever sits on the screen's silhouette. The buttons are opaque already. */
 .hero--plate .hero__inner { position: relative; isolation: isolate; }
 .hero--plate .hero__inner::before {
-  content: ""; position: absolute; z-index: -1; inset: -40px calc(-1 * var(--gutter)) -24px; pointer-events: none;
+  /* Reaches 120 px past the gutter on the left and feathers over that whole run, so the plate dissolves into the
+     plaster instead of ending in a hard vertical line beside the text (Maxwell, 11 Nov 2026: seen with
+     browser translation, whose longer lines switch the plate on). The right side keeps its long fade. */
+  content: ""; position: absolute; z-index: -1; inset: -40px calc(-1 * var(--gutter)) -24px calc(-1 * var(--gutter) - 120px); pointer-events: none;
   background: color-mix(in oklab, var(--color-lime-50) 94%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 24px), transparent), linear-gradient(to right, black 72%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 24px), transparent), linear-gradient(to right, transparent, black calc(120px + var(--gutter)), black 72%, transparent);
   mask-composite: intersect;
 }
 /* The pause toggle can sit beside the intro, past the plate's feather: it takes its own plaster. */
