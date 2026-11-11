@@ -21,3 +21,5 @@ qa/m3/
 qa/wp-port/
 # Local WordPress smoke-test screenshots and reports (scripts/wp-local.sh smoke): local only.
 qa/wp/
+# Finish-pages QA working captures (crawls, strips, critic evidence): local only.
+qa/m4/
