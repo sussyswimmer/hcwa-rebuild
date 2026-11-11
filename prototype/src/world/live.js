@@ -15,6 +15,8 @@ import { createFlight, journeyAt } from "./flight.js";
 import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, walkPitch, washSpan, hemSpan, wash as washAt } from "./journey.js";
 import { createWalk } from "./walk.js";
 import { worldOff } from "./index.js";
+import { WALL_FADE, disposeWalls, loadWalls, setWallTier, wallUniforms } from "./walls.js";
+import { yieldNow } from "./textures.js";
 
 // The live world (05-DESIGN D6, PLAN H2-H4, H7), with three.js. index.js loads it only once the GPU probe has
 // passed. It draws into the page's fixed canvas, reads the DOM (frame box, stage, text rects, beats) and
@@ -362,6 +364,11 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // ---- render on demand (D6.7): only while a world section is in view and the tab is visible;
   // every frame while something moves, 30 fps for the canopy and motes, nothing when paused ----
   let raf = 0, last = 0, lastDraw = 0, inView = true, visible = !document.hidden, paused = Boolean(bus?.state.paused), lost = false, dead = false, live = false, gate = null, covered = false;
+  // The Blender wall maps (walls.js): loaded after the first frame, then faded in over WALL_FADE ms of unpaused time
+  // (walls.k); a pause holds the fade where it is. gateState: the live gate's last verdict, so the gate can measure
+  // again once the maps are in (they cost GPU time the first measurement never saw).
+  const wallsU = wallUniforms(), wallAbort = new AbortController();
+  let walls = null, gateState = null;
   const running = () => live && inView && visible && !lost && !dead;
   const kick = () => { if (!raf && running()) raf = requestAnimationFrame(tick); };
   // A tap or key waiting for the main thread goes first: this frame is skipped, the next one draws (INP).
@@ -387,6 +394,12 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       if (floodHold == null && floodStep(flood, clamp01((scrollY - sp.top) / sp.len), dt, paused)) active = true;
     }
     if (!paused) {
+      if (walls && walls.k < 1) {
+        walls.k = Math.min(walls.k + (dt * 1000) / WALL_FADE, 1);
+        wallsU.uWallK.value = inOut(walls.k);
+        active = true;
+        if (walls.k >= 1) rearmGate();
+      }
       if (fine) active = stepSpring(px, target.x, dt, SPRING) | stepSpring(py, target.y, dt, SPRING) || active;
       if (idle && inRoom) active = stepCloud(now) || active;
       const w = s3 ? shutters.U.uWind.value : inRoom ? wind : null;
@@ -466,6 +479,8 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     e.preventDefault();
     lost = true;
     cancelAnimationFrame(raf); raf = 0;
+    // The maps' texels were let go after upload: a restored context goes on with the procedural walls.
+    wallAbort.abort(); disposeWalls(); walls = null;
     root.classList.remove("world-live");
     if (++losses > 1) return stop("context lost twice");
     restoreTimer = setTimeout(() => stop("context not restored"), 5000);
@@ -485,12 +500,21 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // ---- live gates (D6.7), skipped when ?tier forces a tier ----
   const onStep = ({ state, p75, final, source }) => {
     console.info(`[world] gate p75 ${p75.toFixed(1)} ms (${source}) → ${state}${final ? " (final)" : ""}`);
+    gateState = state;
     // A tier change swaps the shafts' programs: compiled off the main thread before they draw (D6.7).
     const recompile = () => Promise.all([room, corridor, shutters].filter(Boolean).map((s) => s.compile())).then(() => { dirty = true; kick(); });
-    if (state === "t1") { tier = 1; gl.setTier(1); room.setTier(1); corridor?.setTier(1); shutters?.setTier(1); layout(); recompile(); }
+    if (state === "t1") { tier = 1; gl.setTier(1); setWallTier(1); room.setTier(1); corridor?.setTier(1); shutters?.setTier(1); layout(); recompile(); }
     else if (state === "lite") { for (const s of [room, corridor, shutters]) if (s) s.shafts.enabled = false; gl.setTier(1, { lite: true }); layout(); }
     else if (state === "off") stop("frame time over the Tier 1 limit");
   };
+
+  // Once the maps are in, the gate measures again from where it stood (never from lite or off): a device that held its
+  // budget with procedural walls must hold it with the maps too.
+  function rearmGate() {
+    if (forced != null || dead || !live || (gateState && gateState !== "t2" && gateState !== "t1") || gate?.measuring) return;
+    gate?.dispose();
+    gate = createGate(gl.renderer.getContext(), { tier, onStep });
+  }
 
   function stop(reason) {
     if (dead) return;
@@ -515,6 +539,8 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       dead = true;
       resume?.();
       cancelAnimationFrame(raf); cancelAnimationFrame(pending); clearTimeout(restoreTimer);
+      wallAbort.abort();
+      disposeWalls();
       removeEventListener("pointermove", onPointer);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       bus?.removeEventListener("velocity", onVelocity);
@@ -567,11 +593,24 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   kick();
 
   // QA hooks (?debug): their own chunk, never loaded otherwise.
-  if (debug) import("./debug.js").then((d) => d.attach({ gl, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); } }));
+  if (debug) import("./debug.js").then((d) => d.attach({ gl, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
 
   // The corridor, in idle time after the handoff, from the page's own cards (D6.5). It is needed first
   // behind the wash halfway through the passage; until it is ready the wash simply holds.
   const idle = () => new Promise((ok) => ("requestIdleCallback" in window ? requestIdleCallback(ok, { timeout: 1500 }) : setTimeout(ok, 50)));
+  // The wall maps (walls.js), in idle time once the world is live: never before the first frame, so they cannot move the
+  // LCP or the handoff; until they are in (or if they fail) the procedural walls stay.
+  idle().then(async () => {
+    if (dead) return;
+    const t0 = performance.now();
+    const r = await loadWalls({ renderer: gl.renderer, tier, yieldNow, signal: wallAbort.signal });
+    if (dead || lost) return disposeWalls();
+    setWallTier(tier);
+    walls = { k: 0 };
+    dirty = true;
+    kick();
+    console.info(`[world] walls · ${r.size} px maps · ${r.kb} KB · GPU ~${r.gpuMB} MB · in ${Math.round(performance.now() - t0)} ms`);
+  }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] walls unavailable, the procedural walls stay", err); });
   // No cards still builds the corridor, empty: the camera always has somewhere to come out.
   idle().then(async () => {
     if (dead) return;

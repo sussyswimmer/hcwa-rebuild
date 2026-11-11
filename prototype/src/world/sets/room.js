@@ -9,6 +9,7 @@ import { streetPlane, streetUniforms } from "../objects/sky.js";
 import { bakeLimeWash, bakeTerrazzo } from "../textures.js";
 import { makeSun, REST, sunAt } from "../clock.js";
 import { mixc, tok, vec } from "../colors.js";
+import { wallUniforms } from "../walls.js";
 
 // The hero room (05-DESIGN D6.2): lime-wash room 8.6 × 3.3 × 8 m, an 18 × 8 breeze-block
 // screen on the right wall above a 0.9 m parapet, terrazzo floor, the street beyond.
@@ -92,6 +93,7 @@ export async function buildRoom({ gl, tier, slice = true, shaftSteps = null }) {
     ...apertureUniforms(SCREEN, L),
     ...capUniforms(),
     ...streetUniforms(),
+    ...wallUniforms(),
     uShade: { value: shade },
     uSunT: { value: sunTarget.map((v) => v.clone()) },
     uNdlRef: { value: ndlRef },

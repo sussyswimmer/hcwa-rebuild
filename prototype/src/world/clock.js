@@ -50,6 +50,8 @@ export const STILL_SUNS = {
   shutters: { az: -48, el: 16, color: "sunShuttersB" },  // 17:00, raking: the window's patch climbs the side wall
   street: { az: -58, el: 20, color: "sunShuttersA" },    // 16:30, raking along the street face
   story: { az: 40, el: 24, color: "sunRoom" },           // the hero room at rest
+  about: { az: 64, el: 13, color: "sunCorridorA" },      // early morning on the house's front: low, raking across the face from the street's left
+  impact: { az: 72, el: 61, color: "sunCorridorB" },     // November noon in Saigon (latitude 10.8°, declination −18°: about 61° up), down the light well
 };
 
 export function sunFixed({ az, el, mirror = false }, out = new Vector3()) {

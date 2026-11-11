@@ -2,6 +2,7 @@ import { PerspectiveCamera, Vector3, Vector4 } from "three";
 import { capUniforms } from "../materials/caps.js";
 import { MAX_DOORS } from "../glsl/blocks.js";
 import { mixc, tok, vec } from "../colors.js";
+import { wallUniforms } from "../walls.js";
 
 // Shared by the still sets and the live corridor: the same surface model, the same colors.
 
@@ -12,6 +13,7 @@ export const tint = (c, sun, k = 1, rest = tok("sunRoom")) => c.clone().lerp(c.c
 export function surfaceUniforms({ box, fillDir, sun, shade, sunT, spillT, refs, lime, terr }) {
   return {
     ...capUniforms(),
+    ...wallUniforms(),
     uShade: { value: shade.map(vec) },
     uSunT: { value: sunT.map(vec) },
     uSpillT: { value: spillT.map(vec) },

@@ -27,3 +27,4 @@ qa/m4/
 qa/m5/
 # Blender bake output (regenerate with prototype/blender/walls.py).
 prototype/blender/out/
+qa/m6/

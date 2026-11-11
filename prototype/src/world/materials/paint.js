@@ -3,6 +3,8 @@ import { BLOCK, BLOCKS } from "../glsl/blocks.js";
 import { NOISE } from "../glsl/noise.js";
 import { aperturesGLSL } from "../glsl/apertures.js";
 import { DOOR } from "../objects/door.js";
+import { WALLS_GLSL } from "../glsl/walls.js";
+import { WALL_SCALE } from "../walls.js";
 
 // Painted wood (doors, frames, shutters; 05-DESIGN D6.3): the paint token is the display color in full
 // light, so a lit door lands on its unit token (not tone-mapped, D6.3); shade is the token darkened and
@@ -49,6 +51,11 @@ void main(){
 // nearFade (the corridor, critique r2): a backstop for what passes the lens: paint nearer the camera than 1.4 m along
 // its view axis dithers away (gone by 0.7 m), so no leaf or frame is ever a blurred slab with straight edges across the
 // frame. Discarded, never blended: no transparency sort.
+// The Blender paint map (walls.js, glsl/walls.js; live only, faded in by uWallK): neutral paint over wood at 1 m a map,
+// on a leaf in hinge space (its brush streaks swing with it), elsewhere along the face's own axes. Its tone relief
+// tints with the unit's paint (the token stays the colour), its normal (a frame from the derivatives: leaves turn)
+// shades the streaks and chips under each light; the wood it shows through a chip comes in only where the wear masks
+// above already allow wear, so faces stay clean (critique r1).
 export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, leafWear = false, nearFade = false, oldCoat = false } = {}) {
   return new ShaderMaterial({
     defines: { ...(vertexPaint ? { VERTEX_PAINT: "" } : {}), ...(leafWear ? { LEAF_WEAR: "" } : {}), ...(nearFade ? { NEAR_FADE: "" } : {}), ...(oldCoat ? { OLD_COAT: "" } : {}) },
@@ -73,6 +80,7 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
       ${NOISE}
       ${aperturesGLSL(lights)}
       ${ao ?? "float paintAo(vec3 P){ return 1.; }"}
+      ${WALLS_GLSL(["Pt"])}
       void main(){
         #ifdef NEAR_FADE
         if (h21(gl_FragCoord.xy) > smoothstep(.7, 1.4, vDepth)) discard;
@@ -82,6 +90,7 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
         vec2 e = min(vUv, 1. - vUv);
         float wear = (1. - smoothstep(0.015, 0.05, min(e.x, e.y))) * uWear;
         vec2 grain = vP.xy * 38. + vP.zz * 21.;
+        vec2 puv = abs(N.x) > .5 ? vP.zy : abs(N.z) > .5 ? vP.xy : vP.xz;
         #ifdef LEAF_WEAR
         if (vL.y > -.5) {
           float az = abs(vL.z), d = min(min(vL.y, ${DOOR.h.toFixed(3)} - vL.y), min(az, ${DOOR.w.toFixed(3)} - az));
@@ -97,21 +106,34 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
           wear = mix(min(uWear, .1), uWear, m);
           #endif
           grain = vL.zy * 38. + vL.xx * 21.; // the chips stay on the leaf as it swings
+          puv = vL.zy;
         }
         #endif
         float chip = smoothstep(0.62, 0.7, vn(grain)) * wear;
+        vec4 wp = vec4(0., 0., 1., 0.);
+        vec3 Nb = N;
+        if (uWallK > 0.) {
+          vec2 tuv = puv / ${WALL_SCALE.paint.toFixed(1)};
+          wp = wallTap(uWPt, tuv, .5);
+          vec3 dp1 = dFdx(vP), dp2 = dFdy(vP), p2 = cross(dp2, N), p1 = cross(N, dp1);
+          vec2 du1 = dFdx(tuv), du2 = dFdy(tuv);
+          vec3 T = p2 * du1.x + p1 * du2.x, B = p2 * du1.y + p1 * du2.y;
+          float im = inversesqrt(max(max(dot(T, T), dot(B, B)), 1e-12));
+          Nb = wallNB(N, T * im, B * im, wp.rg, uWallK);
+          chip = max(chip, smoothstep(.3, .7, wp.a) * wear * uWallK);
+        }
         #ifdef OLD_COAT
-        vec3 albedo = mix(uPaint, mix(uPaint, uWood, .45), chip);
+        vec3 albedo = mix(uPaint * mix(1., wallRel(wp.b, 1.), uWallK * (1. - wp.a)), mix(uPaint, uWood, .45), chip);
         #else
-        vec3 albedo = mix(uPaint, uWood, chip);
+        vec3 albedo = mix(uPaint * mix(1., wallRel(wp.b, 1.), uWallK * (1. - wp.a)), uWood, chip);
         #endif
         float sky = 0.82 + 0.18 * N.y;
-        vec3 shade = mix(albedo * uShadeK, uCool * uShadeK * 1.08, 0.18) * sky;
+        vec3 shade = mix(albedo * uShadeK, uCool * uShadeK * 1.08, 0.18) * sky * wallFill(Nb, N, vec3(0., 1., 0.), .8);
         float n0 = max(dot(N, uLt[0]), 0.), n1 = max(dot(N, uLt[1]), 0.);
         float f0 = n0 > 0. && uI[0] > 0. ? n0 / uRef[0] * lightMask0(vP) * uI[0] : 0.;
         ${lights.length > 1 ? "float f1 = n1 > 0. && uI[1] > 0. ? n1 / uRef[1] * lightMask1(vP) * uI[1] : 0.;" : "float f1 = 0.;"}
-        vec3 col = mix(shade, albedo * uSunTint, min(f0, 1.));
-        col = mix(col, albedo * uSpillTint, min(f1, 1.) * 0.85);
+        vec3 col = mix(shade, albedo * uSunTint * wallSun(Nb, N, uLt[0]), min(f0, 1.));
+        col = mix(col, albedo * uSpillTint * wallSun(Nb, N, uLt[1]), min(f1, 1.) * 0.85);
         col *= (1. + uGrad * (smoothstep(0., 2.2, vP.y) - .5)) * paintAo(vP);
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>

@@ -5,6 +5,8 @@ import { aperturesGLSL } from "../glsl/apertures.js";
 import { CAPS } from "./caps.js";
 import { TERRAZZO_CEMENT, TILE_CREAM } from "../textures.js";
 import { MAX_DOORS } from "../glsl/blocks.js";
+import { WALLS_GLSL } from "../glsl/walls.js";
+import { WALL_SCALE } from "../walls.js";
 
 // Shells of the still sets (05-DESIGN D6.10): the room surface model of surface.js (display targets in
 // shade and in full light, one texture fetch, analytic AO, caps inside text rects) with up to two
@@ -51,6 +53,11 @@ float loCo(vec2 p){
   return stroke * smoothstep(.18, .42, streak) * smoothstep(.12, .4, vn(p * 46.)) * (.82 + .18 * vn(p * 9. + 3.1));
 }
 `;
+// The Blender maps (walls.js, glsl/walls.js; live only, faded in by uWallK): plaster on walls and ceilings, and in the
+// house the yellow lime wash above the dado, the mint oil paint below it (its chips show the plaster: the ceiling's
+// targets) and plaster on the ceiling. Tone relief replaces the procedural mottle (the house keeps its metre-wide loang
+// at half strength over the wash); the normal shades the relief under light 0 (the sun), light 1 (a room's daylight)
+// and the open side's fill. The floor (terrazzo, gạch bông, cream tiles) is unchanged.
 // nearFade (the live corridor and its stills, critique r2): a backstop: a wall or pier nearer the camera than 1.4 m
 // along its view axis dithers away (gone by 0.7 m). Walls only: the floor at a phone frame's foot is that near.
 export function stillSurface(U, lights, { contact = null, house = false, nearFade = false } = {}) {
@@ -78,6 +85,7 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
       ${CAPS}
       ${contact ?? "float contact(vec3 P){ return 1.; }"}
       ${house ? HOUSE_GLSL(doorsDeclared) : ""}
+      ${WALLS_GLSL(house ? ["Pl", "Lw", "Da"] : ["Pl"])}
       // A surface skips the term of the plane it lies in (facing it, within 3 mm). Distance alone also
       // skipped the last 3 mm of the neighbouring wall, and every corner drew an unshaded bright seam.
       float occ(float d, float r, float s, float self){ return self > .5 && d < 0.003 ? 1. : 1. - s * (1. - smoothstep(0., r, d)); }
@@ -93,6 +101,20 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
         float mott = (lw.r - .5) * .09 + (lw.g - .5) * .05 + (lw.b - .5) * .04 * vertical;
         vec3 rel = k == 1 ? texture2D(uTerr, vP.xz * 0.5).rgb / ${TERRAZZO_CEMENT.toFixed(3)} * (1. + mott * .5) : vec3(1. + mott);
         vec3 shT = uShade[k], suT = uSunT[k], spT = uSpillT[k];
+        // The maps: wA the wall's own (plaster, or the house's wash), wB the house's dado.
+        vec3 Nb = N;
+        vec4 wA = vec4(0., 0., 1., 0.), wB = wA;
+        float age = 1.;
+        if (k != 1 && uWallK > 0.) {
+          vec2 wuv = uv / ${WALL_SCALE.wall.toFixed(1)};
+          float mw = smoothstep(.35, .65, lw.r);
+          // The ceiling stays calmer; behind body text (a capped rect, caps.js) a fifth of the relief.
+          age = wallAge(lw.a) * (k == 2 ? .3 : 1.) * mix(.2, 1., smoothstep(.4, 1., capAt(gl_FragCoord.xy)));
+          ${house ? `wA = k == 0 ? wallTap(uWLw, wuv, mw) : wallTap(uWPl, wuv, mw);
+          if (k == 0) wB = wallTap(uWDa, wuv + vec2(.43, .19), mw);` : "wA = wallTap(uWPl, wuv, mw);"}
+          ${house ? "" : "rel = mix(rel, vec3(wallRel(wA.b, age)), uWallK);"}
+          Nb = wallN(N, wA.rg, uWallK * .6 * mix(.3, 1., age));
+        }
         ${house ? `
         if (k == 1) {
           float s = vP.x - uGachP.x, T = uGachP.z, R = uGachP.w;
@@ -129,12 +151,18 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
           spT = mix(spT, spT * dU / max(suT, vec3(.001)), dado);
           shT = mix(shT, dS, dado);
           suT = mix(suT, dU, dado);
-          rel = mix(rel * (1. + (lw.a - .5) * uWearP.w), vec3(1. + mott * .3), dado);
+          vec3 relW = mix(rel, vec3(wallRel(wA.b, age * .55)), uWallK) * (1. + (lw.a - .5) * uWearP.w * (1. - .5 * uWallK));
+          vec3 relD = vec3(mix(1. + mott * .3, mix(wallRel(wB.b, age), 1., wB.a), uWallK));
+          rel = mix(relW, relD, dado);
+          // The dado's chips show the plaster under the paint: the ceiling's warm targets.
+          float chip = dado * wB.a * uWallK * smoothstep(.25, .6, age);
+          shT = mix(shT, uShade[2], chip); suT = mix(suT, uSunT[2], chip); spT = mix(spT, uSpillT[2], chip);
+          Nb = wallN(N, mix(wA.rg * .7, wB.rg, dado), uWallK * mix(.3, 1., age));
         } else {
           // The ceiling: the yellow walls' bounce within 0.5 m of them (up to 30%), and the wash's loang.
           float dw = min(vP.x - uBoxMin.x, uBoxMax.x - vP.x);
           shT = mix(shT, uShade[0], .3 * (1. - smoothstep(0., .5, dw)));
-          rel *= 1. + (lw.a - .5) * uWearP.w;
+          rel = mix(rel, vec3(wallRel(wA.b, age)), uWallK) * (1. + (lw.a - .5) * uWearP.w);
         }` : ""}
         vec3 an = abs(N);
         float ao = occ(vP.y - uBoxMin.y, .35, .12 * uAoK, an.y) * occ(uBoxMax.y - vP.y, .4, .1 * uAoK, an.y)
@@ -148,10 +176,10 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
         float n0 = max(dot(N, uLt[0]), 0.), n1 = max(dot(N, uLt[1]), 0.);
         float f0 = n0 > 0. && uI[0] > 0. ? n0 / uRef[0] * lightMask0(vP) * cap * uI[0] : 0.;
         ${lights.length > 1 ? "float f1 = n1 > 0. && uI[1] > 0. ? n1 / uRef[1] * lightMask1(vP) * cap * uI[1] : 0.;" : "float f1 = 0.;"}
-        vec3 shade = shT * rel * ao * fill;
-        vec3 sun = suT * 0.94 * rel * mix(1., ao, .5);
+        vec3 shade = shT * rel * ao * fill * wallFill(Nb, N, normalize(uFillDir + vec3(0., .7, 0.)), .4);
+        vec3 sun = suT * 0.94 * rel * mix(1., ao, .5) * wallSun(Nb, N, uLt[0]);
         vec3 col = mix(mix(shade, sun, min(f0, 1.)), uGlare, min(max(f0 - 1., 0.) * .35, .6));
-        col = mix(col, spT * 0.94 * rel * mix(1., ao, .5), min(f1, 1.));
+        col = mix(col, spT * 0.94 * rel * mix(1., ao, .5) * wallSun(Nb, N, uLt[1]), min(f1, 1.));
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>
         gl_FragColor.rgb += (h21(gl_FragCoord.xy) - .5) / 255.;

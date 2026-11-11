@@ -1340,3 +1340,75 @@ JS and `TRACKS` together. Departures and findings:
   interim procedural plaster. `header-about`, `header-impact`, `header-cau-han` and the sharper `header-contact`
   are waiting on the same stream. **needs (lead):** `npm run export:wp` at integration; `wp/themes/hcwa-2026/404.php`
   still prints the `notInPrototype` note; the 3 home contrast lines.
+
+**M5 walls: the Blender materials in the live world (11 Nov 2026).** Maxwell: "the walls look too perfect, like
+play-doh; they need character, more realistic: scratches, a real wall". `blender/walls.py` (Cycles, Blender 4.2) bakes
+five seamless 1024 px materials; `scripts/encode-walls.py` writes them to `public/textures/` and `src/world/walls-data.js`.
+- **What ships.** Per material an albedo and a tangent-space normal WebP (roughness dropped: the analytic light has no
+  specular term), 512 px for Tier 1 and 1024 px for Tier 2. The normal is low-passed 0.8 px at 1024 before encoding
+  (the 2 mm grit it loses is sub-pixel at every camera distance and was half of every file). Tier 1 251 KB, Tier 2
+  689 KB (budgets 300 / 800 KB, held by `test/walls.test.mjs`, which reads the files).
+- **Loading.** `live.js` asks for them in an idle slice after the handoff (after `world-live`), never before the
+  first frame, so neither LCP nor the handoff moves; until they arrive, or if any fails, the procedural walls stay. A
+  module worker (`walls-worker.js`, main-thread fallback) fetches, decodes and packs each material into one RGBA
+  texture (`walls-pack.js`: normal xy, luminance relief, chip mask), one upload a slice; the maps then fade in over
+  700 ms of unpaused time (`uWallK`; a pause holds the fade). Context loss drops them for good (procedural after a
+  restore). Once they are in, the live gate measures again from where it stood (t2 or t1, never from lite).
+- **Departure: tone relief is luminance, not per channel.** The task asked for albedo / mean × token. The shaders
+  use the albedo's luminance over its mean × the token (darker freely, lighter by half and never past +5%, so a sun
+  patch keeps its headroom), and a chip mask where the paint is gone: the dado's chips take the ceiling's warm
+  plaster targets, a door's chips the wood / older coat its wear rule already had. Reason: the palette holds exactly
+  (no map hue drifts the yellow wash or the unit paints), and one RGBA texture per material instead of two.
+- **Departure: GPU memory on Tier 2.** 1024 px packed is ~26.7 MB (5 × 4 MB + mips); with the Tier 2 drawing buffer
+  (~33 MB at 1440 × 900, dpr 1.5) that passes D6.7's 48 MB. Tier 1 is ~6.7 MB (inside 24 MB with its ~6 MB buffer).
+  One line (`WALL_SIZE` in `walls.js`) puts Tier 2 on the 512 px maps (~6.7 MB) if the lead holds the budget.
+- **Shading** (`glsl/walls.js`). Walls are axis-aligned: the tangent basis is the surface's own uv (x walls: z, y; z
+  walls: x, y; floors and ceilings: x, z). The normal shades relief on the light's own term (`wallSun`: how much more
+  or less a texel faces the light than its wall, 0.55 to 1.05, so cracks and chips catch a grazing sun) and, softer,
+  against the open side's fill in shade (`wallFill`, 0.7 to 1.04). Masks, caps and patch targets are untouched, so the
+  light's geometry is exactly as before (`check-sun-crisp` is pure geometry and passes unchanged). Scale: 2 m a map on
+  walls, 1 m on paint and on breeze blocks (each block its own random corner of the map). Repetition: Tier 2 blends a
+  second sample turned 34° at 0.73 the scale where the lime texture's broad mottle says; on both tiers the cracks,
+  stains and chips read fully only where the wash's metre-wide loang has aged the wall (a third elsewhere), the
+  ceilings take 30%, and behind body text (a capped rect, caps.js) the relief drops to a fifth, so the hero intro's
+  darkest pixels stay where its bar was measured.
+  - Hero room (`surface.js`): plaster on walls and ceiling; the terrazzo floor unchanged.
+  - Corridor (`still-surface.js` house): limewash above the dado (at 55% tone: its crack network is the strongest map;
+    the house's loang stays at half strength over it), mint dado below with its chips, plaster on the ceiling; the gạch
+    bông, thresholds and cream tiles unchanged. The shutters room (non-house): plaster on walls and ceiling.
+  - Doors, frames, shutters (`paint.js`): the neutral paint map tinted by the unit's paint, on a leaf in hinge space
+    (its brush streaks swing with it); its normal through a derivative frame (leaves turn). Wood or the older coat
+    shows through a chip only where the existing wear masks allow (edges, kick zone, handle), so faces stay clean
+    (critique r1). Little Rose's door: same rules at its 0.3 wear, still shut; no colour or light added near its bay.
+  - Breeze blocks: the room's screen face (Tier 1 SDF and Tier 2 instanced, `screen.js`) and every lattice panel
+    (`lattice.js`: the corridor's screen, the transoms) take the concrete's relief, the face tokens holding.
+  - Tier 1 keeps the normal map: the SwiftShader proxy (`qa/m5/integrate/perf.cjs`, median of 12-16 redraws with a
+    pixel read-back, walls off/on alternated; not a GPU measurement) gave 390 × 844 Tier 1 hero +8.8%, corridor bay 1
+    +1.5%, shutters +14.5%; 1440 Tier 1 +11.5% / +4.8% / +8.5%; 1440 Tier 2 +16.7% / +7.4% / +2.7%. The richness pass
+    took +13-14% on the same proxy; the runtime gate re-measures with the maps in.
+- **Code.** Lazy JS gzip +4.3 KB (live +0.86, common +0.82, corridor +0.27, the three chunk +2.33) and the 1.6 KB
+  worker; nothing on the first-paint path (`main.js`, `world/index.js`, posters) imports the walls (the test checks).
+  `?debug` gets `__hcwaWorld.wallK(v)` for before/after captures.
+- **Stills and posters are unchanged.** They never load the maps; with `uWallK` 0 every new term is exactly 1 or the
+  old value, so a re-render gives the same pixels. Re-rendering stills with the maps is a separate step (needs below).
+- **Not done:** the News page's `--wall-tex` (the openings stream can point it at `textures/plaster-1024.webp`).
+- **Checks** (captures and logs in `qa/m5/integrate/`; before = this tree without the walls, built and served side by
+  side). `npm test` 164 pass (6 new in `walls.test.mjs`). `build`, `build:pages` (textures resolve under
+  `/hcwa-rebuild/`), `check-links` on both: 46 pages, 0 dead. `PROD=1`: only its guards, 143 problems, as before.
+  `check-sun-crisp` all pass. `check-bays` and `check-tiles` pass. `check-hero`: its matrix FAIL lines are identical to
+  the before build's (27; the 390 intro over the stills, 6.6-6.98 < 7, comes from this morning's re-rendered hero
+  posters, which this pass does not touch; the live Tier 1 intro is 6.98 before and after), plus the known flaky "world
+  moves with no input" at 390 Tier 1 and the six short-phone extras, which also read the stills (tier 0).
+  `light-contrast` (over the stills): the same 3 home lines at 390 (6.7 < 7) as the M4 recheck. Live probe over the
+  world with the maps faded in (`qa/m5/integrate/livecontrast.cjs`, the m3 method plus the hero at rest; VI/EN, 390/1440,
+  Tier 1/2): 0 lines newly below their bar; hero intro at 390 6.97 (before 6.95) and 7.03 (7.01), hero H1 ≥ 6.97, worst
+  corridor running text 7.64 (7.63). Mobile LCP (`lcp.cjs`, median of 3, before / after on the same machine): world
+  off 2,312 / 2,316 ms, world on 2,304 / 2,284 ms, default 2,324 / 2,292 ms; the world chunk is requested after LCP and
+  the maps after the handoff, so they cannot move it (the first-10 s long-task rule fails on both builds). Before/after
+  crops: `cmp-<lang>-<w>-t<tier>-<place>.png` and `sheet-{before,after}-*.png`. No new hard line: the maps are seamless,
+  the age mask is metres wide, a block's own corner of the concrete changes only inside its mortar joint.
+- **needs (lead):** (1) the Tier 2 GPU memory call above (keep 1024 px and raise D6.7's 48 MB, or one line to 512 px);
+  (2) 05-DESIGN 6.11 still says Blender is not available here: it is (4.2), and the walls now use it; (3) the hero,
+  bay and header stills could be re-rendered with the maps for a matching handoff (the world fades the maps in over
+  700 ms after the handoff, so nothing pops today); that needs `still.html`/`poster.html` to load them and an encode
+  budget check; (4) the hero intro at 390 over the stills (6.6-6.98) predates this pass.

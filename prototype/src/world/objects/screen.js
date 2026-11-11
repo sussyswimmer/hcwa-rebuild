@@ -3,6 +3,8 @@ import { APERTURE } from "../glsl/aperture.js";
 import { BLOCK, BLOCKS, DEPTH, HOA_THI } from "../glsl/blocks.js";
 import { DITHER, LEAF, NOISE } from "../glsl/noise.js";
 import { STREET } from "./sky.js";
+import { WALLS_GLSL } from "../glsl/walls.js";
+import { WALL_SCALE } from "../walls.js";
 
 // The breeze-block screen, backlit: a logo-blue silhouette (--color-world-screen-face) with
 // holes blazing the street (05-DESIGN D6.3). Face, joints and the halation around each hole
@@ -14,8 +16,15 @@ uniform float uRimI, uHaloA, uHaloW; // uTime comes with STREET
 // tone, 8 mm mortar joints sit 20% darker, and the street light halates 1.2 cm into the face
 // (world units, so the glow keeps its size at every distance; the passage widens it as the camera nears
 // a hole, the eye adjusting to the light).
+// The Blender concrete (walls.js; live only, faded in by uWallK): each block takes its own corner of the map (cast one
+// by one), its tone relief and its relief under the room's light from above; the silhouette's token holds.
 vec3 faceColor(vec2 c, vec3 P, float d, float fw){
-  vec3 col = uFace * (0.94 + 0.12 * h21(floor((P.zy - vec2(uZ0, uY0)) / uB)));
+  vec2 id = floor((P.zy - vec2(uZ0, uY0)) / uB);
+  vec3 col = uFace * (0.94 + 0.12 * h21(id));
+  if (uWallK > 0.) {
+    vec4 w = wallTap(uWCo, P.zy / ${WALL_SCALE.block.toFixed(1)} + h22(id), .5);
+    col *= mix(1., wallRel(w.b, .8) * wallFill(wallN(vec3(-1., 0., 0.), w.rg, 1.), vec3(-1., 0., 0.), vec3(-.406, .914, 0.), .8), uWallK);
+  }
   float jd = 0.5 * uB - max(abs(c.x), abs(c.y));
   col *= 1. - 0.2 * (1. - smoothstep(0.004, 0.004 + fw, jd));
   col = mix(col, uGlow, uHaloA * exp(-max(d, 0.) / uHaloW));
@@ -48,6 +57,7 @@ ${NOISE}
 ${DITHER}
 ${LEAF}
 ${STREET}
+${WALLS_GLSL(["Co"])}
 ${FACE}
 `;
 

@@ -12,5 +12,7 @@ export function attach(w) {
     // Freeze the flood at tween position v (QA frames of its peak on a slow GPU); null lets it run again.
     flood: w.hold, memoryMB: () => gl.memoryMB, msaa: gl.msaa, info: () => ({ ...gl.renderer.info.render }), redraw: w.redraw,
     lose: () => ext?.loseContext(), restore: () => ext?.restoreContext(), paused: w.paused, running: w.running, pointer: w.pointer,
+    // The Blender wall maps' strength (0: the procedural walls), for before/after captures and the perf proxy.
+    wallK: w.wallK,
   };
 }

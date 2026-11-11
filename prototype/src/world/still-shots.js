@@ -67,6 +67,10 @@ export const STILLS = {
   "header-thrive-together": { kind: "header", layers: ["base", "lightroom"], page: "program", motion: "drift", what: "Lam stripes of late-morning light on a wall" },
   "header-get-involved": { kind: "header", layers: LIT, page: "get-involved", motion: "louver", what: "The open shutters at 17:00" },
   "header-contact": { kind: "header", layers: LIT, page: "contact", what: "The street side of the screen at 16:30" },
+  // M4 pages (PLAN-M4 4.1, 4.6, 4.10), rendered with the Blender walls (M5).
+  "header-about": { kind: "header", layers: LIT, page: "about", what: "The house's front screen in early-morning light, raking across the plaster" },
+  "header-impact": { kind: "header", layers: ["base", "lightroom"], page: "impact", motion: "drift", what: "Noon down the light well: Hoa thị patches drawn long on the back wall, no numbers" },
+  "header-cau-han": { kind: "header", layers: LIT, page: "center", unit: "cau-han", motion: "drift", what: "Its blue door open, Vòm cầu light on the wall" },
   dusk: { kind: "band", layers: PLAIN, what: "The room at 18:00, one last lit quatrefoil" },
   // Our Work's door wall (critique r1): one wall, one camera, one sun, the three doors at 1/6, 1/2, 5/6.
   "hub-doors-wide": { kind: "pano", layers: PLAIN, page: "our-work", what: "One lime wall, three doors: green open, pink shut in plain daylight, blue open" },

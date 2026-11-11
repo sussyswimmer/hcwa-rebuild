@@ -9,6 +9,7 @@
 //        [--shot x,z,lookX,lookY,lookZ,fov] (try a K0 for one bucket; pair with --keep)
 // Stills (inner headers, dusk, doors, 404, story; src/world/still-shots.js): npm run posters -- --still all
 //        [--still header-our-work,dusk] [--crop desk] [--keep [dir]] [--debug] [--no-encode]
+//        [--no-walls] (the procedural walls alone, for a before/after)
 //        tuning one crop: [--cam x,y,z,lookX,lookY,lookZ,fov] [--sun az,el] [--w 800] [--layer lit]
 import { createServer as httpServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
@@ -33,10 +34,13 @@ let chromium;
 try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require(require.resolve("playwright", { paths: ["/opt/node-tools/node_modules"] }))); }
 
 // Static server for the poster entry: prototype/ as the web root (src/world, node_modules/three).
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".woff2": "font/woff2" };
+const TYPES = { ".webp": "image/webp", ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".woff2": "font/woff2" };
 function serve(dir) {
   const server = httpServer((req, res) => {
-    const path = resolve(dir, "." + decodeURIComponent(new URL(req.url, "http://x").pathname));
+    const rel = "." + decodeURIComponent(new URL(req.url, "http://x").pathname);
+    // The site's public/ files (the wall maps, /textures/) where the page asks for them at the root, as Vite serves them.
+    let path = resolve(dir, rel);
+    if (!existsSync(path) && rel.startsWith("./textures/")) path = resolve(dir, "public", rel);
     if (!path.startsWith(dir + sep) || !existsSync(path)) { res.writeHead(404).end(); return; }
     res.writeHead(200, { "content-type": TYPES[extname(path)] ?? "application/octet-stream" }).end(readFileSync(path));
   });
@@ -119,7 +123,7 @@ async function renderStills() {
         const errors = [];
         page.on("pageerror", (e) => errors.push(e.message));
         page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()); });
-        const q = new URLSearchParams({ still: name, crop: crop.name, w: String(opt("w") ?? width), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("cam") === "string" ? { cam: opt("cam") } : {}), ...(typeof opt("sun") === "string" ? { sun: opt("sun") } : {}) });
+        const q = new URLSearchParams({ still: name, crop: crop.name, w: String(opt("w") ?? width), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("cam") === "string" ? { cam: opt("cam") } : {}), ...(typeof opt("sun") === "string" ? { sun: opt("sun") } : {}), ...(opt("no-walls") ? { walls: "0" } : {}) });
         await page.goto(`${origin}/src/world/still.html?${q}`);
         await page.waitForFunction(() => document.title === "done", null, { timeout: 300000, polling: 500 }).catch(() => {});
         const r = await page.evaluate(() => window.__posterResult ?? null);
@@ -163,7 +167,7 @@ try {
       page.on("pageerror", (e) => errors.push(e.message));
       page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()); });
       await page.addInitScript((input) => { window.__posterInput = input; }, { sets });
-      const q = new URLSearchParams({ bucket: b.name, w: String(PIXELS), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("shot") === "string" ? { shot: opt("shot") } : {}) });
+      const q = new URLSearchParams({ bucket: b.name, w: String(PIXELS), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("shot") === "string" ? { shot: opt("shot") } : {}), ...(opt("no-walls") ? { walls: "0" } : {}) });
       await page.goto(`${origin}/src/world/poster.html?${q}`);
       await page.waitForFunction(() => document.title === "done" || window.__posterError, null, { timeout: 300000, polling: 500 }).catch(() => {});
       const result = await page.evaluate(() => window.__posterResult ?? null);

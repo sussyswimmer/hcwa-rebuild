@@ -487,6 +487,72 @@ function streetSide({ lime, terr }) {
   return { box, lights, U, objects: [shell, panel], subject: [aperture], glow: [aperture], shafts: false };
 }
 
+// Who we are (header-about, PLAN-M4 4.1): the house's front at about 6:30, seen from across the pavement nearly
+// square on. The screen stands in the right of the face; the left is the plain plaster the H1 sits on. The low
+// morning sun rakes across the face from the street's left (the text's side), so the Blender plaster's cracks
+// and patches and every block's cast face catch it (the light that tells a real wall from a smooth one); a few
+// tamarind leaves fleck the screen's far end only. Behind the holes the room is still in its night shade.
+function frontScreen({ lime, terr }) {
+  const s = { z0: -4.6, z1: -4.6 + 18 * BLOCK, y0: 0.9, y1: 3.3 };
+  const sunSpec = STILL_SUNS.about, L = sunFixed(sunSpec), sun = sunColor(sunSpec.color);
+  // The canopy over the pavement, between the sun and the screen's far end: its leaves reach the blocks past the
+  // middle of the screen and never the plaster under the H1 (feathered over a metre).
+  const reach = 2.2 * (L.z / L.x);
+  const canopy = { mode: "occluder", pattern: "canopy", corner: [2.2, -1, s.z0 + 2.3 + reach], u: [0, 0, -1], v: [0, 1, 0], size: [8, 10], depth: 0, params: [2.4, 0.46, 1.7, 5.3], feather: 1.0, penumbra: 0.4 };
+  const lights = [{ dir: L, apertures: [canopy] }];
+  const sand = tok("faceSand");
+  // Morning shade outdoors: the sky's cool over the street's lime bounce.
+  const shade = [mixc(tok("wallShade"), tok("lime-300"), 0.36), mixc(tok("floorShade"), tok("lime-300"), 0.45), tok("ceiling")];
+  // The lime wash in the first sun: warm cream (the lime and the wall's sun target as they are; tinting toward this
+  // whiter morning sun would bleach it to paper).
+  const sunT = [mixc(tok("lime-100"), tok("wallSun"), 0.5), tint(mixc(tok("lime-50"), sand, 0.5), sun, 0.5).multiplyScalar(0.9), tint(tok("wallSun"), sun)];
+  const box = { min: [0, 0, -14], max: [14, 9, 14] };
+  const U = {
+    ...surfaceUniforms({ box, fillDir: [1, 0, 0], sun, shade, sunT, spillT: shade, refs: [L.x, 1], lime, terr }),
+    ...apertureUniforms(lights, [L, new Vector3(0, 1, 0)]),
+  };
+  U.uAoK.value = 0.6;
+  // An evenly sunlit wall under the text: no cap (it would show as a dim box on it), as Contact's.
+  U.noCap = true;
+  const facade = rect("x", 0, [-14, 14], [0, 9], 1, 0, [[s.z0, s.z1, s.y0, s.y1]]);
+  const ground = rect("y", 0, [0, 14], [-14, 14], 1, 1);
+  const shell = new Mesh(shellGeometry([...facade, ...ground]), stillSurface(U, lights));
+  const panel = latticePanel(U, lights, {
+    corner: [0, s.y0, s.z1], u: [0, 0, -1], v: [0, 1, 0], size: [s.z1 - s.z0, s.y1 - s.y0], pattern: "hoaThi", mode: "frontlit",
+    // The room behind in its night shade: the logo blue's dusk, a little light at the far window.
+    own: { uBehindLow: { value: vec(mixc(tok("screenFace"), tok("blue-900"), 0.45)) }, uBehindHigh: { value: vec(mixc(tok("screenFace"), tok("wallShade"), 0.3)) }, uBehindY: { value: [0.5, 3.3] } },
+  });
+  const u = panel.material.uniforms;
+  u.uFace.value.copy(vec(mixc(sand, tok("wallShade"), 0.5).multiplyScalar(0.72)));
+  // The cast cement in the same first sun: sand warmed toward the wall's sun, never paper white.
+  u.uFaceSun.value.copy(vec(mixc(sand, tok("wallSun"), 0.35)));
+  u.uWallC.value.copy(vec(mixc(sand, tok("screenFace"), 0.5)));
+  u.uRimC.value.copy(vec(tint(mixc(sand, tok("wallSun"), 0.3), sun)));
+  const aperture = { mode: "window", pattern: "hoaThi", corner: [0, s.y0, s.z1], u: [0, 0, -1], v: [0, 1, 0], size: [s.z1 - s.z0, s.y1 - s.y0] };
+  return { box, lights, U, objects: [shell, panel], subject: [aperture], glow: [aperture], shafts: false };
+}
+
+// Impact (header-impact, PLAN-M4 4.6): noon. The house's light well (giếng trời) is roofed with a band of Hoa thị
+// blocks against the back wall; the November noon sun (61° up, from the street side) drops through it and lays
+// the quatrefoils down the plaster, drawn out 1.7× by the steep sun, at mid-height in the right of the wall. The
+// well is out of frame above; the left of the wall, under the H1, has only the bounce. No numbers, no people.
+export const WELL = { x: [0.4, 3.8], depth: 1.15, ceiling: 3.6 };
+function lightWell({ lime, terr }) {
+  const box = { min: [-5.5, 0, -6], max: [4.6, WELL.ceiling, 4] };
+  const sunSpec = STILL_SUNS.impact, L = sunFixed(sunSpec), sun = sunColor(sunSpec.color);
+  // The roof's band of blocks along the back wall: its holes' light lands from the wall's top down to about 1.2 m.
+  const well = { mode: "window", pattern: "hoaThi", corner: [WELL.x[0], box.max[1], box.min[2]], u: [1, 0, 0], v: [0, 0, 1], size: [WELL.x[1] - WELL.x[0], WELL.depth], depth: DEPTH, feather: 0.22, penumbra: 0.5 };
+  const lights = [{ dir: L, apertures: [well] }];
+  const shade = warmShade(0.7);
+  const U = {
+    ...surfaceUniforms({ box, fillDir: [0, 1, 0], sun, shade, sunT: roomSun(sun, 0.5), spillT: shade, refs: [Math.max(L.z, 0.05), 1], lime, terr }),
+    ...apertureUniforms(lights, [L, new Vector3(0, 1, 0)]),
+  };
+  U.uI.value = [0.95, 0];
+  const shell = new Mesh(shellGeometry(boxRoom(box)), stillSurface(U, lights));
+  return { box, lights, U, objects: [shell], subject: [], glow: [], shafts: 1.2 };
+}
+
 // ---- Shots ----------------------------------------------------------------------------------------
 
 // Cameras per crop (CSS aspect from still-shots.js). Header desk crops keep the subject right of the
@@ -516,6 +582,24 @@ export const SHOTS = {
   "header-contact": { scene: (o) => streetSide(o), crops: {
     desk: levelCam([3.5, 1.1, -0.25], -118, 34, 3, [0, 2.1, 0.9], 0.594, 0.5),
     mobile: levelCam([3.2, 1.1, -0.6], -118, 50, 4 / 3, [0, 2.15, 0.9], 0.2, 0.5),
+  } },
+  // Cầu Hàn's (PLAN-M4 4.10): the same corridor wall, door and cameras as Green Bamboo's, its blue door open onto
+  // its lit room and its Vòm cầu out of the transom on the side wall (doorLight: ≤ 15% of the unit's blue, D6.5).
+  "header-cau-han": { scene: (o) => centerDoor({ ...o, unit: "cau-han" }), crops: {
+    desk: levelCam([-5.25, 1.1, -3.5], 112, 32, 3, [0, 1.3, CENTER_DOOR], 0.7, 0.52),
+    mobile: levelCam([-3.5, 1.1, 0.5], 110, 52, 4 / 3, [0, 1.3, CENTER_DOOR], 0.36, 0.5),
+  } },
+  // Nearly square on to the house front (8° off), the screen's middle at 0.78 of the frame (desk) and in the
+  // middle of the phone's 4:3, the plaster left of it for the H1.
+  "header-about": { scene: (o) => frontScreen(o), crops: {
+    desk: levelCam([6.4, 1.1, -0.2], -104, 30, 3, [0, 2.0, -2.8], 0.8, 0.52),
+    mobile: levelCam([4.6, 1.1, -1.6], -98, 46, 4 / 3, [0, 2.0, -2.8], 0.55, 0.5),
+  } },
+  // Square on to the back wall, 3.5 m back (no corner, floor or ceiling in a desk crop): the wall's right part takes
+  // the well's patches beside the H1.
+  "header-impact": { scene: (o) => lightWell(o), crops: {
+    desk: levelCam([0.6, 1.1, -2.5], 0, 40, 3, [(WELL.x[0] + WELL.x[1]) / 2, 2.1, -6], 0.78, 0.46),
+    mobile: levelCam([2.0, 1.1, -2.8], 0, 54, 4 / 3, [(WELL.x[0] + WELL.x[1]) / 2, 2.1, -6], 0.5, 0.46),
   } },
   dusk: { scene: (o) => duskScreen(o), crops: {
     // Turned 8° toward the near end (critique r2): the screen's far end and the wall past it leave the frame,

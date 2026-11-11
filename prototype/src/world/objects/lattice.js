@@ -2,6 +2,8 @@ import { Matrix4, Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from "three";
 import { BLOCK, BLOCKS, DEPTH } from "../glsl/blocks.js";
 import { NOISE } from "../glsl/noise.js";
 import { aperturesGLSL } from "../glsl/apertures.js";
+import { WALLS_GLSL } from "../glsl/walls.js";
+import { WALL_SCALE } from "../walls.js";
 
 // A panel of breeze blocks for the stills (05-DESIGN D6.3, the Tier 1 screen of screen.js generalized):
 // one plane, the block pattern as an SDF, the 6 cm depth faked by a second test at the back face.
@@ -48,6 +50,7 @@ export function latticePanel(U, lights, { corner, u, v, size, pattern = "hoaThi"
       ${BLOCKS}
       ${NOISE}
       ${aperturesGLSL(lights)}
+      ${WALLS_GLSL(["Co"])}
       #define B ${BLOCK.toFixed(4)}
       vec2 local(vec3 P){ return vec2(dot(P - uO, uU), dot(P - uO, uV)); }
       float pat(vec2 uv){ vec2 c = mod(uv, B) - 0.5 * B, id = floor(uv / B); ${PATTERN[pattern]} }
@@ -67,13 +70,21 @@ export function latticePanel(U, lights, { corner, u, v, size, pattern = "hoaThi"
         float joint = 1. - 0.2 * (1. - smoothstep(0.004, 0.004 + fw, 0.5 * B - max(abs(c.x), abs(c.y))));
         vec3 rd = normalize(vP - cameraPosition);
         float toward = dot(rd, -uNf);          // > 0: the ray goes into the panel
+        // The Blender concrete (walls.js; live only): each block its own corner of the map, its tone relief, and its
+        // relief under the light from above (backlit) or the sun (frontlit). The face tokens hold.
+        vec3 Nf = uNf * sign(toward), Nb = Nf;
+        if (uWallK > 0.) {
+          vec4 w = wallTap(uWCo, uv / ${WALL_SCALE.block.toFixed(1)} + h22(id), .5);
+          Nb = wallNB(Nf, uU, uV, w.rg, uWallK);
+          tone *= mix(1., wallRel(w.b, .8), uWallK) * wallFill(Nb, Nf, vec3(0., .914, 0.) + .406 * Nf, .8);
+        }
         vec3 inward = -uNf * sign(toward);
         float tb = uDepth / max(abs(toward), 1e-3);
         ${mode === "frontlit" ? `
         vec3 facing = uNf * sign(toward); // the face's normal on the viewer's side
         float n0 = max(dot(facing, uLt[0]), 0.);
         float f0 = n0 > 0. ? n0 / uRef[0] * lightMask0(vP + facing * 0.002) * uI[0] : 0.;
-        vec3 col = mix(uFace, uFaceSun, min(f0, 1.)) * tone * joint;` : `
+        vec3 col = mix(uFace, uFaceSun * wallSun(Nb, Nf, uLt[0]), min(f0, 1.)) * tone * joint;` : `
         vec3 col = mix(uFace * tone * joint, uRimC, uHalo * exp(-max(d, 0.) / 0.012));`}
         if (d < fw) {
           float a = 0., b = tb;

@@ -5,6 +5,7 @@ import { HEADER_TEXT, STILLS, cropsOf } from "./still-shots.js";
 import { applyFrame, PAD, projectPoly } from "./frame.js";
 import { setCaps } from "./materials/caps.js";
 import { applyBounds } from "./flight.js";
+import { stillWalls } from "./walls.js";
 
 // Still entry (05-DESIGN D6.10): one named still at one crop, rendered once at an exact pixel width by
 // scripts/render-posters.mjs. layer=base is the set in shade, layer=lit every light at rest; the encoder
@@ -28,6 +29,9 @@ gl.setPosterSize(W, H, width);
 // Tuning only (render-posters never passes them): &cam=x,y,z,lookX,lookY,lookZ,fov &sun=az,el.
 const num = (k) => q.get(k)?.split(",").map(Number);
 const still = await buildStill(name, crop.name, { gl, aspect: W / H, cam: num("cam"), sun: num("sun") });
+// The Blender walls at Tier 2 (walls.js), as the live world has them once they have faded in; &walls=0 renders the
+// procedural walls alone (before/after comparisons).
+const walls = q.get("walls") === "0" ? null : await stillWalls({ renderer: gl.renderer, tier: 2 });
 const { dpr } = gl.size;
 for (const p of still.passes) p.setSize(Math.round(W * dpr), Math.round(H * dpr));
 
@@ -58,7 +62,7 @@ const silhouettes = project(still.glow).map((poly) => poly.map((p) => [Math.roun
 window.__posterResult = {
   still: name, crop: crop.name, view: [W, H], width, layer: lit ? "lit" : "base", gpu,
   frame: { sx: Math.round(sx * 10) / 10, clear: true },
-  silhouettes, calls: info.calls, triangles: info.triangles, shafts: still.passes.length > 0,
+  silhouettes, walls: walls && { size: walls.size, kb: walls.kb }, calls: info.calls, triangles: info.triangles, shafts: still.passes.length > 0,
   png: canvas.toDataURL("image/png"),
 };
 if (q.get("debug") === "frame") {
