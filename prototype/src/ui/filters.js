@@ -68,13 +68,15 @@ function apply(hub, { area, status }, animate) {
 }
 
 // What a choice left on the page, said once in the polite live region (WCAG 4.1.3): "Showing 1 center,
-// 0 projects". Only after a visitor's choice, never on load.
+// 0 projects" on Our Work, "Showing 3 posts" on News. Only after a visitor's choice, never on load. A
+// kind is counted only when the region carries its words (data-<kind>-one / data-<kind>-many).
+const KINDS = { centers: ".door[data-areas]", programs: ".program-row[data-areas]", posts: ".notice[data-areas]" };
 function say(hub) {
   const out = $("[data-filter-status]", hub);
   if (!out) return;
   const count = (sel) => $$(sel, hub).filter((el) => !el.hidden).length;
   const word = (n, kind) => out.dataset[kind + (n === 1 ? "One" : "Many")].replace("{n}", n);
-  const centers = word(count(".door[data-areas]"), "centers");
-  const programs = word(count(".program-row[data-areas]"), "programs");
-  out.textContent = out.dataset.template.replace("{centers}", centers).replace("{programs}", programs);
+  let text = out.dataset.template;
+  for (const [kind, sel] of Object.entries(KINDS)) if (out.dataset[kind + "One"]) text = text.replace("{" + kind + "}", word(count(sel), kind));
+  out.textContent = text;
 }

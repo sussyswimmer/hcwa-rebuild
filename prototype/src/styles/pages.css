@@ -1400,6 +1400,14 @@ html[data-motion="off"] .track__dot { transition: none; }
 .years__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
 .change { display: grid; gap: 20px 64px; padding-top: calc(var(--sec) * 1.25); }
 @media (min-width: 1024px) { .change { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } .change__title, .change__lead { grid-column: 1; } .change__story { grid-column: 2; grid-row: 1 / span 3; } }
+/* The placeholder's wall sits in the page's own light, as on News (openings.css .news-feature): its edges
+   feather into the day (D0.5, no box edge) and its cool render takes the day's warm hue. */
+.change__story .feature__wall {
+  border-radius: 0; background: none;
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent), linear-gradient(to bottom, transparent, black 12%, black 82%, transparent);
+  mask-composite: intersect;
+}
+.change__story .feature__wall::after { content: ""; position: absolute; inset: 0; background: var(--color-sun-200); mix-blend-mode: color; opacity: 0.5; pointer-events: none; }
 .change__title { font-size: var(--fs-h2); }
 .change__lead { max-width: 40ch; color: var(--color-ink-700); }
 .library { scroll-margin-top: calc(var(--header-h-compact, 72px) + 24px); }

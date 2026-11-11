@@ -38,6 +38,7 @@ const chips = (c, H) => html`<nav class="filters news-filters" aria-labelledby="
     <li><a class="chip chip--all" href="./" data-area="">${c.t("all")}</a></li>
     ${CATEGORIES.map((k) => html`<li><a class="chip" href="?area=${k}#f-${k}" data-area="${k}">${c.t("cat_" + k)}</a></li>`)}
   </ul>
+  <p class="sr-only" data-filter-status aria-live="polite" data-posts-one="${c.t("countPost")}" data-posts-many="${c.t("countPosts")}" data-template="${c.t("filterShowingPosts")}"></p>
 </nav>`;
 
 // The featured story slot waits for an HCWA-approved story (content/verified/): staging only, and

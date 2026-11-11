@@ -1,3 +1,15 @@
 {
-  "_note": "UI strings for the M4 openings stream (Contact and News openings). Merged into ui by src/lib/content.mjs; a key that is also in ui.json or another ui-*.json file is a build error."
+  "_note": "UI strings for the M4 openings stream (Contact and News openings). Merged into ui by src/lib/content.mjs; a key that is also in ui.json or another ui-*.json file is a build error.",
+  "filterShowingPosts": {
+    "vi": "Đang hiện {posts}",
+    "en": "Showing {posts}"
+  },
+  "countPost": {
+    "vi": "{n} tin",
+    "en": "{n} post"
+  },
+  "countPosts": {
+    "vi": "{n} tin",
+    "en": "{n} posts"
+  }
 }
