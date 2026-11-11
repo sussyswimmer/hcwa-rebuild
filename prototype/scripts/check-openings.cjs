@@ -27,6 +27,9 @@ const ok = (cond, msg) => { if (!cond) { failed++; console.log("FAIL " + msg); }
 // Runs in the page: the text a visitor can read right now, with its colour and the box it covers.
 function visibleText() {
   const vh = innerHeight, out = [];
+  // Any CSS colour (rgb, oklab, color-mix…) to 0-255 RGBA, through a 1×1 canvas.
+  const g = (window.__px ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true }));
+  const paint = (c, solid) => { g.clearRect(0, 0, 1, 1); g.fillStyle = solid ? "#fff" : "rgba(0,0,0,0)"; g.fillRect(0, 0, 1, 1); g.fillStyle = c; g.fillRect(0, 0, 1, 1); return [...g.getImageData(0, 0, 1, 1).data]; };
   const els = document.querySelectorAll("main h1, main h2, main h3, main p, main li, main a, main dt, main dd, main label, main time");
   for (const el of els) {
     if (!el.childNodes.length || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
@@ -42,16 +45,15 @@ function visibleText() {
     const top = document.elementFromPoint(cx, cy);
     if (top && !el.contains(top) && !top.contains(el)) continue;
     // An element with its own solid fill (a chip, a button) is judged against that fill.
-    const fill = cs.backgroundColor.match(/[\d.]+/g)?.map(Number);
-    const own = fill && (fill.length < 4 || fill[3] > 0.9) ? cs.backgroundColor : null;
-    out.push({ tag: el.tagName, text: el.textContent.trim().slice(0, 40), color: cs.color, own, size: parseFloat(cs.fontSize), weight: Number(cs.fontWeight), box: [r.left, r.top, r.width, r.height] });
+    const own = paint(cs.backgroundColor);
+    out.push({ tag: el.tagName, text: el.textContent.trim().slice(0, 40), color: paint(cs.color, true), own: own && own[3] > 230 ? own : null, size: parseFloat(cs.fontSize), weight: Number(cs.fontWeight), box: [r.left, r.top, r.width, r.height] });
   }
   return out;
 }
 
 const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
 const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-const rgb = (s) => s.match(/[\d.]+/g).slice(0, 3).map(Number);
+const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(0, 3).map(Number));
 
 (async () => {
   const browser = await chromium.launch();
@@ -85,6 +87,8 @@ const rgb = (s) => s.match(/[\d.]+/g).slice(0, 3).map(Number);
     page.on("response", (r) => r.status() >= 400 && errors.push(r.status() + " " + r.url()));
     // Tier 2 on desktop, Tier 1 on phones, motion on (the flags only exist on staging).
     await page.goto(`${base}${url}?tier=${w > 600 ? 2 : 1}`, { waitUntil: "networkidle" });
+    // The probe below hides the text to sample what is behind it: colour transitions would smear it.
+    await page.addStyleTag({ content: "main *, main *::before, main *::after { transition: none !important; }" });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(2600); // the sun-in (2.28 s) comes to rest
     const end = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("[data-scroll3d]")).getPropertyValue("--s3d-end")) || 0);
@@ -105,6 +109,8 @@ const rgb = (s) => s.match(/[\d.]+/g).slice(0, 3).map(Number);
       ok(state.h1 === 1, `${tag} f${i}: one H1 (${state.h1})`);
       ok(!state.sx, `${tag} f${i}: no horizontal scroll`);
       ok(Math.abs(state.h1Top - h1Start) < 1.5, `${tag} f${i}: H1 moves only with the scroll`);
+      const file = path.join(out, `${tag}-f${String(i).padStart(2, "0")}.png`);
+      await page.screenshot({ path: file });
       const items = await page.evaluate(visibleText);
       const ratios = await sampleBehind(page, items);
       items.forEach((it, k) => {
@@ -112,8 +118,6 @@ const rgb = (s) => s.match(/[\d.]+/g).slice(0, 3).map(Number);
         const need = it.tag === "H1" || large ? 4.5 : 7;
         ok(ratios[k] >= need, `${tag} f${i} (p ${Number(state.p).toFixed(2)}): "${it.text}" ${ratios[k].toFixed(2)}:1 < ${need}`);
       });
-      const file = path.join(out, `${tag}-f${String(i).padStart(2, "0")}.png`);
-      await page.screenshot({ path: file });
       shots.push([file, Number(state.p).toFixed(2), state.y]);
     }
     ok(errors.length === 0, `${tag}: no console errors or 4xx (${errors.join("; ")})`);

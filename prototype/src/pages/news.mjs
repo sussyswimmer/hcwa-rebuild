@@ -25,7 +25,7 @@ const notice = (c, p) => {
     <span class="notice__pin" aria-hidden="true"></span>
     <p class="notice__cat">${c.t("cat_" + p.category)}</p>
     <h3 class="notice__title"><a href="${c.tx(p.url)}">${c.tx(p.title)}<span class="sr-only"> (${c.t("externalPost")})</span></a></h3>
-    <p class="notice__foot"><time class="notice__date" datetime="${p.published}"><span class="notice__dm">${dm}</span><span class="sr-only">${sep}</span><span class="notice__y">${year}</span></time>${icon("external", "icon notice__ext")}</p>
+    <p class="notice__foot"><time class="notice__date" datetime="${p.published}"><span class="dated__dm">${dm}</span><span class="sr-only">${sep}</span><span class="dated__y">${year}</span></time>${icon("external", "icon notice__ext")}</p>
   </article>
 </li>`;
 };

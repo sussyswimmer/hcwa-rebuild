@@ -1163,6 +1163,12 @@ and production. Departures and decisions:
 7. **PROD=1** still fails only on its guards: 143 problems against the baseline 59. The +84 are 28 new production
    pages (14 route pairs, the news stub among them) × the 3 text categories every page already carries in its footer
    (data-draft, [DRAFT, bracket tokens). No new Little Rose door (still 8), no donation, traces or team lines.
+8. **QA** (`qa/m4/pages/`): 26 new pages (13 VI, 13 EN) at 320, 390 and 1440 with JS, reduced motion, scripts
+   blocked and `?tier=0`: 182 views, one H1 each, no sideways scroll, no text left at opacity 0, 0 console errors
+   (besides the refused scripts in the no-JS run), 0 4xx (`matrix.log`). Tastegate on all 26: 0 fail, 1 warn each
+   (no button in the first desktop screen, as on the m3 inner pages); the first run's small tap targets (inline phone
+   and email links) are fixed (`tastegate-r2/`). Contrast pairs added: warn and gold-700 on lime-100 (4.8:1,
+   staging placeholders and the large gold numerals only).
 - **needs (lead):** `npm run export:wp`: besides "the committed generated files" assertion, the two guard-export
   assertions in `test/export-wp.test.mjs` are red until it runs, because `render.mjs` gained the `data-team-pending`
   blocker that PLAN-M4 4.3 asks for (the generated `guards.json` and PHP patterns are stale, `wp/` is not ours).

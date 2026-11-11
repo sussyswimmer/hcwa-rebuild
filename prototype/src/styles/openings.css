@@ -147,7 +147,7 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 .newswall__head { display: grid; justify-items: start; padding-top: clamp(24px, 4vw, 64px); }
 /* Small lines on the wall take ink-900: the light and the plaster can lift the wall behind them. */
 .newswall :is(.breadcrumb ol, .breadcrumb a, .filters__label, .newswall__note) { color: var(--color-ink-900); }
-.newswall__title { margin-top: 10px; font-size: clamp(3rem, 1.2rem + 6.2vw, 7.25rem); line-height: var(--lh-h1); max-inline-size: 12em; }
+.newswall__title { margin-top: 10px; font-size: clamp(3rem, 1.2rem + 6.2vw, 7.25rem); max-inline-size: 12em; }
 .newswall__intro { margin-top: 18px; max-width: 36ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
 .newswall__filters { margin-top: clamp(28px, 3.5vw, 48px); }
 .news-filters { display: grid; gap: 10px; }
@@ -184,13 +184,15 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 /* The brass pin. */
 .notice__pin { position: absolute; top: 12px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--color-sun-200), var(--color-gold-700) 70%); box-shadow: 0 2px 3px color-mix(in srgb, var(--color-ink-900) 30%, transparent); }
 .notice__cat { font-size: var(--fs-meta); font-weight: 600; color: var(--color-blue-700); }
-.notice__title { font: 600 clamp(1.125rem, 1rem + 0.4vw, 1.3125rem) / 1.45 var(--font-display); letter-spacing: var(--track-display); text-wrap: pretty; }
+/* An h3: its line height is the headings' own (base.css), set in Archivo like every heading. */
+.notice__title { font-size: clamp(1.125rem, 1rem + 0.4vw, 1.3125rem); text-wrap: pretty; }
 .notice__title a { color: var(--color-ink-900); text-decoration: none; }
 .notice__title a::after { content: ""; position: absolute; inset: 0; }
 .notice__foot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 6px; }
 .notice__date { display: flex; align-items: baseline; gap: 8px; color: var(--color-ink-900); }
-.notice__dm { font: var(--wght-h1) clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem) / 1 var(--font-display); font-variant-numeric: tabular-nums lining-nums; letter-spacing: var(--track-display); }
-.notice__y { font: 600 var(--fs-sm) / 1.2 var(--font-display); font-variant-numeric: tabular-nums lining-nums; color: var(--color-ink-700); }
+/* The date in the home news list's own type (components.css .dated__dm / .dated__y), a little smaller. */
+.notice__date .dated__dm { font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem); }
+.notice__date .dated__y { margin: 0; color: var(--color-ink-700); }
 .notice__ext { width: 18px; height: 18px; color: var(--color-ink-700); transition: translate var(--d-hover) var(--ease-out); }
 @media (hover: hover) {
   .notice:hover .notice__paper { translate: 0 -2px; box-shadow: 0 1px 1px color-mix(in srgb, var(--color-ink-900) 6%, transparent), 0 18px 32px -14px color-mix(in srgb, var(--color-ink-900) 30%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--color-ink-900) 10%, transparent); }
@@ -221,8 +223,8 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 /* ---- The stage: the camera pulls back from the newest notice along the wall ----
    The wall is held behind the page (the plane is sticky inside the wall's box) and recedes as the camera
    pulls back (--s3d-cam); its light drifts as the sun moves (--s3d-sun). The notices are in the page's own
-   flow and scroll at native speed: the board starts 150 px nearer the camera and tilted 6° (1100 px perspective,
-   about 1.16×; 70 px and 4° on phones) and settles flat onto the wall; each notice turns from a slight angle (≤ 9°) to flat as it reaches its
+   flow and scroll at native speed: the board starts 80 px nearer the camera and tilted 7° (1100 px perspective,
+   about 1.08×, so no notice leaves the frame; 56 px and 5° on phones) and settles flat onto the wall; each notice turns from a slight angle (≤ 9°) to flat as it reaches its
    reading place, and a quatrefoil of sun crosses it (each on its own view timeline). Text is never faded
    or hidden; nothing here touches the H1. */
 html.stages[data-motion="on"] .s3d--news .newswall { --stage-h: calc(100svh - var(--hdr)); }
@@ -233,8 +235,8 @@ html.stages[data-motion="on"] .s3d--news .newswall__plane {
   will-change: transform;
 }
 html.stages[data-motion="on"][data-tier="2"] .s3d--news .newswall__light { transform: translate(calc(-7% * var(--s3d-sun)), calc(9% * var(--s3d-sun))); will-change: transform; }
-html.stages[data-motion="on"] .s3d--news .notices { --near: 150px; --tilt: 6deg; transform: translateZ(calc(var(--near) * (1 - var(--s3d-cam)))) rotateX(calc(var(--tilt) * (1 - var(--s3d-cam)))); transform-style: preserve-3d; will-change: transform; }
-@media (max-width: 719.98px) { html.stages[data-motion="on"] .s3d--news .notices { --near: 70px; --tilt: 4deg; } }
+html.stages[data-motion="on"] .s3d--news .notices { --near: 80px; --tilt: 7deg; transform: translateZ(calc(var(--near) * (1 - var(--s3d-cam)))) rotateX(calc(var(--tilt) * (1 - var(--s3d-cam)))); transform-style: preserve-3d; will-change: transform; }
+@media (max-width: 719.98px) { html.stages[data-motion="on"] .s3d--news .notices { --near: 56px; --tilt: 5deg; } }
 @supports (animation-timeline: view()) {
   html.stages[data-motion="on"] .s3d--news .notice {
     animation: notice-turn linear both; animation-timeline: view(); animation-duration: auto; animation-range: entry 0% cover 45%;

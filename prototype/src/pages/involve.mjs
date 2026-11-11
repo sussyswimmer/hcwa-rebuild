@@ -244,6 +244,8 @@ ${stage("contact", litHeader(c, {
 
 // "Một viên gạch bị thiếu": the screen with one block missing and the light pouring through the gap.
 // Static: nothing on this page moves. The still is the first thing on the page, so it loads eagerly.
+// Every page the site links to is built (PLAN-M4), so this page only ever meets a mistyped or old URL:
+// the staging "not part of the prototype yet" note is gone (ui.notInPrototype stays in ui.json, unused).
 export function notFound(c) {
   const links = [["home", "home"], ["ourWork", "ourWork"], ["contact", "contact"]];
   const art = stillReady("not-found") ? stillPicture("not-found", { cls: "gap__img", sizes: "(min-width: 1024px) 46vw, 100vw", eager: true }) : litWall();
@@ -254,7 +256,6 @@ export function notFound(c) {
     <div class="gap__text">
       <h1 class="gap__title" id="nf-title">${viKeep(c.t("nf_title"))}</h1>
       <p class="gap__lead">${c.t("nf_text")}</p>
-      ${c.prod ? "" : html`<p class="gap__proto" data-draft>${icon("info")}<span>${c.t("notInPrototype")}</span></p>`}
       <form class="search" action="${c.url("home")}" method="get" role="search">
         <label for="s">${c.t("nf_search")}</label>
         <div class="search__row"><input type="search" id="s" name="s" autocomplete="off"><button class="btn btn--secondary" type="submit">${icon("search")}<span>${c.t("nf_searchBtn")}</span></button></div>

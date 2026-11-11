@@ -1471,3 +1471,5 @@ html[data-motion="off"] .track__dot { transition: none; }
   .area__tile, .onward__link .icon { transition: none; }
 }
 html[data-motion="off"] .step__sun { animation: none; }
+/* Inline phone and email links on the day's light keep a 44 px tall target (WCAG 2.5.8; tastegate). */
+:is(.reach-office .dusk__lines, .bakery__lines) a, .sun-head__mail a, .signup__mail a { display: inline-flex; align-items: center; min-height: 44px; }
