@@ -27,7 +27,7 @@
   html.stages[data-motion="on"] [data-scroll3d] {
     animation: s3d-p linear both, s3d-cam linear both, s3d-sun linear both, s3d-open linear both;
     animation-timeline: scroll(root block);
-    animation-duration: auto; /* the shorthand reset it to 0s, which some Chromium builds keep for scroll timelines */
+    animation-duration: auto; /* the built CSS otherwise carries 0s durations for this list, and the tracks would finish at once */
     animation-range: 0px var(--s3d-end, 100svh);
   }
 }
@@ -131,17 +131,23 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
    stream's real plaster map can replace it through --wall-tex. The house's Hoa thị light falls across
    the upper right, away from the words. The wall's foot sinks into the day (D0.5): no edge. */
 .newswall {
-  --wall-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.31 0 0 0 0 0.24 0 0 0 0.08 -0.015'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.40 0 0 0 0 0.30 0 0 0 0.22 -0.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  /* The house's Hoa thị hole (public/svg/hole-hoa-thi.svg) inlined: the light paints with the page, never
+     as a late image (a fetched mask made the first notice the page's largest late paint). */
+  --hoa-thi: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-150 -150 300 300%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z%22/%3E%3C/svg%3E");
+  --wall-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.31 0 0 0 0 0.24 0 0 0 0.08 -0.015'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.40 0 0 0 0 0.30 0 0 0 0.22 -0.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   position: relative; isolation: isolate; overflow-x: clip;
   padding-bottom: clamp(56px, 7vw, 112px);
   background: var(--color-lime-100);
 }
 .newswall__bg { position: absolute; inset: 0; z-index: -1; overflow: clip; pointer-events: none;
   mask-image: linear-gradient(to bottom, black calc(100% - max(24svh, 180px)), rgb(0 0 0 / 0.5) calc(100% - max(24svh, 180px) * 0.5), transparent); }
-.newswall__plane { position: absolute; inset: 0; background: var(--wall-tex) 0 0 / 320px 320px; }
+/* The plaster sits on a pseudo-element: a decorative texture is never the page's largest paint (LCP
+   stays on the H1), and its noise is rasterised once per tile. */
+.newswall__plane { position: absolute; inset: 0; }
+.newswall__plane::before { content: ""; position: absolute; inset: 0; background: var(--wall-tex) 0 0 / 320px 320px; }
 /* The house's light through the screen behind the camera: Hoa thị patches high on the right. */
 .newswall__light { position: absolute; top: 0; right: max(-6vw, -30vw + 120px); width: min(62vw, 880px); height: min(74svh, 640px); overflow: hidden; mask-image: radial-gradient(closest-side, black 22%, transparent); }
-.newswall__light::before { content: ""; position: absolute; inset: -25%; background: var(--color-sun-200); opacity: 0.5; mask: url("/svg/hole-hoa-thi.svg") 0 0 / 118px 118px repeat; transform: rotate(-4deg) skewX(-20deg) scaleY(1.25); }
+.newswall__light::before { content: ""; position: absolute; inset: -25%; background: var(--color-sun-200); opacity: 0.5; mask: var(--hoa-thi) 0 0 / 118px 118px repeat; transform: rotate(-4deg) skewX(-20deg) scaleY(1.25); }
 .newswall__sun { display: none; }
 
 .newswall__head { display: grid; justify-items: start; padding-top: clamp(24px, 4vw, 64px); }
@@ -178,7 +184,7 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 .notice__paper::before {
   content: ""; position: absolute; z-index: -1; top: -30%; left: 0; width: 70%; aspect-ratio: 1;
   background: var(--color-sun-200); opacity: 0.42; filter: blur(4px);
-  mask: url("/svg/hole-hoa-thi.svg") 50% 50% / 100% 100% no-repeat;
+  mask: var(--hoa-thi) 50% 50% / 100% 100% no-repeat;
   transform: translateX(78%) rotate(-8deg) skewX(-14deg);
 }
 /* The brass pin. */

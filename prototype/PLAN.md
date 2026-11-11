@@ -1174,3 +1174,51 @@ and production. Departures and decisions:
   blocker that PLAN-M4 4.3 asks for (the generated `guards.json` and PHP patterns are stale, `wp/` is not ours).
 - **needs (walls):** stills `header-about`, `header-impact`, `header-cau-han` (lit headers; pages.css has no per-still
   mask values for them yet, so the default seam applies). **needs (openings):** none.
+
+**M4 openings (11 Nov 2026; openings stream, PLAN-M4 sections 4.13, 4.14 and 5).** Contact and News each open with a
+3D scroll stage that follows the native scroll, and the News hub exists (`/tin-tuc/`, `/en/news/`). Shared parts:
+`partials/scroll3d.mjs` (stage wrapper, `TRACKS`, still geometry), `motion/scroll3d.js` (1.1 KB gzip, imports
+nothing), `styles/openings.css` (imported after `pages.css`). A stage becomes 3D only under `html.stages` with motion
+on, which `head-inline.js` sets before first paint, so nothing moves after paint and no JS, reduced motion, pause and
+`?tier=0` keep the rest frame. Progress runs from scroll 0 to where the stage lets go (`--s3d-end`, measured by the
+driver, kept fresh by a ResizeObserver); four tracks (`--s3d-p` linear, `--s3d-cam` in-out to 0.86, `--s3d-sun`
+ease-sun to 0.86, `--s3d-open` 0.55-0.92) come from CSS scroll-driven keyframes, or from the driver where
+`animation-timeline` is unsupported (one passive listener, one rAF, asleep off screen). `openings.test.mjs` pins CSS,
+JS and `TRACKS` together. Departures and findings:
+- **`animation-duration: auto` is set explicitly** on the stage: with four animations in one shorthand the built CSS
+  came out with `0s` durations, so every track finished at once (progress stuck at 1). The existing single-animation
+  `view()` rules (`lit-drift`) compute `auto` and are fine.
+- **Contact.** The lit header is kept as the rest frame (no layout change at rest except a "Skip to the contact form"
+  link). On the stage the still fills the first screen and stays pinned for 76svh (32svh on phones, where the words
+  come first and the still pins under them): a dolly toward the screen (scale up to 1.55), a turn of up to 10° in a
+  1400 px perspective that evens the blocks out as if the camera came round, and a truck toward the words' side once
+  they have scrolled off (Tier 2 also slides the canopy's flecks with the sun). Placement comes from the still's own
+  data (`HEADER_TEXT`, the crop's aspect), never pixels. The page rises over the stage as a long sun-100 fog (the day's
+  first colour, eased stops) so the office and the form arrive while the camera still moves and no edge ever shows.
+  The plan's "street side opens out" flood was tried as a sun-100 bloom and dropped: it read as a washed-out photo,
+  not light, and left a dead stretch; the rising day carries the hand-off instead.
+- **News.** Departure from 5.2: the chips sit in the first screen above the notices (not after the opening), because
+  the notices are the archive itself (one list, no copy) and a filter belongs above what it filters. The wall plane is
+  pinned and recedes (scale 1.28 → 1), the board starts 80 px nearer and tilted 7° and settles flat (56 px, 5° on
+  phones), each notice turns from at most 9° to flat on its own `view()` timeline and a soft quatrefoil of sun crosses
+  it. Notices are not pinned, so any number of posts reads at native speed. Cards link to the live posts with
+  `ui.externalPost`; no images, embeds, article or category URLs. Chips reuse `ui/filters.js` (`data-hub`,
+  `data-area`) and CSS `:target` without JS; Stories shows its empty note. The featured-story placeholder is staging
+  only (`data-story-placeholder`). The plaster is an inline SVG noise (≤ 6% stains) and the Hoa thị light is an
+  inline data-URI mask: a fetched mask made the first notice the page's late LCP (2.47 s); inline it is 2.0 s.
+- **404:** the "not part of the prototype yet" note is gone (the crawl of `build:pages` finds 0 dead targets in 46
+  pages).
+- **Results.** `check-openings.cjs` (16-frame strips at 390 and 1440, VI and EN, contrast sampled from the real pixels
+  behind every visible word at every frame, one H1, H1 moves only with the scroll; rest frames under reduced motion,
+  `?tier=0` and no JS): 0 FAIL; strips in `qa/m4/openings/final/`. Driver fallback checked with `CSS.supports` forced
+  false (same track values). Mobile LCP (lcp.cjs, median of 3): Contact 2.08 s (default 2.08, Tier 1 2.08), News 2.02 s
+  (Tier 0 1.95, Tier 1 1.99), CLS 0.000; the first-10-s long task is 139-294 ms on News as on every page (open issue
+  since m3). Tastegate on all four pages: 0 fail, 1 warn each (no button in the first desktop screen, as on every inner
+  page). `openings.css` adds about 3.7 KB gzip to the main CSS. PROD: News adds 6 blocker lines (2 pages × data-draft,
+  [DRAFT, bracket token from the shared parts), nothing else; Contact and the 404 unchanged.
+- **needs (walls):** a sharper Contact stage: `header-contact` desk layers at 2400 w (the full-height stage shows the
+  1600 w still at 1.5× and the dolly to 1.55× on top, so the screen goes soft); and, if the real plaster map lands, it
+  can replace News's `--wall-tex` (opacity ≤ 6%). No `header-news` still is needed.
+- **needs (pages):** `.gap__proto` in `pages.css` is now unused; `ui/filters.js` `say()` could announce a news count
+  (it only knows centers and programs, so News has no live region yet).
+- **needs (lead):** `wp/themes/hcwa-2026/404.php` still prints the `notInPrototype` note (wp/ is not ours).

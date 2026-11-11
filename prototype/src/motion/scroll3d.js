@@ -1,7 +1,8 @@
 // The Contact and News openings (PLAN-M4 5.3; partials/scroll3d.mjs, styles/openings.css). Native scroll
 // only: no Lenis, no GSAP, never imports motion/index.js. Two jobs:
 // 1. Measure where each stage lets go (--s3d-end, px of scroll from the top), which CSS scroll-driven
-//    animations use as their range end; again on resize and when the layout changes (pause, fonts).
+//    animations use as their range end; again on resize and when the layout changes (pause, fonts,
+//    a stage changing height).
 // 2. Where CSS scroll-driven animations are not supported (Firefox today), write the same tracks the
 //    CSS keyframes write: one passive scroll listener, one rAF per frame, asleep while no stage is on
 //    screen (IntersectionObserver). TRACKS mirrors scroll3d.mjs.
@@ -49,8 +50,10 @@ export function initScroll3d() {
   addEventListener("resize", remeasure, { passive: true });
   addEventListener("load", remeasure, { once: true });
   document.fonts?.ready.then(remeasure);
-  // Pause and the OS asking for less motion switch the stage to its rest layout and back.
+  // Pause and the OS asking for less motion switch the stage to its rest layout and back; a filter or a
+  // late image changes a stage's height.
   window.hcwa?.addEventListener?.("pause", remeasure);
+  if ("ResizeObserver" in window) { const ro = new ResizeObserver(remeasure); stages.forEach((s) => ro.observe(s)); }
 
   const native = window.CSS?.supports?.("animation-timeline: scroll()");
   let write = () => {};
