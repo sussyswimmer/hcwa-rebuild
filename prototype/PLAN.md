@@ -1311,3 +1311,32 @@ JS and `TRACKS` together. Departures and findings:
   `--wall-tex-size` at an opacity of 6% or less (openings swaps it in, one line).
 - **needs (pages), fix round:** the Impact page's featured-story placeholder could take the same feather and warm
   blend as News's (`.news-feature .feature__wall` in `openings.css`).
+
+**M4 final recheck (11 Nov 2026).** Cross-stream needs closed, then every gate rerun on the final tree.
+- **Closed.** (1) Impact's featured-story placeholder now feathers into the day on all four edges and takes the warm
+  hue (`.change__story .feature__wall` in `pages.css`, the same rule as News's). (2) News announces a filter
+  choice in a polite live region, as Our Work does: "Đang hiện 1 tin" / "Showing 1 post" (new strings
+  `filterShowingPosts`, `countPost`, `countPosts` in `ui-openings.json`, VI and EN). `ui/filters.js` `say()` now
+  counts each kind (centers, programs, posts) only when the region carries its words, so Our Work's message is
+  unchanged.
+- **Left as is, on purpose.** `.gap__proto` stays in `pages.css`: the WordPress 404 template still prints the old
+  note with that class, and the theme's CSS is generated from these files.
+- **Checks.** `npm test` 155 pass, 3 fail (the three `export-wp.test` assertions; in a scratch copy of this tree
+  `npm run export:wp` succeeds and then all 158 pass). `build`, `build:pages`, `check:links`, `check:links:pages`:
+  46 pages, 0 dead. `PROD=1`: only its guards, 143 problems (44 × 3 draft lines, 8 Little Rose door, 2 donation, 1
+  traces), the same as before; the new strings are UI words, not drafts. `qa/m4/crawl.mjs` on both builds: 0 dead
+  targets, 0 "not in the prototype" notices, 8 external links. Browser matrix (`qa/m4/final/matrix.cjs`): all 46
+  pages at 390 and 1440, walked top to bottom: 0 console or page errors, 0 failed requests, 0 sideways scroll, one H1
+  each, and 0 dead links or anchors among the 6,802 links in the live DOM. `check-openings.cjs` (16 frames, VI and
+  EN, 390 and 1440, plus the rest frames): all pass; strips in `qa/m4/final/strips/`. The new live region was
+  probed: VI and EN say the right count after a chip and after "All". Tastegate on the 30 new pages and both 404s: 0
+  fail (1 warn each on the 30, no button in the first desktop screen). The Python Playwright package on this box
+  was upgraded today and looks for a browser build that is not installed, so tastegate ran through a small wrapper
+  that points it at the installed headless shell (the gate itself is unchanged). `light-contrast`: the same 3 home
+  lines at 390 fail (6.7 < 7); everything else passes. Mobile LCP was not re-measured (the openings did not change
+  in this step; the fix round measured Contact 2.08 s and News 2.06 s).
+- **Still open.** Maxwell's walls request: no Higgsfield texture exists yet (`public/textures/` is missing; the walls
+  stream has not run and needs the budget OK in PLAN-M4 6.1), so no still was re-rendered and News still uses its
+  interim procedural plaster. `header-about`, `header-impact`, `header-cau-han` and the sharper `header-contact`
+  are waiting on the same stream. **needs (lead):** `npm run export:wp` at integration; `wp/themes/hcwa-2026/404.php`
+  still prints the `notInPrototype` note; the 3 home contrast lines.

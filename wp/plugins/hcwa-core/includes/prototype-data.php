@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 return array(
-	'version' => '4c8a0e8f1a6a8230902a69d5f5a837741f0808f6c89f66ad5372ad72acb1f7ee',
+	'version' => 'b337dad78487f9fb266c8041c7fe401770bb2b459499479b7791e742ae034951',
 	'areas' => array(
 		'education',
 		'protection',
@@ -142,6 +142,10 @@ return array(
 			array(
 				'pattern' => '/data-partners-pending/u',
 				'why' => 'partners placeholder strip',
+			),
+			array(
+				'pattern' => '/data-team-pending/u',
+				'why' => 'team placeholder (people not yet agreed to be listed)',
 			),
 		),
 		'little_rose_door' => '/data-unit="little-rose"[^>]*\\sdata-door="|(?:door|bay)-little-rose-|hub-doors-wide/u',

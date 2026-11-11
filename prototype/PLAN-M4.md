@@ -1,6 +1,6 @@
 # M4 plan: every page, no dead links, two 3D openings, real walls (PLAN-M4.md)
 
-Written 11 Nov 2026 (planning step; nothing here is built yet). Read with `CLAUDE.md` (hard rules),
+Written 11 Nov 2026 as the plan; the status table below says what was built. Read with `CLAUDE.md` (hard rules),
 `docs/plan/05-DESIGN.md` (0.5, 0.6, 0.6.7, 5 and 7), `docs/plan/06-PAGES.md`,
 `docs/plan/04-SITEMAP-AND-CONTENT-MODEL.md` and `PLAN.md` (section 4 for the inner-page pattern,
 section 9 for what was built differently). Every stream logs its own departures in PLAN.md
@@ -13,6 +13,22 @@ Maxwell, same day, on the walls: "for all of these walls they look too perfect, 
 character, more realistic; have Higgsfield generate some more realistic walls and use that for
 context, maybe some scratches or just a real wall, not look like it's made out of play-doh."
 That request is covered in section 6 (stream 3, "walls").
+
+## Status (final recheck, 11 Nov 2026)
+
+| Part | State |
+|---|---|
+| Pages (sections 3-4) | **Done.** 46 pages (23 VI, 23 EN) build; one fix round from the critique is in. |
+| Openings (section 5) | **Done.** Contact and News open on 3D scroll stages; one fix round from the critique is in. |
+| No dead links (gate 1) | **Green.** `crawl.mjs` on `build` and on `build:pages`: 46 pages, 0 dead targets, 0 "not in the prototype" notices; the live-DOM crawl after JS (6,802 links, 92 views) finds 0 dead links or anchors. |
+| Builds (gate 2) | **Green except the planned export-wp three.** `npm test` 155 pass, 3 fail: the three `export-wp.test` assertions that clear when the lead runs `npm run export:wp` (checked in a scratch copy: export:wp succeeds, then 158 pass, 0 fail). `build`, `build:pages` pass. `PROD=1` fails only on its guards: 143 problems (44 pages × data-draft, [DRAFT, bracket token; 8 Little Rose door; 2 donation; 1 traces), unchanged by the recheck. |
+| Complete at 390 and 1440 (gate 3) | **Green.** Every page at both sizes, walked top to bottom: 0 console or page errors, 0 failed requests, 0 sideways scroll, one H1 each. Opening rest frames (reduced motion, `?tier=0`, no JS) pass `check-openings.cjs`. |
+| Tastegate (gate 4) | **Green.** 32 new pages (the 30 M4 pages and both 404 pages): 0 fail; 1 warn each on the 30 (no button in the first desktop screen, as on every inner page), 0 on the 404s. |
+| Contrast (gate 5) | **Openings green; home not.** `check-openings.cjs` holds 4.5:1 / 7:1 at every strip frame. `light-contrast` still fails 3 lines on the home page at 390 (6.7 < 7; home is outside M4). |
+| Walls (section 6, gate 9) | **Not started.** No Higgsfield texture has been generated, `public/textures/` does not exist and no still was re-rendered. The plan asks for a budget OK before generating. News carries an interim procedural plaster (two tile sizes plus an untiled drawing of cracks, patches and scratches) and takes the real map through `--wall-tex` once it lands. |
+
+Captures: `qa/m4/final/` (16-frame strips of both openings at 390 and 1440, VI and EN, in `strips/`;
+`matrix.json`; tastegate in `tg2/`). PLAN.md section 9, "M4 final recheck", has the details.
 
 ## 1. What the crawl found
 
