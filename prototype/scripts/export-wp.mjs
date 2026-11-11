@@ -518,7 +518,7 @@ export function golden(stills, rendered) {
   addSet(["not-an-area"]);
   addSet([]);
   g.gach_strip = [];
-  for (const cls of ["gach-strip program-row__tiles", "gach-strip chip__tile"]) {
+  for (const cls of ["gach-strip program-row__tiles", "gach-strip chip__tile", "gach-strip area__tile"]) {
     for (const areas of sets.values()) g.gach_strip.push({ areas, cls, html: str(gachStrip(areas, cls)) });
   }
   const stripOut = new Set(g.gach_strip.map((c) => c.html));

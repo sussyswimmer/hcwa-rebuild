@@ -400,7 +400,7 @@ body:has(.day) { background: var(--color-sun-100); }
 }
 /* The unit's paint at the head of its page: 6 px of colour that thins out to the right and softens into the
    still below it, a mark rather than a rule (D0.5). */
-.lit-head--unit::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 10px; background: linear-gradient(to bottom, var(--unit) 4px, transparent); mask-image: linear-gradient(to right, black 30%, transparent 92%); }
+.lit-head--unit::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 18px; background: linear-gradient(to bottom, var(--unit) 3px, color-mix(in srgb, var(--unit) 40%, transparent) 7px, transparent); mask-image: linear-gradient(to right, transparent, black 12px, black 30%, transparent 92%); }
 .lit-head__text { display: grid; justify-items: start; align-content: center; gap: 0; min-width: 0; }
 .lit-head .breadcrumb ol, .lit-head .breadcrumb a { color: var(--color-ink-900); }
 .lit-head__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--color-ink-900); }
@@ -1226,8 +1226,13 @@ html[data-motion="off"] .track__dot { transition: none; }
 .sun-head--calm { --head: var(--color-lime-50); }
 .sun-head--shelter { --head: var(--color-lime-100); }
 .sun-head--morning::before, .sun-head--calm::before, .sun-head--shelter::before { background: var(--color-sun-200); }
-/* A center's paint as the band (Little Rose's pink): 6 px that thins to the right, paint not light. */
-.sun-head--unit::before { height: 10px; background: linear-gradient(to bottom, var(--unit) 4px, transparent); mask-image: linear-gradient(to right, black 30%, transparent 92%); }
+/* A center's paint as the band (Little Rose's pink): paint, not light, soaked into the wall like a brush
+   stroke: full for 3 px, then feathered down over about 15 px, faded in over 12 px at the left end and
+   thinning out to the right, so it never reads as a rule (05-DESIGN 0.5; fix round 1). */
+.sun-head--unit::before { height: 18px; background: linear-gradient(to bottom, var(--unit) 3px, color-mix(in srgb, var(--unit) 40%, transparent) 7px, transparent); mask-image: linear-gradient(to right, transparent, black 12px, black 30%, transparent 92%); }
+/* A center's facts above its title while its still is pending (Cầu Hàn): the lit header's meta line. */
+.sun-head__meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--color-ink-900); }
+.sun-head__meta .icon { width: 18px; height: 18px; margin-right: 6px; vertical-align: -3px; }
 .sun-head--page .sun-head__title { font-size: clamp(3rem, 1rem + 7.4vw, 8rem); max-inline-size: 9em; }
 .sun-head--long .sun-head__title { font-size: clamp(2.5rem, 1rem + 5vw, 5.75rem); max-inline-size: 12em; }
 .sun-head__actions { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -1247,6 +1252,10 @@ html[data-motion="off"] .track__dot { transition: none; }
 .day--impact { --day: var(--color-lime-100) 0, var(--color-sun-100) 34%, var(--color-sun-100) 100%; }
 .day--late { --day: var(--color-sun-100) 0, var(--color-lime-100) 22%, var(--color-lime-100) 70%, var(--color-sun-100) 100%; }
 .day--shelter { --day: var(--color-lime-100) 0, var(--color-lime-100) 64%, var(--color-sun-100) 100%; }
+/* While header-about, header-impact and header-cau-han are pending, those pages open on the sun band, so
+   their day starts on the band's colour instead of the lit header's shade (fix round 1). */
+.sun-head + .day--impact { --day: var(--color-sun-100) 0, color-mix(in oklab, var(--color-sun-100), var(--color-lime-100)) 40%, var(--color-sun-100) 100%; }
+.day--center-sun { --day: var(--color-lime-100) 0, var(--color-lime-100) 52%, var(--color-sun-100) 74%, var(--color-sun-100) 100%; }
 /* The lit header's shade warms to lime under its long seam on About (as Get Involved), so the aim never
    sits on the cool wall. */
 .page-about .lit-head, .page-impact .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 45%, var(--color-lime-100)); }
@@ -1310,6 +1319,9 @@ html[data-motion="off"] .track__dot { transition: none; }
 /* The year (a token until HCWA verifies it; production leaves it out), a patch of Hoa thị sun, the
    step's name and its one line. No line joins the steps: the patches walk down the wall. */
 .steps { list-style: none; padding-inline: 0; display: grid; gap: clamp(40px, 5vw, 72px); padding-top: var(--sec); }
+/* Staging only: the order of the steps is a history claim HCWA still has to confirm (fix round 1). */
+.steps__order { padding-top: clamp(32px, 4vw, 56px); max-width: 60ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.steps__order + .steps { padding-top: clamp(32px, 4vw, 56px); }
 .step { display: grid; grid-template-columns: 56px minmax(0, 1fr); grid-template-areas: "sun when" "sun body"; gap: 6px 20px; align-items: start; }
 @media (min-width: 800px) { .step { grid-template-columns: minmax(0, 11rem) 96px minmax(0, 1fr); grid-template-areas: "when sun body"; gap: 0 clamp(24px, 3vw, 48px); } }
 .step__when { grid-area: when; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); letter-spacing: var(--track-display); font-variant-numeric: tabular-nums lining-nums; color: var(--color-ink-700); }
@@ -1331,7 +1343,15 @@ html[data-motion="off"] .track__dot { transition: none; }
 .roster { display: grid; gap: 18px; padding-top: var(--sec); }
 .roster__list { list-style: none; padding: 0; display: grid; gap: 20px; }
 @media (min-width: 700px) { .roster__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.roster__slot { display: grid; place-items: center; min-height: 176px; padding: 20px; border: 1.5px dashed var(--color-gold-700); border-radius: var(--r-md); color: var(--color-warn); font-weight: 500; text-align: center; }
+/* The pending places (staging only) are sheets of paper on the wall like the News notices: a shadow, no
+   outline and no edge drawn on the wall (05-DESIGN 0.5; fix round 1). The draft marking stays in the
+   data-team-pending / data-partners-pending attributes and the reviewer's draft outlines. */
+:is(.roster__slot, .pwait .partners__pending) { display: grid; place-items: center; padding: 20px 28px; border: 0; border-radius: 3px; background: var(--color-lime-50); color: var(--color-warn); font-weight: 500; text-align: center;
+  box-shadow: 0 1px 1px color-mix(in srgb, var(--color-ink-900) 6%, transparent), 0 12px 26px -12px color-mix(in srgb, var(--color-ink-900) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--color-ink-900) 10%, transparent); }
+.roster__slot { min-height: 176px; }
+.roster__slot:nth-child(3n + 2) { rotate: 0.6deg; }
+.roster__slot:nth-child(3n + 3) { rotate: -0.5deg; }
+.pwait .partners__pending { min-height: 112px; justify-self: start; max-width: 40rem; rotate: -0.4deg; }
 .roster__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
 
 /* ---------- Partners ---------- */
@@ -1446,6 +1466,35 @@ html[data-motion="off"] .track__dot { transition: none; }
 /* The illustration: one Hoa thị block, and below it the same holes cast long on the lime wall in plain,
    untinted daylight (the wall's own lime-50, never the sun's yellow, never pink). Decoration only. */
 .sun-head__art { width: clamp(132px, 13vw, 196px); margin-top: clamp(8px, 2vw, 24px); pointer-events: none; }
+/* A sun band with a picture (fix round 1): Little Rose's illustration, and a center's own block while its
+   header still is pending (Cầu Hàn). The picture takes the header's whole right column on desktop (title
+   and intro on the left, no empty quadrant) and the full gutter width on phones. The side's items join the
+   header grid so they can sit beside it. */
+.sun-head--art .sun-head__art { width: 100%; margin-top: clamp(28px, 6vw, 40px); }
+@media (min-width: 1024px) {
+  .sun-head--art .sun-head__inner { grid-template-areas: "crumb crumb" "meta art" "title art" "intro art" "vi art" ". art"; grid-template-rows: auto auto auto auto auto 1fr; align-items: start; }
+  .sun-head--art .breadcrumb { grid-area: crumb; }
+  .sun-head--art .sun-head__meta { grid-area: meta; }
+  .sun-head--art .sun-head__side { display: contents; }
+  .sun-head--art .sun-head__title { grid-area: title; padding-top: clamp(24px, 4vw, 72px); }
+  .sun-head--art .sun-head__meta + .sun-head__title { padding-top: 0; }
+  .sun-head--art .sun-head__meta { padding-top: clamp(24px, 4vw, 72px); }
+  .sun-head--art .sun-head__intro { grid-area: intro; margin-top: clamp(20px, 2vw, 32px); }
+  .sun-head--art .sun-head__vi { grid-area: vi; margin-top: 12px; }
+  .sun-head--art .sun-head__art { grid-area: art; justify-self: end; width: min(100%, clamp(320px, 31vw, 460px)); margin-top: 0; }
+}
+@media (max-width: 1023.98px) { .sun-head--art :is(.lr-art, .block-art) { aspect-ratio: 1; } }
+/* A center's block is a stand-in for its still, not the page's only picture: smaller on phones. */
+@media (max-width: 1023.98px) { .sun-head__art:has(> .block-art) { width: min(100%, 240px); justify-self: center; margin-top: 16px; } }
+/* A center's block on the morning wall: the block in line work, its holes lit with sun, and the same holes
+   cast long and warm below it (the house's light; Little Rose alone keeps plain untinted daylight). */
+.block-art { position: relative; display: block; aspect-ratio: 4 / 5; background: radial-gradient(closest-side, color-mix(in oklab, var(--color-lime-100), var(--color-sun-200) 45%), transparent); }
+.block-art__block { position: absolute; left: 30%; top: 4%; width: 40%; height: auto; aspect-ratio: 1; overflow: visible; }
+.block-art__block .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.block-art__block .block-icon__light { fill: var(--color-sun-400); }
+.block-art__light { position: absolute; left: 10%; right: 4%; top: 42%; bottom: 6%; background: color-mix(in oklab, var(--color-sun-200), var(--color-sun-400) 45%); transform: skewX(-16deg); transform-origin: top;
+  mask-image: url("/svg/hole-vom-cau.svg"), radial-gradient(closest-side, black 45%, transparent); mask-size: 34% auto, 100% 100%; mask-repeat: repeat, no-repeat; mask-composite: intersect; }
+.block-art--dotTre .block-art__light { mask-image: url("/svg/hole-dot-tre.svg"), radial-gradient(closest-side, black 45%, transparent); }
 /* A patch of lime wall a touch deeper than the band (no edge: it fades out on every side), the block at its
    top, and the block's holes cast long and white below it. */
 .lr-art { position: relative; display: block; aspect-ratio: 4 / 5; background: radial-gradient(closest-side, color-mix(in oklab, var(--color-lime-100), var(--color-ink-700) 7%), transparent); }

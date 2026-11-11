@@ -202,7 +202,7 @@ ${stage("contact", litHeader(c, {
     <a class="btn btn--secondary" href="mailto:${site.email.general}">${icon("mail")}<span>${c.tx(P.writeUs)}</span></a>
   </p>
   ${skipOpening("#form-title", c.tx(P.skipToForm))}`,
-}), litStageVars("header-contact"))}
+}), litStageVars("header-contact"), { pin: ".lit-head__media" })}
 <div class="day day--contact">
   <div class="reach container">
     <section class="reach__write" aria-labelledby="form-title">

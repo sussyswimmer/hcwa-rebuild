@@ -12,6 +12,7 @@ import { layout } from "../src/partials/layout.mjs";
 import { findBlockers } from "../src/render.mjs";
 import { workSheet } from "../src/pages/home/work-sheet.mjs";
 import { routes } from "../src/routes.mjs";
+import { headerReady } from "../src/partials/lit-header.mjs";
 
 const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8");
 const page = (fn, lang, key, prod = false) => str(fn(ctx(lang, key, prod)).body);
@@ -122,7 +123,16 @@ test("each page opens on its lit header and asks the head script for the sun-in"
 test("Cầu Hàn: its own header, unit and emblem; no health status anywhere on it; no figures or news sections", () => {
   for (const lang of LANGS) {
     const h = page(center, lang, "cauHan");
-    assert.match(h, /data-still="header-cau-han"/);
+    // Its lit header once the walls stream ships header-cau-han; the morning sun band with its facts until
+    // then, never the lit header's flat shade fill (fix round 1).
+    if (headerReady("header-cau-han")) assert.match(h, /data-still="header-cau-han"/);
+    else {
+      assert.doesNotMatch(h, /data-still=/, "no shade-fill header while the still is pending");
+      assert.match(h, /class="sun-head sun-head--page sun-head--morning[^"]*sun-head--unit sun-head--art"/);
+      assert.match(h, /class="block-art block-art--vomCau" aria-hidden|<div class="sun-head__art" aria-hidden="true"><span class="block-art block-art--vomCau">/, "its own block as the picture, decoration only");
+      assert.match(h, /class="sun-head__meta">[\s\S]*lit-head__facts/, "the facts stay above the title");
+      assert.match(h, /class="day day--center day--center-sun"/, "the day starts on the band's lime");
+    }
     assert.match(h, /--unit:var\(--color-unit-cau-han\)/);
     assert.doesNotMatch(h, /class="related\b|class="counts\b/, "no scoped figures, no tagged news");
     // Who it serves names the families the project is for (work.json); nothing else on the page may point

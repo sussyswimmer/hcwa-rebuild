@@ -25,16 +25,24 @@ export function litHeader(c, { still, trail, title, intro, introDraft = false, m
 </header>`;
 }
 
+// Whether a page's header still is declared and rendered. Until it is, the page opens on the sun band
+// instead of the lit header's flat shade fill (fix round 1: a cool lilac first view clashed with the warm
+// day on every other page); the page swaps back to its lit header by itself once the walls stream ships
+// the still. Used by Who we are (header-about), Impact (header-impact) and Cầu Hàn (header-cau-han).
+export const headerReady = (still) => still in STILLS && stillReady(still);
+
 // The image-free header (Donate's sun band, PLAN-M4 decision 8): the H1 is the picture, a patch of the
 // house's Hoa thị light falls across it from the left, and the band feathers into the page's day with no
 // edge. time: where the page sits in the day (morning lime for About, late sun for Get Involved, calm
 // for Policies). unit: a center's paint as a 6 px band (Little Rose: paint, never light). side: the
-// intro and any first-screen actions. art: optional block art beside the title (decoration only).
-export function sunHead(c, { trail, title, intro, introDraft = false, side = "", time = "sun", unit = "", art = "", size = "" }) {
-  return html`<header class="sun-head sun-head--page sun-head--${time}${size ? " sun-head--" + size : ""}${unit ? " sun-head--unit" : ""}"${unit ? raw(` style="--unit:var(--color-unit-${unit})"`) : ""}>
+// intro and any first-screen actions. art: optional block art beside the title (decoration only). meta: a
+// line above the H1 (a center's facts while its still is pending).
+export function sunHead(c, { trail, title, intro, introDraft = false, side = "", time = "sun", unit = "", art = "", size = "", meta = "" }) {
+  return html`<header class="sun-head sun-head--page sun-head--${time}${size ? " sun-head--" + size : ""}${unit ? " sun-head--unit" : ""}${art ? " sun-head--art" : ""}"${unit ? raw(` style="--unit:var(--color-unit-${unit})"`) : ""}>
   <span class="sun-layer sun-layer--page" aria-hidden="true"></span>
   <div class="container sun-head__inner">
     ${breadcrumb(c, trail)}
+    ${meta ? html`<div class="sun-head__meta">${meta}</div>` : ""}
     <h1 class="sun-head__title">${title}</h1>
     <div class="sun-head__side">
       ${intro ? html`<p class="sun-head__intro"${introDraft ? raw(" data-draft") : ""}>${intro}</p>` : ""}

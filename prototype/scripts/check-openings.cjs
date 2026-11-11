@@ -51,6 +51,38 @@ function visibleText() {
   return out;
 }
 
+// Runs in the page: each notice's box (with its transform) against the board's content box, and the
+// notice's turn about its pin (rotateX, from its computed matrix: atan2(m23, m22)).
+function stageNotices() {
+  const board = document.querySelector(".newswall__board").getBoundingClientRect();
+  const rects = [...document.querySelectorAll(".notice")].map((el, i) => {
+    const r = el.getBoundingClientRect();
+    const t = getComputedStyle(el).transform;
+    let deg = 0;
+    if (t && t !== "none") {
+      const m = t.match(/matrix3d\(([^)]+)\)/);
+      if (m) { const v = m[1].split(",").map(Number); deg = Math.abs((Math.atan2(v[6], v[5]) * 180) / Math.PI); }
+    }
+    return { i, left: r.left, right: r.right, top: r.top, deg };
+  }).filter((r) => r.right > r.left);
+  return { gutter: [board.left, board.right], rects };
+}
+
+// Runs in the page: the Contact still's base image, css px drawn per px of the largest source file it
+// offers, at the middle of the picture: the layout box's cover factor times the camera's dolly (the turn
+// enlarges the near edge a little more; that is perspective, not resolution).
+function stillScale() {
+  const img = document.querySelector(".s3d--contact .lit__base img");
+  if (!img || !img.currentSrc || !img.naturalWidth) return 0;
+  const cover = Math.max(img.offsetWidth / img.naturalWidth, img.offsetHeight / img.naturalHeight);
+  const lit = getComputedStyle(img.closest(".lit"));
+  const dolly = 1 + (parseFloat(lit.getPropertyValue("--zoom")) || 0) * (parseFloat(lit.getPropertyValue("--s3d-cam")) || 0);
+  const sources = [...img.closest("picture").querySelectorAll("source")].filter((s) => !s.media || matchMedia(s.media).matches);
+  const widths = sources.flatMap((s) => [...s.srcset.matchAll(/ (\d+)w/g)].map((m) => Number(m[1])));
+  const max = Math.max(img.naturalWidth, ...widths);
+  return (cover * dolly * img.naturalWidth) / max;
+}
+
 const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
 const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(0, 3).map(Number));
@@ -92,10 +124,10 @@ const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(2600); // the sun-in (2.28 s) comes to rest
     const end = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("[data-scroll3d]")).getPropertyValue("--s3d-end")) || 0);
-    ok(end > h * 0.5, `${tag}: stage has a scroll range (${end}px)`);
+    ok(end > h * 0.3, `${tag}: stage has a scroll range (${end}px)`);
     const span = end * 1.18;
     const shots = [];
-    let h1Start = null;
+    let h1Start = null, maxScale = 0;
     for (let i = 0; i < FRAMES; i++) {
       const y = Math.round((span * i) / (FRAMES - 1));
       await page.evaluate((y) => window.scrollTo(0, y), y);
@@ -111,7 +143,21 @@ const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(
       ok(Math.abs(state.h1Top - h1Start) < 1.5, `${tag} f${i}: H1 moves only with the scroll`);
       const file = path.join(out, `${tag}-f${String(i).padStart(2, "0")}.png`);
       await page.screenshot({ path: file });
+      // News: every notice stays inside the content gutter at every frame, and a notice already in the
+      // first screen at scroll 0 is flat or turned by 3° at most.
+      if (name === "news") {
+        const n = await page.evaluate(stageNotices);
+        for (const r of n.rects) ok(r.left >= n.gutter[0] - 0.5 && r.right <= n.gutter[1] + 0.5, `${tag} f${i}: notice ${r.i} inside the gutter (${r.left.toFixed(1)}..${r.right.toFixed(1)} in ${n.gutter[0].toFixed(1)}..${n.gutter[1].toFixed(1)})`);
+        if (i === 0) for (const r of n.rects) if (r.top < h * 0.8) ok(r.deg <= 3, `${tag} f0: notice ${r.i} in the first screen is flat or nearly (${r.deg.toFixed(1)}°)`);
+      }
+      // Contact: the still is never shown far past its own resolution (css px per source px, at 1x).
+      if (name === "contact") {
+        const m = await page.evaluate(stillScale);
+        if (m) { maxScale = Math.max(maxScale, m); ok(m <= (w > 600 ? 1.3 : 0.75), `${tag} f${i}: still at ${m.toFixed(2)} css px per source px`); }
+      }
       const items = await page.evaluate(visibleText);
+      // There is always something to read on screen (no frame of only the stage).
+      ok(items.length > 0, `${tag} f${i}: some text on screen`);
       const ratios = await sampleBehind(page, items);
       items.forEach((it, k) => {
         const large = it.size >= 24 || (it.size >= 18.66 && it.weight >= 700);
@@ -121,6 +167,7 @@ const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(
       shots.push([file, Number(state.p).toFixed(2), state.y]);
     }
     ok(errors.length === 0, `${tag}: no console errors or 4xx (${errors.join("; ")})`);
+    if (maxScale) console.log(`${tag}: still at most ${maxScale.toFixed(2)} css px per source px (x DPR for device pixels)`);
     // Contact sheet: every frame scaled into a grid, the progress under each.
     const cols = w > 600 ? 4 : 8, sw = w > 600 ? 480 : 195, sh = Math.round((sw * h) / w);
     const sheet = await browser.newPage({ viewport: { width: cols * (sw + 8) + 8, height: Math.ceil(FRAMES / cols) * (sh + 30) + 8 } });

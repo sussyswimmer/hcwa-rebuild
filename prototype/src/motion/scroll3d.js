@@ -7,8 +7,8 @@
 //    CSS keyframes write: one passive scroll listener, one rAF per frame, asleep while no stage is on
 //    screen (IntersectionObserver). TRACKS mirrors scroll3d.mjs.
 const TRACKS = [
-  ["cam", 0, 0.86, [0.77, 0, 0.175, 1]],
-  ["sun", 0, 0.86, [0.16, 1, 0.3, 1]],
+  ["cam", 0, 0.86, [0.3, 0.1, 0.6, 1]],
+  ["sun", 0, 0.86, [0.3, 0.45, 0.45, 1]],
   ["open", 0.55, 0.92, [0.37, 0, 0.63, 1]],
 ];
 
@@ -39,7 +39,12 @@ export function initScroll3d() {
   const measure = () => {
     for (const s of stages) {
       const min = Number(s.dataset.s3dMin || 0) * innerHeight;
-      const end = Math.max(1, min, Math.round(s.getBoundingClientRect().bottom + scrollY - innerHeight));
+      // Where the pinned layer lets go: the wrapper's bottom minus the layer's sticky top and height (a
+      // pinned layer shorter than the screen lets go before the wrapper's bottom reaches the screen's).
+      const pin = s.dataset.s3dPin && s.querySelector(s.dataset.s3dPin);
+      const ps = pin && getComputedStyle(pin);
+      const held = ps && ps.position === "sticky" ? parseFloat(ps.top) + pin.offsetHeight : innerHeight;
+      const end = Math.max(1, min, Math.round(s.getBoundingClientRect().bottom + scrollY - held));
       ends.set(s, end);
       s.style.setProperty("--s3d-end", end + "px");
     }

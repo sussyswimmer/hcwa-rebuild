@@ -2,7 +2,7 @@ import { html, raw } from "../lib/html.mjs";
 import { viKeep } from "../lib/vikeep.mjs";
 import { visibleFigures } from "../lib/content.mjs";
 import { programRow, textLink, button, icon, statusPill, datedPost, pendingChip, duskBand, quatrefoil } from "../partials/components.mjs";
-import { litHeader } from "../partials/lit-header.mjs";
+import { litHeader, sunHead, headerReady } from "../partials/lit-header.mjs";
 import { blockIcon, gachStrip, gachSpriteOnce } from "../partials/blocks.mjs";
 import { still, hasStill, stillAspect } from "../partials/still.mjs";
 import { routes } from "../routes.mjs";
@@ -216,16 +216,32 @@ export function center(c) {
       ${c.prod ? "" : html`<span data-draft>${c.t("since")} ${c.tx(gb.sinceToken)}</span>`}
       <span${c.d(gb.location)}>${icon("pin")}${c.tx(gb.location)}</span>
     </p>`;
+  // The center's lit header once its still is shipped (header-cau-han is still with the walls stream);
+  // the morning sun band, with the same facts and the unit's paint, until then.
+  const lit = headerReady("header-" + gb.id);
+  const trail = [[c.t("ourWork"), c.url("ourWork")], [c.t("centers"), c.url("ourWork") + "#" + A[c.lang].centers], [c.tx(gb.shortName)]];
   const body = html`
-${litHeader(c, {
-  still: "header-" + gb.id,
-  unit: gb.accent,
-  trail: [[c.t("ourWork"), c.url("ourWork")], [c.t("centers"), c.url("ourWork") + "#" + A[c.lang].centers], [c.tx(gb.shortName)]],
-  title: viKeep(c.tx(gb.name)),
-  meta,
-  extra: c.lang === "en" ? html`<p class="lit-head__vi" lang="vi">${gb.name.vi}</p>` : "",
-})}
-<div class="day day--center" style="--unit:var(--color-unit-${gb.accent})">
+${lit
+  ? litHeader(c, {
+    still: "header-" + gb.id,
+    unit: gb.accent,
+    trail,
+    title: viKeep(c.tx(gb.name)),
+    meta,
+    extra: c.lang === "en" ? html`<p class="lit-head__vi" lang="vi">${gb.name.vi}</p>` : "",
+  })
+  : sunHead(c, {
+    unit: gb.accent,
+    trail,
+    title: viKeep(c.tx(gb.name)),
+    meta,
+    time: "morning",
+    size: "long",
+    // The center's own block letting the morning sun onto the wall: the header's picture until its still ships.
+    art: html`<span class="block-art block-art--${emblem}">${blockIcon(emblem, "block-art__block")}<span class="block-art__light"></span></span>`,
+    side: c.lang === "en" ? html`<p class="sun-head__vi" lang="vi">${gb.name.vi}</p>` : "",
+  })}
+<div class="day day--center${lit ? "" : " day--center-sun"}" style="--unit:var(--color-unit-${gb.accent})">
   <section class="plate container" aria-labelledby="glance-title">
     <h2 class="plate__title" id="glance-title">${c.t("glance")}</h2>
     <dl class="plate__facts">
@@ -284,7 +300,7 @@ ${duskBand(c, {
     <p class="dusk__note"${c.d(P.contactNote)}>${c.tx(P.contactNote)}</p>
     ${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk", cls: "dusk__btn" })}`,
 })}`;
-  return { title: c.tx(gb.name), description: c.tx(gb.serves), body, lit: true, bodyClass: "page-center" };
+  return { title: c.tx(gb.name), description: c.tx(gb.serves), body, lit, bodyClass: "page-center" };
 }
 
 // ---------- Program: Thrive Together (P3) ----------

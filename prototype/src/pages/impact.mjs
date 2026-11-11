@@ -2,7 +2,7 @@ import { html } from "../lib/html.mjs";
 import { viKeep } from "../lib/vikeep.mjs";
 import { visibleFigures } from "../lib/content.mjs";
 import { textLink, button, icon, pendingChip, duskBand } from "../partials/components.mjs";
-import { litHeader } from "../partials/lit-header.mjs";
+import { litHeader, sunHead, headerReady } from "../partials/lit-header.mjs";
 import { still, litWall } from "../partials/still.mjs";
 
 // Impact & Reports (PLAN-M4 4.6, 06-PAGES): midday. The figures follow the verified rule: they render
@@ -81,8 +81,12 @@ const reports = (c) => {
 
 export function impact(c) {
   const I = c.content.impactPage.page;
+  // The lit header once the walls stream ships header-impact; the midday sun band until then.
+  const lit = headerReady("header-impact");
   const body = html`
-${litHeader(c, { still: "header-impact", trail: [[c.t("impact")]], title: viKeep(c.t("impact")), intro: c.tx(I.intro), introDraft: I.intro.draft, size: "display" })}
+${lit
+  ? litHeader(c, { still: "header-impact", trail: [[c.t("impact")]], title: viKeep(c.t("impact")), intro: c.tx(I.intro), introDraft: I.intro.draft, size: "display" })
+  : sunHead(c, { trail: [[c.t("impact")]], title: viKeep(c.t("impact")), intro: c.tx(I.intro), introDraft: I.intro.draft, time: "sun" })}
 <div class="day day--impact">
   ${figures(c)}
   ${byYear(c)}
@@ -104,5 +108,5 @@ ${duskBand(c, {
   draft: I.ctaTitle.draft,
   body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${button({ href: c.url("news"), label: c.t("allStories"), kind: "on-dusk" })}</div>`,
 })}`;
-  return { title: c.t("impact"), description: c.t("impact"), body, lit: true, bodyClass: "page-impact" };
+  return { title: c.t("impact"), description: c.t("impact"), body, lit, bodyClass: "page-impact" };
 }

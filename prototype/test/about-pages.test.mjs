@@ -10,6 +10,7 @@ import { routes } from "../src/routes.mjs";
 import { layout } from "../src/partials/layout.mjs";
 import { pages } from "../src/pages/index.mjs";
 import { findBlockers } from "../src/render.mjs";
+import { headerReady } from "../src/partials/lit-header.mjs";
 
 const LANGS = ["vi", "en"];
 const body = (key, lang, prod = false) => str(pages[routes[key].page](ctx(lang, key, prod)).body);
@@ -132,4 +133,33 @@ test("In-kind and the bakery: orders through the office, no photos, no place but
     assert.doesNotMatch(bakery, /\[phường\]|\[ward\]|Lâm Văn Bền|Tân Hưng/);
     assert.match(body("inKind", lang, true), new RegExp(`id="${id}"`));
   }
+});
+
+// Fix round 1: a page whose header still the walls stream has not shipped opens on the sun band (About in
+// morning lime, Impact in midday sun), never on the lit header's flat shade fill, and swaps back by itself.
+test("Who we are and Impact: the lit header once their still ships, the sun band until then", () => {
+  for (const [key, still, time] of [["about", "header-about", "morning"], ["impact", "header-impact", "sun"]]) {
+    for (const lang of LANGS) {
+      const c = ctx(lang, key, false);
+      const out = pages[routes[key].page](c);
+      const h = str(out.body);
+      if (headerReady(still)) {
+        assert.match(h, new RegExp(`data-still="${still}"`));
+        assert.equal(out.lit, true);
+      } else {
+        assert.doesNotMatch(h, /class="lit-head\b|data-still=/, `${key} ${lang}: no shade fill`);
+        assert.match(h, new RegExp(`class="sun-head sun-head--page sun-head--${time}"`));
+        assert.equal(out.lit, false, "no sun-pending head script for a page without a still");
+      }
+    }
+  }
+});
+
+test("Our story: the order of the steps is flagged for HCWA; Vietnamese names in English titles carry lang", () => {
+  for (const lang of LANGS) {
+    assert.match(body("ourStory", lang), /<p class="steps__order container" data-draft>\[/);
+    assert.doesNotMatch(body("ourStory", lang, true), /steps__order/, "production leaves the note out");
+  }
+  assert.match(body("ourStory", "en"), /The <span lang="vi">Cầu Muối<\/span> club/);
+  assert.doesNotMatch(body("ourStory", "vi"), /<span lang="vi">Cầu Muối/, "no lang span on the Vietnamese page");
 });

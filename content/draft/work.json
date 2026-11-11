@@ -668,14 +668,16 @@
       ],
       "activities": [
         {
-          "vi": "Lớp học miễn phí các môn Toán, Văn, Khoa học",
-          "en": "Free classes in maths, literature and science",
-          "draft": true
+          "vi": "[Các môn học, HCWA cung cấp]",
+          "en": "[Subjects taught, HCWA to confirm]",
+          "draft": true,
+          "source": "token: no source for the subjects was found, so HCWA supplies them (fix round 1)"
         },
         {
-          "vi": "Sinh viên tình nguyện cùng giáo viên kèm học",
-          "en": "Student volunteers tutor alongside the teachers",
-          "draft": true
+          "vi": "[Ai đứng lớp và kèm học, HCWA cung cấp]",
+          "en": "[Who teaches and tutors, HCWA to confirm]",
+          "draft": true,
+          "source": "token: no source for who teaches was found, so HCWA supplies it (fix round 1)"
         }
       ],
       "runsAtNote": {

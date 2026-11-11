@@ -1175,6 +1175,41 @@ and production. Departures and decisions:
 - **needs (walls):** stills `header-about`, `header-impact`, `header-cau-han` (lit headers; pages.css has no per-still
   mask values for them yet, so the default seam applies). **needs (openings):** none.
 
+**M4 pages, fix round 1 (11 Nov 2026; pages stream).** From the critique:
+1. **export:wp (must).** About's focus-area tiles print `gachStrip([...], "gach-strip area__tile")`; the golden-case
+   list in `scripts/export-wp.mjs` now builds that class too, so `npm run export:wp` no longer throws. Checked in a
+   scratch copy of the tree: export:wp succeeds and `npm test` then gives 154 pass, 0 fail. In the live tree the only
+   red tests stay the three export-wp ones the lead clears by running export:wp at integration. **WordPress port:**
+   `golden.json` will now hold `gach_strip` cases with `gach-strip area__tile`; `HCWA_Theme_Art::gach_strip()` already
+   takes any class string, so no PHP change is needed, only the About pattern printing that class.
+2. **Headers while their stills are pending (should).** `headerReady(still)` (lit-header.mjs) decides per page: Who we
+   are, Impact and Cầu Hàn render `sunHead()` (morning lime, midday sun, morning lime with the unit's paint) until the
+   walls stream declares and renders `header-about`, `header-impact`, `header-cau-han`, then swap back to the lit
+   header by themselves (and set `lit` for the head script only then). No page opens on the cool shade fill any more.
+   Cầu Hàn's band keeps its facts above the title (`sun-head__meta`) and shows its own Vòm cầu block casting warm sun
+   as the picture (`block-art`, aria-hidden); its day starts on lime (`day--center-sun`). Supersedes item 3 above for
+   these three pages.
+3. **Little Rose illustration (should).** Any sun band with `art` gets `sun-head--art`: on desktop the title and intro
+   take the left column and the illustration the whole right column (320-460 px); on phones it is the full gutter
+   width (square). Still aria-hidden, untinted white daylight, no door, no place.
+4. **Coulds.** Team's three pending places and the pending partner strips (Partners, Partner with us; the home strip
+   is untouched) are paper sheets with a shadow like the News notices, no dashed outline; the draft marking stays in
+   `data-team-pending` / `data-partners-pending` and the reviewer's draft outlines. The unit band (sun band and lit
+   header) is full for 3 px then feathers down over about 15 px and fades in over 12 px at its left end. Our story
+   carries a staging-only `[Order of the steps: HCWA to confirm along with the years]` note (`about.json`
+   `story.orderNote` with a `source`), and the EN title wraps "Cầu Muối" in `lang="vi"` (`steps[].viName`). The Charity
+   Class's two activities with no source are now bracket tokens ("[Subjects taught, HCWA to confirm]", "[Who teaches
+   and tutors, HCWA to confirm]") with a `source` note saying why.
+5. **Checks.** npm test 151 pass, 3 fail (the export-wp three, as planned); build, build:pages, check:links and
+   check:links:pages 0 dead links (46 pages). PROD=1 still fails only on its guards, 143 problems, unchanged (the order
+   note is staging only). Captures in `qa/m4/pages/fix1/` (390 and 1440, JS, reduced motion, no JS; `?tier=0` probe: one
+   H1, no sideways scroll, no console errors). Tastegate on 14 pages (About, Impact, Cầu Hàn, Little Rose VI and EN,
+   Team, Partners, Partner with us, Our story EN, Charity Class, Green Bamboo): 0 fail, 1 warn each
+   (`qa/m4/pages/tastegate-fix1b/`).
+- **needs (lead):** run `npm run export:wp` at integration (clears the three export-wp tests, now with the area__tile
+  golden cases). **needs (walls):** unchanged: `header-about`, `header-impact`, `header-cau-han`; the pages pick them up
+  with no code change once they are in `STILLS` and rendered.
+
 **M4 openings (11 Nov 2026; openings stream, PLAN-M4 sections 4.13, 4.14 and 5).** Contact and News each open with a
 3D scroll stage that follows the native scroll, and the News hub exists (`/tin-tuc/`, `/en/news/`). Shared parts:
 `partials/scroll3d.mjs` (stage wrapper, `TRACKS`, still geometry), `motion/scroll3d.js` (1.1 KB gzip, imports

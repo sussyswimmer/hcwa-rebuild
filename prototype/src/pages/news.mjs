@@ -81,7 +81,7 @@ export function news(c) {
   </div>
 </section>`;
   const body = html`
-${stage("news", wall, {}, { min: 0.75 })}
+${stage("news", wall, {}, { min: 0.75, pin: ".newswall__plane" })}
 <div class="day day--news">
   ${story ? featured(c, story, H) : ""}
 </div>

@@ -1,11 +1,11 @@
 import { html } from "../lib/html.mjs";
 import { viKeep } from "../lib/vikeep.mjs";
 import { textLink, button, icon, quatrefoil, duskBand, reachLines } from "../partials/components.mjs";
-import { litHeader, sunHead } from "../partials/lit-header.mjs";
+import { litHeader, sunHead, headerReady } from "../partials/lit-header.mjs";
 import { gachStrip, gachSpriteOnce, blockIcon } from "../partials/blocks.mjs";
 
 // About pages (PLAN-M4 4.1-4.5): the morning of the site's day. Who we are opens on a lit header (the
-// house's front screen in early light, header-about, shade fill until the walls stream renders it); the
+// house's front screen in early light, header-about; the morning sun band until the walls stream renders it); the
 // four smaller pages open on the image-free sun band. No founding year and no numbers anywhere: every
 // year is a token on staging and production leaves it out. No names, photos, initials or silhouettes of
 // staff, and no partner name HCWA has not confirmed.
@@ -32,8 +32,12 @@ export function about(c) {
   const { site } = c.content;
   const W = c.content.about.whoWeAre;
   const more = [["ourStory", W.storyLead], ["team"], ["partners"], ["policies"]];
+  // The lit header once the walls stream ships header-about; the morning sun band until then.
+  const lit = headerReady("header-about");
   const body = html`
-${litHeader(c, { still: "header-about", trail: [[c.t("about")]], title: viKeep(c.t("whoWeAre")), intro: c.tx(site.description), introDraft: site.description.draft, size: "display" })}
+${lit
+  ? litHeader(c, { still: "header-about", trail: [[c.t("about")]], title: viKeep(c.t("whoWeAre")), intro: c.tx(site.description), introDraft: site.description.draft, size: "display" })
+  : sunHead(c, { trail: [[c.t("about")]], title: viKeep(c.t("whoWeAre")), intro: c.tx(site.description), introDraft: site.description.draft, time: "morning" })}
 <div class="day day--about">
   <section class="aim container" aria-labelledby="aim-title">
     <h2 class="aim__label" id="aim-title">${blockIcon("hoaThi", "aim__mark")}${c.tx(W.aimTitle)}</h2>
@@ -78,7 +82,7 @@ ${duskBand(c, {
   draft: W.ctaTitle.draft,
   body: html`<div class="dusk__actions">${button({ href: c.url("donate"), label: c.t("donate") })}${button({ href: c.url("volunteer"), label: c.t("volunteer"), kind: "on-dusk" })}</div>`,
 })}`;
-  return { title: c.t("whoWeAre"), description: c.tx(site.description), body, lit: true, bodyClass: "page-about" };
+  return { title: c.t("whoWeAre"), description: c.tx(site.description), body, lit, bodyClass: "page-about" };
 }
 
 // ---------- Our story (ourStory) ----------
@@ -90,7 +94,10 @@ ${duskBand(c, {
 export function ourStory(c) {
   const S = c.content.about.story;
   const step = (s) => {
-    const title = viKeep(c.tx(s.title));
+    // A Vietnamese name inside an English title is read in Vietnamese by screen readers (lang="vi").
+    const text = viKeep(c.tx(s.title));
+    const at = c.lang === "en" && s.viName ? text.indexOf(s.viName) : -1;
+    const title = at < 0 ? text : html`${text.slice(0, at)}<span lang="vi">${s.viName}</span>${text.slice(at + s.viName.length)}`;
     return html`<li class="step" data-step="${s.id}">
     <p class="step__when">${s.id === "today" || c.prod ? "" : html`<span data-draft>${c.t("yearToken")}</span>`}</p>
     <span class="step__sun" aria-hidden="true"></span>
@@ -103,6 +110,7 @@ export function ourStory(c) {
   const body = html`
 ${sunHead(c, { trail: [aboutCrumb(c), [c.t("ourStory")]], title: viKeep(c.t("ourStory")), intro: c.tx(S.intro), introDraft: S.intro.draft, time: "morning" })}
 <div class="day day--story">
+  ${c.prod ? "" : html`<p class="steps__order container" data-draft>${c.tx(S.orderNote)}</p>`}
   <ol class="steps container">${S.steps.filter((s) => s.id !== "today").map(step)}${S.steps.filter((s) => s.id === "today").map(step)}</ol>
 </div>
 ${duskBand(c, {

@@ -20,8 +20,8 @@
    fallback is close enough for the first frame). Keyframe easings and ranges = TRACKS: the camera and the
    light are done at 0.86, so the last 14% holds still; the street light opens over 0.55 → 0.92. */
 @keyframes s3d-p { from { --s3d-p: 0; } to { --s3d-p: 1; } }
-@keyframes s3d-cam { 0% { --s3d-cam: 0; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); } 86%, 100% { --s3d-cam: 1; } }
-@keyframes s3d-sun { 0% { --s3d-sun: 0; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 86%, 100% { --s3d-sun: 1; } }
+@keyframes s3d-cam { 0% { --s3d-cam: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } 86%, 100% { --s3d-cam: 1; } }
+@keyframes s3d-sun { 0% { --s3d-sun: 0; animation-timing-function: cubic-bezier(0.3, 0.45, 0.45, 1); } 86%, 100% { --s3d-sun: 1; } }
 @keyframes s3d-open { 0%, 55% { --s3d-open: 0; animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1); } 92%, 100% { --s3d-open: 1; } }
 @supports (animation-timeline: scroll()) {
   html.stages[data-motion="on"] [data-scroll3d] {
@@ -44,107 +44,129 @@
 .s3d--contact + .day { --pull: calc(max(24svh, 180px) * 0.4); margin-top: calc(-1 * var(--pull)); background: linear-gradient(in oklab to bottom, var(--day)) 0 var(--pull) / 100% calc(100% - var(--pull)) no-repeat; }
 @media (max-width: 599.98px) { .s3d--contact + .day { --pull: 32px; } }
 
-/* The stage. The still fills the first screen under the header and stays pinned for --run of scroll while
-   the H1, intro and buttons scroll away over its plain wall at native speed (they never animate). The
-   camera dollies toward the screen (the whole still scales about the middle of the subject's side), the
-   canopy's flecks on the screen slide as the sun moves toward 16:30. While it does, the page itself rises into
-   the frame: its top is a long fog of the day's first colour (eased stops, about 27svh), so the stage is
-   covered by light, never cut, and the form's title arrives on plain sun-100. */
-/* The run and zoom are set on the stage and on the day after it (the day sizes its fog from the run). */
+/* The stage. The still is pinned under the header (data-s3d-pin) for --run of scroll while the H1, intro
+   and buttons scroll away at native speed (they never animate). The camera dollies a little toward the
+   bông gió screen and comes round to face it; the room's light and the canopy's flecks drift as the sun
+   moves toward 16:30, each at its own rate, so the light separates from the screen instead of the whole
+   picture growing. The still is never shown much past its own resolution: the stage is no taller than
+   the still is at about 1x (62svh on desktop, 48svh on phones) and the dolly stops at 1.16x (1.12x on
+   phones). From the first pixel of scroll the page rises over the stage: its top is a fog of the day's
+   first colour, so the stage is covered by light, never cut, and the form's title arrives while the
+   camera is still moving (there is always text on screen). */
 html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) {
-  --stage-h: calc(100svh - var(--hdr));
-  --run: 76svh;
-  --rise: 0.75; /* how much of the run the page spends rising over the stage */
-  --zoom: 0.55;
-  --turn: 10deg;
-  --truck: -12cqw; /* the camera trucks toward the words' side as it comes round; the screen stays clear of them while they are on screen */
+  --stage-h: min(100svh - var(--hdr), 62svh);
+  --run: 36svh;
+  --zoom: 0.16;
+  --turn: 6deg;
+  --truck: -4cqw; /* the camera trucks toward the words' side as it comes round */
 }
 html.stages[data-motion="on"] .s3d--contact .lit-head {
   min-height: 0; padding: 0;
   background: linear-gradient(in oklab to bottom, var(--color-lime-100), var(--color-sun-100) 50%);
 }
 html.stages[data-motion="on"] .s3d--contact .lit-head__media { inset: auto; position: sticky; top: var(--hdr); z-index: 0; height: var(--stage-h); align-self: start; overflow: clip; pointer-events: none; }
-/* The feathers sit on the pinned box, not on the still, so the camera's zoom never carries an edge in. */
+/* The feathers sit on the pinned box, not on the still, so the camera's move never carries an edge in. */
 html.stages[data-motion="on"] .s3d--contact .lit-head__media .lit { mask-image: none; }
 /* The picture runs on past the frame's right edge as far as the still itself does (its subject side), so
    the truck and the turn never bring an edge of it into view. */
-@media (min-width: 600px) { html.stages[data-motion="on"] .s3d--contact .lit-head__media .lit { inset: 0 -30% 0 0; } }
-/* The camera: a dolly toward the middle of the screen while it swings round to face it (the still is
-   shot 28° off the face; turning the picture up to --turn in a 1400 px perspective evens the blocks out
-   the way a camera coming round would) and trucks toward the words' side once they have scrolled away.
-   Scale, turn and truck keep the picture over the whole frame at every step. */
+@media (min-width: 600px) { html.stages[data-motion="on"] .s3d--contact .lit-head__media .lit { inset: 0 -12% 0 0; } }
+/* The camera: a short dolly toward the middle of the screen while it swings round to face it (the still is
+   shot 28° off the face; turning the picture up to --turn in a 1400 px perspective evens the blocks out the
+   way a camera coming round would) and trucks toward the words' side. Scale, turn and truck keep the
+   picture over the whole frame at every step. */
 html.stages[data-motion="on"] .s3d--contact .lit-head__media { perspective: 1400px; perspective-origin: calc(var(--s3d-ox) * 100cqw) 48cqh; }
 html.stages[data-motion="on"] .s3d--contact .lit {
   transform-origin: calc(var(--s3d-ox) * 100cqw) 48cqh;
   transform: translateX(calc(var(--truck) * var(--s3d-cam))) rotateY(calc(var(--turn) * var(--s3d-cam))) scale(calc(1 + var(--zoom) * var(--s3d-cam)));
   will-change: transform;
 }
-/* The canopy's flecks on the screen move with the sun (Tier 2: the light drift is richness, not content). */
+/* The canopy's flecks on the screen move with the sun at their own rate, so the light separates from the
+   blocks it falls on (Tier 2: the drift is richness, not content). The room's light stays registered with
+   the wall: its edge is the screen's shadow line, and moving it would bare the unlit wall beside it. */
 html.stages[data-motion="on"][data-tier="2"] .s3d--contact .lit__screen {
   transform-origin: 100% 0;
-  transform: translate(calc(2.5% * var(--s3d-sun)), calc(-2.5% * var(--s3d-sun))) scale(calc(1 + 0.05 * var(--s3d-sun)));
+  transform: translate(calc(3% * var(--s3d-sun)), calc(-3% * var(--s3d-sun))) scale(calc(1 + 0.06 * var(--s3d-sun)));
   will-change: transform;
 }
-/* The page rises into the frame over the last three quarters of the run (phones: all of it, under a
-   stage two thirds of the screen tall), so the office and the form arrive while the camera is still
-   moving: its top --pull is a fog of sun-100 on
-   eased stops, then the day's gradient (which starts on that colour). The first words sit below the fog. */
+/* The page rises into the frame over the whole run: its top --pull (= the run) is a fog of sun-100 on
+   eased stops, then the day's gradient (which starts on that colour). The fog is nearly whole a third of
+   the way down, where the first words sit. */
 html.stages[data-motion="on"] .s3d--contact + .day {
-  --pull: calc(var(--run) * var(--rise));
+  --pull: var(--run);
   --fog: var(--color-sun-100);
   z-index: 2;
   background:
-    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--fog) 34%, transparent) 20%, color-mix(in srgb, var(--fog) 74%, transparent) 42%, color-mix(in srgb, var(--fog) 95%, transparent) 62%, var(--fog) 78%) 0 0 / 100% var(--pull) no-repeat,
+    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--fog) 42%, transparent) 14%, color-mix(in srgb, var(--fog) 80%, transparent) 28%, color-mix(in srgb, var(--fog) 96%, transparent) 42%, var(--fog) 56%) 0 0 / 100% var(--pull) no-repeat,
     linear-gradient(in oklab to bottom, var(--day)) 0 calc(var(--pull) - 2px) / 100% calc(100% - var(--pull) + 2px) no-repeat;
 }
 html.stages[data-motion="on"] .s3d--contact + .day--contact { --day: var(--color-sun-100) 0, var(--color-lime-100) 34%, var(--color-sun-100) 100%; }
-html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(var(--pull) * 0.8); }
+html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(var(--pull) * 0.36); }
 
 /* Desktop: the text over the still's plain wall, as on the lit header; the still is as tall as the stage
    and placed so the subject begins just right of the text column (its own HEADER_TEXT, via --s3d-subject
-   and the crop's --s3d-aspect: no pixel values). */
+   and the crop's --s3d-aspect: no pixel values). The pinned box feathers on three sides: into the
+   header above (no line where the stage meets it), into the plain wall on the left, and into the day
+   below. */
 @media (min-width: 600px) {
   html.stages[data-motion="on"] .s3d--contact .lit-head { display: grid; grid-template: calc(var(--stage-h) + var(--run)) / minmax(0, 1fr); }
   html.stages[data-motion="on"] .s3d--contact .lit-head__media { grid-area: 1 / 1; }
-  html.stages[data-motion="on"] .s3d--contact .lit-head__text { grid-area: 1 / 1; align-self: start; z-index: 1; min-height: var(--stage-h); padding-block: 24px 10svh; }
-  html.stages[data-motion="on"] .s3d--contact .lit-head__media { mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.5) 5%, black 12%); }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__text { grid-area: 1 / 1; align-self: start; z-index: 1; min-height: var(--stage-h); padding-block: 24px 6svh; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media {
+    mask-image:
+      linear-gradient(to right, transparent, rgb(0 0 0 / 0.5) 5%, black 12%),
+      linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.35) 16px, rgb(0 0 0 / 0.8) 32px, black 48px, black 66%, rgb(0 0 0 / 0.62) 80%, rgb(0 0 0 / 0.22) 92%, transparent);
+    mask-composite: intersect;
+  }
   html.stages[data-motion="on"] .s3d--contact .lit img {
     object-position: calc(var(--s3d-subject) * 100cqw - var(--s3d-subject) * var(--s3d-aspect) * 100cqh) 50%;
   }
 }
-/* Phones: the words first on the plain wall, then the still pinned under the header for the run. The
+/* Phones: the words first on the plain wall, then the still pinned under the header for a short run. The
    still comes out of the wall at its top and sinks back into the day at its foot (no edge either way);
-   the 4:3 crop is centred on the screen. */
+   the 4:3 crop is centred on the screen. The stage is half the screen, so the form's title is always
+   below it. */
 @media (max-width: 599.98px) {
-  html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) { --run: 32svh; --rise: 1; --zoom: 0.42; --turn: 6deg; --truck: 0px; }
+  html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) { --stage-h: 48svh; --run: 12svh; --zoom: 0.12; --turn: 4deg; --truck: 0px; }
   html.stages[data-motion="on"] .s3d--contact .lit-head { display: grid; grid-template-rows: auto calc(var(--stage-h) + var(--run)); }
   html.stages[data-motion="on"] .s3d--contact .lit-head__text { grid-row: 1; margin-top: 0; padding-block: 12px 28px; }
   html.stages[data-motion="on"] .s3d--contact .lit-head__media { grid-row: 2; aspect-ratio: auto; }
-  html.stages[data-motion="on"] .s3d--contact .lit-head__media { mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.5) 6%, black 14%, black 76%, rgb(0 0 0 / 0.5) 90%, transparent); }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media { mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.5) 8%, black 18%, black 70%, rgb(0 0 0 / 0.5) 86%, transparent); }
   html.stages[data-motion="on"] .s3d--contact .lit img { object-position: 62% 50%; }
 }
 
 /* ===================================== News: notices on the wall ===================================== */
 
-/* The page is one stretch of the house's lime wall. The plaster is lime-100 with a fine grain and a few
-   soft stains (an SVG noise, static, under 6% even where it is darkest: 05-DESIGN D4 grain); the walls
-   stream's real plaster map can replace it through --wall-tex. The house's Hoa thị light falls across
-   the upper right, away from the words. The wall's foot sinks into the day (D0.5): no edge. */
+/* The page is one stretch of the house's lime wall, an old one: plaster grit and pores, cloudy lime wash
+   (loang), rain streaks running down from the top, two patched repairs, a damp stain, hairline cracks and a
+   few scratches through the wash (05-DESIGN D4; Maxwell, 11 Nov: "not play-doh"). Until the walls stream's
+   generated plaster map lands, the grain and the wash are SVG noise on two tiles whose sizes share no
+   period (320 and 487 px, so no repeat shows on a screen) and the marks are one drawing over the whole
+   wall, never tiled. Every layer is static and light: the darkest mark changes the wall by about 12% on a
+   hairline, the grain and wash by 6% or less, so running text keeps 7:1. The walls stream's map replaces
+   the grain through --wall-tex (and its size through --wall-tex-size). The house's Hoa thị light falls
+   across the upper right, away from the words. The wall's foot sinks into the day (D0.5): no edge. */
 .newswall {
   /* The house's Hoa thị hole (public/svg/hole-hoa-thi.svg) inlined: the light paints with the page, never
      as a late image (a fetched mask made the first notice the page's largest late paint). */
   --hoa-thi: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-150 -150 300 300%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M56 -56A56 56 0 0 1 56 56A56 56 0 0 1 -56 56A56 56 0 0 1 -56 -56A56 56 0 0 1 56 -56ZM91 112A21 21 0 1 0 133 112A21 21 0 1 0 91 112ZM-133 112A21 21 0 1 0 -91 112A21 21 0 1 0 -133 112ZM91 -112A21 21 0 1 0 133 -112A21 21 0 1 0 91 -112ZM-133 -112A21 21 0 1 0 -91 -112A21 21 0 1 0 -133 -112Z%22/%3E%3C/svg%3E");
-  --wall-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.31 0 0 0 0 0.24 0 0 0 0.08 -0.015'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.40 0 0 0 0 0.30 0 0 0 0.22 -0.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  /* Plaster grit and pores (320 px tile). */
+  --wall-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.31 0 0 0 0 0.24 0 0 0 0.09 -0.02'/%3E%3C/filter%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='1' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 -2.4 1.32'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0.16 0.3'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --wall-tex-size: 320px;
+  /* Lime wash: cloudy loang and brushed highlights (487 px tile). */
+  --wall-wash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='487' height='487'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0082' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.39 0 0 0 0 0.28 0 0 0 0.34 -0.12'/%3E%3C/filter%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.021' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.99 0 0 0 0 0.95 0 0 0 0.6 -0.27'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+  /* The wall's history, drawn once: streaks, patches, a stain, cracks, scratches, pits. */
+  --wall-marks: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000' preserveAspectRatio='xMidYMid slice'%3E%3Cfilter id='r' x='-10%25' y='-10%25' width='120%25' height='120%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' seed='9'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='34'/%3E%3C/filter%3E%3Cfilter id='j'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.08' numOctaves='2' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='5'/%3E%3C/filter%3E%3Cfilter id='v' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.06 0.0022' numOctaves='2' seed='21'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.36 0 0 0 0 0.26 0 0 0 0.36 -0.17'/%3E%3C/filter%3E%3ClinearGradient id='f' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='0.55' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cmask id='m'%3E%3Crect width='1600' height='1000' fill='url(%23f)'/%3E%3C/mask%3E%3Crect width='1600' height='1000' filter='url(%23v)' mask='url(%23m)'/%3E%3Cg filter='url(%23r)'%3E%3Cpath d='M60 590c60-40 170-30 220 10s20 120-60 130-200-10-190-70 30-70 30-70z' fill='%23fffbf0' fill-opacity='.22' stroke='%236b5a40' stroke-opacity='.08' stroke-width='2'/%3E%3Cpath d='M1230 720c80-30 230-20 270 40s-30 140-140 130-170-40-160-100z' fill='%23fffbf0' fill-opacity='.2' stroke='%236b5a40' stroke-opacity='.07' stroke-width='2'/%3E%3Cpath d='M870 100c40-20 110-10 130 20s-10 60-70 60-80-60-60-80z' fill='%237a6646' fill-opacity='.06'/%3E%3Ccircle cx='1420' cy='300' r='70' fill='%237a6646' fill-opacity='.055'/%3E%3C/g%3E%3Cg filter='url(%23j)' fill='none' stroke='%234e4030' stroke-linecap='round'%3E%3Cpath d='M1600 120l-38 22-21 41-44 18-15 37-46 30-9 44-37 26-12 51' stroke-opacity='.3' stroke-width='1.3'/%3E%3Cpath d='M1497 181l-31-12-26 9M1393 351l26 38 4 33' stroke-opacity='.22' stroke-width='.9'/%3E%3Cpath d='M0 820l44-9 30 21 52-6 23 19 40-4' stroke-opacity='.26' stroke-width='1.1'/%3E%3Cpath d='M600 1000l9-36-14-29 11-41-8-27' stroke-opacity='.22' stroke-width='1'/%3E%3C/g%3E%3Cg stroke-linecap='round' stroke-width='1'%3E%3Cpath d='M400 268l58-14M404 276l63-15M410 285l44-10M398 293l30-7' stroke='%23fff' stroke-opacity='.55'/%3E%3Cpath d='M1080 520l-9 48M1088 522l-8 40M1095 527l-6 29' stroke='%234e4030' stroke-opacity='.2'/%3E%3Cpath d='M760 760l70 9M763 769l52 6' stroke='%23fff' stroke-opacity='.5'/%3E%3Cpath d='M220 120l26 31M228 117l22 27' stroke='%234e4030' stroke-opacity='.18'/%3E%3C/g%3E%3Cg fill='%234e4030'%3E%3Ccircle cx='1012' cy='402' r='2.6' fill-opacity='.22'/%3E%3Ccircle cx='1019' cy='407' r='1.4' fill-opacity='.2'/%3E%3Ccircle cx='318' cy='470' r='2' fill-opacity='.18'/%3E%3Ccircle cx='1270' cy='120' r='2.4' fill-opacity='.2'/%3E%3C/g%3E%3C/svg%3E");
   position: relative; isolation: isolate; overflow-x: clip;
   padding-bottom: clamp(56px, 7vw, 112px);
   background: var(--color-lime-100);
 }
 .newswall__bg { position: absolute; inset: 0; z-index: -1; overflow: clip; pointer-events: none;
   mask-image: linear-gradient(to bottom, black calc(100% - max(24svh, 180px)), rgb(0 0 0 / 0.5) calc(100% - max(24svh, 180px) * 0.5), transparent); }
-/* The plaster sits on a pseudo-element: a decorative texture is never the page's largest paint (LCP
-   stays on the H1), and its noise is rasterised once per tile. */
+/* The plaster sits on pseudo-elements: a decorative texture is never the page's largest paint (LCP stays
+   on the H1), and its noise is rasterised once per tile. */
 .newswall__plane { position: absolute; inset: 0; }
-.newswall__plane::before { content: ""; position: absolute; inset: 0; background: var(--wall-tex) 0 0 / 320px 320px; }
+.newswall__plane::before { content: ""; position: absolute; inset: 0; background: var(--wall-tex) 0 0 / var(--wall-tex-size) var(--wall-tex-size), var(--wall-wash) 0 0 / 487px 487px; }
+.newswall__plane::after { content: ""; position: absolute; inset: 0; background: var(--wall-marks) 50% 0 / cover no-repeat; }
 /* The house's light through the screen behind the camera: Hoa thị patches high on the right. */
 .newswall__light { position: absolute; top: 0; right: max(-6vw, -30vw + 120px); width: min(62vw, 880px); height: min(74svh, 640px); overflow: hidden; mask-image: radial-gradient(closest-side, black 22%, transparent); }
 .newswall__light::before { content: ""; position: absolute; inset: -25%; background: var(--color-sun-200); opacity: 0.5; mask: var(--hoa-thi) 0 0 / 118px 118px repeat; transform: rotate(-4deg) skewX(-20deg) scaleY(1.25); }
@@ -225,39 +247,63 @@ html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(va
 .news-feature { display: grid; gap: clamp(24px, 3vw, 40px); padding-top: clamp(40px, 5vw, 80px); }
 .news-feature__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
 @media (min-width: 1024px) { .news-feature .feature { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: center; column-gap: clamp(40px, 5vw, 80px); } }
+/* The placeholder's wall sits in the same light as the page: its edges feather into the day (D0.5, no box
+   edge) and its cool render is warmed toward lime-100 (multiply, so the screen's shadows keep their depth). */
+.news-feature .feature__wall {
+  border-radius: 0; background: var(--color-lime-100);
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent), linear-gradient(to bottom, transparent, black 12%, black 82%, transparent);
+  mask-composite: intersect;
+}
+.news-feature .feature__wall::after { content: ""; position: absolute; inset: 0; background: var(--color-lime-100); mix-blend-mode: multiply; opacity: 0.55; pointer-events: none; }
 
 /* ---- The stage: the camera pulls back from the newest notice along the wall ----
    The wall is held behind the page (the plane is sticky inside the wall's box) and recedes as the camera
-   pulls back (--s3d-cam); its light drifts as the sun moves (--s3d-sun). The notices are in the page's own
-   flow and scroll at native speed: the board starts 80 px nearer the camera and tilted 7° (1100 px perspective,
-   about 1.08×, so no notice leaves the frame; 56 px and 5° on phones) and settles flat onto the wall; each notice turns from a slight angle (≤ 9°) to flat as it reaches its
-   reading place, and a quatrefoil of sun crosses it (each on its own view timeline). Text is never faded
-   or hidden; nothing here touches the H1. */
+   pulls back (--s3d-cam, 1.22x to 1x): its cracks, patches and streaks are what make the move read. Its
+   light drifts as the sun moves (--s3d-sun). The notices are in the page's own flow and scroll at native
+   speed over the held wall, which is the parallax. Each notice hangs from its pin: it arrives with its foot
+   lifted off the wall (at most 9°, in its own perspective about the pin, slightly smaller so its corners
+   stay inside the column) and settles flat as it comes fully into view, while the shadow it casts on the
+   wall shortens and melts into the paper's own. A notice already in the first screen starts flat, and no
+   notice ever leaves the content gutter. A quatrefoil of sun crosses each one (all on their own view
+   timelines). Text is never faded or hidden; nothing here touches the H1. */
 html.stages[data-motion="on"] .s3d--news .newswall { --stage-h: calc(100svh - var(--hdr)); }
 html.stages[data-motion="on"] .s3d--news .newswall__plane {
-  position: sticky; top: var(--hdr); inset: auto; height: var(--stage-h);
+  inset: auto; position: sticky; top: var(--hdr); height: var(--stage-h);
   transform-origin: 70% 30%;
-  transform: scale(calc(1.28 - 0.28 * var(--s3d-cam)));
+  transform: scale(calc(1.22 - 0.22 * var(--s3d-cam)));
   will-change: transform;
 }
 html.stages[data-motion="on"][data-tier="2"] .s3d--news .newswall__light { transform: translate(calc(-7% * var(--s3d-sun)), calc(9% * var(--s3d-sun))); will-change: transform; }
-html.stages[data-motion="on"] .s3d--news .notices { --near: 80px; --tilt: 7deg; transform: translateZ(calc(var(--near) * (1 - var(--s3d-cam)))) rotateX(calc(var(--tilt) * (1 - var(--s3d-cam)))); transform-style: preserve-3d; will-change: transform; }
-@media (max-width: 719.98px) { html.stages[data-motion="on"] .s3d--news .notices { --near: 56px; --tilt: 5deg; } }
+/* The shadow a lifted notice casts on the wall (only on the stage; at rest the paper's own shadow is all). */
+html.stages[data-motion="on"] .s3d--news .notice::before {
+  content: ""; position: absolute; z-index: -1; inset: 18px 5% 0; border-radius: 4px;
+  background: color-mix(in srgb, var(--color-ink-900) 30%, transparent); filter: blur(8px); opacity: 0;
+}
 @supports (animation-timeline: view()) {
   html.stages[data-motion="on"] .s3d--news .notice {
-    animation: notice-turn linear both; animation-timeline: view(); animation-duration: auto; animation-range: entry 0% cover 45%;
+    animation: notice-turn linear both; animation-timeline: view(); animation-duration: auto; animation-range: entry 0% contain 10%;
+  }
+  html.stages[data-motion="on"] .s3d--news .notice::before {
+    animation: notice-shadow linear both; animation-timeline: view(); animation-duration: auto; animation-range: entry 0% contain 10%;
   }
   html.stages[data-motion="on"] .s3d--news .notice__paper::before {
     animation: notice-sun linear both; animation-timeline: view(); animation-duration: auto; animation-range: cover 5% cover 75%;
   }
 }
-/* Each notice: a slight turn toward the camera and up off the wall, settling flat (camera ease, no bounce). */
+/* Each notice: its foot lifted off the wall toward the camera, settling flat about its pin (a soft curve
+   that follows the scroll evenly, no bounce). Its own perspective sits on the pin, so the paper grows
+   evenly on both sides; the 0.94 keeps its widest edge inside the column. */
 @keyframes notice-turn {
-  from { transform: translateZ(60px) rotateY(-9deg) rotateX(6deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
-  to { transform: none; }
+  from { transform: perspective(900px) rotateX(9deg) scale(0.94); animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); }
+  to { transform: perspective(900px) rotateX(0deg) scale(1); }
+}
+/* Its shadow on the wall: long and soft while the foot is lifted, shortening into the paper as it settles. */
+@keyframes notice-shadow {
+  from { transform: translateY(26px) scale(0.94, 1.02); opacity: 0.5; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); }
+  to { transform: translateY(4px) scale(0.98, 1); opacity: 0; }
 }
 /* The sun crossing the paper from the left, coming to rest on its upper right. */
 @keyframes notice-sun {
-  from { transform: translateX(-90%) rotate(-8deg) skewX(-14deg); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  from { transform: translateX(-90%) rotate(-8deg) skewX(-14deg); animation-timing-function: cubic-bezier(0.3, 0.45, 0.45, 1); }
   to { transform: translateX(78%) rotate(-8deg) skewX(-14deg); }
 }
