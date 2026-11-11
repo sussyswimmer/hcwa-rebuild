@@ -54,6 +54,11 @@ export function surfaceMaterial(U) {
         // left and low, where this stays within a few percent of the target.
         float near = smoothstep(uBoxMin.x, uBoxMax.x, vP.x);
         float fill = (1. + 0.06 * N.x) * (0.92 + 0.14 * near) * (k == 2 ? 0.86 + 0.16 * near : 1.);
+        // The back wall meets the screen in the back-right corner. The fill above peaks right there, so without
+        // a real corner shade the last half metre of plaster read as a hard white seam against the dark screen
+        // (Maxwell, 11 Nov 2026). Walls only: a deeper, wider contact shade that eases the plaster into the screen.
+        float toScreen = 1. - smoothstep(0., .55, uBoxMax.x - vP.x);
+        ao *= 1. - .26 * vertical * step(.5, abs(N.z)) * toScreen * toScreen;
 
         float ndl = max(dot(N, uL), 0.);
         float m = ndl > 0. ? sunMask(vP) : 0.;

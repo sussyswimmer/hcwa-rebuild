@@ -124,7 +124,11 @@ def screen_mask(size, outline, view, outlines=None):
             continue
         pts = grow(np.array(o, dtype=np.float64) * (w / view[0]), max(w, h) * 0.005)
         ImageDraw.Draw(img).polygon([tuple(p) for p in pts], fill=255)
-    return np.asarray(img.filter(ImageFilter.GaussianBlur(w / 1600 * 3)), dtype=np.float32) / 255
+    # Feathered over ~40 px at 1600 w (was ~6 px). The room's light drifts during the sun-in while the
+    # screen's holds still, so a narrow feather showed mid-animation as a hard white seam down the screen's
+    # left edge (Maxwell, 11 Nov 2026). A wide feather hands one layer to the other gradually; at rest the
+    # two layers still composite exactly (split_light).
+    return np.asarray(img.filter(ImageFilter.GaussianBlur(w / 1600 * 20)), dtype=np.float32) / 255
 
 
 def split_light(light, m):
