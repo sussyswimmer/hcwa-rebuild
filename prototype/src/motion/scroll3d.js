@@ -7,9 +7,11 @@
 //    CSS keyframes write: one passive scroll listener, one rAF per frame, asleep while no stage is on
 //    screen (IntersectionObserver). TRACKS mirrors scroll3d.mjs.
 const TRACKS = [
-  ["cam", 0, 0.86, [0.3, 0.1, 0.6, 1]],
+  ["cam", 0, 0.8, [0.3, 0.1, 0.6, 1]],
   ["sun", 0, 0.86, [0.3, 0.45, 0.45, 1]],
   ["open", 0.55, 0.92, [0.37, 0, 0.63, 1]],
+  ["gate", 0.05, 0.45, [0.3, 0.1, 0.6, 1]],
+  ["mail", 0.55, 0.85, [0.3, 0.1, 0.6, 1]],
 ];
 
 // cubic-bezier(x1, y1, x2, y2) at x (Newton steps, then bisection where the slope is flat).
@@ -33,6 +35,7 @@ const clamp = (v) => Math.min(1, Math.max(0, v));
 const EASES = TRACKS.map(([name, from, to, e]) => [name, from, to, bezier(e)]);
 
 export function initScroll3d() {
+  initSteps();
   const stages = [...document.querySelectorAll("[data-scroll3d]")];
   if (!stages.length) return;
   const ends = new Map();
@@ -66,12 +69,16 @@ export function initScroll3d() {
 
   const on = new Set();
   let frame = 0;
+  // Only on the stage: at rest (pause, the OS asking for less motion) the layers keep their CSS rest values.
+  const staged = () => document.documentElement.classList.contains("stages") && document.documentElement.dataset.motion === "on";
   write = () => {
     frame = 0;
     for (const s of on) {
-      const p = clamp(scrollY / (ends.get(s) || 1));
-      s.style.setProperty("--s3d-p", p.toFixed(4));
-      for (const [name, from, to, ease] of EASES) s.style.setProperty("--s3d-" + name, ease(clamp((p - from) / (to - from))).toFixed(4));
+      const p = clamp(scrollY / (ends.get(s) || 1)), live = staged();
+      for (const [name, from, to, ease] of [["p", 0, 1, (x) => x], ...EASES]) {
+        if (live) s.style.setProperty("--s3d-" + name, ease(clamp((p - from) / (to - from))).toFixed(4));
+        else s.style.removeProperty("--s3d-" + name);
+      }
     }
   };
   const tick = () => { if (!frame && on.size) frame = requestAnimationFrame(write); };
@@ -83,5 +90,32 @@ export function initScroll3d() {
     stages.forEach((s) => io.observe(s));
   } else stages.forEach((s) => on.add(s));
   addEventListener("scroll", tick, { passive: true });
+  tick();
+}
+
+// Little Rose's garden ([data-steps], styles/pages.css): each story line lights one part of the picture
+// (--step-<n>, over "cover 15% → 50%" of the line) and the layers move over the whole story (--lr-p).
+// CSS view timelines do it where supported; here the same values for the rest. A garden near the screen
+// takes .is-near (Tier 2's sheets only move then). Motion off: the inline values go, the picture is lit.
+function initSteps() {
+  const box = document.querySelector("[data-steps]");
+  const garden = box?.querySelector(".lr-garden");
+  if (!garden) return;
+  const root = document.documentElement;
+  const items = [...box.querySelectorAll("[data-step]")];
+  const ease = bezier([0.3, 0.1, 0.6, 1]);
+  const cover = (el) => { const r = el.getBoundingClientRect(); return (innerHeight - r.top) / (innerHeight + r.height); };
+  if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => garden.classList.toggle("is-near", e.isIntersecting), { rootMargin: "20% 0px" }).observe(garden);
+  if (CSS.supports?.("animation-timeline: view()") && CSS.supports("timeline-scope: --a")) return;
+  let frame = 0;
+  const write = () => {
+    frame = 0;
+    const on = root.classList.contains("stages") && root.dataset.motion === "on";
+    items.forEach((el, i) => (on ? garden.style.setProperty("--step-" + (i + 1), ease(clamp((cover(el) - 0.15) / 0.35)).toFixed(4)) : garden.style.removeProperty("--step-" + (i + 1))));
+    if (on) garden.style.setProperty("--lr-p", clamp(cover(items[0].parentElement)).toFixed(4)); else garden.style.removeProperty("--lr-p");
+  };
+  const tick = () => { if (!frame) frame = requestAnimationFrame(write); };
+  addEventListener("scroll", tick, { passive: true });
+  window.hcwa?.addEventListener?.("pause", tick);
   tick();
 }

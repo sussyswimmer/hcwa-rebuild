@@ -179,8 +179,10 @@ test("the corridor's meshes: frames and Little Rose's leaf are one draw, the pro
   const painted = meshes.filter((m) => m.geometry.getAttribute("aPaint"));
   assert.equal(painted.length, 1, "every frame and Little Rose's fixed leaf in one mesh");
   assert.equal(meshes.filter((m) => m.geometry.getAttribute("aK")).length, 1, "fans and leaflets in one mesh");
-  // shell, screen, props, frames, 2 swinging leaves, 2 doorway glows, 3 transoms
-  assert.equal(meshes.length, 11);
+  // shell, screen, props, frames, 2 swinging leaves, 2 doorway glows, 3 transoms, and 3 wall posters (M6: one quad
+  // sheet each, transparent, so they cannot merge with the opaque draws)
+  assert.equal(meshes.length, 14);
+  assert.equal(meshes.filter((m) => m.name.startsWith("poster:")).length, 3);
   const tris = meshes.reduce((s, m) => s + (m.geometry.index ? m.geometry.index.count : m.geometry.getAttribute("position").count) / 3, 0);
   assert.ok(tris <= 2500, `${tris} triangles`);
 });

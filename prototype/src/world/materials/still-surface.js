@@ -58,8 +58,8 @@ float loCo(vec2 p){
 // targets) and plaster on the ceiling. Tone relief replaces the procedural mottle (the house keeps its metre-wide loang
 // at half strength over the wash); the normal shades the relief under light 0 (the sun), light 1 (a room's daylight)
 // and the open side's fill. The floor (terrazzo, gạch bông, cream tiles) is unchanged.
-// nearFade (the live corridor and its stills, critique r2): a backstop: a wall or pier nearer the camera than 1.4 m
-// along its view axis dithers away (gone by 0.7 m). Walls only: the floor at a phone frame's foot is that near.
+// nearFade (the live corridor and its stills, critique r2; M6): a backstop: a wall or pier nearer the camera than 1.4 m
+// along its view axis settles into its flat shade (fully by 0.7 m), eased, with no dither. Walls only: the floor at a phone frame's foot is that near.
 export function stillSurface(U, lights, { contact = null, house = false, nearFade = false } = {}) {
   // The corridor's light 1 already declares the doors (glsl/doors.js); a still's house declares them itself.
   const doorsDeclared = lights.some((l) => l.glsl?.includes("uDoors["));
@@ -92,8 +92,12 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
       void main(){
         int k = int(vKind + 0.5);
         vec3 N = normalize(vN);
+        // M6: a wall passing the lens no longer dithers away (a screen-door discard read as stipple where the screen
+        // meets the dado, Maxwell 11 Nov): it settles smoothly into its own shade, no noise, no transparency.
         #ifdef NEAR_FADE
-        if (k == 0 && h21(gl_FragCoord.xy) > smoothstep(.7, 1.4, vDepth)) discard;
+        float nearK = k == 0 ? 1. - smoothstep(.7, 1.4, vDepth) : 0.;
+        #else
+        float nearK = 0.;
         #endif
         vec2 uv = abs(N.z) > .5 ? vP.xy : abs(N.x) > .5 ? vP.zy : vP.xz;
         vec4 lw = texture2D(uLime, uv * 0.25);
@@ -104,7 +108,7 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
         // The maps: wA the wall's own (plaster, or the house's wash), wB the house's dado.
         vec3 Nb = N;
         vec4 wA = vec4(0., 0., 1., 0.), wB = wA;
-        float age = 1.;
+        float age = 1., cg = 0.;
         if (k != 1 && uWallK > 0.) {
           vec2 wuv = uv / ${WALL_SCALE.wall.toFixed(1)};
           float mw = smoothstep(.35, .65, lw.r);
@@ -112,7 +116,10 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
           age = wallAge(lw.a) * (k == 2 ? .3 : 1.) * mix(.2, 1., smoothstep(.4, 1., capAt(gl_FragCoord.xy)));
           ${house ? `wA = k == 0 ? wallTap(uWLw, wuv, mw) : wallTap(uWPl, wuv, mw);
           if (k == 0) wB = wallTap(uWDa, wuv + vec2(.43, .19), mw);` : "wA = wallTap(uWPl, wuv, mw);"}
-          ${house ? "" : "rel = mix(rel, vec3(wallRel(wA.b, age)), uWallK);"}
+          cg = wallCrackGate(wuv, mw, age);
+          // The dado's A is its chips: its cracks are found by their tone instead.
+          wA.rg = wallCrackN(wA, cg); wB.rg *= mix(1., cg, smoothstep(.08, .25, 1. - wB.b) * (1. - wB.a));
+          ${house ? "" : "rel = mix(rel, vec3(wallRelM(wA, age, cg)), uWallK);"}
           Nb = wallN(N, wA.rg, uWallK * .6 * mix(.3, 1., age));
         }
         ${house ? `
@@ -151,8 +158,8 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
           spT = mix(spT, spT * dU / max(suT, vec3(.001)), dado);
           shT = mix(shT, dS, dado);
           suT = mix(suT, dU, dado);
-          vec3 relW = mix(rel, vec3(wallRel(wA.b, age * .55)), uWallK) * (1. + (lw.a - .5) * uWearP.w * (1. - .5 * uWallK));
-          vec3 relD = vec3(mix(1. + mott * .3, mix(wallRel(wB.b, age), 1., wB.a), uWallK));
+          vec3 relW = mix(rel, vec3(wallRelM(wA, age * .55, cg)), uWallK) * (1. + (lw.a - .5) * uWearP.w * (1. - .5 * uWallK));
+          vec3 relD = vec3(mix(1. + mott * .3, mix(wallRelC(wB.b, age, age * cg), 1., wB.a), uWallK));
           rel = mix(relW, relD, dado);
           // The dado's chips show the plaster under the paint: the ceiling's warm targets.
           float chip = dado * wB.a * uWallK * smoothstep(.25, .6, age);
@@ -162,7 +169,7 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
           // The ceiling: the yellow walls' bounce within 0.5 m of them (up to 30%), and the wash's loang.
           float dw = min(vP.x - uBoxMin.x, uBoxMax.x - vP.x);
           shT = mix(shT, uShade[0], .3 * (1. - smoothstep(0., .5, dw)));
-          rel = mix(rel, vec3(wallRel(wA.b, age)), uWallK) * (1. + (lw.a - .5) * uWearP.w);
+          rel = mix(rel, vec3(wallRelM(wA, age, cg)), uWallK) * (1. + (lw.a - .5) * uWearP.w);
         }` : ""}
         vec3 an = abs(N);
         float ao = occ(vP.y - uBoxMin.y, .35, .12 * uAoK, an.y) * occ(uBoxMax.y - vP.y, .4, .1 * uAoK, an.y)
@@ -180,6 +187,7 @@ export function stillSurface(U, lights, { contact = null, house = false, nearFad
         vec3 sun = suT * 0.94 * rel * mix(1., ao, .5) * wallSun(Nb, N, uLt[0]);
         vec3 col = mix(mix(shade, sun, min(f0, 1.)), uGlare, min(max(f0 - 1., 0.) * .35, .6));
         col = mix(col, spT * 0.94 * rel * mix(1., ao, .5) * wallSun(Nb, N, uLt[1]), min(f1, 1.));
+        col = mix(col, shT * fill, nearK * nearK * (3. - 2. * nearK));
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>
         gl_FragColor.rgb += (h21(gl_FragCoord.xy) - .5) / 255.;

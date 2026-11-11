@@ -5,7 +5,7 @@ import { write } from "./batch.js";
 // keyboard focus, and whether the stage fits at all. Cards are never scrubbed: one is shown whole or not at
 // all. The numbers are the world's walk (world/journey.js WALK; test/beats.test.mjs keeps them equal):
 // motion/ never imports world/.
-export const TIMELINE = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOut: 0.97, release: 0.95 };
+export const TIMELINE = { head: [0, 0.12], beats: [0.12, 0.92], cardIn: 0.18, cardOut: 0.98, release: 0.95 };
 const width = (n) => (TIMELINE.beats[1] - TIMELINE.beats[0]) / Math.max(n, 1);
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 
@@ -63,7 +63,9 @@ export function initStages() {
     ext = { top: y(rail).top - g, rail: y(rail).bottom - g, head: y(head).bottom - g, cards: texts.map((t) => y(t).bottom - g), all: bottom - g };
     el.style.setProperty("--all-x", `${Math.round(ax)}px`);
     el.style.setProperty("--all-y", `${Math.round(ay)}px`);
-    return bottom <= cell.bottom + 1;
+    // The link must fit the panel (M6: on desktop the list is only as tall as its tallest card, centred with the index).
+    const foot = y(panel).bottom - parseFloat(getComputedStyle(panel).paddingBottom);
+    return bottom <= Math.max(cell.bottom, foot) + 1;
   };
   let lastK = -1;
   const extent = (k) => {

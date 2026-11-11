@@ -393,5 +393,10 @@
   "texto": "--color-gold-700",
   "fondo": "--color-lime-100",
   "tipo": "texto"
+ },
+ {
+  "texto": "--color-ink-900",
+  "fondo": "--color-sun-300",
+  "tipo": "texto"
  }
 ]

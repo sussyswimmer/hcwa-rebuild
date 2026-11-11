@@ -6,6 +6,9 @@ import { litHeader } from "../partials/lit-header.mjs";
 import { louvers } from "../partials/louvers.mjs";
 import { litWall } from "../partials/still.mjs";
 import { stage, litStageVars, skipOpening } from "../partials/scroll3d.mjs";
+import { involveWindow } from "../partials/involve-window.mjs";
+import { contactGate } from "../partials/contact-gate.mjs";
+import { blockIcon } from "../partials/blocks.mjs";
 
 // Get Involved, Donate, Contact and the 404 (PLAN P4-P7). Same day as the rest of the site (05-DESIGN
 // D0.5): each page is one stretch of light from its header to the dusk, no section fills, no rules.
@@ -24,13 +27,38 @@ const reachLines = (c, email) => {
 
 // ---------- Get Involved (P4) ----------
 
-// The open shutters at 17:00, their light coming in through louver stripes (light.css .lit--louver);
-// the four ways to help as slats whose lit face opens as each one passes (pages.css), then the
-// questions, then the evening.
+// "Cửa mở" (M6): the first glance says come in. The header is a room in late-morning light with its
+// window's blue shutters thrown open onto a sunny street (partials/involve-window.mjs), a welcoming H1,
+// and the four ways to help as a bar of tiles, each with its own button, all above the fold at 390 and
+// 1440. On the stage (html.stages, motion on) the shutters, already open, swing wide and the street comes
+// in as the visitor scrolls (styles/pages.css, the --s3d-cam track); at rest they stand wide open. Below
+// it the four ways again as slats with their longer lines, then the questions, then the evening.
+const WAY_ROUTE = { donate: "donate", volunteer: "volunteer", partner: "partner", "in-kind": "inKind" };
+
+const waysBar = (c, involve) => html`<nav class="ways" aria-label="${c.tx(involve.waysLabel)}">
+  <ul class="ways__list">${involve.ways.map((w) => {
+    const donate = w.id === "donate";
+    return html`<li class="way way--${w.id}">
+      <span class="way__tile" aria-hidden="true">${blockIcon("hoaThi", "way__block")}</span>
+      <strong class="way__title">${viKeep(c.tx(w.title))}</strong>
+      ${button({ href: c.url(WAY_ROUTE[w.id]), label: donate ? c.t("donate") : c.tx(w.cta), kind: donate ? "primary" : "secondary", cls: "way__btn", attrs: !donate && w.cta.draft ? "data-draft" : "" })}
+    </li>`;
+  })}</ul>
+</nav>`;
+
 export function getInvolved(c) {
   const { involve, site } = c.content;
+  const head = html`<header class="gi-head">
+  ${involveWindow()}
+  <div class="container gi-head__text">
+    ${breadcrumb(c, [[c.t("getInvolved")]])}
+    <h1 class="gi-head__title"${c.d(involve.welcomeTitle)}>${viKeep(c.tx(involve.welcomeTitle))}</h1>
+    <p class="gi-head__intro"${c.d(involve.intro)}>${c.tx(involve.intro)}</p>
+    ${waysBar(c, involve)}
+  </div>
+</header>`;
   const body = html`
-${litHeader(c, { still: "header-get-involved", trail: [[c.t("getInvolved")]], title: viKeep(c.t("getInvolved")), intro: c.tx(involve.intro), introDraft: involve.intro.draft, size: "display" })}
+${stage("involve", head, {}, { min: 0.6 })}
 <div class="day day--involve">
   ${louvers(c, involve.ways, { level: 2, cls: "louvers--page" })}
   <section class="faq container" aria-labelledby="faq-title">
@@ -48,7 +76,7 @@ ${duskBand(c, {
   title: c.tx(site.contactBand.title),
   body: html`${reachLines(c, site.email.general)}${button({ href: c.url("contact"), label: c.t("contactUs"), kind: "on-dusk", cls: "dusk__btn" })}`,
 })}`;
-  return { title: c.t("getInvolved"), description: c.tx(involve.intro), body, lit: true, bodyClass: "page-involve" };
+  return { title: c.t("getInvolved"), description: c.tx(involve.intro), body, bodyClass: "page-involve" };
 }
 
 // ---------- Donate (P5) ----------
@@ -185,11 +213,15 @@ export function contact(c) {
   const { site, work, involve } = c.content;
   const P = involve.contactPage;
   const topics = ["donate", "partner", "volunteer", "media", "other"].map((k) => [k, c.t("topic_" + k)]);
-  // The opening (PLAN-M4 5.1, openings.css): on the stage the header's still fills the first screen and
-  // the camera dollies toward the screen while the late light floods in from the street; at rest (no JS,
-  // reduced motion, pause, ?tier=0) it is the lit header as before. The H1 never moves; it scrolls away.
+  // The opening, "Qua cổng vào văn phòng" (M6; openings.css): on the stage (Tier 1 and 2, motion on) the
+  // first screen is the house seen through its courtyard gate (the header's still, with the courtyard, the
+  // gate and the tamarind drawn over it: partials/contact-gate.mjs). As the visitor scrolls, the gate's
+  // leaves swing open, the camera comes through the gate toward the office and three letters drop into the
+  // letterbox, then the page rises into the stage. At rest (no JS, reduced motion, pause, ?tier=0) it is the
+  // lit header with the gate half open. The H1 never moves; it scrolls away. The stage line stays on screen
+  // (pinned at the foot of the frame) after the words above it have gone.
   const body = html`
-${stage("contact", litHeader(c, {
+${stage("contact", html`${litHeader(c, {
   still: "header-contact",
   trail: [[c.t("contact")]],
   title: viKeep(c.t("contact")),
@@ -202,7 +234,8 @@ ${stage("contact", litHeader(c, {
     <a class="btn btn--secondary" href="mailto:${site.email.general}">${icon("mail")}<span>${c.tx(P.writeUs)}</span></a>
   </p>
   ${skipOpening("#form-title", c.tx(P.skipToForm))}`,
-}), litStageVars("header-contact"), { pin: ".lit-head__media" })}
+  layers: contactGate(),
+})}<div class="container s3d-linebox"><p class="s3d-line"${c.d(P.stageLine)}>${c.tx(P.stageLine)}</p></div>`, litStageVars("header-contact"), { pin: ".lit-head__media" })}
 <div class="day day--contact">
   <div class="reach container">
     <section class="reach__write" aria-labelledby="form-title">

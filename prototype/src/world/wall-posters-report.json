@@ -1,0 +1,69 @@
+{
+ "atlases": {
+  "2048": {
+   "bytes": 243836,
+   "quality": 45,
+   "sha": "b1dd33bfef30fe1d"
+  },
+  "1024": {
+   "bytes": 100744,
+   "quality": 50,
+   "sha": "d8120b07be72c8f9"
+  },
+  "512": {
+   "bytes": 34328,
+   "quality": 68,
+   "sha": "7ff45789a8db1d2d"
+  }
+ },
+ "prints": {
+  "tet-hoa-mai": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 12752,
+   "sha": "a6d7091613db1a91"
+  },
+  "ca-phe-phin": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 20220,
+   "sha": "bf4f0a1bb1a5da54"
+  },
+  "cub-duoi-hang-me": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 35658,
+   "sha": "473928021cec2a8f"
+  },
+  "ao-sen": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 38460,
+   "sha": "1ccc6a5983a5faee"
+  },
+  "pho-mua": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 27906,
+   "sha": "b0e058a4f1a7af6e"
+  },
+  "dieu-dong-lua": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 8950,
+   "sha": "55c31836565ad41e"
+  },
+  "xe-banh-mi": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 28292,
+   "sha": "f3d4ecb256cbe467"
+  },
+  "cua-hieu": {
+   "red": 0.0,
+   "pink": 0.0,
+   "bytes": 18116,
+   "sha": "95cdd8339001abab"
+  }
+ }
+}

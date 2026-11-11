@@ -49,8 +49,8 @@ void main(){
 // lighter coat of the same paint (mix(paint, uWood, 0.45), uWood the tiles' cream), not bare wood, and a leaf's
 // kick zone fades up its foot's 12.5 cm (it was 25).
 // nearFade (the corridor, critique r2): a backstop for what passes the lens: paint nearer the camera than 1.4 m along
-// its view axis dithers away (gone by 0.7 m), so no leaf or frame is ever a blurred slab with straight edges across the
-// frame. Discarded, never blended: no transparency sort.
+// its view axis settles into its own flat shade (fully by 0.7 m, eased; M6: the old screen-door discard showed as
+// stipple), so no leaf or frame is ever a sharp, sunlit slab across the frame. Opaque: no transparency sort.
 // The Blender paint map (walls.js, glsl/walls.js; live only, faded in by uWallK): neutral paint over wood at 1 m a map,
 // on a leaf in hinge space (its brush streaks swing with it), elsewhere along the face's own axes. Its tone relief
 // tints with the unit's paint (the token stays the colour), its normal (a frame from the derivatives: leaves turn)
@@ -83,7 +83,9 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
       ${WALLS_GLSL(["Pt"])}
       void main(){
         #ifdef NEAR_FADE
-        if (h21(gl_FragCoord.xy) > smoothstep(.7, 1.4, vDepth)) discard;
+        float nearK = 1. - smoothstep(.7, 1.4, vDepth);
+        #else
+        float nearK = 0.;
         #endif
         vec3 N = normalize(vN);
         // Edge band in face UV, broken up by noise: chipped paint at corners and edges only.
@@ -135,6 +137,8 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
         vec3 col = mix(shade, albedo * uSunTint * wallSun(Nb, N, uLt[0]), min(f0, 1.));
         col = mix(col, albedo * uSpillTint * wallSun(Nb, N, uLt[1]), min(f1, 1.) * 0.85);
         col *= (1. + uGrad * (smoothstep(0., 2.2, vP.y) - .5)) * paintAo(vP);
+        // M6: paint passing the lens settles into its own shade (no screen-door dither).
+        col = mix(col, uPaint * uShadeK * sky, nearK * nearK * (3. - 2. * nearK));
         gl_FragColor = vec4(col, 1.);
         #include <colorspace_fragment>
       }`,

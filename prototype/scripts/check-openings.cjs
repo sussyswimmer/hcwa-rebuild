@@ -1,4 +1,6 @@
-// Frame strips and checks for the M4 openings (PLAN-M4 5, 8): Contact and News, VI and EN, 390 and 1440.
+// Frame strips and checks for the openings (PLAN-M4 5, 8; M6): Contact, News and Get Involved, VI and EN,
+// 390 and 1440. M6 adds a vertical hard-line scan inside the stage on every frame, and a Tier 1 check that
+// the motion is clearly visible.
 // Serve a build first (any static server), then:
 //   node scripts/check-openings.cjs http://localhost:4173 ../qa/m4/openings [frames=16]
 // For each page and size it scrolls from the top to a little past the point where the stage lets go
@@ -18,6 +20,7 @@ const FRAMES = Number(process.argv[4] || 16);
 const PAGES = [
   ["contact", "/lien-he/", "/en/contact/"],
   ["news", "/tin-tuc/", "/en/news/"],
+  ["involve", "/chung-tay/", "/en/get-involved/"],
 ].filter(([n]) => !process.env.ONLY || process.env.ONLY === n);
 const SIZES = [[390, 844], [1440, 900]];
 fs.mkdirSync(out, { recursive: true });
@@ -87,6 +90,45 @@ const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? 
 const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(0, 3).map(Number));
 
+// M6: the box a stage's picture is drawn in, and the boxes of objects in it (data-art) and of the words.
+const STAGE_BOX = { contact: ".s3d--contact .lit-head__media", news: ".newswall__bg", involve: ".gi-stage" };
+function stageBoxes(sel) {
+  const box = document.querySelector(sel)?.getBoundingClientRect();
+  // An object's soft shadow reaches past its box: 16 px around art, 2 px around words.
+  const skip = [...document.querySelectorAll("[data-art], main h1, main h2, main p, main a, main li, main .btn, main nav")]
+    .map((e) => [e.getBoundingClientRect(), e.hasAttribute("data-art") ? 16 : 0]).filter(([r]) => r.width > 1 && r.height > 1).map(([r, m]) => [r.left - m, r.top - m, r.right + m, r.bottom + m]);
+  return box ? { box: [Math.max(0, box.left), Math.max(0, box.top), Math.min(innerWidth, box.right), Math.min(innerHeight, box.bottom)], skip } : null;
+}
+const L = (d, k) => 0.2126 * d[k] + 0.7152 * d[k + 1] + 0.0722 * d[k + 2];
+// A vertical hard line: a column pair 2 px apart whose luminance steps by more than 24 levels over more
+// than half the box's height (outside the words and the objects). Returns the worst column's share.
+function hardColumns(png, { box: [x0, y0, x1, y1], skip }) {
+  const H = Math.max(1, Math.round(y1 - y0)), out = [];
+  for (let x = Math.round(x0) + 1; x < Math.round(x1) - 3; x++) {
+    let n = 0;
+    for (let y = Math.round(y0); y < Math.round(y1); y++) {
+      if (skip.some(([a, b, c, d]) => x + 2 >= a - 2 && x <= c + 2 && y >= b - 2 && y <= d + 2)) continue;
+      const k = (y * png.w + x) * 4;
+      if (Math.abs(L(png.d, k) - L(png.d, k + 8)) > 24) n++;
+    }
+    out.push([n / H, x]);
+  }
+  return out.sort((a, b) => b[0] - a[0])[0] ?? [0, 0];
+}
+// How much the picture changes between two frames inside the box (mean absolute difference, 0-255).
+// dy: how far the box moved up between the frames (0 for a pinned stage): the same point of the picture
+// is compared, so scrolling alone never counts as motion.
+function meanDiff(a, b, [x0, y0, x1, y1], dy = 0) {
+  let sum = 0, n = 0;
+  for (let y = Math.round(y0); y < Math.round(y1); y += 2) for (let x = Math.round(x0); x < Math.round(x1); x += 2) {
+    const yb = y - dy;
+    if (yb < 0 || yb >= b.h) continue;
+    const k = (y * a.w + x) * 4, kb = (yb * b.w + x) * 4;
+    sum += (Math.abs(a.d[k] - b.d[kb]) + Math.abs(a.d[k + 1] - b.d[kb + 1]) + Math.abs(a.d[k + 2] - b.d[kb + 2])) / 3; n++;
+  }
+  return n ? sum / n : 0;
+}
+
 (async () => {
   const browser = await chromium.launch();
   // The background under a text box, from a screenshot with the text itself hidden: the 92nd-percentile
@@ -155,6 +197,15 @@ const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(
         const m = await page.evaluate(stillScale);
         if (m) { maxScale = Math.max(maxScale, m); ok(m <= (w > 600 ? 1.3 : 0.75), `${tag} f${i}: still at ${m.toFixed(2)} css px per source px`); }
       }
+      if (name !== "news") {
+        const boxes = await page.evaluate(stageBoxes, STAGE_BOX[name]);
+        // Only while at least a quarter of the screen shows the stage (a sliver at the top is all edge).
+        if (boxes && boxes.box[3] - boxes.box[1] > h * 0.25) {
+          const png = await decodePng(await page.screenshot({ type: "png" }));
+          const [share, x] = hardColumns(png, boxes);
+          ok(share <= 0.5, `${tag} f${i}: no vertical hard line in the stage (worst column x ${x}: ${(share * 100).toFixed(0)}% of its height)`);
+        }
+      }
       const items = await page.evaluate(visibleText);
       // There is always something to read on screen (no frame of only the stage).
       ok(items.length > 0, `${tag} f${i}: some text on screen`);
@@ -176,6 +227,30 @@ const rgb = (s) => (Array.isArray(s) ? s.slice(0, 3) : s.match(/[\d.]+/g).slice(
     await sheet.screenshot({ path: path.join(out, `${tag}-strip.png`), fullPage: true });
     await sheet.close();
     for (const [f] of shots) if (!process.env.KEEP_FRAMES) fs.unlinkSync(f);
+    await ctx.close();
+  }
+
+  // M6: the motion is clearly visible on Tier 1 too (not only on Tier 2): the picture inside the stage
+  // box differs between strip frames 0 and 8 (of 16) by more than 18 levels on average.
+  for (const [name, vi] of PAGES) for (const [w, h] of SIZES) {
+    if (name === "news") continue;
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+    const page = await ctx.newPage();
+    await page.goto(`${base}${vi}?tier=1`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(2600);
+    const end = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("[data-scroll3d]")).getPropertyValue("--s3d-end")) || 0);
+    const box = (await page.evaluate(stageBoxes, STAGE_BOX[name]))?.box;
+    const a = await decodePng(await page.screenshot({ type: "png" }));
+    await page.evaluate((y) => window.scrollTo(0, y), Math.round((end * 1.18 * 8) / (FRAMES - 1)));
+    await page.waitForTimeout(400);
+    const b = await decodePng(await page.screenshot({ type: "png" }));
+    // The stage is pinned on Contact; on Get Involved it scrolls with the page, so the same point of the
+    // picture is compared (only the visible part of the box in both frames).
+    const dy = name === "contact" ? 0 : await page.evaluate(() => Math.round(scrollY));
+    const area = box && [box[0], Math.max(box[1], dy), box[2], box[3]];
+    const d = area ? meanDiff(a, b, area, dy) : 0;
+    ok(d > 18, `${name}-vi-${w} tier 1: the stage visibly moves (mean difference ${d.toFixed(1)} levels between frames 0 and 8)`);
+    console.log(`${name}-vi-${w} tier 1: frames 0 → 8 differ by ${d.toFixed(1)} levels`);
     await ctx.close();
   }
 

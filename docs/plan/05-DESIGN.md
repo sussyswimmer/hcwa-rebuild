@@ -481,6 +481,7 @@ shaders. `theme.json` slugs in `wp/themes/hcwa-2026` use the same names without 
   --color-sun-400: #FFC42E;   /* primary button fill and Donate only */
   --color-sun-500: #F2B312;   /* primary hover */
   --color-sun-200: #FFE6AE;   /* light patches in CSS and SVG, reading highlight */
+  --color-sun-300: #FFD58A;   /* a late-morning sun patch: decorative light only, never text, never a button */
   --color-sun-100: #FFF3D3;   /* help section, the flight wash, statement halo */
   --color-gold-700: #8A5A12;  /* small accents on sun-100 / lime-50; draft outline */
 

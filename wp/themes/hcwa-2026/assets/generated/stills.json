@@ -848,6 +848,490 @@
 				}
 			}
 		},
+		"header-about": {
+			"kind": "header",
+			"unit": null,
+			"page": "about",
+			"motion": null,
+			"layers": [
+				"base",
+				"lightroom"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-about-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-about-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-about-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-about-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-about-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-about-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-about-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-about-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-about-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-about-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-about-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-about-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-about-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-about-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-about-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-about-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-about-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-about-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-about-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-about-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-about-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-about-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-cau-han": {
+			"kind": "header",
+			"unit": "cau-han",
+			"page": "center",
+			"motion": "drift",
+			"layers": [
+				"base",
+				"lightroom",
+				"lightscreen"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-cau-han-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-cau-han-mobile-lightroom-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightscreen": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-lightscreen-960.avif",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-lightscreen-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-cau-han-desk-lightscreen-960.webp",
+									960
+								],
+								[
+									"posters/header-cau-han-desk-lightscreen-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-lightscreen-480.avif",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-lightscreen-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-cau-han-mobile-lightscreen-480.webp",
+									480
+								],
+								[
+									"posters/header-cau-han-mobile-lightscreen-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-cau-han-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
 		"header-contact": {
 			"kind": "header",
 			"unit": null,
@@ -876,10 +1360,18 @@
 								[
 									"posters/header-contact-desk-base-1600.avif",
 									1600
+								],
+								[
+									"posters/header-contact-desk-base-2400.avif",
+									2400
+								],
+								[
+									"posters/header-contact-desk-base-3840.avif",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "desk",
@@ -893,10 +1385,18 @@
 								[
 									"posters/header-contact-desk-base-1600.webp",
 									1600
+								],
+								[
+									"posters/header-contact-desk-base-2400.webp",
+									2400
+								],
+								[
+									"posters/header-contact-desk-base-3840.webp",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "desk",
@@ -910,10 +1410,18 @@
 								[
 									"posters/header-contact-desk-base-1600.jpg",
 									1600
+								],
+								[
+									"posters/header-contact-desk-base-2400.jpg",
+									2400
+								],
+								[
+									"posters/header-contact-desk-base-3840.jpg",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "mobile",
@@ -927,10 +1435,14 @@
 								[
 									"posters/header-contact-mobile-base-960.avif",
 									960
+								],
+								[
+									"posters/header-contact-mobile-base-1440.avif",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						},
 						{
 							"crop": "mobile",
@@ -944,10 +1456,14 @@
 								[
 									"posters/header-contact-mobile-base-960.webp",
 									960
+								],
+								[
+									"posters/header-contact-mobile-base-1440.webp",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						},
 						{
 							"crop": "mobile",
@@ -961,16 +1477,20 @@
 								[
 									"posters/header-contact-mobile-base-960.jpg",
 									960
+								],
+								[
+									"posters/header-contact-mobile-base-1440.jpg",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						}
 					],
 					"img": {
-						"src": "posters/header-contact-mobile-base-960.jpg",
-						"width": 960,
-						"height": 720
+						"src": "posters/header-contact-mobile-base-1440.jpg",
+						"width": 1440,
+						"height": 1080
 					}
 				},
 				"lightroom": {
@@ -987,10 +1507,18 @@
 								[
 									"posters/header-contact-desk-lightroom-1600.avif",
 									1600
+								],
+								[
+									"posters/header-contact-desk-lightroom-2400.avif",
+									2400
+								],
+								[
+									"posters/header-contact-desk-lightroom-3840.avif",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "desk",
@@ -1004,10 +1532,18 @@
 								[
 									"posters/header-contact-desk-lightroom-1600.webp",
 									1600
+								],
+								[
+									"posters/header-contact-desk-lightroom-2400.webp",
+									2400
+								],
+								[
+									"posters/header-contact-desk-lightroom-3840.webp",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "mobile",
@@ -1021,10 +1557,14 @@
 								[
 									"posters/header-contact-mobile-lightroom-960.avif",
 									960
+								],
+								[
+									"posters/header-contact-mobile-lightroom-1440.avif",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						},
 						{
 							"crop": "mobile",
@@ -1038,16 +1578,20 @@
 								[
 									"posters/header-contact-mobile-lightroom-960.webp",
 									960
+								],
+								[
+									"posters/header-contact-mobile-lightroom-1440.webp",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						}
 					],
 					"img": {
-						"src": "posters/header-contact-mobile-lightroom-960.webp",
-						"width": 960,
-						"height": 720
+						"src": "posters/header-contact-mobile-lightroom-1440.webp",
+						"width": 1440,
+						"height": 1080
 					}
 				},
 				"lightscreen": {
@@ -1064,10 +1608,18 @@
 								[
 									"posters/header-contact-desk-lightscreen-1600.avif",
 									1600
+								],
+								[
+									"posters/header-contact-desk-lightscreen-2400.avif",
+									2400
+								],
+								[
+									"posters/header-contact-desk-lightscreen-3840.avif",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "desk",
@@ -1081,10 +1633,18 @@
 								[
 									"posters/header-contact-desk-lightscreen-1600.webp",
 									1600
+								],
+								[
+									"posters/header-contact-desk-lightscreen-2400.webp",
+									2400
+								],
+								[
+									"posters/header-contact-desk-lightscreen-3840.webp",
+									3840
 								]
 							],
-							"width": 1600,
-							"height": 533
+							"width": 3840,
+							"height": 1280
 						},
 						{
 							"crop": "mobile",
@@ -1098,10 +1658,14 @@
 								[
 									"posters/header-contact-mobile-lightscreen-960.avif",
 									960
+								],
+								[
+									"posters/header-contact-mobile-lightscreen-1440.avif",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						},
 						{
 							"crop": "mobile",
@@ -1115,16 +1679,20 @@
 								[
 									"posters/header-contact-mobile-lightscreen-960.webp",
 									960
+								],
+								[
+									"posters/header-contact-mobile-lightscreen-1440.webp",
+									1440
 								]
 							],
-							"width": 960,
-							"height": 720
+							"width": 1440,
+							"height": 1080
 						}
 					],
 					"img": {
-						"src": "posters/header-contact-mobile-lightscreen-960.webp",
-						"width": 960,
-						"height": 720
+						"src": "posters/header-contact-mobile-lightscreen-1440.webp",
+						"width": 1440,
+						"height": 1080
 					}
 				}
 			}
@@ -1685,6 +2253,209 @@
 					],
 					"img": {
 						"src": "posters/header-green-bamboo-mobile-lightscreen-960.webp",
+						"width": 960,
+						"height": 720
+					}
+				}
+			}
+		},
+		"header-impact": {
+			"kind": "header",
+			"unit": null,
+			"page": "impact",
+			"motion": "drift",
+			"layers": [
+				"base",
+				"lightroom"
+			],
+			"aspect": 3,
+			"ready": true,
+			"showsLittleRoseDoor": false,
+			"pictures": {
+				"base": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-impact-desk-base-960.avif",
+									960
+								],
+								[
+									"posters/header-impact-desk-base-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-impact-desk-base-960.webp",
+									960
+								],
+								[
+									"posters/header-impact-desk-base-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/jpeg",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-impact-desk-base-960.jpg",
+									960
+								],
+								[
+									"posters/header-impact-desk-base-1600.jpg",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-impact-mobile-base-480.avif",
+									480
+								],
+								[
+									"posters/header-impact-mobile-base-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-impact-mobile-base-480.webp",
+									480
+								],
+								[
+									"posters/header-impact-mobile-base-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/jpeg",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-impact-mobile-base-480.jpg",
+									480
+								],
+								[
+									"posters/header-impact-mobile-base-960.jpg",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-impact-mobile-base-960.jpg",
+						"width": 960,
+						"height": 720
+					}
+				},
+				"lightroom": {
+					"sources": [
+						{
+							"crop": "desk",
+							"type": "image/avif",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-impact-desk-lightroom-960.avif",
+									960
+								],
+								[
+									"posters/header-impact-desk-lightroom-1600.avif",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "desk",
+							"type": "image/webp",
+							"media": "(min-width: 600px)",
+							"srcset": [
+								[
+									"posters/header-impact-desk-lightroom-960.webp",
+									960
+								],
+								[
+									"posters/header-impact-desk-lightroom-1600.webp",
+									1600
+								]
+							],
+							"width": 1600,
+							"height": 533
+						},
+						{
+							"crop": "mobile",
+							"type": "image/avif",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-impact-mobile-lightroom-480.avif",
+									480
+								],
+								[
+									"posters/header-impact-mobile-lightroom-960.avif",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						},
+						{
+							"crop": "mobile",
+							"type": "image/webp",
+							"media": null,
+							"srcset": [
+								[
+									"posters/header-impact-mobile-lightroom-480.webp",
+									480
+								],
+								[
+									"posters/header-impact-mobile-lightroom-960.webp",
+									960
+								]
+							],
+							"width": 960,
+							"height": 720
+						}
+					],
+					"img": {
+						"src": "posters/header-impact-mobile-lightroom-960.webp",
 						"width": 960,
 						"height": 720
 					}

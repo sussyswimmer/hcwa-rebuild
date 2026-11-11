@@ -75,8 +75,15 @@ const startWorld = () => {
   else addEventListener("load", idle, { once: true });
 };
 
+// Every other page with motion on gets the same wheel glide as the home (motion/smooth-wheel.js: Lenis alone, no
+// GSAP), so a wheel tick never jumps 100 px on Contact or News (M6 pacing). Fine pointers only.
+let wheel = null;
+const startWheel = () => {
+  if (!scrolled && matchMedia("(pointer: fine)").matches) wheel ??= import("./motion/smooth-wheel.js").then((m) => m.startSmoothWheel());
+};
 if (motionOn()) {
   startMotion();
+  startWheel();
   startWorld();
 }
 // The stage layout (head-inline.js) is for a page whose world may fly. If the world gives up (no WebGL2,
@@ -110,7 +117,7 @@ if (corridor && "IntersectionObserver" in window) {
 bus.addEventListener("pause", (e) => {
   world?.setPaused(e.detail.paused);
   // Turning motion back on during this visit brings the layers in that were never loaded.
-  if (!e.detail.paused && motionOn()) { startMotion(); startWorld(); }
+  if (!e.detail.paused && motionOn()) { startMotion(); startWheel(); startWorld(); }
 });
 // The OS asking for less motion mid-visit (05-DESIGN D5.6): everything that moves stops and the stills
 // come back, as on a reduced-motion load. Not stored as the visitor's own choice (hcwa:motion).

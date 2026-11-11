@@ -17,6 +17,8 @@ import { createWalk } from "./walk.js";
 import { worldOff } from "./index.js";
 import { WALL_FADE, disposeWalls, loadWalls, setWallTier, wallUniforms } from "./walls.js";
 import { yieldNow } from "./textures.js";
+import { disposePosters, loadPosterAtlas, posterUniforms } from "./objects/wall-poster.js";
+import { atlasSizeFor } from "./wall-posters-data.js";
 
 // The live world (05-DESIGN D6, PLAN H2-H4, H7), with three.js. index.js loads it only once the GPU probe has
 // passed. It draws into the page's fixed canvas, reads the DOM (frame box, stage, text rects, beats) and
@@ -33,6 +35,11 @@ import { yieldNow } from "./textures.js";
 // tamarind dapple while a card is read.
 
 const SPRING = 6; // rad/s: the pointer sun and the camera's parallax (D5.1)
+// M6 pacing: the camera's scroll position on a critically damped spring (ω 9/s, settled in about 0.25 s), so a
+// trackpad fling glides the corridor walk and S3 through their doors instead of jumping them. Only the camera
+// lags: the text, the cards, the washes and hems that meet the DOM's sheets all read the scroll itself. A jump
+// further than CAM_JUMP screens (a link, a key) lands at once.
+const CAM_SPRING = 9, CAM_JUMP = 2.5;
 const CANOPY_IN = 2.5; // s of world time for the canopy to fade in after the handoff (glsl LEAF)
 const PLASTER = tok("lime-100"); // the corridor's way out washes to the plaster under the stage (stages.css)
 const LIGHT = tok("wash"); // the passage's light, which the frame holds while the corridor is not built yet
@@ -223,7 +230,12 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // ---- the journey: where the scroll is, which set, which pose ----
   const sunState = { t: REST.room, nudge, intensity: 1, rims: 1 }; // reused: no per-frame garbage
   const at = { hero: 0, passage: 0, y: 0, approach: 0, stage: 0, out: 0 }, path = { s: 0, lift: 0 };
+  const camY = { x: scrollY, v: 0 };
+  let camT = 0;
   let lastY = -1, inRoom = true, inS3 = false, wasS3 = false, corridorSun = -1, propT = 0, hallWash = 1;
+  // The camera's scroll position (camY, stepped in tick()): the scroll itself while paused, before the loop runs, or
+  // after a jump.
+  const camAt = (y) => (paused || !live ? y : camY.x);
   const draw = (now) => {
     const y = scrollY;
     lastY = y;
@@ -238,22 +250,24 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       // S3: the camera comes round to the window as the section rises, then the slats turn, the leaves swing
       // in, the flood, and the frame gives way to sun-100 for the help section. Without the set yet (a very
       // fast scroll), the frame is sun-100 and the section's stills show.
-      const sp = span.shutters, a = clamp01((y - sp.from) / Math.max(sp.top - sp.from, 1)), q = clamp01((y - sp.top) / sp.len);
+      const sp = span.shutters, yc = camAt(y), a = clamp01((yc - sp.from) / Math.max(sp.top - sp.from, 1)), q = clamp01((y - sp.top) / sp.len);
+      // The leaves and the camera on the spring (qc); the blend into the help section's sun-100 on the scroll (q).
+      const qc = clamp01((yc - sp.top) / sp.len);
       at.s3 = q;
       // Coming into S3 from elsewhere (a jump, or back from far away): the flood is where this crossing has
       // it, not replayed or unwound in front of the visitor.
       if (!wasS3 && floodHold == null) { flood.on = q >= SHUTTERS.flood; flood.v = flood.on ? 1 : 0; }
       wash = blendAt(q);
       if (shutters && wash < 1) {
-        const slat = slatLive(a, q);
-        if (a + q !== s3Last) { shutters.pose(leafAt(q), slat); s3Last = a + q; }
+        const slat = slatLive(a, qc);
+        if (a + qc !== s3Last) { shutters.pose(leafAt(qc), slat); s3Last = a + qc; }
         const t = s3Sun(q);
         if (Math.abs(t - s3Sunt) > 1e-4) { shutters.setSun(t); s3Sunt = t; }
         floodAt(flood.v, fl);
         // The gold lines brighten as the slats turn (their angle over 65°), then the open window carries it.
-        const e = s3Exposure(q, fl), open = s3Open(q, slat);
-        shutters.setExposure(e, open, Math.max(slat / SHUTTERS.slatDeg, smoothLeaf(q)));
-        shutters.shafts.uniforms.uDensity.value = S3_SHAFTS * (1 + 0.6 * smoothLeaf(q) + 0.4 * fl.peak);
+        const e = s3Exposure(qc, fl), open = s3Open(qc, slat);
+        shutters.setExposure(e, open, Math.max(slat / SHUTTERS.slatDeg, smoothLeaf(qc)));
+        shutters.shafts.uniforms.uDensity.value = S3_SHAFTS * (1 + 0.6 * smoothLeaf(qc) + 0.4 * fl.peak);
         shutters.shafts.uniforms.uExposure.value = e;
         shutters.motes.uniforms.uBurst.value = fl.peak;
         shutters.U.uMotesA.value = 0.55 + 0.45 * open;
@@ -261,7 +275,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
         shutters.U.uStir.value = stir;
         shutters.sway(time);
         const c = shutters.camera;
-        s3Pose(a, q, lastBucket, WIN_Z, s3Cam);
+        s3Pose(a, qc, lastBucket, WIN_Z, s3Cam);
         c.position.set(...s3Cam.pos);
         c.fov = s3Cam.fov;
         c.aspect = view.w / view.h;
@@ -299,14 +313,14 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       passes = [room.shafts];
     } else if (corridor) {
       const u = clamp01((p - PASSAGE.exit[0]) / (PASSAGE.exit[1] - PASSAGE.exit[0])), n = corridor.specs.length;
-      const c = span.corridor;
-      at.approach = walking ? clamp01((y - (c.top - c.pre)) / c.pre) : 0;
-      at.stage = walking ? clamp01((y - c.top) / c.len) : 0;
+      const c = span.corridor, yc = camAt(y);
+      at.approach = walking ? clamp01((yc - (c.top - c.pre)) / c.pre) : 0;
+      at.stage = walking ? clamp01((yc - c.top) / c.len) : 0;
       // The way out (journey.js WALK_OUT): the camera leaves the last door from `release` on, looking down to the
       // runner, and past the stage's end the frame washes to the plaster below from the top down, until the next
       // sheet's top nears the top of the frame: the runner fades last, just above the sheet rising over it.
       const ws = washSpan(c.top + c.len, c.next, view.w, view.h), from = c.top + WALK.release * c.len;
-      at.out = walking ? clamp01((y - from) / (ws.y0 + ws.len - from)) : 0;
+      at.out = walking ? clamp01((yc - from) / (ws.y0 + ws.len - from)) : 0;
       const gone = walking ? clamp01((y - ws.y0) / ws.len) : 0;
       // Once the stage lets go the frame scrolls up with the page and the image goes with it (a lens shift), so
       // the floor stays just above the sheet that follows it.
@@ -369,6 +383,10 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // again once the maps are in (they cost GPU time the first measurement never saw).
   const wallsU = wallUniforms(), wallAbort = new AbortController();
   let walls = null, gateState = null;
+  // The wall posters' atlas (objects/wall-poster.js; M6): the same way, after the first frame, faded in with the walls'
+  // timing. Only the corridor and S3 hang them, so nothing at the handoff changes.
+  const postersU = posterUniforms();
+  let posters = null;
   const running = () => live && inView && visible && !lost && !dead;
   const kick = () => { if (!raf && running()) raf = requestAnimationFrame(tick); };
   // A tap or key waiting for the main thread goes first: this frame is skipped, the next one draws (INP).
@@ -380,6 +398,19 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     const dt = last ? Math.min((now - last) / 1000, 0.1) : 1 / 60;
     last = now;
     let active = dirty || scrollY !== lastY;
+    const camT0 = camT; camT = now;
+    // The camera's spring (M6 pacing): a jump lands at once, a scroll glides.
+    if (paused || Math.abs(scrollY - camY.x) > CAM_JUMP * view.h) { camY.x = scrollY; camY.v = 0; }
+    else if (camY.x !== scrollY) {
+      // The exact critically damped step over the real time since the last frame (not the loop's 0.1 s cap), so a slow
+      // frame never leaves the camera further behind than the spring itself would.
+      const t = Math.min((now - (camT0 || now)) / 1000, 1) || dt, e = camY.x - scrollY, c = camY.v + CAM_SPRING * e, k = Math.exp(-CAM_SPRING * t);
+      camY.x = scrollY + (e + c * t) * k;
+      camY.v = (c - CAM_SPRING * (e + c * t)) * k;
+      // Within half a pixel and slow: there (the spring's own stop is a ten-thousandth of a pixel).
+      if (Math.abs(scrollY - camY.x) < 0.5 && Math.abs(camY.v) < 8) { camY.x = scrollY; camY.v = 0; }
+      active = true;
+    }
     // Idle motion belongs to the rooms at rest (the hero's, and S3's once built); in the flight nothing moves
     // by itself.
     const s3 = inShutters(scrollY) && shutters && blendAt(at.s3 ?? 0) < 1;
@@ -399,6 +430,11 @@ export async function live({ canvas, stage, bus, probed, forced }) {
         wallsU.uWallK.value = inOut(walls.k);
         active = true;
         if (walls.k >= 1) rearmGate();
+      }
+      if (posters && posters.k < 1) {
+        posters.k = Math.min(posters.k + (dt * 1000) / WALL_FADE, 1);
+        postersU.uPosterK.value = inOut(posters.k);
+        active = true;
       }
       if (fine) active = stepSpring(px, target.x, dt, SPRING) | stepSpring(py, target.y, dt, SPRING) || active;
       if (idle && inRoom) active = stepCloud(now) || active;
@@ -541,6 +577,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       cancelAnimationFrame(raf); cancelAnimationFrame(pending); clearTimeout(restoreTimer);
       wallAbort.abort();
       disposeWalls();
+      disposePosters();
       removeEventListener("pointermove", onPointer);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       bus?.removeEventListener("velocity", onVelocity);
@@ -611,6 +648,16 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     kick();
     console.info(`[world] walls · ${r.size} px maps · ${r.kb} KB · GPU ~${r.gpuMB} MB · in ${Math.round(performance.now() - t0)} ms`);
   }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] walls unavailable, the procedural walls stay", err); });
+  // The posters' atlas: 512 px under 600 px wide, 1024 on Tier 1, 2048 on Tier 2 (wall-posters-data.js budgets).
+  idle().then(async () => {
+    if (dead) return;
+    const r = await loadPosterAtlas({ size: atlasSizeFor({ tier, width: innerWidth }), signal: wallAbort.signal });
+    if (dead || lost) return disposePosters();
+    posters = { k: 0 };
+    dirty = true;
+    kick();
+    console.info(`[world] posters · ${r.size} px atlas · ${r.kb} KB`);
+  }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] posters unavailable, the walls stay bare", err); });
   // No cards still builds the corridor, empty: the camera always has somewhere to come out.
   idle().then(async () => {
     if (dead) return;

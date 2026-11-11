@@ -76,7 +76,10 @@ test("get involved: four louvers as h2 slats, one sun button; home shares the sa
     const h = body(getInvolved, lang, "getInvolved");
     assert.equal((h.match(/<li class="louver/g) ?? []).length, content.involve.ways.length);
     assert.equal((h.match(/<h2 class="louver__title">/g) ?? []).length, content.involve.ways.length);
-    assert.equal((h.match(/btn--primary/g) ?? []).length, 1, "only the Ủng hộ slat has the sun button");
+    // M6: the header's ways bar repeats the Ủng hộ button above the fold; each of the two groups has one.
+    const louverList = h.match(/<ul class="louvers[\s\S]*?<\/ul>/)[0];
+    assert.equal((louverList.match(/btn--primary/g) ?? []).length, 1, "only the Ủng hộ slat has the sun button");
+    assert.equal((h.match(/btn--primary/g) ?? []).length, 2, "the slat's and the ways bar's Ủng hộ, nothing else");
     assert.equal((h.match(/<details class="ask">/g) ?? []).length, content.involve.faq.length);
     const home = str(help(ctx(lang, "home", false)));
     assert.equal((home.match(/<h3 class="louver__title">/g) ?? []).length, content.involve.ways.length);

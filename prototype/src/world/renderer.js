@@ -49,9 +49,9 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   // in uv from the bottom): the ceiling and the walls go first, the floor last, so the runner is still fading
   // just above the sheet that rises over it (critique r1, fix round 1).
   // The hem (uHem: on, the next sheet's top in uv from the bottom, the hem's height in uv; critique r2, D0.5): the
-  // picture fades to the wash's color over the hem above that top, whatever the sweep is doing, on eased stops
-  // (0.11 at an eighth of the hem, 0.51 at half: no 40 px band of it moves the frame's mean by more than about 12
-  // levels over the corridor's darkest floor), so the sheet never cuts the corridor at full strength. Hem and
+  // picture fades to the wash's color over the hem above that top, whatever the sweep is doing, on a smoothstep (M6:
+  // no corner anywhere in the ramp; its steepest 40 px band still moves the frame's mean by about 11 levels at most over
+  // the corridor's darkest floor), so the sheet never cuts the corridor at full strength. Hem and
   // sweep multiply (their masks intersect). The canvas fades; the page's text never does. The hem fades to its own color
   // (uHemC, the plaster), which is the wash's on the walk; while no corridor is built yet (a jump straight to the sheet)
   // the frame is the light and the hem still takes it to the plaster, so the sheet's solid top never cuts a frame of
@@ -89,7 +89,8 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
         }
         if (uHem.x > 0.) {
           float h = clamp((vU.y - uHem.y) / uHem.z, 0., 1.);
-          float v = h < .125 ? .88 * h : h < .5 ? .11 + (h - .125) * 1.0667 : .51 + (h - .5) * .98;
+          // M6: a smoothstep, not three straight pieces: a piecewise ramp's corners read as faint lines (Mach bands).
+          float v = h * h * (3. - 2. * h);
           float A = 1. - (1. - a) * v;
           col = (uHemC * (1. - v) + col * a * v) / max(A, 1e-4);
           a = A;

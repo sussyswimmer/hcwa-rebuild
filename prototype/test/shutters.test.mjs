@@ -18,10 +18,12 @@ test("S3: the motion layer's timeline is the world's", async () => {
   for (const k of ["slats", "leaves", "flood", "unflood", "blend"]) assert.deepEqual(TIMELINE[k], SHUTTERS[k], k);
 });
 
-test("S3: slats 0 → 65° by 0.35, then the leaves 0 → 110° by 0.75, then the blend into sun-100 by 0.90; never back", () => {
-  assert.equal(slatAt(0), 0); assert.equal(slatAt(0.35), 65); assert.equal(slatAt(1), 65);
-  assert.equal(leafAt(0.35), 0); assert.equal(leafAt(0.75), 110); assert.equal(leafAt(1), 110);
-  assert.equal(blendAt(0.75), 0); assert.equal(blendAt(0.9), 1);
+test("S3: slats 0 → 65° by 0.30, the leaves 0 → 110° by 0.66, held open to 0.76, the blend into sun-100 by 0.92; never back", () => {
+  assert.equal(slatAt(0), 0); assert.equal(slatAt(0.3), 65); assert.equal(slatAt(1), 65);
+  assert.equal(leafAt(0.3), 0); assert.equal(leafAt(0.66), 110); assert.equal(leafAt(1), 110);
+  // M6 pacing: the "look out" plateau, the window fully open with nothing blending, over at least 0.1 of the stage.
+  for (let p = 0.66; p <= 0.76; p += 0.01) { assert.equal(leafAt(p), 110); assert.equal(blendAt(p), 0); }
+  assert.equal(blendAt(0.76), 0); assert.equal(blendAt(0.92), 1);
   let prev = { s: -1, l: -1, b: -1, d: -1, o: -1 };
   for (const p of grid(400)) {
     const now = { s: slatAt(p), l: leafAt(p), b: blendAt(p), d: slatDuty(slatAt(p)), o: s3Open(p) };

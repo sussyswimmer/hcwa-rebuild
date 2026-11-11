@@ -303,13 +303,14 @@ html.stages #centers.is-stage + #work::before { display: none; }
   .louver:nth-child(even) .louver__title { grid-column: 2; grid-row: 1; justify-self: end; text-align: right; }
   .louver:nth-child(even) .louver__body { grid-column: 1; grid-row: 1; }
 }
-/* The slat's lit upper face: sun that feathers in at the slat's top and fades down it, so the rows read
-   as louvers with no rule between them (D0.5). */
+/* The slat's lit upper face: a feathered patch of sun at the slat's top (an ellipse, M6: never a full-width
+   band, which read as a rule), so the rows read as louvers with no line between them (D0.5). */
 .louver__face {
-  position: absolute; z-index: -1; inset: 0 0 auto; height: min(80%, 150px); pointer-events: none; transform-origin: top;
-  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-sun-200) 55%, transparent) 30%, transparent 75%);
-  mask-image: linear-gradient(to right, transparent, black 36px calc(100% - 36px), transparent);
+  position: absolute; z-index: -1; inset: 0 0 auto; height: 160px; pointer-events: none; transform-origin: top;
+  background: color-mix(in srgb, var(--color-sun-200) 60%, transparent);
+  mask-image: radial-gradient(ellipse 60% 50% at 30% 50%, black, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.18) 75%, transparent);
 }
+.louver:nth-child(even) .louver__face { mask-image: radial-gradient(ellipse 60% 50% at 70% 50%, black, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.18) 75%, transparent); }
 /* Hover: the face's top catches 3 px of full sun, feathered at both ends, and a bar of light runs under
    the title (520 ms). */
 .louver::before { content: ""; position: absolute; inset: 2px 0 auto; height: 4px; background: var(--color-sun-400); mask-image: linear-gradient(to right, transparent, black 10% 90%, transparent); transform: scaleY(0); transform-origin: top; transition: transform var(--d-hover) var(--ease-out); }
@@ -390,6 +391,8 @@ body:has(.day) { background: var(--color-sun-100); }
   .lit-head__media[data-still="header-green-bamboo"] { --from: 58%; --to: 81%; }
   .lit-head__media[data-still="header-thrive-together"] { --x1: 30%; --from: 66%; --to: 94%; }
   .lit-head__media[data-still="header-get-involved"] { --from: 62%; --to: 86%; }
+  /* Contact (M6): the still's left ramp on the screen's own edge, so its straight side never stands on plaster. */
+  .lit-head__media[data-still="header-contact"] { --x0: 44%; --x1: 60%; }
 }
 @media (max-width: 599.98px) {
   .lit-head__media { --x1: 8%; }
@@ -871,37 +874,114 @@ body:has(.day) { background: var(--color-sun-100); }
 .page-contact { --day-end: var(--color-sun-100); }
 .page-gap { --day-end: var(--color-lime-100); }
 
-/* ---------- P4 Get Involved ---------- */
-/* The header's shade warms to lime under the still's long seam, so the first slat's light never lands
-   on the cool wall (that would read as a line between header and body). */
-.page-involve .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 45%, var(--color-lime-100)); }
-.day--involve { --day: var(--color-lime-100) 0, var(--color-sun-100) 46%, var(--color-sun-100) 100%; }
+/* ---------- P4 Get Involved: "Cửa mở" (M6) ----------
+   The first glance says come in: a room in late-morning light whose window stands open onto a sunny
+   street (partials/involve-window.mjs), a welcoming H1, and the four ways to help as tiles with their own
+   buttons, all above the fold. The room's wall is the header's own light: lime-50 by the words warming to
+   sun-200 toward the window, and sinking into the day's sun-100 at its foot over eased stops (no shade,
+   no grey, no edge). On the stage (html.stages, motion on) the leaves, open 62° at scroll 0, swing to
+   112° while the street comes in and the sun on it strengthens (--s3d-cam, scroll3d.mjs TRACKS; transform
+   and opacity only); at rest they stand at 112° and nothing moves. The words and the tiles never move. */
+.gi-head {
+  --hdr: var(--header-h);
+  position: relative; isolation: isolate; overflow-x: clip; display: grid;
+  background:
+    linear-gradient(in oklab to bottom, transparent 52%, color-mix(in oklab, var(--color-sun-100) 24%, transparent) 64%, color-mix(in oklab, var(--color-sun-100) 62%, transparent) 78%, color-mix(in oklab, var(--color-sun-100) 90%, transparent) 90%, var(--color-sun-100)),
+    linear-gradient(in oklab to right, var(--color-lime-50), var(--color-sun-100) 55%, var(--color-sun-200));
+}
+.gi-head__text { position: relative; z-index: 1; display: grid; justify-items: start; align-content: start; padding-bottom: clamp(40px, 5vw, 72px); }
+.gi-head .breadcrumb ol, .gi-head .breadcrumb a { color: var(--color-ink-900); }
+.gi-head__title { margin-top: clamp(10px, 1.6vw, 24px); font-size: clamp(2.5rem, 1rem + 4.6vw, 5.25rem); font-weight: 700; max-inline-size: 9.5em; }
+.gi-head__intro { margin-top: clamp(12px, 1.4vw, 20px); max-width: 34ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+
+/* The four ways: tiles of sunlit plaster with a shadow and no outline, each with its gạch tile in its own
+   pigment and one button (Ủng hộ is the only sun fill). The whole tile is the button's target. */
+.ways { margin-top: clamp(20px, 2.4vw, 32px); width: 100%; }
+.ways__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.way {
+  position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-areas: "tile title" "tile btn"; gap: 8px 14px; align-content: center;
+  min-height: 112px; padding: 14px 16px; border-radius: 12px;
+  background: color-mix(in srgb, var(--color-lime-50) 92%, transparent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink-900) 8%, transparent), 0 16px 30px -18px color-mix(in srgb, var(--color-ink-900) 34%, transparent);
+  transition: translate var(--d-hover) var(--ease-out), box-shadow var(--d-hover) var(--ease-out);
+}
+.way--donate { --pig: var(--color-tile-ochre); }
+.way--volunteer { --pig: var(--color-tile-jade); }
+.way--partner { --pig: var(--color-tile-indigo); }
+.way--in-kind { --pig: var(--color-tile-ochre-lit); }
+.way__tile { grid-area: tile; align-self: start; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig); }
+.way__block { width: 30px; height: 30px; overflow: visible; }
+.way__block .block-icon__light { fill: var(--color-tile-cream); }
+.way__block .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-tile-cream) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.way__title { grid-area: title; font: 700 var(--fs-body, 1rem) / 1.6 var(--font-body); color: var(--color-ink-900); }
+.way__btn { grid-area: btn; justify-self: start; min-height: 44px; }
+.way__btn::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
+@media (hover: hover) { .way:hover { translate: 0 -2px; box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink-900) 8%, transparent), 0 22px 36px -18px color-mix(in srgb, var(--color-ink-900) 38%, transparent); } }
+
+/* The window. Its frame, the leaves and the sill are objects in the room (data-art), not seams. */
+.gi-stage { position: relative; pointer-events: none; }
+.gi-window { position: absolute; left: 18%; right: 18%; top: 12%; height: 56%; perspective: 1200px; }
+.gi-street { position: absolute; inset: 0; overflow: hidden; border-radius: 2px; }
+.gi-street__art { display: block; width: 100%; height: 100%; transform-origin: 50% 60%; }
+.gi-sunwash { position: absolute; inset: 0; background: var(--color-sun-200); opacity: 0.3; }
+.gi-reveal { position: absolute; inset: 0; box-shadow: inset 0 0 0 5px var(--color-lime-50), inset 14px 16px 26px -8px color-mix(in srgb, var(--color-ink-900) 26%, transparent); }
+.gi-leaf { --a: 112deg; position: absolute; top: 0; bottom: 0; width: 50%; backface-visibility: visible; box-shadow: 0 12px 18px -6px color-mix(in srgb, var(--color-ink-900) 24%, transparent); }
+.gi-leaf svg { display: block; width: 100%; height: 100%; }
+.gi-leaf--l { left: 0; transform-origin: 0 50%; transform: rotateY(calc(-1 * var(--a))); }
+.gi-leaf--r { right: 0; transform-origin: 100% 50%; transform: rotateY(var(--a)); }
+.gi-sill { position: absolute; left: 15%; right: 15%; top: 68%; height: 14px; border-radius: 2px; background: var(--color-lime-50); box-shadow: 0 10px 18px -8px color-mix(in srgb, var(--color-ink-900) 30%, transparent); }
+/* The louver light under the sill: soft slanted bands of sun, feathered on every side. */
+.gi-stripes { position: absolute; left: 12%; right: 6%; top: 72%; bottom: 0; opacity: 0.6; transform-origin: 50% 0; transform: skewX(-18deg);
+  background: repeating-linear-gradient(to bottom, var(--color-sun-300) 0 9px, transparent 9px 22px);
+  mask-image: radial-gradient(ellipse 50% 60% at 50% 20%, black 30%, rgb(0 0 0 / 0.5) 60%, transparent); }
+@media (min-width: 1024px) {
+  .gi-head { --hdr: var(--header-h-wide); min-height: min(calc(100svh - var(--hdr)), 820px); }
+  .gi-head__text { grid-area: 1 / 1; padding-top: clamp(12px, 1.6vw, 24px); }
+  .gi-head__text > * { max-inline-size: min(100%, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
+  .gi-head__title { max-inline-size: min(9.5em, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
+  .ways__list { grid-template-columns: repeat(2, minmax(min(260px, 100%), 1fr)); }
+  .gi-stage { position: absolute; top: 0; right: 0; bottom: 0; width: 50vw; }
+}
+/* Below 1024 the window comes first, as a band of the room, and the words follow it. */
+@media (max-width: 1023.98px) {
+  .gi-stage { height: clamp(190px, 26svh, 340px); }
+  .gi-window { left: 24%; right: 24%; top: 8%; height: 74%; }
+  .gi-sill { left: 21%; right: 21%; top: 82%; height: 10px; }
+  .gi-stripes { top: 86%; }
+  .gi-head__text { margin-top: -6px; }
+}
+@media (max-width: 599.98px) {
+  .gi-head .breadcrumb li:not(:nth-last-child(2)) { display: none; }
+  .gi-head .breadcrumb li:nth-last-child(2)::before { content: none; }
+  .gi-head__title { font-size: clamp(2.25rem, 1.2rem + 4.4vw, 2.75rem); }
+  .gi-head__intro { font-size: 1.0625rem; }
+  .ways__list { gap: 10px; }
+  .way { min-height: 88px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "tile" "btn"; gap: 8px; padding: 10px; justify-items: start; }
+  .way__tile { width: 32px; height: 32px; }
+  .way__block { width: 24px; height: 24px; }
+  /* On a phone the button says what the tile is (its words name the way); the title stays for screen readers. */
+  .way__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .way__btn { justify-self: stretch; justify-content: center; padding: 8px 10px; font-size: 0.9375rem; text-align: center; white-space: normal; }
+}
+@media (max-width: 339.98px) { .ways__list { grid-template-columns: minmax(0, 1fr); } }
+
+/* The stage: the leaves swing from 62° to 112° (already open at the first frame), the street comes toward
+   the window (1 → 1.14) and its sun strengthens; the louver light turns and lengthens. */
+html.stages[data-motion="on"] .gi-leaf { --a: calc(62deg + 50deg * var(--s3d-cam)); will-change: transform; }
+html.stages[data-motion="on"] .gi-street__art { transform: scale(calc(1 + 0.14 * var(--s3d-cam))); will-change: transform; }
+html.stages[data-motion="on"] .gi-sunwash { opacity: calc(0.12 + 0.24 * var(--s3d-sun)); }
+html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc(4deg * var(--s3d-cam))) scaleY(calc(1 + 0.3 * var(--s3d-cam))); will-change: transform; }
+
+/* The day after the header stays warm until the evening. */
+.day--involve { --day: var(--color-sun-100) 0, var(--color-sun-100) 42%, color-mix(in oklab, var(--color-sun-100), var(--color-lime-100)) 74%, var(--color-sun-100) 100%; }
 /* Padding, not margin: a margin would collapse through .day and open a band of body colour under the header. */
 .louvers--page { margin-top: 0; padding-top: clamp(32px, 5vw, 80px); }
-@media (max-width: 599.98px) {
-  .page-involve .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 30%, var(--color-lime-100) 80%); }
-  .louvers--page { padding-top: 64px; }
-}
-/* The slats open as they pass: each lit face widens from a sliver to its full band, the S3 duty cycle
-   in CSS (scroll-driven, transform only; at rest and without support the face is simply open). */
+@media (max-width: 599.98px) { .louvers--page { padding-top: 48px; } }
+/* The slats open as they pass: each lit face widens from a sliver to its full patch (scroll-driven,
+   transform only; at rest and without support the face is simply open). */
 @keyframes louver-open-face { from { scale: 1 0.16; opacity: 0.55; } to { scale: 1 1; opacity: 1; } }
 @supports (animation-timeline: view()) {
   html[data-motion="on"] .louvers--page .louver__face { animation: louver-open-face linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
-}
-/* The header's light comes in through louvers (light.css .lit--louver): here their duty cycle is
-   scrubbed by the header leaving, thin lines of sun at the top of the page that open to full bands as
-   it scrolls away. The sun-in still opens them on load (the smaller of the two wins); reduced motion,
-   pause and no support leave the light whole. */
-@property --louver-duty { syntax: "<length>"; inherits: true; initial-value: 14px; }
-@keyframes louver-duty { from { --louver-duty: 4px; } to { --louver-duty: 14px; } }
-@supports (animation-timeline: view()) {
-  html[data-motion="on"] .page-involve .lit-head { animation: louver-duty linear both; animation-timeline: view(); animation-range: exit 0% exit 70%; }
-  html[data-motion="on"] .page-involve .lit--louver :is(.lit__light, .lit__screen) {
-    mask-image: repeating-linear-gradient(to bottom, black 0 var(--louver-duty), transparent var(--louver-duty) 14px); mask-size: auto; mask-position: 0 0; mask-repeat: repeat;
-  }
-  html.sun-in[data-motion="on"] .page-involve .lit--louver :is(.lit__light, .lit__screen) {
-    mask-image: repeating-linear-gradient(to bottom, black 0 min(var(--louver), var(--louver-duty)), transparent min(var(--louver), var(--louver-duty)) 14px);
-  }
 }
 
 .faq { display: grid; gap: 28px 64px; padding-top: clamp(80px, 9vw, 144px); }
@@ -1265,7 +1345,7 @@ html[data-motion="off"] .track__dot { transition: none; }
 .aim { display: grid; gap: 16px; padding-top: var(--sec); }
 .aim__label { display: flex; align-items: center; gap: 12px; font: 600 var(--fs-meta) / 1.6 var(--font-body); letter-spacing: 0; color: var(--color-ink-700); }
 .aim__mark { flex: none; width: 26px; height: 26px; overflow: visible; }
-:is(.aim__mark, .lr-art__block) .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.aim__mark .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
 .aim__mark .block-icon__light { fill: var(--color-sun-400); }
 .aim__text { max-width: 24ch; font: 500 var(--fs-statement) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: balance; }
 
@@ -1471,8 +1551,6 @@ html[data-motion="off"] .track__dot { transition: none; }
 .bakery__links { display: flex; flex-wrap: wrap; gap: 0 32px; }
 
 /* ---------- Little Rose ---------- */
-/* The illustration: one Hoa thị block, and below it the same holes cast long on the lime wall in plain,
-   untinted daylight (the wall's own lime-50, never the sun's yellow, never pink). Decoration only. */
 .sun-head__art { width: clamp(132px, 13vw, 196px); margin-top: clamp(8px, 2vw, 24px); pointer-events: none; }
 /* A sun band with a picture (fix round 1): Little Rose's illustration, and a center's own block while its
    header still is pending (Cầu Hàn). The picture takes the header's whole right column on desktop (title
@@ -1491,7 +1569,7 @@ html[data-motion="off"] .track__dot { transition: none; }
   .sun-head--art .sun-head__vi { grid-area: vi; margin-top: 12px; }
   .sun-head--art .sun-head__art { grid-area: art; justify-self: end; width: min(100%, clamp(320px, 31vw, 460px)); margin-top: 0; }
 }
-@media (max-width: 1023.98px) { .sun-head--art :is(.lr-art, .block-art) { aspect-ratio: 1; } }
+@media (max-width: 1023.98px) { .sun-head--art .block-art { aspect-ratio: 1; } }
 /* A center's block is a stand-in for its still, not the page's only picture: smaller on phones. */
 @media (max-width: 1023.98px) { .sun-head__art:has(> .block-art) { width: min(100%, 240px); justify-self: center; margin-top: 16px; } }
 /* A center's block on the morning wall: the block in line work, its holes lit with sun, and the same holes
@@ -1503,13 +1581,6 @@ html[data-motion="off"] .track__dot { transition: none; }
 .block-art__light { position: absolute; left: 10%; right: 4%; top: 42%; bottom: 6%; background: color-mix(in oklab, var(--color-sun-200), var(--color-sun-400) 45%); transform: skewX(-16deg); transform-origin: top;
   mask-image: url("/svg/hole-vom-cau.svg"), radial-gradient(closest-side, black 45%, transparent); mask-size: 34% auto, 100% 100%; mask-repeat: repeat, no-repeat; mask-composite: intersect; }
 .block-art--dotTre .block-art__light { mask-image: url("/svg/hole-dot-tre.svg"), radial-gradient(closest-side, black 45%, transparent); }
-/* A patch of lime wall a touch deeper than the band (no edge: it fades out on every side), the block at its
-   top, and the block's holes cast long and white below it. */
-.lr-art { position: relative; display: block; aspect-ratio: 4 / 5; background: radial-gradient(closest-side, color-mix(in oklab, var(--color-lime-100), var(--color-ink-700) 7%), transparent); }
-.lr-art__block { position: absolute; left: 30%; top: 4%; width: 40%; height: auto; aspect-ratio: 1; overflow: visible; }
-.lr-art__block .block-icon__light { fill: white; }
-.lr-art__light { position: absolute; left: 10%; right: 4%; top: 42%; bottom: 6%; background: white; opacity: 0.9; transform: skewX(-16deg); transform-origin: top;
-  mask-image: url("/svg/hole-hoa-thi.svg"), radial-gradient(closest-side, black 45%, transparent); mask-size: 34% auto, 100% 100%; mask-repeat: repeat, no-repeat; mask-composite: intersect; }
 .shelter { display: grid; gap: 10px; padding-top: var(--sec); }
 .shelter__note { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 14px; align-items: start; max-width: 52ch; margin-top: clamp(20px, 3vw, 36px); font-size: var(--fs-lg); line-height: var(--lh-lead); font-weight: 500; color: var(--color-ink-900); }
 .shelter__mark { width: 18px; height: 18px; margin-top: 0.45em; fill: var(--color-lime-300); }
@@ -1522,6 +1593,125 @@ html[data-motion="off"] .track__dot { transition: none; }
 .reach-office .dusk__lines a { color: var(--color-ink-900); }
 .offers { display: grid; gap: clamp(14px, 2vw, 24px); padding-top: calc(var(--sec) * 1.2); }
 .offers__title { font-size: var(--fs-h2); }
+
+/* ---------- Little Rose: "Khu vườn có tường bao" (M6) ----------
+   One surface from the title to the office lines: the header and the story share the page's lime, so no
+   band and no rule (05-DESIGN 0.5; the pink unit band and the sun band's 6 px top are gone from this page).
+   The garden (partials/shelter-scene.mjs) is a paper-cut illustration in six layers. At rest (no JS,
+   reduced motion, pause, Tier 0) it is one composed picture, fully lit, beside the five things the shelter
+   provides as a plain list. On the stage (html.stages, motion on) it is pinned while those five lines
+   scroll past at native speed, and each lights one part of it: --step-1 … --step-5 run 0 → 1 on each
+   line's own view timeline, and --lr-p (the whole story's run) moves the layers at their depths. Only
+   transform and opacity move; the words never do. motion/scroll3d.js writes the same values where CSS
+   scroll-driven animations are missing. */
+@property --step-1 { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --step-2 { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --step-3 { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --step-4 { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --step-5 { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --lr-p { syntax: "<number>"; inherits: true; initial-value: 0.5; }
+.lr-top { --hdr: var(--header-h); position: relative; background: var(--color-lime-100); }
+@media (min-width: 1024px) { .lr-top { --hdr: var(--header-h-wide); } }
+.lr-grid { display: grid; gap: clamp(28px, 4vw, 56px) clamp(40px, 5vw, 88px); padding-top: 10px; padding-bottom: clamp(24px, 4vw, 56px); }
+.lr-head { display: grid; justify-items: start; align-content: start; }
+.lr-head__title { margin-top: clamp(16px, 3vw, 48px); font-size: clamp(2.5rem, 1rem + 5vw, 5.75rem); max-inline-size: 12em; }
+.lr-head__intro { margin-top: clamp(16px, 2vw, 28px); max-width: 30ch; font: 500 var(--fs-statement) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: balance; }
+.lr-head__vi { margin-top: 12px; font-size: var(--fs-sm); color: var(--color-ink-900); }
+.lr-garden { margin: 0; display: grid; gap: 10px; align-content: start; }
+/* The picture never ends on an edge: it comes out of the page's lime on every side over eased stops
+   (14% top and foot, 8% at the sides), the two masks intersected. */
+.lr-garden__scene {
+  position: relative; overflow: clip; width: 100%; aspect-ratio: 10 / 11; isolation: isolate;
+  mask-image:
+    linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.3) 4%, rgb(0 0 0 / 0.75) 9%, black 14%, black 86%, rgb(0 0 0 / 0.75) 91%, rgb(0 0 0 / 0.3) 96%, transparent),
+    linear-gradient(to right, transparent, rgb(0 0 0 / 0.4) 3%, black 8%, black 92%, rgb(0 0 0 / 0.4) 97%, transparent);
+  mask-composite: intersect;
+}
+/* Each layer is drawn 15% past the frame at the top and the foot, so its parallax never bares an edge. */
+.lr-layer { position: absolute; left: 0; top: -15%; width: 100%; height: 130%; display: block; }
+.lr-grain { top: 0; height: 100%; opacity: 0.06; pointer-events: none; mix-blend-mode: multiply;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 128px 128px; }
+.lr-garden__note { font-size: var(--fs-sm); line-height: 1.6; color: var(--color-ink-700); }
+.lr-story { padding-top: 0; }
+.lr-steps { margin-top: clamp(12px, 2vw, 24px); }
+.lr-steps li { max-width: 30ch; }
+/* What the steps light (all 1 at rest: the afternoon, everything lit). */
+.lr-warm { opacity: calc(0.2 + 0.4 * var(--step-1)); }
+.lr-glow { opacity: var(--step-1); }
+.lr-cushion { opacity: var(--step-2); transform: translateY(calc(-10px * (1 - var(--step-2)))); }
+.lr-steam path { stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--step-2)); opacity: var(--step-2); }
+.lr-books-shut { opacity: calc(1 - var(--step-3)); }
+.lr-books-open, .lr-lamp-glow { opacity: var(--step-3); }
+.lr-loaf { opacity: var(--step-3); transform: translateY(calc(-8px * (1 - var(--step-3)))); }
+.lr-notebook { opacity: var(--step-4); }
+.lr-bloom { transform: scale(calc(0.6 + 0.4 * var(--step-4))); }
+.lr-sun { opacity: calc(0.3 + 0.7 * var(--step-5)); transform: translateX(calc((var(--step-5) - 0.5) * 460px)); }
+.lr-line-glow { opacity: calc(0.15 + 0.65 * var(--step-5)); }
+@media (min-width: 1024px) {
+  .lr-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); grid-template-rows: auto auto; }
+  .lr-head { grid-area: 1 / 1; }
+  .lr-story { grid-area: 2 / 1; }
+  .lr-garden { grid-area: 1 / 2 / 3 / 3; }
+  .lr-garden__scene { aspect-ratio: auto; height: min(78svh, 720px); }
+  .lr-steps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 600px) and (max-width: 1023.98px) { .lr-garden__scene { aspect-ratio: 4 / 3; } }
+
+/* The stage: the garden pinned under the header while the five lines pass. */
+html.stages[data-motion="on"] .lr-grid { timeline-scope: --lr-s1, --lr-s2, --lr-s3, --lr-s4, --lr-s5, --lr-story; }
+html.stages[data-motion="on"] .lr-steps { view-timeline-name: --lr-story; }
+html.stages[data-motion="on"] .lr-step:nth-child(1) { view-timeline-name: --lr-s1; }
+html.stages[data-motion="on"] .lr-step:nth-child(2) { view-timeline-name: --lr-s2; }
+html.stages[data-motion="on"] .lr-step:nth-child(3) { view-timeline-name: --lr-s3; }
+html.stages[data-motion="on"] .lr-step:nth-child(4) { view-timeline-name: --lr-s4; }
+html.stages[data-motion="on"] .lr-step:nth-child(5) { view-timeline-name: --lr-s5; }
+html.stages[data-motion="on"] .lr-steps { display: block; margin-top: 0; }
+html.stages[data-motion="on"] .lr-step { display: flex; align-items: center; min-height: 55svh; max-width: none; }
+html.stages[data-motion="on"] .lr-step__text { max-width: 22ch; font: 600 var(--fs-h3) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: balance; }
+html.stages[data-motion="on"] .lr-garden { position: sticky; top: calc(var(--hdr) + 24px); align-self: start; z-index: 0; }
+/* Depth: the share of the scene's height each layer travels over the whole story (far to near). */
+html.stages[data-motion="on"] .lr-layer--2 { --d: 0.08; }
+html.stages[data-motion="on"] .lr-layer--3 { --d: 0.12; }
+html.stages[data-motion="on"] .lr-layer--4 { --d: 0.18; }
+html.stages[data-motion="on"] .lr-layer--5 { --d: 0.28; }
+html.stages[data-motion="on"] :is(.lr-layer--2, .lr-layer--3, .lr-layer--4, .lr-layer--5) { transform: translate3d(0, calc((0.5 - var(--lr-p)) * var(--d) * 100% / 1.3), 0); will-change: transform; }
+@keyframes lr-step-1 { from { --step-1: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-1: 1; } }
+@keyframes lr-step-2 { from { --step-2: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-2: 1; } }
+@keyframes lr-step-3 { from { --step-3: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-3: 1; } }
+@keyframes lr-step-4 { from { --step-4: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-4: 1; } }
+@keyframes lr-step-5 { from { --step-5: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-5: 1; } }
+@keyframes lr-run { from { --lr-p: 0; } to { --lr-p: 1; } }
+@supports (animation-timeline: view()) and (timeline-scope: --a) {
+  html.stages[data-motion="on"] .lr-garden {
+    animation: lr-step-1 linear both, lr-step-2 linear both, lr-step-3 linear both, lr-step-4 linear both, lr-step-5 linear both, lr-run linear both;
+    animation-timeline: --lr-s1, --lr-s2, --lr-s3, --lr-s4, --lr-s5, --lr-story;
+    animation-duration: auto;
+    animation-range: cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 0% cover 100%;
+  }
+}
+/* Tier 2: the sheets move in the breeze (6 s, only while the garden is on screen; never with motion off). */
+@keyframes lr-sway { from { transform: rotate(-1.4deg) skewX(1deg); } to { transform: rotate(1.4deg) skewX(-1deg); } }
+html.stages[data-motion="on"][data-tier="2"] .lr-garden.is-near .lr-sheet { animation: lr-sway 6s ease-in-out infinite alternate; }
+html.stages[data-motion="on"][data-tier="2"] .lr-garden.is-near .lr-sheet--2 { animation-delay: -2s; }
+html.stages[data-motion="on"][data-tier="2"] .lr-garden.is-near .lr-sheet--3 { animation-delay: -4s; }
+/* Phones: the words first, then the garden pinned under the header (52svh, feathered into the page at
+   its foot) while each line rises over its lower part on a soft plate of lime-50. */
+@media (max-width: 599.98px) {
+  .lr-garden__scene { aspect-ratio: 10 / 11; }
+  /* One crumb on a phone (the parent), as on the lit header. */
+  .lr-head .breadcrumb li:not(:nth-last-child(2)) { display: none; }
+  .lr-head .breadcrumb li:nth-last-child(2)::before { content: none; }
+  html.stages[data-motion="on"] .lr-grid { grid-template: auto 52svh auto / minmax(0, 1fr); row-gap: 0; }
+  html.stages[data-motion="on"] .lr-head { grid-area: 1 / 1; padding-bottom: 24px; }
+  html.stages[data-motion="on"] .lr-garden { grid-area: 2 / 1 / 4 / 2; top: var(--hdr); }
+  html.stages[data-motion="on"] .lr-garden__scene { aspect-ratio: auto; height: 52svh; }
+  html.stages[data-motion="on"] .lr-story { grid-area: 3 / 1; position: relative; z-index: 1; padding-top: 52px; }
+  html.stages[data-motion="on"] .lr-story .offers__title { display: inline-block; padding: 6px 12px; margin-left: -12px; border-radius: 10px; background: color-mix(in srgb, var(--color-lime-50) 94%, transparent); box-shadow: 0 0 18px 10px color-mix(in srgb, var(--color-lime-50) 94%, transparent); }
+  html.stages[data-motion="on"] .lr-step { min-height: 70svh; align-items: flex-end; }
+  html.stages[data-motion="on"] .lr-step__text { display: block; max-width: none; margin-inline: calc(-1 * var(--gutter)); padding: 14px var(--gutter); background: color-mix(in srgb, var(--color-lime-50) 96%, transparent); box-shadow: 0 0 22px 14px color-mix(in srgb, var(--color-lime-50) 96%, transparent); }
+  html.stages[data-motion="on"] .lr-steps::after { content: ""; display: block; height: 16svh; }
+}
+@media (prefers-reduced-motion: reduce) { .lr-sheet { animation: none !important; } }
 
 @media (prefers-reduced-motion: reduce) {
   .step__sun { animation: none !important; }

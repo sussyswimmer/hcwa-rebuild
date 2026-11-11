@@ -15,6 +15,8 @@ const PAGES = [
   "/hoat-dong/", "/en/our-work/", "/hoat-dong/co-so/tre-xanh/", "/en/our-work/centers/green-bamboo/",
   "/hoat-dong/du-an/cung-vuon-len/", "/en/our-work/programs/thrive-together/",
   "/chung-tay/", "/en/get-involved/", "/lien-he/", "/en/contact/", "/404.html", "/en/404.html",
+  // The M4 pages' lit headers (M6: header-about, header-impact, header-cau-han).
+  "/ve-chung-toi/", "/en/about/", "/tac-dong/", "/en/impact/", "/hoat-dong/co-so/cau-han/", "/en/our-work/centers/cau-han-project/",
 ];
 // Where text meets the world: the hero over its poster, the lit headers over their stills, the passage
 // statement in the light, the corridor cards set into their views, help arriving on the sill.

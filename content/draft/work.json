@@ -61,6 +61,11 @@
         "vi": "Mọi liên hệ về mái ấm xin gửi qua văn phòng Hội.",
         "en": "Please contact the shelter through the HCWA office.",
         "draft": true
+      },
+      "artNote": {
+        "vi": "Tranh minh họa, không phải nơi ở thật của các em.",
+        "en": "An illustration, not the girls' real home.",
+        "draft": true
       }
     }
   },

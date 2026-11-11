@@ -2,13 +2,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { write } from "./batch.js";
 
 // The passage's text (PLAN H3, 05-DESIGN D5.3 S2, D5.4): on the stage layout the statement waits in the
-// light, rises in at 0.28 and fades at 0.78 (time-based, never scrubbed, reversed on the way back), and the
-// sunlit reading runs with the scroll over 0.30-0.72 through one custom property. The halo under it comes
+// light, rises in at 0.16 and fades at 0.78 (time-based, never scrubbed, reversed on the way back), and the
+// sunlit reading runs with the scroll over 0.18-0.74 through one custom property. The halo under it comes
 // in with the wash. The numbers are the world's timeline (world/journey.js PASSAGE; test/beats.test.mjs
 // keeps them equal): motion/ never imports world/.
-export const TIMELINE = { approach: [0, 0.28], plateau: [0.28, 0.78], read: [0.3, 0.72] };
+export const TIMELINE = { approach: [0, 0.16], plateau: [0.16, 0.78], read: [0.18, 0.74] };
 // The halo goes with the statement (0.78), before the wash has cleared off the corridor.
-const HALO = [0.22, 0.28, 0.78, 0.83];
+const HALO = [0.1, 0.16, 0.78, 0.83];
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 
 export function initPassage() {

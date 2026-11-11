@@ -414,7 +414,8 @@ hcwa_assert_true( null === $hcwa_golden || is_array( $hcwa_golden ), 'hcwa_test_
 hcwa_seed_repo( $hcwa_repo );
 hcwa_assert_same( 'header-green-bamboo', hcwa_seed_header_still( 'green-bamboo' ), 'seed: Green Bamboo gets its header still' );
 hcwa_assert_same( 'header-thrive-together', hcwa_seed_header_still( 'thrive-together' ), 'seed: Thrive Together gets its header still' );
-hcwa_assert_same( '', hcwa_seed_header_still( 'cau-han' ), 'seed: no still rendered for Cau Han, so the placeholder' );
+hcwa_assert_same( 'header-cau-han', hcwa_seed_header_still( 'cau-han' ), 'seed: Cau Han gets its header still (M6)' );
+hcwa_assert_same( '', hcwa_seed_header_still( 'charity-class' ), 'seed: no still rendered for Charity Class, so the placeholder' );
 hcwa_assert_same( '', hcwa_seed_header_still( 'little-rose', true ), 'seed: never a header still for a protected center' );
 hcwa_assert_true( function_exists( 'hcwa_seed_program_reports' ) && function_exists( 'hcwa_seed_parity' ), 'seed writes the program reports and the parity block' );
 

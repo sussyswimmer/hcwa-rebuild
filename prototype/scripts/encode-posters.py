@@ -36,7 +36,7 @@ FALLBACK = 2.0
 FLOOR = {"AVIF": 18, "WEBP": 30, "JPEG": 35}  # below these the stills turn to mush: fail instead
 LIGHT_FLOOR = {"AVIF": 14, "WEBP": 25}         # the light layer is soft and only ever drawn over the base
 STEPS = (1, 0.85, 0.72, 0.6)
-SCREEN_STEPS = STEPS + (0.5, 0.4)  # the screen's light is soft haze that holds still: it may go softer
+SCREEN_STEPS = STEPS + (0.5, 0.4, 0.33)  # the screen's light is soft haze that holds still: it may go softer
 BUCKETS = ("portrait", "tablet", "landscape", "wide")
 
 
@@ -189,6 +189,11 @@ def encode_layer(img, name, layer, w, budget_kb, formats, out, rows, failures):
         got = None
         # JPEG is the last-resort fallback (no AVIF, no WebP): it may step down like a light layer.
         steps = SCREEN_STEPS if layer == "lightscreen" else STEPS if layer == "lightroom" or fmt == "JPEG" else STEPS[:1]
+        # A width past its kind's usual largest (a still shown larger than its box: Contact's opening, 3840 w desk and
+        # 1440 w phone) may bring its light down to about the usual file's own pixels: the light is soft over the
+        # base, and the base carries the detail. Tried only after every usual step, so other stills are unchanged.
+        if layer.startswith("light"):
+            steps = steps + tuple(px / w for px in (1600, 1360, 1152, 960, 800, 640, 480, 400, 320) if px / w < steps[-1])
         for step in steps:
             small = resize(img, round(w * step))
             got = fit(small, fmt, budget, floor)

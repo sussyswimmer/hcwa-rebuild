@@ -14,8 +14,9 @@ import { packFrom } from "./walls-pack.js";
 // until they arrive, or if they never do, every surface keeps its procedural look. A worker fetches, decodes and packs
 // each material into one RGBA texture (walls-pack.js: normal xy, tone relief, chip mask). Every material of every set
 // spreads the same uniform objects (wallUniforms()), so one load reaches the room, the corridor and the shutters;
-// uWallK fades them in over WALL_FADE ms (a pop on a held frame would read as a glitch). Stills and posters render with
-// them at full strength (stillWalls(): the tier's own maps, so a fallback matches the live world it stands in for).
+// uWallK fades them in over WALL_FADE ms (a pop on a held frame would read as a glitch). The named stills (still.js:
+// inner headers, doors, bays) render with them at full strength (stillWalls(), Tier 2 maps), offline. The hero posters
+// (poster.js) do not: they are the LCP and hand off to the live room, which starts on its procedural walls.
 // glsl/walls.js holds the shading.
 export const WALL_KEYS = { plaster: "Pl", limewash: "Lw", dado: "Da", paint: "Pt", concrete: "Co" };
 // Map size per tier. Tier 2 at 1024 px costs ~28 MB of GPU memory (5 × 4 MB + mips); 512 px is ~7 MB (PLAN 9, M5).
@@ -97,7 +98,7 @@ export async function loadWalls({ renderer, tier, yieldNow, signal }) {
   return { size, kb: Math.round(wallBytes(tier) / 1024), gpuMB: wallGpuMB(tier) };
 }
 
-// Stills and posters (still.js, poster.js): the tier's maps at full strength, at once (nothing fades in a render).
+// The named stills (still.js, offline): the tier's maps at full strength, at once (nothing fades in a render).
 export async function stillWalls({ renderer, tier }) {
   const r = await loadWalls({ renderer, tier, yieldNow: () => Promise.resolve() });
   shared.uWallK.value = 1;

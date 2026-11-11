@@ -15,6 +15,8 @@ import { HOUSE, houseShade, houseSun, houseUniforms, screenColors, setHouseSun, 
 import { EXIT, exitLook } from "./places.js";
 import { FAN, buildProps, fanAperture, fansGLSL, propsMesh } from "../objects/props.js";
 import { bakeGachBong } from "../gach.js";
+import { posterUniforms, wallPoster } from "../objects/wall-poster.js";
+import { corridorPosters } from "../wall-posters-data.js";
 
 // The corridor (05-DESIGN D6.2, D6.5): open-air, the breeze-block screen on the left with the street and
 // the morning sun beyond it, the lime wall on the right with one painted door per [data-beat] card, each
@@ -188,6 +190,15 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
   }
   if (fixed.length) objects.push(new Mesh(mergeGeometries(fixed), paintMaterial(U, lights, paintOwn(), { vertexPaint: true, leafWear: true, nearFade: true, oldCoat: true })));
 
+  // Wall posters (M6, objects/wall-poster.js): on the door wall above the dado, 5 mm off it, lit as the wall is. Where
+  // they hang and the Little Rose rule are wall-posters-data.js's (corridorPosters drops any that would come within half
+  // a bay and 1.5 m of Little Rose's door). Drawn once the atlas is in (posterUniforms().uPosterK).
+  const posterOwn = { uSunTint: { value: vec(tint(tok("lime-50"), sun.color, 0.6)) }, uSpillTint: { value: vec(mixc(tok("lime-50"), day, 0.5)) }, uShadeK: { value: 0.62 } };
+  const posters = corridorPosters(lay).map((p, i) => wallPoster({ ...U, ...posterUniforms() }, lights, posterOwn, p.wall === "end"
+    ? { id: p.id, w: p.w, at: [p.x, p.y, p.z + 0.005], rotY: 0, seed: 3 + i * 7 }
+    : { id: p.id, w: p.w, at: [C.wallX - 0.005, p.y, p.z], seed: 3 + i * 7 }));
+  objects.push(...posters);
+
   // A door at its angle: the leaf, the light past it, the lit room behind it. Little Rose stays shut.
   const setDoor = (i, deg) => {
     const d = specs[i];
@@ -207,6 +218,7 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
     setHouseSun(U, sun.color);
     const p = tint(tok("lime-50"), sun.color, 0.6);
     propMesh.material.uniforms.uSunTint.value.set(p.r, p.g, p.b);
+    posterOwn.uSunTint.value.set(p.r, p.g, p.b);
     U.uSunCol.value.set(sun.color.r, sun.color.g, sun.color.b);
     U.uRef.value[0] = Math.max(Math.abs(sun.dir.x), 0.05);
     U.uI.value[0] = intensity;
@@ -221,7 +233,7 @@ export function corridorScene({ lime, terr, gach = null, beats, open = 0, t = 0.
   const setFanShadows = (on) => { for (const v of U.uFans.value) if (v.x || v.y) v.w = on && shadows ? 1 : 0; };
 
   return {
-    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun, animate, setFanShadows, lr: lrIndex, props,
+    box, lights, U, objects, sun, layout: lay, specs, setDoor, setSun, animate, setFanShadows, lr: lrIndex, props, posters,
     // For the still renderer: what frames the shot, what glows on its own.
     subject: [screen], glow: [screen], shafts: 1.4,
   };

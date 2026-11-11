@@ -129,6 +129,9 @@ async function extras(browser) {
     const live = await page.waitForFunction(() => document.documentElement.classList.contains("world-live"), null, { timeout: 30000 }).then(() => true, () => false);
     ok(live, `${tag}: world live`);
     if (!live) { await ctx.close(); continue; }
+    // The QA hooks (?debug) are their own chunk, imported after the world goes live; since M6 the posters' atlas and
+    // the wall maps decode in the same idle time, so the hooks can arrive after world-live by a second or more.
+    await page.waitForFunction(() => window.__hcwaWorld?.room, null, { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(1200);
     const clock = () => page.evaluate(() => window.__hcwaWorld.room.U.uTime.value);
     // One second of the world's own clock between two frames, with no input. SwiftShader draws a frame

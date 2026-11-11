@@ -6,7 +6,6 @@ import { applyFrame, drawFrameOverlay, edgePads, solveFrame, toFrame } from "./f
 import { setCaps } from "./materials/caps.js";
 import { REST } from "./clock.js";
 import { mixc, tok } from "./colors.js";
-import { stillWalls } from "./walls.js";
 
 // Poster entry: the same scene code, camera and framing solver as the live world, rendered
 // once at an exact pixel width. layer=base is the shaded room (sun intensity 0), layer=lit
@@ -29,9 +28,6 @@ const { gl: context, gpu } = probe(canvas, tier, { poster: true });
 const gl = createRenderer(canvas, { context, tier, poster: true });
 gl.setPosterSize(W, H, width);
 const room = await buildRoom({ gl, tier, slice: false, shaftSteps: 64 }); // a still can afford clean shafts
-// The Blender walls of this bucket's tier (walls.js: 512 px on Tier 1, 1024 px with the second sample on Tier 2), at
-// full strength: the live room at rest once its maps are in. &walls=0 renders the procedural walls alone.
-const walls = q.get("walls") === "0" ? null : await stillWalls({ renderer: gl.renderer, tier });
 const { dpr } = gl.size;
 room.shafts.setSize(Math.round(W * dpr), Math.round(H * dpr));
 // &shot=x,z,lookX,lookY,lookZ,fov tries a K0 for this bucket (shot approvals, day 3).
@@ -85,7 +81,6 @@ window.__posterResult = {
   silhouette: frame.debug.scr.map((p) => [Math.round((p.x + frame.sx) * 10) / 10, Math.round((p.y + frame.sy) * 10) / 10]),
   // The text caps this still was lit with: the live rest frame uses the same ones, so the handoff is exact.
   caps: capRects.filter((r) => r.kind !== "opaque" && !r.pinned).map(({ x, y, w, h, kind }) => ({ x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), kind })),
-  walls: walls && { size: walls.size, kb: walls.kb },
   calls: info.calls, triangles: info.triangles,
   png: canvas.toDataURL("image/png"),
 };

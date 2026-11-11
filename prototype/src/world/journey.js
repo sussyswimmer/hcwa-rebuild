@@ -6,12 +6,16 @@ import { bezier } from "./tokens.js";
 // and live.js turn it into geometry and a camera.
 
 // A camera eases inside a beat (lantern.md): quick in, a slow drift while the card is read, quick out.
+// M6 pacing (Maxwell, 11 Nov: "it just runs past everything"): the plateau is 0.18–0.82 of the beat (was 0.22–0.78)
+// with a 0.06 drift (was 0.1), so the door holds still while its card is read; arrive on a sine-out, leave on a sine-in.
+// DWELL: in (arrival over 0..in), out (leave over out..1), at (walk units covered on arrival), drift (over the plateau).
+export const DWELL = { in: 0.18, out: 0.82, at: 0.47, drift: 0.06 };
 const sineOut = (x) => Math.sin((x * Math.PI) / 2);
 const sineIn = (x) => 1 - Math.cos((x * Math.PI) / 2);
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 export const dwell = (u) => {
-  const x = Math.min(Math.max(u, 0), 1);
-  return x < 0.22 ? 0.45 * sineOut(x / 0.22) : x < 0.78 ? 0.45 + 0.1 * ((x - 0.22) / 0.56) : 0.55 + 0.45 * sineIn((x - 0.78) / 0.22);
+  const x = Math.min(Math.max(u, 0), 1), D = DWELL, rest = 1 - D.at - D.drift;
+  return x < D.in ? D.at * sineOut(x / D.in) : x < D.out ? D.at + D.drift * ((x - D.in) / (D.out - D.in)) : D.at + D.drift + rest * sineIn((x - D.out) / (1 - D.out));
 };
 
 // Each [data-beat] card is one door (D6.5): its unit, open or closed, its transom's emblem. The DOM
@@ -64,7 +68,11 @@ export function corridorLayout(beats) {
 // the corridor goes out through. An open door swings 0 → 96° into its room over 0.10–0.45. motion/stages.js shows the cards
 // from the same numbers (test/beats.test.mjs keeps them equal and checks every card against the camera):
 // motion/ never imports world/.
-export const WALK = { head: [0, 0.08], beats: [0.08, 0.92], cardIn: 0.18, cardOut: 0.97, release: 0.95, swing: [0.1, 0.45], sun: [0.25, 0.45] };
+// M6 pacing: the stage header holds 0–0.12 (was 0.08), so "Cơ sở trực thuộc" is read before the walk starts; each door
+// is 85svh of scroll (70svh on phones; stages.css), the card's plateau about 44svh / 36svh (test/pacing.test.mjs).
+export const WALK = { head: [0, 0.12], beats: [0.12, 0.92], cardIn: 0.18, cardOut: 0.98, release: 0.95, swing: [0.1, 0.45], sun: [0.25, 0.45] };
+// Scroll per door (svh): desktop and phone (< 600 px). stages.css .bays__track uses the same numbers.
+export const DOOR_SVH = { desk: 85, phone: 70 };
 // The way out (live.js, critique r1 fix round 1): from `release` the camera walks on past the last door (sine-in,
 // `leave` bays of walk) and, scrubbed over the stage's `tilt`, pitches `pitch`° down to the floor, so the gạch
 // runner fills the frame as the pane lets go. From the stage's end the frame washes to the plaster below (lime-100,
@@ -105,7 +113,7 @@ export const DWELL_TILT = 3;
 export function dwellTilt(q, n) {
   if (n <= 0) return 0;
   const u = (q - WALK.beats[0]) / beatW(n) - beatI(q, n);
-  return smooth(0.12, 0.42, u) * (1 - smooth(0.62, 0.92, u));
+  return smooth(0.08, 0.3, u) * (1 - smooth(0.7, 0.92, u));
 }
 
 // The beat q falls in (clamped to the doors there are) and how far through it, u < 0 before the first beat
@@ -126,7 +134,8 @@ export const DOOR_DEG = 96;
 const push = cubicBezier(bezier.out);
 export function doorAngle(i, q, n) {
   const u = (q - WALK.beats[0]) / beatW(n) - i;
-  return DOOR_DEG * push(clamp01((u - WALK.swing[0]) / (WALK.swing[1] - WALK.swing[0])));
+  const x = clamp01((u - WALK.swing[0]) / (WALK.swing[1] - WALK.swing[0]));
+  return x > 1 - 1e-9 ? DOOR_DEG : DOOR_DEG * push(x);
 }
 
 // Where along the walk the camera is: t = 0 is the pose the approach out of the passage settles into, and
@@ -136,19 +145,19 @@ export function doorAngle(i, q, n) {
 // card is read the walk eases to a stop a step past its reading spot. Runs every frame: no allocations.
 export function walkT(q, n) {
   if (n <= 0) return 0;
-  const h1 = WALK.head[1], w = beatW(n), i = beatI(q, n), u = (q - WALK.beats[0]) / w - i;
-  const tHead = (0.95 * h1) / (0.22 * w + h1);
+  const D = DWELL, h1 = WALK.head[1], w = beatW(n), i = beatI(q, n), u = (q - WALK.beats[0]) / w - i;
+  const arrive = 0.5 + D.at, tHead = (arrive * h1) / (D.in * w + h1);
   if (q <= h1) return tHead * sineIn(clamp01(q / h1));
   const uu = Math.min(Math.max(u, 0), 1);
-  if (i === n - 1 && uu >= 0.78) {
-    // Hermite from the drift (at its speed) to rest at n + 0.1.
-    const qa = WALK.beats[0] + (n - 1 + 0.78) * w, x = clamp01((q - qa) / (1 - qa));
-    const p0 = n + 0.05, p1 = n + 0.1, m0 = ((0.1 / 0.56) / w) * (1 - qa);
+  if (i === n - 1 && uu >= D.out) {
+    // Hermite from the drift (at its speed) to rest 0.05 further on.
+    const qa = WALK.beats[0] + (n - 1 + D.out) * w, x = clamp01((q - qa) / (1 - qa));
+    const p0 = n - 0.5 + D.at + D.drift, p1 = p0 + 0.05, m0 = ((D.drift / (D.out - D.in)) / w) * (1 - qa);
     return (2 * x ** 3 - 3 * x ** 2 + 1) * p0 + (x ** 3 - 2 * x ** 2 + x) * m0 + (3 * x ** 2 - 2 * x ** 3) * p1;
   }
   const d = dwell(uu);
-  if (i > 0 || d >= 0.45) return i + 0.5 + d;
-  return tHead + (0.95 - tHead) * (d / 0.45);
+  if (i > 0 || d >= D.at) return i + 0.5 + d;
+  return tHead + (arrive - tHead) * (d / D.at);
 }
 
 // The camera's spot along the corridor at walk position t: from the approach's z (the exit hole) to just
@@ -198,7 +207,9 @@ export function walkPose(t, layout, lay, out = { pos: [0, 0, 0], yaw: 0, fov: 0 
 // The wash clears quickly once the statement has gone (a cubic ease-out over 0.78-0.94): the corridor is
 // already half there at 0.82, so the way out of the hole is never a blank screen; the camera's pull-back
 // keeps the whole exit, 0.78-1.
-export const PASSAGE = { approach: [0, 0.28], washIn: [0.18, 0.28], plateau: [0.28, 0.78], exit: [0.78, 1], clear: [0.78, 0.94], read: [0.3, 0.72] };
+// M6 pacing: the wash rises over 0.06–0.16 (was 0.18–0.28) and the statement holds from 0.16, so no frame of the
+// passage is without text for more than a few wheel ticks; the flight is 200svh (170svh on phones; stages.css).
+export const PASSAGE = { approach: [0, 0.16], washIn: [0.06, 0.16], plateau: [0.16, 0.78], exit: [0.78, 1], clear: [0.78, 0.94], read: [0.18, 0.74] };
 const clearing = (p) => { const x = clamp01((p - PASSAGE.clear[0]) / (PASSAGE.clear[1] - PASSAGE.clear[0])); return (1 - x) ** 3; };
 export const wash = (p) => (p <= PASSAGE.plateau[0] ? smooth(...PASSAGE.washIn, p) : p <= PASSAGE.plateau[1] ? 1 : clearing(p));
 // Which set the camera is in: the swap happens behind a full wash, halfway through the plateau.
@@ -216,8 +227,10 @@ export const setAt = (p) => (p < (PASSAGE.plateau[0] + PASSAGE.plateau[1]) / 2 ?
 // a 0.45) and the slats already turn (a 0.15 → 0.50), the gold lines on the floor widening and brightening with
 // their angle, so the section rising into place is already the light coming in. The stage keeps its numbers
 // for the stills (motion/shutters.js), which only exist pinned.
+// M6 pacing: the slats over 0–0.30, the leaves over 0.30–0.66, then held fully open over 0.66–0.76 (the "look out"
+// plateau) before the blend over 0.76–0.92; the stage is 200svh (stages.css --s3).
 export const SHUTTERS = {
-  slats: [0, 0.35], leaves: [0.35, 0.75], flood: 0.78, unflood: 0.7, blend: [0.75, 0.9], sun: [0.85, 0.95],
+  slats: [0, 0.3], leaves: [0.3, 0.66], flood: 0.78, unflood: 0.7, blend: [0.76, 0.92], sun: [0.85, 0.95],
   push: 0.45, approachSlats: [0.15, 0.5],
   slatDeg: 65, leafDeg: 110, floodMs: 900, back: 1.6,
 };

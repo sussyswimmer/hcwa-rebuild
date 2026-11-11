@@ -9,7 +9,7 @@
 //        [--shot x,z,lookX,lookY,lookZ,fov] (try a K0 for one bucket; pair with --keep)
 // Stills (inner headers, dusk, doors, 404, story; src/world/still-shots.js): npm run posters -- --still all
 //        [--still header-our-work,dusk] [--crop desk] [--keep [dir]] [--debug] [--no-encode]
-//        [--no-walls] (the procedural walls alone, for a before/after)
+//        [--no-walls] (stills only: the procedural walls alone, for a before/after)
 //        tuning one crop: [--cam x,y,z,lookX,lookY,lookZ,fov] [--sun az,el] [--w 800] [--layer lit]
 import { createServer as httpServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
@@ -167,7 +167,7 @@ try {
       page.on("pageerror", (e) => errors.push(e.message));
       page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()); });
       await page.addInitScript((input) => { window.__posterInput = input; }, { sets });
-      const q = new URLSearchParams({ bucket: b.name, w: String(PIXELS), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("shot") === "string" ? { shot: opt("shot") } : {}), ...(opt("no-walls") ? { walls: "0" } : {}) });
+      const q = new URLSearchParams({ bucket: b.name, w: String(PIXELS), layer, ...(opt("debug") ? { debug: "frame" } : {}), ...(typeof opt("shot") === "string" ? { shot: opt("shot") } : {}) });
       await page.goto(`${origin}/src/world/poster.html?${q}`);
       await page.waitForFunction(() => document.title === "done" || window.__posterError, null, { timeout: 300000, polling: 500 }).catch(() => {});
       const result = await page.evaluate(() => window.__posterResult ?? null);

@@ -53,12 +53,15 @@ export function surfaceMaterial(U) {
         vec3 rel = k == 1 ? texture2D(uTerr, vP.xz * 0.5).rgb / ${TERRAZZO_CEMENT.toFixed(3)} * (1. + mott * .5) : vec3(1. + mott);
         vec3 Nb = N;
         if (k != 1 && uWallK > 0.) {
-          vec4 w = wallTap(uWPl, uv / ${WALL_SCALE.wall.toFixed(1)}, smoothstep(.35, .65, lw.r));
+          vec2 wuv = uv / ${WALL_SCALE.wall.toFixed(1)};
+          float mw = smoothstep(.35, .65, lw.r);
+          vec4 w = wallTap(uWPl, wuv, mw);
           // The ceiling stays calmer; behind body text (a capped rect, caps.js) the plaster keeps a fifth of its relief,
           // so the intro's darkest pixels stay where its contrast bar was measured.
           float age = wallAge(lw.a) * (k == 2 ? .3 : 1.) * mix(.2, 1., smoothstep(.4, 1., capAt(gl_FragCoord.xy)));
-          rel = mix(rel, vec3(wallRel(w.b, age)), uWallK);
-          Nb = wallN(N, w.rg, uWallK * .6 * mix(.3, 1., age)); // the plaster's grit, softened: a phone stands 0.5 m from it
+          float cg = wallCrackGate(wuv, mw, age);
+          rel = mix(rel, vec3(wallRelM(w, age, cg)), uWallK);
+          Nb = wallN(N, wallCrackN(w, cg), uWallK * .6 * mix(.3, 1., age)); // the plaster's grit, softened: a phone stands 0.5 m from it
         }
 
         // Analytic contact shadow at floor, ceiling and corners: no SSAO.

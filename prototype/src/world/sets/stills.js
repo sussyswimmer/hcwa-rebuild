@@ -498,7 +498,7 @@ function frontScreen({ lime, terr }) {
   // The canopy over the pavement, between the sun and the screen's far end: its leaves reach the blocks past the
   // middle of the screen and never the plaster under the H1 (feathered over a metre).
   const reach = 2.2 * (L.z / L.x);
-  const canopy = { mode: "occluder", pattern: "canopy", corner: [2.2, -1, s.z0 + 2.3 + reach], u: [0, 0, -1], v: [0, 1, 0], size: [8, 10], depth: 0, params: [2.4, 0.46, 1.7, 5.3], feather: 1.0, penumbra: 0.4 };
+  const canopy = { mode: "occluder", pattern: "canopy", corner: [2.2, -1, s.z0 + 0.6 + reach], u: [0, 0, -1], v: [0, 1, 0], size: [8, 10], depth: 0, params: [2.4, 0.46, 1.7, 5.3], feather: 1.0, penumbra: 0.55 };
   const lights = [{ dir: L, apertures: [canopy] }];
   const sand = tok("faceSand");
   // Morning shade outdoors: the sky's cool over the street's lime bounce.
@@ -593,7 +593,8 @@ export const SHOTS = {
   // middle of the phone's 4:3, the plaster left of it for the H1.
   "header-about": { scene: (o) => frontScreen(o), crops: {
     desk: levelCam([6.4, 1.1, -0.2], -104, 30, 3, [0, 2.0, -2.8], 0.8, 0.52),
-    mobile: levelCam([4.6, 1.1, -1.6], -98, 46, 4 / 3, [0, 2.0, -2.8], 0.55, 0.5),
+    // Phones: further back, so the plaster frames the screen (the screen's lit face alone filled the 4:3 before).
+    mobile: levelCam([6.2, 1.1, -1.4], -100, 40, 4 / 3, [0, 2.1, -2.8], 0.6, 0.42),
   } },
   // Square on to the back wall, 3.5 m back (no corner, floor or ceiling in a desk crop): the wall's right part takes
   // the well's patches beside the H1.

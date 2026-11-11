@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 return array(
-	'version' => 'b337dad78487f9fb266c8041c7fe401770bb2b459499479b7791e742ae034951',
+	'version' => '1343b60dfab9b6d32db5dd13b0d2e66f3eeac0f3129d9210c303f3a7b4da6849',
 	'areas' => array(
 		'education',
 		'protection',
@@ -153,9 +153,12 @@ return array(
 		'min_partner_logos' => 4,
 	),
 	'header_stills' => array(
+		'header-about',
+		'header-cau-han',
 		'header-contact',
 		'header-get-involved',
 		'header-green-bamboo',
+		'header-impact',
 		'header-our-work',
 		'header-thrive-together',
 	),

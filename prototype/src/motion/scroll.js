@@ -6,6 +6,7 @@ import "lenis/dist/lenis.css";
 import { ease } from "./tokens.js";
 import { bus } from "../bus.js";
 import { hold, release, settleSoon } from "./ticker.js";
+import { LERP } from "./smooth-wheel.js";
 
 gsap.registerPlugin(ScrollTrigger, CustomEase);
 for (const [name, curve] of Object.entries(ease)) CustomEase.create(name, curve);
@@ -58,7 +59,9 @@ export function startScroll() {
       };
       const make = () => {
         const l = new Lenis({
-          lerp: 0.12, smoothWheel: true, syncTouch: false, autoRaf: false,
+          // M6 pacing (Maxwell, 11 Nov: "it just runs past everything"): a longer glide (lerp 0.12 → 0.07, about
+          // 0.5 s to settle) with the same native distance per wheel tick (wheelMultiplier 1) and no snap.
+          lerp: LERP, wheelMultiplier: 1, smoothWheel: true, syncTouch: false, autoRaf: false,
           prevent: (node) => Boolean(node.closest?.("dialog, [data-lenis-prevent]")),
         });
         l.on("scroll", ScrollTrigger.update);

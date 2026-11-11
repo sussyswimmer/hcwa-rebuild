@@ -13,6 +13,7 @@ export const color = {
   "sun-400": "#FFC42E",
   "sun-500": "#F2B312",
   "sun-200": "#FFE6AE",
+  "sun-300": "#FFD58A",
   "sun-100": "#FFF3D3",
   "gold-700": "#8A5A12",
   "blue-700": "#313188",

@@ -58,14 +58,42 @@ test("packing: normal xy, tone relief around 1.0, chips only on the dado and the
   assert.equal(paint[3], 0);
   assert.ok(paint[7] > 200, "wood under the paint is a chip");
   assert.equal(packWall("concrete", Uint8Array.from([100, 90, 80, 255]), px([128, 128, 255], 1))[3], 0, "concrete has no chips");
+  // Plaster's A is its crack mask: the crack's core, its lips (one texel at 16 px; 8 at 1024 px), nothing beyond.
+  const S = 16, wall = Uint8Array.from({ length: S * S * 4 }, (_, i) => (i % 4 === 3 ? 255 : Math.floor(i / 4) % S === 5 ? 120 : 200));
+  const cracked = packWall("plaster", wall, px([128, 128, 255], S * S));
+  const A = (x, y) => cracked[(y * S + x) * 4 + 3];
+  assert.equal(A(5, 3), 255, "a crack is in the mask");
+  assert.ok(A(4, 3) > 0 && A(6, 3) > 0, "and its lips");
+  assert.equal(A(8, 3), 0, "the wall beyond is not");
 });
+
+// Every module a file pulls in before its first await: static imports only (an `import()` is a later chunk).
+function staticGraph(entry) {
+  const seen = new Set(), todo = [join(root, entry)];
+  while (todo.length) {
+    const f = todo.pop();
+    if (seen.has(f) || !/\.m?js$/.test(f) || !existsSync(f)) continue;
+    seen.add(f);
+    const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, "");
+    for (const [, spec] of src.matchAll(/^\s*import\s+(?:[^'"]*?\sfrom\s+)?["'](\.{1,2}\/[^"']+)["']/gm)) todo.push(join(dirname(f), spec));
+  }
+  return [...seen].map((f) => f.slice(root.length + 1));
+}
 
 test("the maps load only after the world's first frame (never on the LCP path)", () => {
   const src = readFileSync(join(root, "src/world/live.js"), "utf8");
   const handoff = src.indexOf('root.classList.add("world-live");\n  live = true;');
   const load = src.indexOf("loadWalls({");
   assert.ok(handoff > 0 && load > handoff, "loadWalls is called after the handoff");
-  for (const f of ["src/main.js", "src/world/index.js", "src/world/poster.js", "src/world/still.js"]) {
-    assert.ok(!/walls\.js|textures\//.test(readFileSync(join(root, f), "utf8")), `${f} does not touch the wall maps`);
-  }
+  // The first-paint path: main.js and the world's entry with everything they import statically. The hero posters
+  // (poster.js) are the LCP and hand off to the live room, which starts on its procedural walls: they render without
+  // the maps, so the handoff is exact and their bytes do not move.
+  const firstPaint = [...staticGraph("src/main.js"), ...staticGraph("src/world/index.js"), "src/world/poster.js"];
+  assert.ok(firstPaint.includes("src/ui/stills.js") && firstPaint.includes("src/world/tiers.js"), "the graph walk follows imports");
+  for (const f of firstPaint) assert.ok(!/walls(-[a-z]+)?\.js|textures\//.test(readFileSync(join(root, f), "utf8")), `${f} does not touch the wall maps`);
+  // The named stills (still.js) render with the maps (PLAN-M4 6.4) but only offline: nothing the site runs imports the
+  // still entry, so it can never put the maps in front of a page (the still files themselves keep their budgets,
+  // test/stills.test.mjs).
+  const site = [...new Set([...staticGraph("src/main.js"), ...staticGraph("src/world/index.js"), ...staticGraph("src/world/live.js")])];
+  for (const f of site) assert.ok(!/["']\.{1,2}\/(world\/)?still\.js["']/.test(readFileSync(join(root, f), "utf8")), `${f} does not import the still entry`);
 });

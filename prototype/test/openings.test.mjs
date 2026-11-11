@@ -84,12 +84,13 @@ test("the tracks agree: scroll3d.mjs TRACKS = the CSS keyframes = the JS fallbac
   }
 });
 
-test("motion stays native and light: no GSAP or Lenis on these pages, the driver under 2 KB gzip", () => {
+test("motion stays native and light: no GSAP or Lenis on these pages, the driver under 2.7 KB gzip", () => {
   assert.doesNotMatch(driver, /import\s/, "the driver imports nothing (never motion/index.js)");
   assert.doesNotMatch(driver, /preventDefault|wheel|scrollTo|snap/i, "never takes the scroll");
   assert.match(driver, /passive: true/);
   assert.match(driver, /IntersectionObserver/);
-  assert.ok(gzipSync(driver).length < 2048, `driver ${gzipSync(driver).length} B gzip`);
+  // M6: the driver also carries Little Rose's garden steps and the gate and letter tracks (was 2 KB).
+  assert.ok(gzipSync(driver).length < 2700, `driver ${gzipSync(driver).length} B gzip`);
   assert.match(main, /import "\.\/styles\/openings\.css";/);
   assert.ok(main.indexOf('import "./styles/openings.css"') > main.indexOf('import "./styles/pages.css"'), "openings.css after pages.css");
   for (const [fn, key] of [[contact, "contact"], [news, "news"]]) for (const lang of LANGS) assert.doesNotMatch(body(fn, lang, key), /data-world|data-stage(?!r)/, `${key}: nothing asks main.js for the GSAP chunk`);
@@ -175,7 +176,8 @@ const peakRate = ([x1, y1, x2, y2]) => {
 test("the camera and the notices ease evenly: no stretch of scroll runs faster than 1.6x the mean", () => {
   assert.ok(peakRate(TRACKS.cam.ease) <= 1.6, `cam peak ${peakRate(TRACKS.cam.ease).toFixed(2)}`);
   assert.ok(peakRate(TRACKS.cam.ease) > 0 && TRACKS.cam.ease[1] > 0, "the camera is moving from the first pixel of scroll");
-  assert.ok(TRACKS.cam.to <= 0.88 && TRACKS.cam.to >= 0.85, "the last 12-15% holds still");
+  assert.ok(TRACKS.cam.to <= 0.82 && TRACKS.cam.to >= 0.78, "the last 18-22% holds still (M6)");
+  for (const name of ["gate", "mail"]) assert.ok(peakRate(TRACKS[name].ease) <= 1.6, `${name} peak ${peakRate(TRACKS[name].ease).toFixed(2)}`);
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");
   for (const name of ["notice-turn", "notice-shadow"]) {
     const kf = plain.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?\\})\\s*\\}`))?.[1];
@@ -194,14 +196,35 @@ test("the stages say what they pin, so the driver knows where each lets go", () 
   assert.match(driver, /s3dPin/);
 });
 
-test("contact: the still is never blown up (short dolly, stage no taller than the still at about 1x)", () => {
+test("contact (M6): a long, visible run on every stage tier, the page rising in only at the end, the still kept sharp", () => {
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");
-  const zooms = [...plain.matchAll(/--zoom:\s*([\d.]+)/g)].map((m) => Number(m[1]));
-  assert.ok(zooms.length >= 2 && zooms.every((z) => z <= 0.2), `zooms ${zooms}`);
-  const runs = [...plain.matchAll(/--run:\s*([\d.]+)svh/g)].map((m) => Number(m[1]));
-  assert.ok(Math.min(...runs) <= 12, `phone run ${Math.min(...runs)}svh`);
-  assert.match(plain, /--stage-h: min\(100svh - var\(--hdr\), 62svh\)/);
-  assert.match(plain, /mask-composite: intersect/, "the desktop stage feathers into the header as well as the wall");
+  const contactCss = plain.slice(plain.indexOf(".s3d--contact {"), plain.indexOf(".newswall {"));
+  const zooms = [...contactCss.matchAll(/--zoom:\s*([\d.]+)/g)].map((m) => Number(m[1]));
+  assert.ok(zooms.length >= 2 && zooms.every((z) => z <= 0.12), `the still's own dolly stays short: ${zooms}`);
+  const runs = [...contactCss.matchAll(/--run:\s*([\d.]+)svh/g)].map((m) => Number(m[1]));
+  assert.ok(runs.length >= 2 && Math.max(...runs) >= 100 && Math.min(...runs) >= 80, `runs ${runs} (desktop >= 100svh, phone >= 80svh)`);
+  assert.match(contactCss, /--stage-h: min\(100svh - var\(--hdr\), 66svh\)/, "the stage is no taller than the 1600 w still at about 1x");
+  // The stage runs wherever html.stages is set (Tier 1 and 2), never only on Tier 2.
+  for (const sel of [".cg-leaf--l", ".cg-gate", ".cg-mail", ".lit {"]) assert.ok(contactCss.includes(sel), sel);
+  assert.doesNotMatch(contactCss.match(/html\.stages\[data-motion="on"\] :is\(\.s3d--contact[^{]*\{[^}]*\}/)[0], /data-tier/);
+  // No fog from the first pixel: the day's rise is one feather, and none of its stops is solid before 70%.
+  const fog = contactCss.match(/linear-gradient\(in oklab to bottom, transparent,([^\n]*?)var\(--fog\)\) 0 0/)[1];
+  for (const [, pct, at] of fog.matchAll(/var\(--fog\) (\d+)%, transparent\) (\d+)%/g)) if (Number(at) <= 70) assert.ok(Number(pct) <= 82, `fog ${pct}% at ${at}%`);
+  assert.match(contactCss, /--feather: 28svh/);
+  // The still's straight side never stands on plaster: its left ramp sits on the subject's edge, 16% wide.
+  assert.match(contactCss, /transparent calc\(var\(--s3d-subject\) \* 100cqw - 10cqw\)[^;]*black calc\(var\(--s3d-subject\) \* 100cqw \+ 6cqw\)/);
+  assert.match(read("../src/styles/pages.css"), /\[data-still="header-contact"\] \{ --x0: 44%; --x1: 60%; \}/);
+});
+
+test("contact (M6): the gate, its courtyard and the letters are decorative SVG with no words, and the stage line is HTML in both languages", () => {
+  for (const lang of LANGS) {
+    const h = body(contact, lang, "contact");
+    const gate = h.match(/<div class="cg" aria-hidden="true">[\s\S]*?<div class="cg-canopy">[\s\S]*?<\/div>\s*<\/div>/)?.[0];
+    assert.ok(gate, "the gate layers are in the media box");
+    assert.doesNotMatch(gate, /<text|<img|<image|<p[\s>]|<a\s|<h\d/);
+    assert.equal((gate.match(/class="cg-mail /g) ?? []).length, 3);
+    assert.ok(h.includes(`<p class="s3d-line" data-draft>${esc(content.involve.contactPage.stageLine[lang])}</p>`));
+  }
 });
 
 test("news: the wall's tiles share no short period, and there is a texture hook for the real plaster map", () => {

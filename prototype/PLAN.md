@@ -1412,3 +1412,175 @@ five seamless 1024 px materials; `scripts/encode-walls.py` writes them to `publi
   bay and header stills could be re-rendered with the maps for a matching handoff (the world fades the maps in over
   700 ms after the handoff, so nothing pops today); that needs `still.html`/`poster.html` to load them and an encode
   budget check; (4) the hero intro at 390 over the stills (6.6-6.98) predates this pass.
+
+**M6 walls finisher (11 Nov 2026).** Maxwell (11 Nov): "the walls are so bland". The M5 walls pass stopped midway (7
+tests red); this pass makes it coherent, adds the three M4 header stills and fixes the News and Contact openings' walls.
+- **Stills and posters.** The named stills (`still.js`: inner headers, doors, bays) render with the Blender maps at
+  full strength (Tier 2 maps, PLAN-M4 6.4). The hero posters (`poster.js`) do **not**: they are the LCP and hand off to
+  the live room, which starts on its procedural walls and fades the maps in after the handoff; a poster with the maps
+  would pop back at the handoff. `test/walls.test.mjs` now walks the static import graph from `main.js` and
+  `world/index.js` (any module, not two named files), keeps `poster.js` out of the maps, and checks that nothing the
+  site runs imports the still entry. **Departure:** the stopped pass's test also listed `still.js`; that contradicted
+  6.4 (and the M5 task #203 it had done), so the clause is replaced by the stronger graph check, not dropped.
+- **Cracks were stamps.** A Blender map has one crack network a tile; at 2 m a tile it repeated on every header and
+  read as stickers (most visible under a raking sun, through the normal map's lips, not the tone). Now: `walls-pack.js`
+  packs a crack mask in A for plaster, lime wash and concrete (the crack's core plus the 8 texels of lips its normal
+  gives it, measured on the bake; wraps); `glsl/walls.js` `wallCrackGate()` lets a repeat keep its cracks only where
+  the wall is well aged (`wallCrack(age)`, age 0.82 → 1) **and** on a random draw per 2 m tile (a value noise whose
+  lattice sits on tile centres, so a crack takes its own tile's draw and is never cut; Tier 2's rotated sample draws on
+  its own tiles): about one repeat in three. `wallRelM()`/`wallCrackN()` gate tone and relief under the mask together.
+  The dado (A = chips) finds its cracks by tone. Paint, blocks: unchanged (`wallRel`). Live check (SwiftShader, both
+  tiers): maps load after the handoff (`[world] walls · 1024 px · 689 KB` / `512 px · 251 KB`), no shader errors.
+- **Header stills** (`still-shots.js`, `sets/stills.js`; PLAN-M4 4.1, 4.6, 4.10), rendered with the maps:
+  `header-about` (the house front at 06:30, the low sun raking the plaster, the screen right; **two layers**: its
+  screen is lit from the street side, so the face's light is the room light; the lightscreen layer could not meet its
+  8 KB at any size with the concrete's relief, and nothing comes through toward the camera anyway; canopy moved to the
+  screen's far end only; phone crop pulled back so the screen sits in the upper two thirds and the breadcrumb stays on
+  plaster), `header-impact` (noon down the light well, no numbers), `header-cau-han` (`centerDoor` with the unit's
+  rules: blue door open, Vòm cầu transom light; no Little Rose door, `stills.json` says so). The pages switch to them
+  by themselves (`headerReady`). Budgets: all inside (test/stills.test.mjs).
+- **News wall** (`openings.css`, `scripts/encode-wall-css.py`). The SVG feTurbulence grain and wash are gone: the
+  Blender plaster (grit, pores, trowel ridges, mottle, relief lit from the upper right) at 640 px and the Blender lime
+  wash's broad loang (low-passed, no grit) at 1037 px, each one hard-light map over the lime, **with their cracks masked
+  and filled** (a tiled crack is a stamp); the cracks, patches and streaks stay drawn once (`--wall-marks`). Found and
+  fixed: the hard-light maps had been blending with nothing (the backdrop's mask makes its own group) and showed as flat
+  grey; the plane now carries the lime. Bounds checked by the encoder on both layers together: at most 14% darker
+  (ink-900 on the darkest 11.3:1), 7% lighter. Bytes: 103 + 6 KB desktop, 22 + 3 KB phones. `check-openings` (news):
+  pass. LCP 2,040 ms (the inline marks, = FCP; the maps are never the LCP).
+- **Contact sharp** (`still-shots.js` per-still `widths`; `cropsOf()` merges them). The desk crop now has 2400 and
+  3840 w, the phone crop 1440 w, each at the 1600 w (960 w) file's bytes: at 1440 × 900 on a 2x screen the browser takes
+  3840 w and draws about 1.0 device px a texel at the end of the dolly (was 2.4); 1920 at 1x takes 2400 w; a 390 phone
+  at 3x takes 1440 w (1.3, was 1.9) for the same 22 KB. `encode-posters.py`: past their kind's usual largest width the
+  light layers may step down to about the usual file's pixels (tried only after every usual step, so no other still
+  changes). The opening's CSS and module are untouched (the pages stream reworks the Contact header next).
+- **Checks.** `npm test` 164 pass; `build`, `build:pages` (textures resolve under `/hcwa-rebuild/`), `check-links` 46
+  pages 0 dead; `PROD=1` blocked by its existing guards only (143, as before); `export:wp`, `php wp/tests/run.php` 8228
+  pass (`runtime-scripts-test.php`: Cầu Hàn now seeds its still; the placeholder case moved to Charity Class),
+  `wp-static-check` 0 errors. `light-contrast` (now also About, Impact, Cầu Hàn VI/EN): only the 3 known home lines at
+  390. Mobile LCP (median of 3): home 2,336, Contact 2,104, News 2,040, Cầu Hàn 2,056, About 2,084, Impact 2,072 ms.
+  `check-openings` contact and news: pass. Captures in `qa/m6/walls/`.
+- **needs (lead / later phase):** (1) the re-render-all phase: every other still still has procedural walls (only the
+  three new headers and Contact have the maps); when they are re-rendered, the lit layers of block-heavy frames may need
+  the same treatment as `header-about` (the concrete relief costs bytes in a light layer); (2) Contact at 1440 × 900 on a
+  1x screen still takes 1600 w (1.2x at the end of the dolly; a `sizes` per still would fix it, but the PHP builder has no
+  per-still sizes yet); (3) the M5 needs (1), (2) and (4) stand.
+
+### M6 world and flow (11 Nov 2026, Maxwell: "it just runs past everything", "the gradient into the wall", "the walls are so bland", "the white space between green bamboo little rose and centers is too huge")
+- **Pacing** (`motion/scroll.js`, new `motion/smooth-wheel.js`, `world/live.js`, `world/journey.js`, `motion/stages.js`,
+  `motion/passage.js`, `motion/shutters.js`, `stages.css`; `test/pacing.test.mjs`). Lenis lerp 0.12 → 0.07 (about 0.5 s to
+  settle), `wheelMultiplier` 1, `syncTouch` false, no snap: the same native distance per wheel tick, a longer glide. Every
+  page without the motion layer (Contact, News, inner pages) now gets the same glide from a Lenis-only chunk, fine pointers
+  and motion on only (departure: openings.test's "no Lenis on these pages" now means no Lenis in their driver; the wheel
+  chunk is separate). The world camera follows the scroll on an exact critically damped spring (ω 9/s), so a trackpad
+  fling glides through a door; the text, cards, washes and hems keep reading the scroll itself. Measured scroll per beat
+  (before → after): 1440 passage flight 1620 → 1800 px, text-less run 454 → under 290 px (the wash rises 0.06-0.16 and
+  the statement holds 0.16-0.78, 1116 px); corridor 378 → 612 px a door, the card's still plateau 212 → 392 px, the
+  stage header 108 → 275 px; shutters stage 1620 → 1800 px with a new fully open "look out" hold of 180 px (leaves
+  0.30-0.66, blend 0.76-0.92). 390: passage 1266 → 1435 px, corridor 284 → 472 px a door (plateau 159 → 302 px),
+  shutters 1266 → 1435 px. `cardOut` 0.97 → 0.98 (with the shorter leave, Little Rose's card had gone while its door
+  was still at 0.79 of the frame). Departures from the art director's numbers: passage `read` is [0.18, 0.74] (not
+  [0.12, 0.74]: the words would be lit before they rise in); `approach` is [0, 0.16] so the camera reaches the block as
+  the wash fills; `WALK_OUT.pitch` stays 14° (0.6.7 is binding; the plan asked 6°).
+- **Corridor rail to Centers** (`stages.css`, `motion/stages.js`). On desktop the door index and the stage header (or the
+  card) are one block centred in the panel, the index 24 px above the H2 (it was about 260 px of empty pane). The pane's
+  mask feathers 24svh top and bottom and 200 px toward the door, each on 8 smoothstep stops (it was 96 px and a linear 22%,
+  which read as a horizontal and a vertical line). The link-fit check measures against the panel's foot.
+- **Seams** (`materials/still-surface.js`, `materials/paint.js`, `renderer.js`, `stages.css`, `components.css`).
+  The near-lens backstop no longer discards on an interleaved-noise threshold (the stipple where the screen meets the
+  dado): a wall or door nearer than 1.4 m settles smoothly into its own flat shade. The hem's three-piece ramp is a
+  smoothstep in the shader and on 8 stops in the stills' `--hem-mask`. The passage's band is an oklab ramp on 8 stops,
+  its exit still's masks eased; the bay views, the phone glass and S3's frame feather on eased stops. The site header's
+  skirt is 48 px with its own 8 px blur, eased (the blur used to end in a line at the bar's foot: rows 79/84 flagged in
+  14 home frames before, none after). The dusk band and the footer sky are eased per stretch in oklab; the footer's hole
+  row varies 0.35-1 along an irregular ramp. New gate `scripts/seam-scan.py` (row/column luminance steps > 6 levels over
+  > 40% of the frame, and a dither block finder): home strips at 25svh, Tier 1, 1440 rows 61 → 49 lines, 390 rows 242 →
+  230 (most of what remains is 3D geometry, the news image's edge, the draft partner box and the footer); captures in
+  `qa/m6/world/{before,after}/`.
+- **Wall posters** (`world/wall-posters-data.js`, `scripts/wall-posters.mjs`, `scripts/encode-wall-posters.py`,
+  `world/objects/wall-poster.js`; `test/wall-posters.test.mjs`). Eight original screen prints of everyday Saigon life
+  (Xuân hoa mai, Cà phê phin, a scooter under tamarind, Sen, Mưa on shophouse shutters, a kite over rice terraces, a
+  bánh mì cart, a shophouse shutter): flat token inks, halftone, a second plate off register, aged cream paper (sun
+  fade, stains, edge grime, creases), tape and a soft wall shadow. No stars, flags, people's faces, children, brands,
+  dates or red/pink (0% pink, 0% red measured). Atlases 512 / 1024 / 2048 px at 33.5 / 98.4 / 238 KB (budgets 34 / 100 /
+  240), loaded in idle time after the world is live, faded in like the wall maps. Hung: the corridor's end wall
+  (the scooter: every frame of the walk looks toward it), Green Bamboo's bay (the kite) and Cầu Hàn's far side (Sen), and
+  S3's window wall (Xuân, Cà phê); lit by the set's own lights. Little Rose rule tested over every bay order: no print
+  within 4.75 m of its door. **Departure:** no poster in the hero room: its H1 covers the back wall in every bucket and
+  the other walls are out of frame, so any print would sit under text (the hero stills are unchanged). The pho-mua and
+  the two Contact prints (xe-banh-mi, cua-hieu) exist as single prints (`public/textures/prints/`) for the pages'
+  stills. **HCWA approves the set before production.**
+- **Stills re-rendered:** `bay-green-bamboo`, `bay-cau-han`, `passage-corridor`, `shutters-closed/-louvers/-open`
+  (posters, smooth near fade). `bay-little-rose`, the hub doors and the hero posters are unchanged.
+- **Checks:** `npm test` 195 pass; `build`, `build:pages` pass; `PROD=1` blocked by its existing guards only (143);
+  `export:wp`, `php wp/tests/run.php` 8288 pass, `wp-static-check` 0 errors. `check-bays` pass, `check-tiles` pass,
+  `check-sun-crisp` pass, `light-contrast` only the 3 known home lines at 390 (6.7 < 7). `check-hero`: the known 390
+  intro contrast (6.6-7.0 < 7, predates M6) and the known Tier 1 ambient-motion timing; nothing new.
+- **needs:** (1) pages: the work floor's tiles end in a straight line at the floor's foot (pages.css `.floor`, gradient
+  audit B5); (2) the header skirt over the dusk band reads as a pale band (a dark-mode skirt over `.dusk` would fix it);
+  (3) HCWA approval of the poster set; (4) the Lenis glide and the camera spring should be tried by Maxwell on a real
+  trackpad.
+
+### M6 pages: Contact, Get Involved, Little Rose (11 Nov 2026, Maxwell: "that contact page has an ugly line and also no animation when scrolling down", "the get involved is the worst out of the bunch", "the little rose warm shelter page looks so bland and boring")
+- **Contact, "Qua cổng vào văn phòng".** The hard vertical line was the bông gió screen's silhouette in the
+  `header-contact` still standing on plain plaster (x ≈ 862 at 1440 on the stage, ≈ 757 at rest), plus the shade-100
+  fill of `.lit`. Fixed at its source: the still's left mask ramp now sits on the subject's edge (16% of the frame,
+  `--s3d-subject - 10cqw → + 6cqw`, on the still so it moves with it; at rest `--x0: 44%; --x1: 60%`), and the still's
+  box is lime-100. The stage is now a layered 2.5D scene on every stage tier (Tier 1 included): the still (L0, 1 → 1.12,
+  4° round on desktop), a courtyard of gạch runner and two plants (L1), the gate's two blue iron leaves with bông gió
+  openwork between lime-washed piers (L2, opening 20° → 80° on `--s3d-gate`, then the camera passes through it:
+  1 → 1.9, fading over cam 0.55-0.75), tamarind along the top (L3), and three plain envelopes (no writing, no address)
+  dropping into a letterbox on the office wall (`--s3d-mail`). New tracks `gate` (0.05-0.45) and `mail` (0.55-0.85);
+  `cam` now ends at 0.80. The stage line ("Cổng luôn mở. Mời bạn vào." / "The gate is open. Come in.", draft) is HTML,
+  pinned at the screen's foot for the whole run, so every frame has words. Measured: Tier 1 frames 0 → 8 differ by 30
+  levels at 1440 and 55-70 at 390 (gate ≥ 18); no vertical hard line in any strip frame.
+  - **Departures.** (1) The plan's four rendered alpha layers (`contact-gate`, 2400/1600/960 w, new encode budgets) are
+    drawn as inline SVG in the house's screen-print manner instead (partials/contact-gate.mjs): sharp at 2x, no new
+    request, no budget, and the world stream's sets stay untouched. L0 is the existing `header-contact` still. (2) The
+    run is long again (36 → 110svh desktop, 12 → 80svh phones), reversing the M4 fix round, but the stage is
+    `min(100svh - hdr, 66svh)` tall rather than the full screen: posters.mjs offers the desk crop with `sizes="100vw"`, so
+    on a 1x screen at 1440 a full-height stage would draw the 1600 w file at 1.5 css px per source px (blurred). At
+    66svh it is 0.52 at rest of the move and about 1.1 at its end; a per-still `sizes` (WordPress builder too) would
+    let the stage grow. (3) The fog from the first pixel is gone: the page rises in only over the last 28svh (eased,
+    8 stops, none solid before 70%). (4) The rest frame is the same still with the gate half open and one envelope
+    in the slot, drawn over it, not a re-rendered still.
+- **Get Involved, "Cửa mở".** The header is rebuilt: a room in late-morning light whose window's blue louvered
+  shutters stand open onto a sunny street (partials/involve-window.mjs, inline SVG: shophouse front, tamarind, a
+  generic scooter, no people, no lettering), the H1 "Mời bạn cùng chung tay" / "Come and lend a hand" (draft; the
+  `<title>` stays "Chung tay"), and the four ways as tiles, each with a gạch tile in its pigment and its own button
+  (Ủng hộ the only sun fill among them; new `cta` labels, draft), all above the fold: ways buttons' bottoms 599-779 at
+  390x844 and 574-768 at 1440x900 with the staging bars (check-page.cjs 8). The header is lime-50 → sun-100 → sun-200
+  toward the window and sinks into sun-100 at its foot: no shade-100, no grey fog. On the stage the leaves, already open
+  62° at scroll 0, swing to 112° over a 60svh run while the street comes in (1 → 1.14) and its sun strengthens; at rest
+  they stand at 112°. `.louver__face` is now a feathered elliptical patch (it was a full-width band that read as a
+  rule; this also changes the home help slats). New token `--color-sun-300: #FFD58A` (light only, never text or a
+  button; tokens.css and the D1 block in 05-DESIGN.md; ink-900 on it 11.5:1 in qa/contrast-pairs.json).
+  - **Departures.** The new `header-get-involved` layered still is drawn as inline SVG, not rendered (as Contact). The
+    run is one value (`data-s3d-min="0.6"`, 60svh) on phones too, not 45svh. The ways bar's Ủng hộ repeats the
+    slat's, so the page has two sun buttons (one per group; involve-pages.test.mjs says so). On phones the tile shows
+    the button only; the way's name stays in the tile for screen readers.
+- **Little Rose, "Khu vườn có tường bao".** A paper-cut walled garden in six inline SVG layers
+  (partials/shelter-scene.mjs): sky, the far wall with a torn-paper top, a coping of round tiles and one high window
+  showing only lamp glow, a trellis with nine ivory and apricot blooms and a bench, a line of plain sheets, a desk under
+  a striped awning (books, a loaf, a teapot and cup, a lamp, a notebook), pots and paper-cut grass. On the stage it is
+  pinned while the five things the shelter provides (content/draft/work.json, unchanged) scroll past, and each lights
+  one part of it (`--step-1…5` on CSS view timelines, motion/scroll3d.js where unsupported); the layers drift at
+  depths 0.08-0.28 of the scene's height. At rest it is one picture, fully lit, beside the five lines as a plain list
+  (no reveal, so no long empty beige stretch). Caption "Tranh minh họa, không phải nơi ở thật của các em." / "An
+  illustration, not the girls' real home." (draft). The pink unit band and the sun band's 6 px top rule are gone from
+  the page. Safeguarding, all in test/little-rose-page.test.mjs: no image, file, foreignObject or text in the scene;
+  no class or id naming a door, gate, person, girl, face, hand, child, rose, pink or unit; every paint a token from the
+  scene's allow-list (no hex, no unit-little-rose, no tile-brick, no error red). Tier 2: the sheets sway (6 s, only
+  near the screen, never with motion off).
+  - **Departures.** "Đối tượng" and the privacy note now follow the story (the plan's order). The steps are the
+    existing `ul.does.offers__list`, styled as the story on the stage. The grain is one 128 px CSS noise tile, not a
+    full-size feTurbulence (that cost up to 265 ms of main thread on a 4x-throttled phone).
+- **Shared.** motion/scroll3d.js now also runs Little Rose's steps and only writes tracks while the stage is on (pause
+  and reduced motion fall back to the CSS rest values); its gzip budget in openings.test.mjs is 2.7 KB (was 2 KB).
+  check-openings.cjs covers Get Involved and adds a vertical hard-line scan inside the stage on every frame (words and
+  `[data-art]` objects masked) and a Tier 1 motion-visibility check. New test/involve-first-screen.test.mjs.
+- **Checks.** npm test 195/195 (before export: all but the export test); build, build:pages and check:links (46 pages,
+  0 dead); PROD=1 blocked only by its guards (143, as before); export:wp, php wp/tests/run.php 8288/0,
+  wp-static-check 0 errors (10 known warnings); check-openings all pass (Contact, News, Get Involved); light-contrast:
+  only the 3 known home lines; tastegate 0 fail on all six (one heuristic "no CTA" warning each); mobile LCP median
+  2.0-2.2 s on the three pages, CLS 0-0.001 (0.001 on EN pages predates M6), H1/intro stays the LCP on Get Involved and
+  Little Rose. Captures: qa/m6/pages/before, after, after-2x, openings, tastegate.

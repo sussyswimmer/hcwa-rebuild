@@ -6,7 +6,7 @@ import { write } from "./batch.js";
 // 0.70, so hovering at the threshold never flickers). The live world reads the same numbers from
 // world/journey.js SHUTTERS (test/beats.test.mjs keeps them equal): motion/ never imports world/. The stage
 // is CSS (html.stages and a screen 640 px tall): this only arms it while that holds.
-export const TIMELINE = { slats: [0, 0.35], leaves: [0.35, 0.75], flood: 0.78, unflood: 0.7, blend: [0.75, 0.9] };
+export const TIMELINE = { slats: [0, 0.3], leaves: [0.3, 0.66], flood: 0.78, unflood: 0.7, blend: [0.76, 0.92] };
 
 export function initShutters() {
   const root = document.documentElement;

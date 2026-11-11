@@ -12,7 +12,7 @@
 /* Stacked: a band of light. The hero's floor has dissolved into sun-100 above it (world.css); the
    statement sits in that light; then the corridor still rises out of it and settles into the plaster of
    the corridor section below (lime-100). */
-.passage { --flight: 180svh; position: relative; isolation: isolate; overflow-x: clip; background: linear-gradient(to bottom, var(--color-sun-100) 0 62%, var(--color-lime-100)); }
+.passage { --flight: 200svh; position: relative; isolation: isolate; overflow-x: clip; background: linear-gradient(in oklab to bottom, var(--color-sun-100) 0 50%, color-mix(in oklab, var(--color-sun-100) 96%, var(--color-lime-100)) 56%, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-lime-100)) 62%, color-mix(in oklab, var(--color-sun-100) 68%, var(--color-lime-100)) 68%, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-lime-100)) 74%, color-mix(in oklab, var(--color-sun-100) 32%, var(--color-lime-100)) 80%, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-lime-100)) 86%, color-mix(in oklab, var(--color-sun-100) 4%, var(--color-lime-100)) 92%, var(--color-lime-100)); }
 .passage__frame { position: relative; z-index: 1; padding-block: clamp(48px, 8vw, 120px) clamp(24px, 4vw, 64px); }
 .passage__halo { display: none; }
 .passage__text { display: grid; justify-items: start; gap: clamp(18px, 2.2vw, 32px); }
@@ -40,14 +40,15 @@
 
 /* The corridor still: the end of the flight, for every page that does not fly it. Feathered into the light
    above and the plaster below. */
-.passage__exit { position: relative; z-index: 0; aspect-ratio: 16 / 9; margin-top: clamp(-40px, -3vw, -16px); mask-image: linear-gradient(to bottom, transparent, black 26%, black 68%, transparent); }
+.passage__exit { position: relative; z-index: 0; aspect-ratio: 16 / 9; margin-top: clamp(-40px, -3vw, -16px); mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) 3.8%, rgb(0 0 0 / 0.16) 7.5%, rgb(0 0 0 / 0.32) 11.2%, rgb(0 0 0 / 0.50) 15.0%, rgb(0 0 0 / 0.68) 18.8%, rgb(0 0 0 / 0.84) 22.5%, rgb(0 0 0 / 0.96) 26.2%, black 30%, black 64%, rgb(0 0 0 / 0.96) 68.5%, rgb(0 0 0 / 0.84) 73.0%, rgb(0 0 0 / 0.68) 77.5%, rgb(0 0 0 / 0.50) 82.0%, rgb(0 0 0 / 0.32) 86.5%, rgb(0 0 0 / 0.16) 91.0%, rgb(0 0 0 / 0.04) 95.5%, transparent); }
 .passage__exit picture, .passage__exit img { display: block; width: 100%; height: 100%; object-fit: cover; }
 @media (max-aspect-ratio: 1/1) { .passage__exit { aspect-ratio: 4 / 5; } }
 
 /* Stage: the flight's scroll length plus the sticky frame. The frame holds the statement over the wash
    for the whole timeline; ScrollTrigger reads 0 → 1 between the section's top reaching the top of the
    screen and its bottom reaching the bottom (motion/scroll.js, data-stage). */
-@media (max-width: 599.98px) { .passage { --flight: 150svh; } }
+/* M6 pacing: 200svh (was 180), 170svh on phones (was 150): the statement holds over 0.16–0.78 (world/journey.js PASSAGE). */
+@media (max-width: 599.98px) { .passage { --flight: 170svh; } }
 /* A statement taller than the frame (200% text, a short screen) takes the passage off the stage and back to
    the band (motion/passage.js is-unfit), so every line is read: the world flies over it unseen. */
 html.stages .passage:not(.is-unfit) { height: calc(var(--flight) + 100svh); background: var(--color-sun-100); }
@@ -65,7 +66,7 @@ html.stages .passage:not(.is-unfit) .passage__halo {
 @media (max-width: 1023.98px) { html.stages .passage:not(.is-unfit) .passage__halo { mask-image: radial-gradient(ellipse 90% 60% at 50% 52%, black 55%, transparent 100%), linear-gradient(to bottom, transparent, black 48px, black calc(100% - 48px), transparent); } }
 /* The corridor still rises out of the light over the last screen of the flight, and gives way to the
    live corridor once the world is drawing it. */
-html.stages .passage:not(.is-unfit) .passage__exit { position: absolute; inset: auto 0 0; height: 100svh; aspect-ratio: auto; margin: 0; mask-image: linear-gradient(to bottom, transparent, black 40%, black 82%, transparent); }
+html.stages .passage:not(.is-unfit) .passage__exit { position: absolute; inset: auto 0 0; height: 100svh; aspect-ratio: auto; margin: 0; mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) 5.0%, rgb(0 0 0 / 0.16) 10.0%, rgb(0 0 0 / 0.32) 15.0%, rgb(0 0 0 / 0.50) 20.0%, rgb(0 0 0 / 0.68) 25.0%, rgb(0 0 0 / 0.84) 30.0%, rgb(0 0 0 / 0.96) 35.0%, black 40%, black 78%, rgb(0 0 0 / 0.96) 80.8%, rgb(0 0 0 / 0.84) 83.5%, rgb(0 0 0 / 0.68) 86.2%, rgb(0 0 0 / 0.50) 89.0%, rgb(0 0 0 / 0.32) 91.8%, rgb(0 0 0 / 0.16) 94.5%, rgb(0 0 0 / 0.04) 97.2%, transparent); }
 html.world-live .passage:not(.is-unfit) { background: transparent; }
 /* main.js unstage(): the one frame the passage changes height in (never on screen: it is below the fold). */
 html.unstaging .passage { visibility: hidden; }
@@ -73,7 +74,7 @@ html.world-live .passage__exit { opacity: 0; display: none; transition: opacity 
 /* As the bays' views: not fetched while the world may draw the flight's end (main.js world-off, stills-near). */
 html.stages:not(.world-off, .stills-near) .passage:not(.is-unfit) .passage__exit { display: none; }
 
-/* Once motion/passage.js has armed the stage, the statement waits in the light and rises in at 0.28
+/* Once motion/passage.js has armed the stage, the statement waits in the light and rises in at 0.16
    (reveal-rise, 520 ms), fades at 0.78 (200 ms); both reverse on the way back. Never scrubbed: the text is
    fully there or gone. */
 html.stages .passage.is-armed .passage__text { opacity: 0; translate: 0 0.6em; transition: opacity 200ms var(--ease-out), translate 200ms var(--ease-out); }
@@ -98,7 +99,7 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
 .bays__intro { margin: 0; max-width: 34ch; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-ink-900); }
 .bays { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(40px, 7vw, 120px); }
 .bay { display: grid; }
-.bay__view { position: relative; aspect-ratio: 3 / 4; margin-inline: calc(-1 * var(--gutter)); mask-image: linear-gradient(to bottom, transparent, black 12%, black 62%, transparent); }
+.bay__view { position: relative; aspect-ratio: 3 / 4; margin-inline: calc(-1 * var(--gutter)); mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) 1.8%, rgb(0 0 0 / 0.16) 3.5%, rgb(0 0 0 / 0.32) 5.2%, rgb(0 0 0 / 0.50) 7.0%, rgb(0 0 0 / 0.68) 8.8%, rgb(0 0 0 / 0.84) 10.5%, rgb(0 0 0 / 0.96) 12.2%, black 14%, black 60%, rgb(0 0 0 / 0.96) 65.0%, rgb(0 0 0 / 0.84) 70.0%, rgb(0 0 0 / 0.68) 75.0%, rgb(0 0 0 / 0.50) 80.0%, rgb(0 0 0 / 0.32) 85.0%, rgb(0 0 0 / 0.16) 90.0%, rgb(0 0 0 / 0.04) 95.0%, transparent); }
 .bay__view picture, .bay__view img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .bay__text { position: relative; z-index: 1; display: grid; gap: 10px; align-content: start; max-width: 46ch; margin-top: clamp(-120px, -14vw, -72px); padding: 28px 0 0; }
 /* The pane: plaster in the door's own light (its unit's color at a few percent from the top; Little Rose
@@ -127,8 +128,8 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
 }
 
 /* ---------- H4 corridor, stage (html.stages + is-stage from motion/stages.js) ---------- */
-/* The track is the walk's scroll length (100svh of frame + 50svh a door: 250svh for three doors, 220svh below
-   600 px with 40svh a door); the frame is pinned over it. The live corridor fills the frame from the fixed
+/* The track is the walk's scroll length (100svh of frame + 85svh a door: 355svh for three doors, 310svh below
+   600 px with 70svh a door; M6 pacing, world/journey.js DOOR_SVH: each card's door holds still for about 44svh); the frame is pinned over it. The live corridor fills the frame from the fixed
    canvas; without it, the bay's own view does. The panel shows the stage header, then one card per beat
    (never scrubbed: in at 0.18 of its beat, out at 0.97; the last one holds to 0.95, as its door stays the
    subject), with the door index. */
@@ -140,8 +141,8 @@ html.world-live .bays-section:not(.is-stage) { padding-top: clamp(120px, 26svh, 
    world the bay's view takes the same hem (.bay__view's --hem-mask). The link to every center comes in under the last
    card (.bays__all below). */
 html.stages .bays-section.is-stage { padding: 0; background: transparent; }
-html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 50svh); }
-@media (max-width: 599.98px) { html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 40svh); } }
+html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 85svh); }
+@media (max-width: 599.98px) { html.stages .is-stage .bays__track { height: calc(100svh + var(--n) * 70svh); } }
 /* Phones: the card panel is the frame's bottom 45svh (PLAN H4's 44%, plus the row the Little Rose card's two
    links take since they wrap instead of running off the screen), the door framed above it; a card taller than
    that stacks the stage (motion/stages.js), it never squeezes the door. */
@@ -157,7 +158,7 @@ html.stages .is-stage .bays__frame { --panel-h: 45svh; position: sticky; top: 0;
    dado line, 11.5 at 92% over indigo, 10.9 at the worst (100% vang-sun). Measured live: PLAN section 9. */
 html.stages .is-stage { --pane-c: color-mix(in oklab, var(--color-lime-50) 40%, var(--color-world-vang-sun)); --pane: color-mix(in oklab, var(--pane-c) 96%, transparent); }
 html.stages[data-tier="2"] .is-stage { --pane: color-mix(in oklab, var(--pane-c) 92%, transparent); }
-html.stages .is-stage .bays__glass { display: block; position: absolute; inset: auto 0 0; height: calc(var(--panel-h) + 56px); z-index: 1; pointer-events: none; background: var(--pane); mask-image: linear-gradient(to bottom, transparent, black 56px); }
+html.stages .is-stage .bays__glass { display: block; position: absolute; inset: auto 0 0; height: calc(var(--panel-h) + 56px); z-index: 1; pointer-events: none; background: var(--pane); mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(56px * 0.125), rgb(0 0 0 / 0.16) calc(56px * 0.250), rgb(0 0 0 / 0.32) calc(56px * 0.375), rgb(0 0 0 / 0.50) calc(56px * 0.500), rgb(0 0 0 / 0.68) calc(56px * 0.625), rgb(0 0 0 / 0.84) calc(56px * 0.750), rgb(0 0 0 / 0.96) calc(56px * 0.875), black 56px); }
 html.stages[data-tier="2"] .is-stage .bays__glass { backdrop-filter: blur(8px); }
 /* The door's own light in the plaster (its unit's color at 10%, D6.5: at most 15%; Little Rose plain daylight). */
 html.stages .is-stage .bays__glass::before { content: ""; position: absolute; inset: 0; background-color: color-mix(in oklab, var(--now, var(--color-sun-100)) 10%, transparent); mask-image: linear-gradient(to bottom, black, transparent 45%); transition: background-color var(--d-reveal) var(--ease-out); }
@@ -175,9 +176,9 @@ html.stages .is-stage .bay { grid-area: 1 / 1; display: block; }
 html.stages .is-stage .bay__view { position: absolute; inset: 0 0 calc(var(--panel-h) - 72px); z-index: 0; margin: 0; aspect-ratio: auto; opacity: 0; transition: opacity var(--d-reveal) var(--ease-out); }
 html.stages .is-stage .bay__view img { object-position: 50% 40%; }
 /* The view fades to the plaster over the hem above the next sheet's top, as the live canvas does (renderer.js uHem,
-   critique r2): 38svh on stops eased like the canvas's (36svh below 600 px). --sheet-y: motion/stages.js, only near
+   critique r2): 38svh on 8 smoothstep stops, the canvas's own curve (M6; 36svh below 600 px). --sheet-y: motion/stages.js, only near
    the stage's end; elsewhere the third layer is black. */
-html.stages .is-stage .bay__view { --hem: 38svh; --sy: var(--sheet-y, 400svh); --hem-mask: linear-gradient(to bottom, black calc(var(--sy) - var(--hem)), rgb(0 0 0 / 0.51) calc(var(--sy) - var(--hem) * 0.5), rgb(0 0 0 / 0.11) calc(var(--sy) - var(--hem) * 0.125), transparent var(--sy)); mask-image: linear-gradient(to bottom, transparent, black 12svh, black 80%, transparent), var(--hem-mask); mask-composite: intersect; }
+html.stages .is-stage .bay__view { --hem: 38svh; --sy: var(--sheet-y, 400svh); --hem-mask: linear-gradient(to bottom, black calc(var(--sy) - var(--hem)), rgb(0 0 0 / 0.96) calc(var(--sy) - var(--hem) * 0.875), rgb(0 0 0 / 0.84) calc(var(--sy) - var(--hem) * 0.75), rgb(0 0 0 / 0.68) calc(var(--sy) - var(--hem) * 0.625), rgb(0 0 0 / 0.50) calc(var(--sy) - var(--hem) * 0.5), rgb(0 0 0 / 0.32) calc(var(--sy) - var(--hem) * 0.375), rgb(0 0 0 / 0.16) calc(var(--sy) - var(--hem) * 0.25), rgb(0 0 0 / 0.04) calc(var(--sy) - var(--hem) * 0.125), transparent var(--sy)); mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(12svh * 0.125), rgb(0 0 0 / 0.16) calc(12svh * 0.250), rgb(0 0 0 / 0.32) calc(12svh * 0.375), rgb(0 0 0 / 0.50) calc(12svh * 0.500), rgb(0 0 0 / 0.68) calc(12svh * 0.625), rgb(0 0 0 / 0.84) calc(12svh * 0.750), rgb(0 0 0 / 0.96) calc(12svh * 0.875), black 12svh, black 78%, rgb(0 0 0 / 0.96) 80.8%, rgb(0 0 0 / 0.84) 83.5%, rgb(0 0 0 / 0.68) 86.2%, rgb(0 0 0 / 0.50) 89.0%, rgb(0 0 0 / 0.32) 91.8%, rgb(0 0 0 / 0.16) 94.5%, rgb(0 0 0 / 0.04) 97.2%, transparent), var(--hem-mask); mask-composite: intersect; }
 @media (max-width: 599.98px) { html.stages .is-stage .bay__view { --hem: 36svh; } }
 html.stages .is-stage .bay.is-at .bay__view { opacity: 1; }
 html.world-live .is-stage .bay__view { display: none; }
@@ -217,7 +218,7 @@ html.stages .is-stage .bays__rail { display: block; grid-area: rail; }
      96 px feather on eased stops. The panel's layout never moves (the camera frames the door above it). */
   html.stages .is-stage .bays__glass {
     --b0: calc(var(--pane-b) + 24px); --b1: calc(var(--pane-b) + 120px);
-    mask-image: linear-gradient(to bottom, transparent, black 56px, black var(--b0), rgb(0 0 0 / 0.84) calc(var(--b0) + 24px), rgb(0 0 0 / 0.5) calc(var(--b0) + 48px), rgb(0 0 0 / 0.16) calc(var(--b0) + 72px), transparent var(--b1));
+    mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(56px * 0.125), rgb(0 0 0 / 0.16) calc(56px * 0.250), rgb(0 0 0 / 0.32) calc(56px * 0.375), rgb(0 0 0 / 0.50) calc(56px * 0.500), rgb(0 0 0 / 0.68) calc(56px * 0.625), rgb(0 0 0 / 0.84) calc(56px * 0.750), rgb(0 0 0 / 0.96) calc(56px * 0.875), black 56px, black var(--b0), rgb(0 0 0 / 0.84) calc(var(--b0) + 24px), rgb(0 0 0 / 0.5) calc(var(--b0) + 48px), rgb(0 0 0 / 0.16) calc(var(--b0) + 72px), transparent var(--b1));
     transition: --pane-b var(--d-reveal) var(--ease-out); }
 }
 /* Below 380 px the names go without their transoms (the EN names need the room at 360). */
@@ -261,16 +262,23 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
   /* Critique r1: plaster only where there is text. From the door index's top − 24 px to the shown text's foot
      + 72 px (--pane-t / --pane-b from motion/stages.js, eased between cards), feathered over 96 px (eased stops),
      so the yellow wash and the ceiling show above the index and the mint dado and the floor below the card. */
+  /* M6 (Maxwell, 11 Nov: "the gradient can still be seen with a line"): the old 96 px feathers and the linear 22% left
+     ramp read as a horizontal and a vertical edge. Now 24svh top and bottom (--fy) and 200 px toward the door (--fx),
+     each on 8 smoothstep stops, so the plaster comes out of the wall with no edge and no corner. */
   html.stages .is-stage .bays__glass {
-    --t0: calc(var(--pane-t) - 120px); --t1: calc(var(--pane-t) - 24px); --b0: calc(var(--pane-b) + 72px); --b1: calc(var(--pane-b) + 168px);
-    inset: 0 0 0 auto; width: calc(min(500px, 36vw) + 140px); height: auto;
-    mask-image: linear-gradient(to right, transparent, black 22%), linear-gradient(to bottom, transparent var(--t0), rgb(0 0 0 / 0.16) calc(var(--t0) + 24px), rgb(0 0 0 / 0.5) calc(var(--t0) + 48px), rgb(0 0 0 / 0.84) calc(var(--t0) + 72px), black var(--t1), black var(--b0), rgb(0 0 0 / 0.84) calc(var(--b0) + 24px), rgb(0 0 0 / 0.5) calc(var(--b0) + 48px), rgb(0 0 0 / 0.16) calc(var(--b0) + 72px), transparent var(--b1));
+    --fy: 24svh; --fx: 200px;
+    --t1: calc(var(--pane-t) - 24px); --t0: calc(var(--t1) - var(--fy)); --b0: calc(var(--pane-b) + 56px); --b1: calc(var(--b0) + var(--fy));
+    inset: 0 0 0 auto; width: calc(min(500px, 36vw) + var(--fx)); height: auto;
+    mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.04) calc(var(--fx) * 0.125), rgb(0 0 0 / 0.16) calc(var(--fx) * 0.25), rgb(0 0 0 / 0.32) calc(var(--fx) * 0.375), rgb(0 0 0 / 0.5) calc(var(--fx) * 0.5), rgb(0 0 0 / 0.68) calc(var(--fx) * 0.625), rgb(0 0 0 / 0.84) calc(var(--fx) * 0.75), rgb(0 0 0 / 0.96) calc(var(--fx) * 0.875), black var(--fx)), linear-gradient(to bottom, transparent var(--t0), rgb(0 0 0 / 0.04) calc(var(--t0) + var(--fy) * 0.125), rgb(0 0 0 / 0.16) calc(var(--t0) + var(--fy) * 0.25), rgb(0 0 0 / 0.32) calc(var(--t0) + var(--fy) * 0.375), rgb(0 0 0 / 0.5) calc(var(--t0) + var(--fy) * 0.5), rgb(0 0 0 / 0.68) calc(var(--t0) + var(--fy) * 0.625), rgb(0 0 0 / 0.84) calc(var(--t0) + var(--fy) * 0.75), rgb(0 0 0 / 0.96) calc(var(--t0) + var(--fy) * 0.875), black var(--t1), black var(--b0), rgb(0 0 0 / 0.96) calc(var(--b0) + var(--fy) * 0.125), rgb(0 0 0 / 0.84) calc(var(--b0) + var(--fy) * 0.25), rgb(0 0 0 / 0.68) calc(var(--b0) + var(--fy) * 0.375), rgb(0 0 0 / 0.50) calc(var(--b0) + var(--fy) * 0.5), rgb(0 0 0 / 0.32) calc(var(--b0) + var(--fy) * 0.625), rgb(0 0 0 / 0.16) calc(var(--b0) + var(--fy) * 0.75), rgb(0 0 0 / 0.04) calc(var(--b0) + var(--fy) * 0.875), transparent var(--b1));
     mask-composite: intersect; transition: --pane-t var(--d-reveal) var(--ease-out), --pane-b var(--d-reveal) var(--ease-out); }
   html.stages .is-stage .bays__glass::before { mask-image: linear-gradient(to right, black 10%, transparent 70%); }
-  html.stages .is-stage .bays__panel { grid-area: 1 / 2; padding: calc(var(--header-h-compact) + clamp(24px, 4svh, 48px)) clamp(32px, 3.4vw, 56px) var(--foot) 8px; gap: clamp(24px, 4svh, 48px); }
-  html.stages .is-stage .bays__head { align-self: center; }
-  html.stages .is-stage .bays { align-self: stretch; grid-template-rows: minmax(0, 1fr); align-items: center; }
-  html.stages .is-stage .bay__view { inset: 0 min(500px, 36vw) 0 0; mask-image: linear-gradient(to bottom, transparent, black 12svh), linear-gradient(to right, black 70%, transparent), var(--hem-mask); mask-composite: intersect; }
+  /* M6 (Maxwell, 11 Nov: "the white space between green bamboo little rose and centers is too huge"): the door index
+     and the stage header or card are one block, centred in the panel, the index 24 px above the H2. Every card stays
+     in the stack (faded, not removed), so the block's height is the tallest card's and nothing moves between beats. */
+  html.stages .is-stage .bays__panel { grid-area: 1 / 2; padding: calc(var(--header-h-compact) + clamp(24px, 4svh, 48px)) clamp(32px, 3.4vw, 56px) var(--foot) 8px; grid-template-rows: auto auto; align-content: center; gap: 24px; }
+  html.stages .is-stage .bays__head { align-self: start; }
+  html.stages .is-stage .bays { align-self: start; grid-template-rows: auto; align-items: start; }
+  html.stages .is-stage .bay__view { inset: 0 min(500px, 36vw) 0 0; mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(12svh * 0.125), rgb(0 0 0 / 0.16) calc(12svh * 0.250), rgb(0 0 0 / 0.32) calc(12svh * 0.375), rgb(0 0 0 / 0.50) calc(12svh * 0.500), rgb(0 0 0 / 0.68) calc(12svh * 0.625), rgb(0 0 0 / 0.84) calc(12svh * 0.750), rgb(0 0 0 / 0.96) calc(12svh * 0.875), black 12svh), linear-gradient(to right, black 66%, rgb(0 0 0 / 0.96) 70.2%, rgb(0 0 0 / 0.84) 74.5%, rgb(0 0 0 / 0.68) 78.8%, rgb(0 0 0 / 0.50) 83.0%, rgb(0 0 0 / 0.32) 87.2%, rgb(0 0 0 / 0.16) 91.5%, rgb(0 0 0 / 0.04) 95.8%, transparent), var(--hem-mask); mask-composite: intersect; }
   html.stages .is-stage .bay__view img { object-position: 58% 50%; }
   .bays__rail ol { flex-direction: column; gap: 0; }
   .bays__rail a { gap: 10px; font-size: var(--fs-sm); }
@@ -302,24 +310,24 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
 
 /* Stage (html.stages, 640 px tall and up). The section opens with a lead where the colour above feathers
    into the room (30svh, 24svh on phones: the camera is already coming round); then the track, S3's scroll
-   length (180svh, 150svh below 600 px) plus the 100svh sticky frame. The help section rises --rise into it
-   (the negative margin: its top reaches the screen's foot at p 0.76, 0.70 on phones, so its heading comes
+   length (200svh, 170svh below 600 px; M6 pacing) plus the 100svh sticky frame. The help section rises --rise into it
+   (the negative margin: its top reaches the screen's foot at p 0.70, 0.66 on phones, so its heading comes
    up into the flood's peak at 0.78), onto the sill: the light it arrives on, sun-100 at its top edge,
    feathered up over 40svh. With the live world drawing the room (html.world-live + is-live), the frame is clear; without it,
    the stills of S3's three beats take turns as --p runs (motion/shutters.js), pushing in as the camera
    would, the flood a bloom of sun-100. */
 @media (min-height: 640px) {
-  html.stages .shutters { --s3: 180svh; --lead: 30svh; --rise: calc(var(--s3) * 0.24); padding: var(--lead) 0 0; margin-bottom: calc(-1 * var(--rise)); background: linear-gradient(to bottom, var(--s3-from), color-mix(in oklab, var(--s3-from) 90%, transparent) calc(var(--lead) * 0.2), color-mix(in oklab, var(--s3-from) 66%, transparent) calc(var(--lead) * 0.4), color-mix(in oklab, var(--s3-from) 36%, transparent) calc(var(--lead) * 0.6), color-mix(in oklab, var(--s3-from) 12%, transparent) calc(var(--lead) * 0.8), transparent var(--lead)); }
+  html.stages .shutters { --s3: 200svh; --lead: 30svh; --rise: calc(var(--s3) * 0.3); padding: var(--lead) 0 0; margin-bottom: calc(-1 * var(--rise)); background: linear-gradient(to bottom, var(--s3-from), color-mix(in oklab, var(--s3-from) 90%, transparent) calc(var(--lead) * 0.2), color-mix(in oklab, var(--s3-from) 66%, transparent) calc(var(--lead) * 0.4), color-mix(in oklab, var(--s3-from) 36%, transparent) calc(var(--lead) * 0.6), color-mix(in oklab, var(--s3-from) 12%, transparent) calc(var(--lead) * 0.8), transparent var(--lead)); }
   html.stages .shutters__track { position: relative; height: calc(100svh + var(--s3)); }
-  html.stages .shutters__frame { position: sticky; top: 0; height: 100svh; aspect-ratio: auto; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, black 16svh); }
+  html.stages .shutters__frame { position: sticky; top: 0; height: 100svh; aspect-ratio: auto; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(16svh * 0.125), rgb(0 0 0 / 0.16) calc(16svh * 0.250), rgb(0 0 0 / 0.32) calc(16svh * 0.375), rgb(0 0 0 / 0.50) calc(16svh * 0.500), rgb(0 0 0 / 0.68) calc(16svh * 0.625), rgb(0 0 0 / 0.84) calc(16svh * 0.750), rgb(0 0 0 / 0.96) calc(16svh * 0.875), black 16svh); }
   html.stages .shutters__view { display: block; transform-origin: 46% 44%; scale: calc(1 + var(--p, 1) * 0.1); }
   html.stages .shutters__view img { animation: none; }
   html.stages .shutters:not(.is-armed) :is(.shutters__view--closed, .shutters__view--louvers) { display: none; }
-  html.stages .shutters.is-armed .shutters__view--louvers { opacity: clamp(0, (var(--p, 0) - 0.08) / 0.27, 1); }
-  html.stages .shutters.is-armed .shutters__view--open { opacity: clamp(0, (var(--p, 0) - 0.42) / 0.33, 1); }
+  html.stages .shutters.is-armed .shutters__view--louvers { opacity: clamp(0, (var(--p, 0) - 0.07) / 0.23, 1); }
+  html.stages .shutters.is-armed .shutters__view--open { opacity: clamp(0, (var(--p, 0) - 0.36) / 0.3, 1); }
   /* The flood without the world: a bloom of sun-100 on the window, once per crossing (is-flooded), then the
-     blend to flat sun-100 over 0.75-0.90, eased (smoothstep in calc). */
-  html.stages .shutters.is-armed .shutters__flood { display: block; position: absolute; inset: 0; --b: clamp(0, (var(--p, 0) - 0.75) / 0.15, 1); background: color-mix(in oklab, var(--color-sun-100) calc(var(--b) * var(--b) * (3 - 2 * var(--b)) * 100%), transparent); }
+     blend to flat sun-100 over 0.76-0.92, eased (smoothstep in calc). */
+  html.stages .shutters.is-armed .shutters__flood { display: block; position: absolute; inset: 0; --b: clamp(0, (var(--p, 0) - 0.76) / 0.16, 1); background: color-mix(in oklab, var(--color-sun-100) calc(var(--b) * var(--b) * (3 - 2 * var(--b)) * 100%), transparent); }
   html.stages .shutters__flood::before, html.stages .shutters__flood::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 46% 58% at 48% 42%, var(--color-sun-100) 30%, transparent 100%); opacity: 0; }
   html.stages .shutters__flood::before { transition: opacity 563ms var(--ease-out); }
   html.stages .shutters.is-flooded .shutters__flood::before { opacity: 0.45; transition-duration: var(--d-flood); }
@@ -330,5 +338,5 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
   html.stages .shutters__sill { display: block; position: absolute; inset: auto 0 0; height: calc(40svh + var(--rise)); pointer-events: none; background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-sun-100) 14%, transparent) 9svh, color-mix(in oklab, var(--color-sun-100) 46%, transparent) 17svh, color-mix(in oklab, var(--color-sun-100) 84%, transparent) 26svh, var(--color-sun-100) 40svh); }
   html[data-motion="off"] .shutters__flood::before, html[data-motion="off"] .shutters__flood::after { transition: none; animation: none; }
 }
-/* Phones arrive earlier (p 0.70, critique r2): the help heading comes up while the leaves still frame the view. */
-@media (min-height: 640px) and (max-width: 599.98px) { html.stages .shutters { --s3: 150svh; --lead: 24svh; --rise: calc(var(--s3) * 0.30); } }
+/* Phones arrive earlier (p 0.66, critique r2): the help heading comes up while the leaves still frame the view. */
+@media (min-height: 640px) and (max-width: 599.98px) { html.stages .shutters { --s3: 170svh; --lead: 24svh; --rise: calc(var(--s3) * 0.34); } }

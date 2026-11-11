@@ -3,8 +3,8 @@ import { HEADER_TEXT } from "../lib/posters.mjs";
 import { cropsOf } from "../world/still-shots.js";
 import { icon } from "./components.mjs";
 
-// The two M4 openings (PLAN-M4 section 5): Contact's "through the screen to the street" and News's
-// "notices on the wall". A stage is plain HTML that reads as a finished page at rest. It only becomes
+// The openings (PLAN-M4 section 5; M6): Contact's "through the gate to the office", News's "notices on
+// the wall" and Get Involved's "open window". A stage is plain HTML that reads as a finished page at rest. It only becomes
 // a 3D stage when head-inline.js has set html.stages with motion on (before first paint, so nothing
 // jumps): then styles/openings.css pins it and moves its layers from a few custom properties that
 // follow the native scroll. CSS scroll-driven animations write them where supported; motion/scroll3d.js
@@ -15,16 +15,20 @@ import { icon } from "./components.mjs";
 // (--s3d-end, measured by motion/scroll3d.js from the pinned layer, data-s3d-pin). The tracks every stage reads:
 //   --s3d-p     linear 0 → 1
 //   --s3d-cam   the camera, a soft in-out that is already moving at the first pixel of scroll and never
-//               runs faster than 1.5x its mean rate (so no stretch of scroll does most of the move), done at
-//               0.86 (the last 14% holds still before reading starts)
+//               runs faster than 1.6x its mean rate (so no stretch of scroll does most of the move), done at
+//               0.80 (the last 20% holds still while the page rises in; M6, was 0.86)
 //   --s3d-sun   light arriving, a soft ease-out (peak 1.8x its mean rate), done at 0.86
 //   --s3d-open  the street's light opening out, in-out over 0.55 → 0.92 (it grows with the camera's last
 //               move and is still widening as the page rises into it)
+//   --s3d-gate  Contact's gate leaves swinging open, over 0.05 → 0.45 (M6)
+//   --s3d-mail  Contact's letters dropping into the letterbox, over 0.55 → 0.85 (M6)
 // The easings and ranges live here once; openings.css and motion/scroll3d.js both read TRACKS.
 export const TRACKS = {
-  cam: { from: 0, to: 0.86, ease: [0.3, 0.1, 0.6, 1] },
+  cam: { from: 0, to: 0.8, ease: [0.3, 0.1, 0.6, 1] },
   sun: { from: 0, to: 0.86, ease: [0.3, 0.45, 0.45, 1] },
   open: { from: 0.55, to: 0.92, ease: [0.37, 0, 0.63, 1] },
+  gate: { from: 0.05, to: 0.45, ease: [0.3, 0.1, 0.6, 1] },
+  mail: { from: 0.55, to: 0.85, ease: [0.3, 0.1, 0.6, 1] },
 };
 
 // A stage wrapper. name: "contact" | "news"; vars: CSS custom properties taken from the still's own data.

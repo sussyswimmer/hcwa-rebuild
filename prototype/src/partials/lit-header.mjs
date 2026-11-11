@@ -11,10 +11,11 @@ import { breadcrumb } from "./components.mjs";
 // still: a header-* name from src/world/still-shots.js. A name the world stream has not declared or
 // rendered yet (header-about, header-impact, header-cau-han in M4) shows the shade fill, never an error. meta: a line above the H1 (status, years, unit).
 // title may carry a { main, sub } pair: one H1 whose second part is set smaller (long programme names).
-export function litHeader(c, { still, trail, title, intro, introDraft = false, meta = "", extra = "", unit = "", size = "" }) {
+// layers: decorative layers drawn over the still inside the media box (Contact's gate), never words.
+export function litHeader(c, { still, trail, title, intro, introDraft = false, meta = "", extra = "", unit = "", size = "", layers = "" }) {
   const t = typeof title === "object" && title.main ? html`<span class="lit-head__main">${title.main}</span><span class="sr-only">: </span><span class="lit-head__sub">${title.sub}</span>` : title;
   return html`<header class="lit-head${size ? " lit-head--" + size : ""}${unit ? " lit-head--unit" : ""}"${unit ? raw(` style="--unit:var(--color-unit-${unit})"`) : ""}>
-  <div class="lit-head__media" data-still="${still}">${still in STILLS && stillReady(still) ? litStill(still) : html`<div class="lit lit--still" aria-hidden="true"></div>`}</div>
+  <div class="lit-head__media" data-still="${still}">${still in STILLS && stillReady(still) ? litStill(still) : html`<div class="lit lit--still" aria-hidden="true"></div>`}${layers}</div>
   <div class="container lit-head__text">
     ${breadcrumb(c, trail)}
     ${meta ? html`<div class="lit-head__meta">${meta}</div>` : ""}

@@ -13,6 +13,8 @@ import { EXPOSURE, mixc, tok, vec } from "../colors.js";
 import { roomShade, roomSun, surfaceUniforms, tint } from "./common.js";
 import { SHUTTERS } from "../journey.js";
 import { WIN_Z } from "./places.js";
+import { posterUniforms, wallPoster } from "../objects/wall-poster.js";
+import { S3_POSTERS } from "../wall-posters-data.js";
 
 // The shutters (05-DESIGN D6.2, D6.3; S3 in D5.3): a French window in the end wall of a lime-wash room,
 // its two logo-blue louvered leaves, the late sun outside. Light enters only through the opening and, while
@@ -138,9 +140,14 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
   };
   const project = (camera, out) => out.copy(FOCUS).project(camera);
 
+  // Wall posters (M6, wall-posters-data.js S3_POSTERS): the live set and its stills only (Get Involved's header keeps
+  // its own room), on the window wall either side of the window, 5 mm off it; the slat lines and the late sun cross
+  // them as they cross the wall. The paint's own sun tint, so they warm with the leaves.
+  const posters = full ? S3_POSTERS.map((p, i) => wallPoster({ ...U, ...posterUniforms() }, lights, { uSunTint: paint.uniforms.uSunTint, uSpillTint: paint.uniforms.uSpillTint, uShadeK: { value: 0.74 } }, { id: p.id, w: p.w, at: [-0.005, p.y, WIN_Z + p.dz], seed: 41 + i * 5 })) : [];
+
   return {
-    box, lights, U, sun, spec: sp, rig, paint, outside,
-    objects: [shell, rig.group, plane],
+    box, lights, U, sun, spec: sp, rig, paint, outside, posters,
+    objects: [shell, rig.group, plane, ...posters],
     pose, setSun, setExposure, project,
     treeIndex: full ? 3 : -1,
     // For the still renderer: what frames the shot, what glows on its own.

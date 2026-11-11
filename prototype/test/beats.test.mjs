@@ -316,5 +316,5 @@ test("the way out: the last card holds to 0.95, the camera only starts to leave 
   for (let q = 0.9; q < 1; q += 0.01) assert.ok(walkPitch(q + 0.01) >= walkPitch(q), "the look down never goes back");
   const { readFileSync } = await import("node:fs");
   const css = readFileSync(new URL("../src/styles/stages.css", import.meta.url), "utf8");
-  assert.match(css, /\.bays__track \{ height: calc\(100svh \+ var\(--n\) \* 50svh\); \}/, "no 10svh tail on the track");
+  assert.match(css, /\.bays__track \{ height: calc\(100svh \+ var\(--n\) \* 85svh\); \}/, "no 10svh tail on the track; 85svh a door (M6 pacing)");
 });

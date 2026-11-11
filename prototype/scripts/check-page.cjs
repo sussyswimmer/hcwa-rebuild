@@ -129,8 +129,10 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     await page.mouse.move(700, 450);
     for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, 120); await page.waitForTimeout(40); }
     await page.waitForTimeout(1500);
-    // With a live world on a software GPU frames are slow, so the spring needs longer to reach rest.
-    await page.waitForFunction(() => window.hcwa.state.velocity === 0, null, { timeout: 6000 }).catch(() => {});
+    // With a live world on a software GPU frames are slow, so the spring needs longer to reach rest. The M6 glide
+    // (Lenis lerp 0.07, about 1.7 s from a 720 px flick to rest, was 1 s at 0.12) comes first, and the spring's own
+    // dt is capped at 50 ms a frame, so under a busy software GPU it reaches 0 after up to ~10 s of wall time.
+    await page.waitForFunction(() => window.hcwa.state.velocity === 0, null, { timeout: 12000 }).catch(() => {});
     const s = await page.evaluate(() => ({ v: window.__v, p: window.__p, y: scrollY, compact: document.querySelector("[data-header]").classList.contains("is-compact"), state: window.hcwa.state }));
     const peak = Math.max(...s.v);
     ok(s.v.length > 10 && peak > 0.1 && s.v.at(-1) === 0, `velocity events rise and settle to 0 (n=${s.v.length}, peak=${peak.toFixed(2)}, last=${s.v.at(-1)})`);
@@ -147,6 +149,22 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     ok(await page.evaluate(() => document.querySelector(".hero__pause").textContent.trim() === "Pause motion"), "pause toggle named in English on the EN page");
     await page.keyboard.press("Tab");
     ok(await page.evaluate(() => document.activeElement.classList.contains("skip-link")), "first Tab lands on the skip link");
+    await ctx.close();
+  }
+  // 8. Get Involved (M6 "Cửa mở"): the four ways and their buttons are above the fold at 390x844 and
+  // 1440x900, VI and EN, with the staging bars shown; at 320 the page never scrolls sideways.
+  for (const [w, h] of [[390, 844], [1440, 900], [320, 640]]) for (const path of ["/chung-tay/", "/en/get-involved/"]) {
+    const { ctx } = await fresh({ viewport: { width: w, height: h } });
+    const page = await ctx.newPage();
+    await page.goto(base + path + "?tier=1", { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    const r = await page.evaluate(() => ({
+      bottoms: [...document.querySelectorAll(".gi-head .way__btn")].map((b) => b.getBoundingClientRect().bottom),
+      vh: innerHeight, sx: document.documentElement.scrollWidth > innerWidth,
+    }));
+    ok(r.bottoms.length === 4, `${path} ${w}: four ways buttons in the header`);
+    if (w >= 390) ok(r.bottoms.every((b) => b < r.vh), `${path} ${w}x${h}: every ways button above the fold (${r.bottoms.map(Math.round).join(", ")} < ${r.vh})`);
+    ok(!r.sx, `${path} ${w}: no horizontal scroll`);
     await ctx.close();
   }
   await browser.close();

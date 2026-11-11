@@ -46,9 +46,14 @@ export const HEADER_TEXT = { x: 0, y: 0.14, w: 0.54, h: 0.86 };
 
 // AVIF budgets in KB per file (PLAN section 5, D6.7): a header's three layers together stay within
 // 70 KB at 1600 w and 22 KB at 480 w; a plain still within 35 KB. WebP and JPEG may use twice that.
+// 2400 and 3840 (desk), 1440 (mobile): a still that is shown larger than its box at 1x (Contact's opening, below) keeps
+// the 1600 w (960 w) header's bytes, spent on more pixels.
 const HEADER_BUDGET = {
-  desk: { 960: { base: 18, lightroom: 12, lightscreen: 6 }, 1600: { base: 36, lightroom: 22, lightscreen: 12 } },
-  mobile: { 480: { base: 10, lightroom: 8, lightscreen: 4 }, 960: { base: 22, lightroom: 14, lightscreen: 8 } },
+  desk: {
+    960: { base: 18, lightroom: 12, lightscreen: 6 }, 1600: { base: 36, lightroom: 22, lightscreen: 12 },
+    2400: { base: 36, lightroom: 22, lightscreen: 12 }, 3840: { base: 36, lightroom: 22, lightscreen: 12 },
+  },
+  mobile: { 480: { base: 10, lightroom: 8, lightscreen: 4 }, 960: { base: 22, lightroom: 14, lightscreen: 8 }, 1440: { base: 22, lightroom: 14, lightscreen: 8 } },
 };
 const STILL_KB = 35;
 const PANO_KB = { 1600: 70, 2400: 130 };
@@ -66,9 +71,15 @@ export const STILLS = {
   "header-green-bamboo": { kind: "header", layers: LIT, page: "center", unit: "green-bamboo", motion: "drift", what: "Its green door open, Đốt tre light on the floor" },
   "header-thrive-together": { kind: "header", layers: ["base", "lightroom"], page: "program", motion: "drift", what: "Lam stripes of late-morning light on a wall" },
   "header-get-involved": { kind: "header", layers: LIT, page: "get-involved", motion: "louver", what: "The open shutters at 17:00" },
-  "header-contact": { kind: "header", layers: LIT, page: "contact", what: "The street side of the screen at 16:30" },
+  // Contact's opening (styles/openings.css) shows the desk crop as tall as its stage (62svh) and dollies in 1.16x: at
+  // 1440 × 900 that is 1942 CSS px wide at the end of the move, 3884 device px on a 2x screen. The browser takes the
+  // 3840 w file there (sizes 100vw: 2880 → the next width up) and 2400 w at 1x on wide screens. Phones (48svh, 1.12x:
+  // about 600 CSS px) at 3x take the 1440 w file, at the 960 w file's bytes, so the phone's LCP does not grow.
+  "header-contact": { kind: "header", layers: LIT, page: "contact", widths: { desk: [960, 1600, 2400, 3840], mobile: [480, 960, 1440] }, what: "The street side of the screen at 16:30" },
   // M4 pages (PLAN-M4 4.1, 4.6, 4.10), rendered with the Blender walls (M5).
-  "header-about": { kind: "header", layers: LIT, page: "about", what: "The house's front screen in early-morning light, raking across the plaster" },
+  // Its screen is lit from the street side (no light comes through it toward the camera), so the morning sun on the
+  // face and the screen is one layer; the light holds still (no drift).
+  "header-about": { kind: "header", layers: ["base", "lightroom"], page: "about", what: "The house's front screen in early-morning light, raking across the plaster" },
   "header-impact": { kind: "header", layers: ["base", "lightroom"], page: "impact", motion: "drift", what: "Noon down the light well: Hoa thị patches drawn long on the back wall, no numbers" },
   "header-cau-han": { kind: "header", layers: LIT, page: "center", unit: "cau-han", motion: "drift", what: "Its blue door open, Vòm cầu light on the wall" },
   dusk: { kind: "band", layers: PLAIN, what: "The room at 18:00, one last lit quatrefoil" },
@@ -97,7 +108,8 @@ export const STILLS = {
   "shutters-open": { kind: "frame", layers: PLAIN, page: "home", what: "Both leaves swung into the room at 17:00, the window's whole patch of gold on the floor" },
 };
 
-export const cropsOf = (name) => CROPS[STILLS[name].kind];
+// A still may carry its own widths per crop (`widths: { desk: [...] }`); everything else is its kind's.
+export const cropsOf = (name) => CROPS[STILLS[name].kind].map((c) => (STILLS[name].widths?.[c.name] ? { ...c, widths: STILLS[name].widths[c.name] } : c));
 export const stillFile = (name, crop, layer, w, ext) => `/posters/${name}-${crop}-${layer}-${w}.${ext}`;
 
 // Budget in bytes for one AVIF file.
