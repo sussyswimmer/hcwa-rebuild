@@ -1126,3 +1126,45 @@ article bodies exist) and categories filter in-page; the Cầu Hàn EN URL becom
 `/en/our-work/centers/cau-han-project/` (04-SITEMAP, wp/CONTRACT.md); Little Rose's page has no still and no
 door, only words and an abstract Hoa thị illustration; the two openings are CSS 3D on prerendered layers driven
 by native scroll, not live WebGL; the 404 page loses its "not in the prototype" note once the crawl is clean.
+
+**M4 pages (11 Nov 2026; pages stream, PLAN-M4 sections 3-4).** Every page the menus, footer and pages link to is
+built, VI and EN: Who we are, Our story, Team, Partners & sponsors, Policies (`#bao-ve-tre-em`/`#safeguarding`,
+`#quyen-rieng-tu`/`#privacy`, `#dieu-khoan`/`#terms`), Impact & Reports (`#bao-cao`/`#reports`), Volunteer, Partner
+with us, In-kind gifts (`#tiem-banh`/`#bakery`), Little Rose, Cầu Hàn, the Charity Class and the disability pilot;
+the news route is registered on the openings stream's `news.mjs`. `test/links.test.mjs` and `npm run check:links`
+(`scripts/check-links.mjs`, base-aware, `check:links:pages` for build:pages) find 0 dead links in VI and EN, staging
+and production. Departures and decisions:
+1. **Content loading.** `lib/content.mjs` merges `ui.json` and every `ui-*.json` (a key in two files names both files
+   and fails the build); `about.json` and `involve-pages.json` load when present; `impact.json` keeps `figures` as
+   `content.impact` and its new `page` strings and empty `reports` list as `content.impactPage`.
+2. **Routes carry what a template renders** (`unit` for `center()`, `program` for `program()`), and `PARENT` marks the
+   hub in the header (`isCurrent`). `center()` and `program()` are generalised; Green Bamboo and Thrive Together keep
+   their ids and output. Sections with nothing to show leave themselves out (no scoped figures, no centers, no posts:
+   `programPages[*].news` / `centerPages[*].news` list the post URLs a page shows; Green Bamboo and Thrive Together
+   keep showing all posts). A completed program's closing band offers Donate and Contact, not "Partner on a program".
+3. **Headers.** Who we are, Impact and Cầu Hàn use the lit header with `header-about`, `header-impact` and
+   `header-cau-han`; `litHeader()` now shows the shade fill for a still the walls stream has not declared yet instead
+   of throwing. The other pages use `sunHead()` (lit-header.mjs), Donate's image-free band with a `time` (morning lime
+   for About, calm lime-50 for Policies, sun for Get Involved, `shelter` for Little Rose) whose colour is the first
+   stop of the page's day, so header and body are one surface. The M4 CSS is appended to the end of `pages.css` (an
+   `@import` at the top lost every tie to the rules it builds on).
+4. **Little Rose** (`little-rose.mjs`, its own template): words, the privacy note, what the shelter offers (condensed
+   from the current page, draft), how to help (general Donate, the bakery, in-kind) and the office lines. The
+   illustration is one Hoa thị block in line with white holes and its holes cast long in white on a lime patch,
+   `aria-hidden`. No still, no door, no place, no person, no phone but the office's, never "visit"; it ends without a
+   dusk band because the band carries the room's still. `work.json` gives Little Rose no location.
+5. **No numbers, no years.** Who we are condenses the aim, vision, mission and values from the current About page
+   (draft, with `source`); the 300,000 and "30 years" claims are left out. Our story prints `[năm]`/`[year]` on staging
+   and nothing in production. Team shows three `[Tên] · [Vai trò]` places with `data-team-pending` (new
+   `render.mjs` blocker) on staging and only the intro and ways in on production. Partners shows the pending strip and,
+   on staging only, the funder already named in `work.json` as text linked to its program.
+6. **Cầu Hàn** serves families affected by HIV/AIDS: only its `serves` line names that; its activities are general
+   (`test/work-pages.test.mjs` checks the rest of the page). Its gallery is the existing `gallery-wall` placeholder.
+7. **PROD=1** still fails only on its guards: 143 problems against the baseline 59. The +84 are 28 new production
+   pages (14 route pairs, the news stub among them) × the 3 text categories every page already carries in its footer
+   (data-draft, [DRAFT, bracket tokens). No new Little Rose door (still 8), no donation, traces or team lines.
+- **needs (lead):** `npm run export:wp`: besides "the committed generated files" assertion, the two guard-export
+  assertions in `test/export-wp.test.mjs` are red until it runs, because `render.mjs` gained the `data-team-pending`
+  blocker that PLAN-M4 4.3 asks for (the generated `guards.json` and PHP patterns are stale, `wp/` is not ours).
+- **needs (walls):** stills `header-about`, `header-impact`, `header-cau-han` (lit headers; pages.css has no per-still
+  mask values for them yet, so the default seam applies). **needs (openings):** none.

@@ -33,13 +33,13 @@ export function litHeader(c, { still, trail, title, intro, introDraft = false, m
 export function sunHead(c, { trail, title, intro, introDraft = false, side = "", time = "sun", unit = "", art = "", size = "" }) {
   return html`<header class="sun-head sun-head--page sun-head--${time}${size ? " sun-head--" + size : ""}${unit ? " sun-head--unit" : ""}"${unit ? raw(` style="--unit:var(--color-unit-${unit})"`) : ""}>
   <span class="sun-layer sun-layer--page" aria-hidden="true"></span>
-  ${art ? html`<div class="sun-head__art" aria-hidden="true">${art}</div>` : ""}
   <div class="container sun-head__inner">
     ${breadcrumb(c, trail)}
     <h1 class="sun-head__title">${title}</h1>
     <div class="sun-head__side">
       ${intro ? html`<p class="sun-head__intro"${introDraft ? raw(" data-draft") : ""}>${intro}</p>` : ""}
       ${side}
+      ${art ? html`<div class="sun-head__art" aria-hidden="true">${art}</div>` : ""}
     </div>
   </div>
 </header>`;

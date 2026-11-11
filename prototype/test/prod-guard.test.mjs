@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderAll, findBlockers, littleRoseDoorLeak, tracesBlocked } from "../src/render.mjs";
+import { pageRoutes } from "../src/routes.mjs";
 import { visibleFigures } from "../src/lib/content.mjs";
 
 const tmp = (p) => mkdtempSync(join(tmpdir(), p));
@@ -18,6 +19,7 @@ test("each blocker category is detected on its own; approved HTML passes", () =>
   assert.deepEqual(findBlockers('<dd data-donation-placeholder>x</dd>'), ["donation placeholder"]);
   assert.deepEqual(findBlockers("<p>children supported since [year]</p>"), ["bracket placeholder token in text"]);
   assert.ok(findBlockers("<p>[DRAFT: x]</p>").includes("[DRAFT marker"));
+  assert.deepEqual(findBlockers("<li class=\"roster__slot\" data-team-pending>x</li>"), ["team placeholder (people not yet agreed to be listed)"]);
 });
 
 test("unverified figures never render on production", () => {
@@ -48,7 +50,8 @@ test("PROD render fails per category, drops unverified figures and the component
 
 test("prototype render succeeds and shows pending figures", () => {
   const files = renderAll(tmp("hcwa-proto-"), false);
-  assert.equal(files.length, 18);
+  assert.equal(files.length, pageRoutes.length * 2, "every built route in VI and EN");
+  assert.ok(files.length >= 46, "PLAN-M4: 23 page pairs");
 });
 
 test("renderer refuses to clean a folder it did not create", () => {

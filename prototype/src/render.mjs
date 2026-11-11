@@ -23,6 +23,8 @@ export const BLOCKERS = [
   // strip for four approved logos. Production leaves both out; these catch a leak.
   [/data-story-placeholder/, "featured story placeholder"],
   [/data-partners-pending/, "partners placeholder strip"],
+  // PLAN-M4 4.3: the Team page's places wait for people who agree to be named; production leaves them out.
+  [/data-team-pending/, "team placeholder (people not yet agreed to be listed)"],
 ];
 
 // HCWA safeguarding sign-off (05-DESIGN D6.8 and section 13, PLAN section 6): until world.json says

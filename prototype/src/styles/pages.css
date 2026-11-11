@@ -1208,3 +1208,266 @@ html[data-motion="off"] .track__dot { transition: none; }
   .track__dot { transition: none; }
   .kit-light.is-sun :is(.lit__light, .lit__screen), .kit-light.is-sun .lit__light img { animation: none; mask-image: none; }
 }
+
+/* =====================================================================================================
+   M4 pages (PLAN-M4 sections 3-4). Owner: pages stream. About (morning), Impact (midday), the Get
+   Involved subpages (late afternoon), Policies (plain and calm), Little Rose, and the shared sun band.
+   The same rules as every inner page (05-DESIGN 0.5): one gradient per page from its header to the dusk,
+   no section fills, no rules, no box edges; the light separates the sections, and no two sections in a
+   row share a grid. Appended to pages.css so it follows the rules it builds on.
+   ===================================================================================================== */
+
+/* ---------- the sun band on the M4 pages (partials/lit-header.mjs sunHead) ---------- */
+/* Donate's header without imagery, at a size a longer title fits: the H1 is the picture, a patch of
+   Hoa thị light falls across it from the left, and the band's colour is the first stop of the page's
+   day, so header and body are one surface. */
+.sun-head--page { --head: var(--color-sun-100); background: var(--head); padding-bottom: clamp(48px, 6vw, 96px); }
+.sun-head--morning { --head: var(--color-lime-100); }
+.sun-head--calm { --head: var(--color-lime-50); }
+.sun-head--shelter { --head: var(--color-lime-100); }
+.sun-head--morning::before, .sun-head--calm::before, .sun-head--shelter::before { background: var(--color-sun-200); }
+/* A center's paint as the band (Little Rose's pink): 6 px that thins to the right, paint not light. */
+.sun-head--unit::before { height: 10px; background: linear-gradient(to bottom, var(--unit) 4px, transparent); mask-image: linear-gradient(to right, black 30%, transparent 92%); }
+.sun-head--page .sun-head__title { font-size: clamp(3rem, 1rem + 7.4vw, 8rem); max-inline-size: 9em; }
+.sun-head--long .sun-head__title { font-size: clamp(2.5rem, 1rem + 5vw, 5.75rem); max-inline-size: 12em; }
+.sun-head__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.sun-head__mail, .sun-head__vi { font-size: var(--fs-sm); color: var(--color-ink-900); overflow-wrap: anywhere; }
+.sun-layer--page { top: -24px; left: -8vw; width: min(64vw, 860px); height: clamp(260px, 30vw, 440px); --pitch: 96px; mask-image: radial-gradient(closest-side, black 50%, transparent); }
+.sun-layer--page::before { transform: rotate(-3deg) skewX(-12deg) scaleY(1.12); opacity: 0.6; }
+.sun-head--morning .sun-layer--page::before, .sun-head--calm .sun-layer--page::before { background: var(--color-sun-200); opacity: 0.5; }
+.sun-head--calm .sun-layer--page { width: min(44vw, 560px); }
+/* Little Rose: no warm sun across its title; its own illustration carries plain daylight. */
+.sun-head--shelter .sun-layer--page { display: none; }
+@media (max-width: 1023px) { .sun-layer--page { width: 100vw; height: 220px; } }
+
+/* ---------- the days of the M4 pages ---------- */
+.day--about { --day: var(--color-lime-100) 0, var(--color-lime-100) 66%, var(--color-sun-100) 100%; }
+.day--story, .day--team, .day--partners { --day: var(--color-lime-100) 0, var(--color-lime-100) 58%, var(--color-sun-100) 100%; }
+.day--policies { --day: var(--color-lime-50) 0, var(--color-lime-100) 62%, var(--color-sun-100) 100%; }
+.day--impact { --day: var(--color-lime-100) 0, var(--color-sun-100) 34%, var(--color-sun-100) 100%; }
+.day--late { --day: var(--color-sun-100) 0, var(--color-lime-100) 22%, var(--color-lime-100) 70%, var(--color-sun-100) 100%; }
+.day--shelter { --day: var(--color-lime-100) 0, var(--color-lime-100) 64%, var(--color-sun-100) 100%; }
+/* The lit header's shade warms to lime under its long seam on About (as Get Involved), so the aim never
+   sits on the cool wall. */
+.page-about .lit-head, .page-impact .lit-head { background: linear-gradient(in oklab to bottom, var(--color-shade-100) 45%, var(--color-lime-100)); }
+.day--team, .day--partners { padding-bottom: clamp(72px, 8vw, 128px); }
+
+/* ---------- Who we are ---------- */
+.aim { display: grid; gap: 16px; padding-top: var(--sec); }
+.aim__label { display: flex; align-items: center; gap: 12px; font: 600 var(--fs-meta) / 1.6 var(--font-body); letter-spacing: 0; color: var(--color-ink-700); }
+.aim__mark { flex: none; width: 26px; height: 26px; overflow: visible; }
+:is(.aim__mark, .lr-art__block) .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-gold-700) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.aim__mark .block-icon__light { fill: var(--color-sun-400); }
+.aim__text { max-width: 24ch; font: 500 var(--fs-statement) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: balance; }
+
+.creed { display: grid; gap: clamp(48px, 6vw, 88px) clamp(48px, 6vw, 104px); padding-top: calc(var(--sec) * 1.25); }
+@media (min-width: 1024px) { .creed { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } .creed__mission { padding-top: clamp(40px, 6vw, 96px); } }
+.creed__title { margin-bottom: clamp(14px, 1.6vw, 22px); font-size: var(--fs-h3); color: var(--color-ink-700); }
+.creed__statement { max-width: 30ch; font: 500 clamp(1.375rem, 1rem + 1vw, 1.75rem) / 1.6 var(--font-body); color: var(--color-ink-900); text-wrap: pretty; }
+.creed__text { max-width: 52ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* The values as one line of words, each opened by the house's quatrefoil of sun. */
+.values { display: grid; gap: 20px; padding-top: calc(var(--sec) * 1.1); }
+.values__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
+.values__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px clamp(28px, 4vw, 56px); }
+.values__list li { display: inline-flex; align-items: center; gap: 14px; font-family: var(--font-display); font-weight: 600; font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.5rem); letter-spacing: var(--track-display); color: var(--color-ink-900); }
+.values__mark { flex: none; width: 0.6em; height: 0.6em; fill: var(--color-sun-500); }
+
+/* The four areas: each a tile of its pigment, its name the link (covering the item), its line under it. */
+.areas { display: grid; gap: clamp(20px, 3vw, 40px); padding-top: calc(var(--sec) * 1.25); }
+.areas__title { font-size: var(--fs-h2); }
+.areas__list { list-style: none; padding: 0; display: grid; gap: 32px 40px; }
+@media (min-width: 600px) { .areas__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .areas__list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.area { position: relative; display: grid; gap: 12px; align-content: start; padding-block: 8px; }
+.area__tile { width: 64px; height: 64px; border-radius: 2px; transition: translate var(--d-hover) var(--ease-out); }
+.area__name { font-size: var(--fs-h3); }
+.area__name a { color: var(--color-ink-900); text-decoration: none; }
+.area__name a::after { content: ""; position: absolute; inset: 0; }
+.area__text { max-width: 34ch; color: var(--color-ink-700); }
+@media (hover: hover) { .area:hover .area__name a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; } .area:hover .area__tile { translate: 0 -3px; } }
+.area:has(a:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 6px; }
+.area a:focus-visible { outline: none; }
+
+.legal { display: grid; gap: 8px 64px; padding-top: calc(var(--sec) * 1.1); }
+@media (min-width: 1024px) { .legal { grid-template-columns: 280px minmax(0, 1fr); } .legal__title { grid-row: span 2; } }
+.legal__title { font-size: var(--fs-h3); }
+.legal__text { max-width: 60ch; font-size: var(--fs-lg); line-height: var(--lh-lead); }
+.legal__reg { font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* Onward: the rest of About as big links, each with the arrow at its last word. */
+.onward { display: grid; gap: clamp(16px, 2vw, 28px); padding-top: calc(var(--sec) * 1.25); }
+.onward__title { font-size: var(--fs-h2); }
+.onward__list { list-style: none; padding: 0; display: grid; gap: 8px clamp(40px, 6vw, 96px); }
+@media (min-width: 1024px) { .onward__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.onward__item { display: grid; gap: 4px; padding-block: 14px; }
+.onward__link { display: inline-flex; align-items: center; gap: 12px; justify-self: start; min-height: 48px; font-family: var(--font-display); font-weight: 600; font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem); letter-spacing: var(--track-display); color: var(--color-ink-900); text-decoration: none; }
+.onward__link .icon { flex: none; width: 26px; height: 26px; color: var(--color-blue-700); transition: translate var(--d-hover) var(--ease-out); }
+@media (hover: hover) { .onward__link:hover span { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.16em; } .onward__link:hover .icon { translate: 4px 0; } }
+.onward__lead { max-width: 44ch; color: var(--color-ink-700); }
+
+/* ---------- Our story: steps along the morning wall ---------- */
+/* The year (a token until HCWA verifies it; production leaves it out), a patch of Hoa thị sun, the
+   step's name and its one line. No line joins the steps: the patches walk down the wall. */
+.steps { list-style: none; padding-inline: 0; display: grid; gap: clamp(40px, 5vw, 72px); padding-top: var(--sec); }
+.step { display: grid; grid-template-columns: 56px minmax(0, 1fr); grid-template-areas: "sun when" "sun body"; gap: 6px 20px; align-items: start; }
+@media (min-width: 800px) { .step { grid-template-columns: minmax(0, 11rem) 96px minmax(0, 1fr); grid-template-areas: "when sun body"; gap: 0 clamp(24px, 3vw, 48px); } }
+.step__when { grid-area: when; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); letter-spacing: var(--track-display); font-variant-numeric: tabular-nums lining-nums; color: var(--color-ink-700); }
+@media (min-width: 800px) { .step__when { text-align: right; padding-top: 4px; } }
+.step__sun { grid-area: sun; position: relative; display: block; aspect-ratio: 1; background: var(--color-sun-200); mask: url("/svg/hole-hoa-thi.svg") center / 100% 100% no-repeat; transform: rotate(-4deg) skewX(-14deg); opacity: 0.9; }
+.step[data-step="today"] .step__sun { background: var(--color-sun-400); }
+.step__body { grid-area: body; display: grid; gap: 8px; max-width: 58ch; }
+.step__title { font-size: clamp(1.5rem, 1.1rem + 1.3vw, 2.375rem); }
+.step__title a { color: var(--color-ink-900); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.step__title a:hover { text-decoration-thickness: 2px; }
+.step__text { font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+/* The patch slides along the wall as its step passes: transform only, it follows the scroll. */
+@keyframes step-sun { from { translate: -14px -10px; } to { translate: 14px 10px; } }
+@supports (animation-timeline: view()) {
+  html[data-motion="on"] .step__sun { animation: step-sun linear both; animation-timeline: view(); }
+}
+
+/* ---------- Team ---------- */
+.roster { display: grid; gap: 18px; padding-top: var(--sec); }
+.roster__list { list-style: none; padding: 0; display: grid; gap: 20px; }
+@media (min-width: 700px) { .roster__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.roster__slot { display: grid; place-items: center; min-height: 176px; padding: 20px; border: 1.5px dashed var(--color-gold-700); border-radius: var(--r-md); color: var(--color-warn); font-weight: 500; text-align: center; }
+.roster__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* ---------- Partners ---------- */
+.pgroup { display: grid; gap: 20px; padding-top: var(--sec); }
+.pgroup__title { font-size: var(--fs-h3); }
+.pwait { display: grid; gap: 16px; padding-top: var(--sec); }
+.pwait__title { font-size: var(--fs-h2); }
+.funders { display: grid; gap: 12px; padding-top: calc(var(--sec) * 1.1); }
+.funders__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
+.funders__list { list-style: none; padding: 0; display: grid; gap: 10px; }
+.funders__list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
+.funders__name { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem); letter-spacing: var(--track-display); }
+.funders__note { max-width: 60ch; font-size: var(--fs-sm); color: var(--color-ink-700); }
+
+/* ---------- Policies: plain and calm ---------- */
+.toc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 32px; padding-top: clamp(32px, 4vw, 56px); }
+.toc__title { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.toc__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 28px; }
+.toc__list a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.policy { display: grid; gap: 20px 64px; padding-top: calc(var(--sec) * 1.1); scroll-margin-top: calc(var(--header-h-compact, 72px) + 24px); }
+@media (min-width: 1024px) { .policy { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); } .policy__title { position: sticky; top: calc(var(--header-h-compact, 72px) + 40px); align-self: start; } }
+.policy__title { font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem); max-inline-size: 11em; }
+.policy__body { display: grid; gap: 18px; max-width: 64ch; }
+.policy__summary { display: grid; gap: 14px; }
+.policy__summary p { font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+.policy__lead { color: var(--color-ink-700); }
+.policy__outline { display: grid; gap: 4px; margin: 0; padding-left: 1.4em; color: var(--color-ink-700); }
+.policy__doc { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 14px; align-items: start; padding-top: 8px; font-size: var(--fs-sm); color: var(--color-ink-700); }
+.policy__icon { color: var(--color-blue-700); }
+/* A section reached from the footer takes a soft underlight of sun for a moment, never an outline box. */
+.policy:target .policy__title { text-decoration: underline; text-decoration-color: var(--color-sun-400); text-decoration-thickness: 4px; text-underline-offset: 0.2em; }
+
+/* ---------- Impact & Reports ---------- */
+.counts--page .counts__title { font-size: var(--fs-h2); }
+.years { display: grid; gap: 16px; padding-top: calc(var(--sec) * 1.25); }
+.years__title { font-size: var(--fs-h3); }
+.years__scroll { overflow-x: auto; max-width: 100%; }
+.years__scroll:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 4px; }
+/* No rules: the rows are told apart by a feathered underlight of sun on every other one. */
+.years__table { border-collapse: collapse; min-width: 520px; font-variant-numeric: tabular-nums lining-nums; }
+.years__table th, .years__table td { padding: 12px 28px 12px 0; text-align: left; vertical-align: baseline; }
+.years__table thead th { font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.years__table tbody th { font-family: var(--font-display); font-weight: 600; }
+.years__table td { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); }
+.years__table tbody tr:nth-child(odd) { background: linear-gradient(to right, color-mix(in srgb, var(--color-sun-200) 45%, transparent), transparent 85%); }
+.years__note { font-size: var(--fs-sm); color: var(--color-ink-700); }
+.change { display: grid; gap: 20px 64px; padding-top: calc(var(--sec) * 1.25); }
+@media (min-width: 1024px) { .change { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } .change__title, .change__lead { grid-column: 1; } .change__story { grid-column: 2; grid-row: 1 / span 3; } }
+.change__title { font-size: var(--fs-h2); }
+.change__lead { max-width: 40ch; color: var(--color-ink-700); }
+.library { scroll-margin-top: calc(var(--header-h-compact, 72px) + 24px); }
+.clear { display: grid; gap: 12px 64px; padding-top: calc(var(--sec) * 1.1); }
+@media (min-width: 1024px) { .clear { grid-template-columns: 280px minmax(0, 1fr); } .clear__title { grid-row: span 2; } }
+.clear__title { font-size: var(--fs-h3); }
+.clear__text { max-width: 60ch; color: var(--color-ink-700); }
+.clear__links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 32px; }
+
+/* ---------- Get Involved subpages ---------- */
+/* Who we look for / ways to partner: numbered lines across the page, two by two from 1024. */
+.needed { display: grid; gap: clamp(20px, 3vw, 40px); padding-top: var(--sec); }
+.needed__title { font-size: var(--fs-h2); }
+.needed__list { list-style: none; padding: 0; display: grid; gap: clamp(28px, 3vw, 44px) clamp(40px, 6vw, 96px); }
+@media (min-width: 1024px) { .needed__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.needed__item { display: grid; grid-template-columns: 4ch minmax(0, 1fr); gap: 6px 20px; align-items: baseline; }
+.needed__n { grid-row: span 2; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h3); color: var(--color-gold-700); font-variant-numeric: tabular-nums lining-nums; }
+.needed__name { font-size: clamp(1.375rem, 1.1rem + 0.9vw, 2rem); }
+.needed__name a { color: var(--color-ink-900); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+.needed__text { max-width: 44ch; color: var(--color-ink-700); }
+
+/* Two short sections side by side: what to expect and safety, contact first and the drop-off. */
+.duo { display: grid; gap: clamp(48px, 6vw, 72px) clamp(48px, 6vw, 104px); padding-top: calc(var(--sec) * 1.25); }
+@media (min-width: 1024px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.duo__col { display: grid; gap: 14px; align-content: start; }
+.duo__title { font-size: var(--fs-h3); }
+.duo__list { flex-direction: column; flex-wrap: nowrap; }
+.duo__text { max-width: 52ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+/* Safety: the house's shade falls on this one, a cool patch on the late wall, feathered on every side. */
+.duo__col--safe { position: relative; isolation: isolate; }
+.duo__col--safe::before { content: ""; position: absolute; z-index: -1; inset: -28px -32px; background: radial-gradient(closest-side, color-mix(in srgb, var(--color-shade-100) 80%, transparent), transparent); pointer-events: none; }
+.duo__address { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px; align-items: start; font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: var(--track-display); }
+.duo__address .office__sun { width: 18px; height: 18px; margin-top: 0.3em; fill: var(--color-sun-500); }
+
+/* The sign-up: its heading held on the left while the form passes on the right. */
+.signup { display: grid; gap: 24px 64px; padding-top: calc(var(--sec) * 1.25); scroll-margin-top: calc(var(--header-h-compact, 72px) + 16px); }
+@media (min-width: 1024px) { .signup { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } .signup__head { position: sticky; top: calc(var(--header-h-compact, 72px) + 40px); } }
+.signup__head { display: grid; gap: 14px; align-content: start; }
+.signup__title { font-size: var(--fs-h2); max-inline-size: 10em; }
+.signup__lead { max-width: 36ch; color: var(--color-ink-700); }
+.signup__mail { display: inline-flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.signup__mail .icon { flex: none; width: 20px; height: 20px; color: var(--color-blue-700); }
+.give__title--sub { font-size: clamp(2.25rem, 1rem + 3.6vw, 4.25rem); }
+.give__lead { max-width: 52ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-700); }
+
+/* The bakery: the house's screen with plain light behind it, never people, never a place. */
+.bakery { display: grid; gap: 32px 64px; padding-top: calc(var(--sec) * 1.3); scroll-margin-top: calc(var(--header-h-compact, 72px) + 24px); }
+@media (min-width: 1024px) { .bakery { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; } }
+.bakery__art { position: relative; isolation: isolate; justify-self: start; width: min(100%, 420px); }
+.bakery__screen { display: block; width: 100%; height: auto; mask-image: radial-gradient(closest-side, black 62%, transparent); }
+.bakery__light { position: absolute; z-index: -1; inset: -12%; background: radial-gradient(closest-side, var(--color-sun-200), transparent); }
+.bakery__text { display: grid; gap: 14px; align-content: start; max-width: 60ch; }
+.bakery__title { font-size: var(--fs-h2); }
+.bakery__lead { font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+.bakery__menu { color: var(--color-ink-700); }
+.bakery__how { margin-top: 10px; font-size: var(--fs-h4); }
+.bakery__order { color: var(--color-ink-700); }
+.bakery__lines { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 4px 0 0; }
+.bakery__lines dt { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.bakery__lines dd { margin: 0; font-family: var(--font-display); font-weight: 600; overflow-wrap: anywhere; }
+.bakery__links { display: flex; flex-wrap: wrap; gap: 0 32px; }
+
+/* ---------- Little Rose ---------- */
+/* The illustration: one Hoa thị block, and below it the same holes cast long on the lime wall in plain,
+   untinted daylight (the wall's own lime-50, never the sun's yellow, never pink). Decoration only. */
+.sun-head__art { width: clamp(132px, 13vw, 196px); margin-top: clamp(8px, 2vw, 24px); pointer-events: none; }
+/* A patch of lime wall a touch deeper than the band (no edge: it fades out on every side), the block at its
+   top, and the block's holes cast long and white below it. */
+.lr-art { position: relative; display: block; aspect-ratio: 4 / 5; background: radial-gradient(closest-side, color-mix(in oklab, var(--color-lime-100), var(--color-ink-700) 7%), transparent); }
+.lr-art__block { position: absolute; left: 30%; top: 4%; width: 40%; height: auto; aspect-ratio: 1; overflow: visible; }
+.lr-art__block .block-icon__light { fill: white; }
+.lr-art__light { position: absolute; left: 10%; right: 4%; top: 42%; bottom: 6%; background: white; opacity: 0.9; transform: skewX(-16deg); transform-origin: top;
+  mask-image: url("/svg/hole-hoa-thi.svg"), radial-gradient(closest-side, black 45%, transparent); mask-size: 34% auto, 100% 100%; mask-repeat: repeat, no-repeat; mask-composite: intersect; }
+.shelter { display: grid; gap: 10px; padding-top: var(--sec); }
+.shelter__note { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 14px; align-items: start; max-width: 52ch; margin-top: clamp(20px, 3vw, 36px); font-size: var(--fs-lg); line-height: var(--lh-lead); font-weight: 500; color: var(--color-ink-900); }
+.shelter__mark { width: 18px; height: 18px; margin-top: 0.45em; fill: var(--color-lime-300); }
+.page-shelter { --day-end: var(--color-sun-100); }
+.reach-office { display: grid; gap: 18px; justify-items: start; padding-top: calc(var(--sec) * 1.2); }
+.reach-office__title { font-size: var(--fs-h3); max-inline-size: 22em; }
+.reach-office .dusk__lines { display: flex; flex-wrap: wrap; gap: 12px 48px; margin: 0; }
+.reach-office .dusk__lines dt { font-size: var(--fs-meta); color: var(--color-ink-700); }
+.reach-office .dusk__lines dd { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--color-ink-900); overflow-wrap: anywhere; }
+.reach-office .dusk__lines a { color: var(--color-ink-900); }
+.offers { display: grid; gap: clamp(14px, 2vw, 24px); padding-top: calc(var(--sec) * 1.2); }
+.offers__title { font-size: var(--fs-h2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .step__sun { animation: none !important; }
+  .area__tile, .onward__link .icon { transition: none; }
+}
+html[data-motion="off"] .step__sun { animation: none; }

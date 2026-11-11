@@ -16,18 +16,21 @@ import { icon } from "./components.mjs";
 //   --s3d-p     linear 0 → 1
 //   --s3d-cam   the camera, --ease-in-out, done at 0.86 (the last 14% holds still before reading starts)
 //   --s3d-sun   light arriving, --ease-sun, done at 0.86
-//   --s3d-open  the late light flooding in, --ease-sun over 0.50 → 0.86
+//   --s3d-open  the street's light opening out, in-out over 0.55 → 0.92 (it grows with the camera's last
+//               move and is still widening as the page rises into it)
 // The easings and ranges live here once; openings.css and motion/scroll3d.js both read TRACKS.
 export const TRACKS = {
   cam: { from: 0, to: 0.86, ease: [0.77, 0, 0.175, 1] },
   sun: { from: 0, to: 0.86, ease: [0.16, 1, 0.3, 1] },
-  open: { from: 0.5, to: 0.86, ease: [0.16, 1, 0.3, 1] },
+  open: { from: 0.55, to: 0.92, ease: [0.37, 0, 0.63, 1] },
 };
 
 // A stage wrapper. name: "contact" | "news"; vars: CSS custom properties taken from the still's own data.
-export const stage = (name, body, vars = {}) => {
+// min: the shortest range, as a fraction of the viewport height (a stage that is not pinned lets go
+// almost at once; its camera still takes this much scroll to come to rest).
+export const stage = (name, body, vars = {}, { min = 0 } = {}) => {
   const style = Object.entries(vars).map(([k, v]) => `--${k}:${v}`).join(";");
-  return html`<div class="s3d s3d--${name}" data-scroll3d="${name}"${style ? raw(` style="${style}"`) : ""}>${body}</div>`;
+  return html`<div class="s3d s3d--${name}" data-scroll3d="${name}"${min ? raw(` data-s3d-min="${min}"`) : ""}${style ? raw(` style="${style}"`) : ""}>${body}</div>`;
 };
 
 // Where a lit header's subject sits, from the still's own crop data (src/world/still-shots.js), never
@@ -41,7 +44,7 @@ export const litStageVars = (still) => {
     "s3d-aspect": desk.aspect.toFixed(4),
     "s3d-subject": subject.toFixed(3),
     // The camera aims at the middle of the subject's side of the frame.
-    "s3d-ox": `${(((1 + subject) / 2) * 100).toFixed(1)}%`,
+    "s3d-ox": ((1 + subject) / 2).toFixed(3),
   };
 };
 

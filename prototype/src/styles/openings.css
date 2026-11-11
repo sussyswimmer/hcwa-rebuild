@@ -1,2 +1,255 @@
 /* M4 openings (PLAN-M4 section 5): the Contact and News 3D scroll openings and the News hub archive.
-   Contact and News overrides live here, never in pages.css. */
+   Contact and News overrides live here, never in pages.css.
+
+   A stage (partials/scroll3d.mjs) is a finished page at rest. It turns into a pinned 3D stage only under
+   html.stages with motion on (head-inline.js decides before first paint: JS on, motion on, Tier 1-2), so
+   no JS, reduced motion, pause and ?tier=0 keep the rest frame and nothing jumps after paint. On the stage
+   the layers move from four custom properties that follow the native scroll (TRACKS in scroll3d.mjs):
+   CSS scroll-driven animations write them where supported, motion/scroll3d.js everywhere else. Only
+   transform and opacity move; at most 4 promoted layers per stage. */
+
+@property --s3d-p { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --s3d-cam { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --s3d-sun { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --s3d-open { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+.s3d { --hdr: var(--header-h); }
+@media (min-width: 1024px) { .s3d { --hdr: var(--header-h-wide); } }
+
+/* Scroll 0 → the scroll at which the stage lets go (--s3d-end, measured by motion/scroll3d.js; the
+   fallback is close enough for the first frame). Keyframe easings and ranges = TRACKS: the camera and the
+   light are done at 0.86, so the last 14% holds still; the street light opens over 0.55 → 0.92. */
+@keyframes s3d-p { from { --s3d-p: 0; } to { --s3d-p: 1; } }
+@keyframes s3d-cam { 0% { --s3d-cam: 0; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); } 86%, 100% { --s3d-cam: 1; } }
+@keyframes s3d-sun { 0% { --s3d-sun: 0; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 86%, 100% { --s3d-sun: 1; } }
+@keyframes s3d-open { 0%, 55% { --s3d-open: 0; animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1); } 92%, 100% { --s3d-open: 1; } }
+@supports (animation-timeline: scroll()) {
+  html.stages[data-motion="on"] [data-scroll3d] {
+    animation: s3d-p linear both, s3d-cam linear both, s3d-sun linear both, s3d-open linear both;
+    animation-timeline: scroll(root block);
+    animation-duration: auto; /* the shorthand reset it to 0s, which some Chromium builds keep for scroll timelines */
+    animation-range: 0px var(--s3d-end, 100svh);
+  }
+}
+
+/* "Skip the opening": a plain link in the first screen, on the stage and at rest alike. */
+.s3d-skip { margin-top: 10px; font-size: var(--fs-sm); }
+.s3d-skip .icon { rotate: 90deg; }
+.text-link.s3d-skip:hover .icon { translate: 0 3px; }
+
+/* ============================== Contact: through the screen to the street ============================== */
+
+/* At rest the wrapper sits between the lit header and the day, so the day's rise into the header's foot
+   (pages.css .lit-head + .day) is restated here for the wrapper. */
+.s3d--contact + .day { --pull: calc(max(24svh, 180px) * 0.4); margin-top: calc(-1 * var(--pull)); background: linear-gradient(in oklab to bottom, var(--day)) 0 var(--pull) / 100% calc(100% - var(--pull)) no-repeat; }
+@media (max-width: 599.98px) { .s3d--contact + .day { --pull: 32px; } }
+
+/* The stage. The still fills the first screen under the header and stays pinned for --run of scroll while
+   the H1, intro and buttons scroll away over its plain wall at native speed (they never animate). The
+   camera dollies toward the screen (the whole still scales about the middle of the subject's side), the
+   canopy's flecks on the screen slide as the sun moves toward 16:30. While it does, the page itself rises into
+   the frame: its top is a long fog of the day's first colour (eased stops, about 27svh), so the stage is
+   covered by light, never cut, and the form's title arrives on plain sun-100. */
+/* The run and zoom are set on the stage and on the day after it (the day sizes its fog from the run). */
+html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) {
+  --stage-h: calc(100svh - var(--hdr));
+  --run: 76svh;
+  --rise: 0.75; /* how much of the run the page spends rising over the stage */
+  --zoom: 0.55;
+  --turn: 10deg;
+  --truck: -12cqw; /* the camera trucks toward the words' side as it comes round; the screen stays clear of them while they are on screen */
+}
+html.stages[data-motion="on"] .s3d--contact .lit-head {
+  min-height: 0; padding: 0;
+  background: linear-gradient(in oklab to bottom, var(--color-lime-100), var(--color-sun-100) 50%);
+}
+html.stages[data-motion="on"] .s3d--contact .lit-head__media { inset: auto; position: sticky; top: var(--hdr); z-index: 0; height: var(--stage-h); align-self: start; overflow: clip; pointer-events: none; }
+/* The feathers sit on the pinned box, not on the still, so the camera's zoom never carries an edge in. */
+html.stages[data-motion="on"] .s3d--contact .lit-head__media .lit { mask-image: none; }
+/* The picture runs on past the frame's right edge as far as the still itself does (its subject side), so
+   the truck and the turn never bring an edge of it into view. */
+@media (min-width: 600px) { html.stages[data-motion="on"] .s3d--contact .lit-head__media .lit { inset: 0 -30% 0 0; } }
+/* The camera: a dolly toward the middle of the screen while it swings round to face it (the still is
+   shot 28° off the face; turning the picture up to --turn in a 1400 px perspective evens the blocks out
+   the way a camera coming round would) and trucks toward the words' side once they have scrolled away.
+   Scale, turn and truck keep the picture over the whole frame at every step. */
+html.stages[data-motion="on"] .s3d--contact .lit-head__media { perspective: 1400px; perspective-origin: calc(var(--s3d-ox) * 100cqw) 48cqh; }
+html.stages[data-motion="on"] .s3d--contact .lit {
+  transform-origin: calc(var(--s3d-ox) * 100cqw) 48cqh;
+  transform: translateX(calc(var(--truck) * var(--s3d-cam))) rotateY(calc(var(--turn) * var(--s3d-cam))) scale(calc(1 + var(--zoom) * var(--s3d-cam)));
+  will-change: transform;
+}
+/* The canopy's flecks on the screen move with the sun (Tier 2: the light drift is richness, not content). */
+html.stages[data-motion="on"][data-tier="2"] .s3d--contact .lit__screen {
+  transform-origin: 100% 0;
+  transform: translate(calc(2.5% * var(--s3d-sun)), calc(-2.5% * var(--s3d-sun))) scale(calc(1 + 0.05 * var(--s3d-sun)));
+  will-change: transform;
+}
+/* The page rises into the frame over the last three quarters of the run (phones: all of it, under a
+   stage two thirds of the screen tall), so the office and the form arrive while the camera is still
+   moving: its top --pull is a fog of sun-100 on
+   eased stops, then the day's gradient (which starts on that colour). The first words sit below the fog. */
+html.stages[data-motion="on"] .s3d--contact + .day {
+  --pull: calc(var(--run) * var(--rise));
+  --fog: var(--color-sun-100);
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--fog) 34%, transparent) 20%, color-mix(in srgb, var(--fog) 74%, transparent) 42%, color-mix(in srgb, var(--fog) 95%, transparent) 62%, var(--fog) 78%) 0 0 / 100% var(--pull) no-repeat,
+    linear-gradient(in oklab to bottom, var(--day)) 0 calc(var(--pull) - 2px) / 100% calc(100% - var(--pull) + 2px) no-repeat;
+}
+html.stages[data-motion="on"] .s3d--contact + .day--contact { --day: var(--color-sun-100) 0, var(--color-lime-100) 34%, var(--color-sun-100) 100%; }
+html.stages[data-motion="on"] .s3d--contact + .day .reach { padding-top: calc(var(--pull) * 0.8); }
+
+/* Desktop: the text over the still's plain wall, as on the lit header; the still is as tall as the stage
+   and placed so the subject begins just right of the text column (its own HEADER_TEXT, via --s3d-subject
+   and the crop's --s3d-aspect: no pixel values). */
+@media (min-width: 600px) {
+  html.stages[data-motion="on"] .s3d--contact .lit-head { display: grid; grid-template: calc(var(--stage-h) + var(--run)) / minmax(0, 1fr); }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media { grid-area: 1 / 1; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__text { grid-area: 1 / 1; align-self: start; z-index: 1; min-height: var(--stage-h); padding-block: 24px 10svh; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media { mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.5) 5%, black 12%); }
+  html.stages[data-motion="on"] .s3d--contact .lit img {
+    object-position: calc(var(--s3d-subject) * 100cqw - var(--s3d-subject) * var(--s3d-aspect) * 100cqh) 50%;
+  }
+}
+/* Phones: the words first on the plain wall, then the still pinned under the header for the run. The
+   still comes out of the wall at its top and sinks back into the day at its foot (no edge either way);
+   the 4:3 crop is centred on the screen. */
+@media (max-width: 599.98px) {
+  html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) { --run: 32svh; --rise: 1; --zoom: 0.42; --turn: 6deg; --truck: 0px; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head { display: grid; grid-template-rows: auto calc(var(--stage-h) + var(--run)); }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__text { grid-row: 1; margin-top: 0; padding-block: 12px 28px; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media { grid-row: 2; aspect-ratio: auto; }
+  html.stages[data-motion="on"] .s3d--contact .lit-head__media { mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.5) 6%, black 14%, black 76%, rgb(0 0 0 / 0.5) 90%, transparent); }
+  html.stages[data-motion="on"] .s3d--contact .lit img { object-position: 62% 50%; }
+}
+
+/* ===================================== News: notices on the wall ===================================== */
+
+/* The page is one stretch of the house's lime wall. The plaster is lime-100 with a fine grain and a few
+   soft stains (an SVG noise, static, under 6% even where it is darkest: 05-DESIGN D4 grain); the walls
+   stream's real plaster map can replace it through --wall-tex. The house's Hoa thị light falls across
+   the upper right, away from the words. The wall's foot sinks into the day (D0.5): no edge. */
+.newswall {
+  --wall-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.31 0 0 0 0 0.24 0 0 0 0.08 -0.015'/%3E%3C/filter%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.40 0 0 0 0 0.30 0 0 0 0.22 -0.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  position: relative; isolation: isolate; overflow-x: clip;
+  padding-bottom: clamp(56px, 7vw, 112px);
+  background: var(--color-lime-100);
+}
+.newswall__bg { position: absolute; inset: 0; z-index: -1; overflow: clip; pointer-events: none;
+  mask-image: linear-gradient(to bottom, black calc(100% - max(24svh, 180px)), rgb(0 0 0 / 0.5) calc(100% - max(24svh, 180px) * 0.5), transparent); }
+.newswall__plane { position: absolute; inset: 0; background: var(--wall-tex) 0 0 / 320px 320px; }
+/* The house's light through the screen behind the camera: Hoa thị patches high on the right. */
+.newswall__light { position: absolute; top: 0; right: max(-6vw, -30vw + 120px); width: min(62vw, 880px); height: min(74svh, 640px); overflow: hidden; mask-image: radial-gradient(closest-side, black 22%, transparent); }
+.newswall__light::before { content: ""; position: absolute; inset: -25%; background: var(--color-sun-200); opacity: 0.5; mask: url("/svg/hole-hoa-thi.svg") 0 0 / 118px 118px repeat; transform: rotate(-4deg) skewX(-20deg) scaleY(1.25); }
+.newswall__sun { display: none; }
+
+.newswall__head { display: grid; justify-items: start; padding-top: clamp(24px, 4vw, 64px); }
+/* Small lines on the wall take ink-900: the light and the plaster can lift the wall behind them. */
+.newswall :is(.breadcrumb ol, .breadcrumb a, .filters__label, .newswall__note) { color: var(--color-ink-900); }
+.newswall__title { margin-top: 10px; font-size: clamp(3rem, 1.2rem + 6.2vw, 7.25rem); line-height: var(--lh-h1); max-inline-size: 12em; }
+.newswall__intro { margin-top: 18px; max-width: 36ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
+.newswall__filters { margin-top: clamp(28px, 3.5vw, 48px); }
+.news-filters { display: grid; gap: 10px; }
+.newswall__board { margin-top: clamp(32px, 4vw, 56px); }
+.newswall__note { display: flex; align-items: center; gap: 8px; margin-top: clamp(28px, 3vw, 44px); font-size: var(--fs-sm); color: var(--color-ink-700); }
+.newswall__note .icon { width: 18px; height: 18px; flex: none; }
+.newswall .filter-empty a { font-weight: 600; color: var(--color-blue-700); }
+
+/* The notices: paper pinned to the wall, shaped by light and shadow (no outline, D0.5), hand-pinned at
+   slightly different heights. The title is the link and covers the paper. */
+.newswall__board { perspective: 1100px; perspective-origin: 50% 0; }
+.notices { list-style: none; padding: 0; display: grid; gap: clamp(20px, 2.4vw, 36px); align-items: start; }
+@media (min-width: 720px) { .notices { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) {
+  .notices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .notice:nth-child(3n + 2) { margin-top: 44px; }
+  .notice:nth-child(3n + 3) { margin-top: 14px; }
+}
+.notice { position: relative; transform-origin: 50% 0; }
+.notice__paper {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 12px; align-content: start;
+  min-height: clamp(220px, 19vw, 280px); padding: 34px clamp(22px, 2vw, 30px) 24px; border-radius: 3px;
+  background: var(--color-lime-50);
+  box-shadow: 0 1px 1px color-mix(in srgb, var(--color-ink-900) 6%, transparent), 0 12px 26px -12px color-mix(in srgb, var(--color-ink-900) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--color-ink-900) 10%, transparent);
+  transition: translate var(--d-hover) var(--ease-out), box-shadow var(--d-hover) var(--ease-out);
+}
+/* The light on the paper: a quatrefoil of sun, resting on its upper right (it passes over on the stage). */
+.notice__paper::before {
+  content: ""; position: absolute; z-index: -1; top: -30%; left: 0; width: 70%; aspect-ratio: 1;
+  background: var(--color-sun-200); opacity: 0.42; filter: blur(4px);
+  mask: url("/svg/hole-hoa-thi.svg") 50% 50% / 100% 100% no-repeat;
+  transform: translateX(78%) rotate(-8deg) skewX(-14deg);
+}
+/* The brass pin. */
+.notice__pin { position: absolute; top: 12px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--color-sun-200), var(--color-gold-700) 70%); box-shadow: 0 2px 3px color-mix(in srgb, var(--color-ink-900) 30%, transparent); }
+.notice__cat { font-size: var(--fs-meta); font-weight: 600; color: var(--color-blue-700); }
+.notice__title { font: 600 clamp(1.125rem, 1rem + 0.4vw, 1.3125rem) / 1.45 var(--font-display); letter-spacing: var(--track-display); text-wrap: pretty; }
+.notice__title a { color: var(--color-ink-900); text-decoration: none; }
+.notice__title a::after { content: ""; position: absolute; inset: 0; }
+.notice__foot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 6px; }
+.notice__date { display: flex; align-items: baseline; gap: 8px; color: var(--color-ink-900); }
+.notice__dm { font: var(--wght-h1) clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem) / 1 var(--font-display); font-variant-numeric: tabular-nums lining-nums; letter-spacing: var(--track-display); }
+.notice__y { font: 600 var(--fs-sm) / 1.2 var(--font-display); font-variant-numeric: tabular-nums lining-nums; color: var(--color-ink-700); }
+.notice__ext { width: 18px; height: 18px; color: var(--color-ink-700); transition: translate var(--d-hover) var(--ease-out); }
+@media (hover: hover) {
+  .notice:hover .notice__paper { translate: 0 -2px; box-shadow: 0 1px 1px color-mix(in srgb, var(--color-ink-900) 6%, transparent), 0 18px 32px -14px color-mix(in srgb, var(--color-ink-900) 30%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--color-ink-900) 10%, transparent); }
+  .notice:hover .notice__title a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  .notice:hover .notice__ext { translate: 2px -2px; color: var(--color-blue-700); }
+}
+.notice:has(a:focus-visible) .notice__paper { outline: 3px solid var(--color-focus); outline-offset: 4px; }
+.notice a:focus-visible { outline: none; }
+
+/* No JS: the chips land on #f-<category> and :target filters the notices (ui/filters.js takes over). */
+.newswall:not(.js-filters):has(#f-news:target) .notice:not([data-areas~="news"]),
+.newswall:not(.js-filters):has(#f-story:target) .notice:not([data-areas~="story"]),
+.newswall:not(.js-filters):has(#f-event:target) .notice:not([data-areas~="event"]) { display: none; }
+.newswall:not(.js-filters):has(#f-news:target) [data-show-for~="news"],
+.newswall:not(.js-filters):has(#f-story:target) [data-show-for~="story"],
+.newswall:not(.js-filters):has(#f-event:target) [data-show-for~="event"] { display: block !important; }
+.newswall:not(.js-filters):has(#f-news:target) .chip[data-area="news"],
+.newswall:not(.js-filters):has(#f-story:target) .chip[data-area="story"],
+.newswall:not(.js-filters):has(#f-event:target) .chip[data-area="event"],
+.newswall:not(.js-filters):not(:has(.filters__anchor:target)) .chip--all { background: var(--color-blue-700); box-shadow: none; color: var(--color-on-dusk); }
+
+/* The day after the wall: the same lime at first, warming toward the evening. */
+.day--news { --day: var(--color-lime-100) 0, var(--color-lime-100) 30%, var(--color-sun-100) 100%; }
+.news-feature { display: grid; gap: clamp(24px, 3vw, 40px); padding-top: clamp(40px, 5vw, 80px); }
+.news-feature__title { font-size: var(--fs-h3); color: var(--color-ink-700); }
+@media (min-width: 1024px) { .news-feature .feature { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: center; column-gap: clamp(40px, 5vw, 80px); } }
+
+/* ---- The stage: the camera pulls back from the newest notice along the wall ----
+   The wall is held behind the page (the plane is sticky inside the wall's box) and recedes as the camera
+   pulls back (--s3d-cam); its light drifts as the sun moves (--s3d-sun). The notices are in the page's own
+   flow and scroll at native speed: the board starts 150 px nearer the camera and tilted 6° (1100 px perspective,
+   about 1.16×; 70 px and 4° on phones) and settles flat onto the wall; each notice turns from a slight angle (≤ 9°) to flat as it reaches its
+   reading place, and a quatrefoil of sun crosses it (each on its own view timeline). Text is never faded
+   or hidden; nothing here touches the H1. */
+html.stages[data-motion="on"] .s3d--news .newswall { --stage-h: calc(100svh - var(--hdr)); }
+html.stages[data-motion="on"] .s3d--news .newswall__plane {
+  position: sticky; top: var(--hdr); inset: auto; height: var(--stage-h);
+  transform-origin: 70% 30%;
+  transform: scale(calc(1.28 - 0.28 * var(--s3d-cam)));
+  will-change: transform;
+}
+html.stages[data-motion="on"][data-tier="2"] .s3d--news .newswall__light { transform: translate(calc(-7% * var(--s3d-sun)), calc(9% * var(--s3d-sun))); will-change: transform; }
+html.stages[data-motion="on"] .s3d--news .notices { --near: 150px; --tilt: 6deg; transform: translateZ(calc(var(--near) * (1 - var(--s3d-cam)))) rotateX(calc(var(--tilt) * (1 - var(--s3d-cam)))); transform-style: preserve-3d; will-change: transform; }
+@media (max-width: 719.98px) { html.stages[data-motion="on"] .s3d--news .notices { --near: 70px; --tilt: 4deg; } }
+@supports (animation-timeline: view()) {
+  html.stages[data-motion="on"] .s3d--news .notice {
+    animation: notice-turn linear both; animation-timeline: view(); animation-duration: auto; animation-range: entry 0% cover 45%;
+  }
+  html.stages[data-motion="on"] .s3d--news .notice__paper::before {
+    animation: notice-sun linear both; animation-timeline: view(); animation-duration: auto; animation-range: cover 5% cover 75%;
+  }
+}
+/* Each notice: a slight turn toward the camera and up off the wall, settling flat (camera ease, no bounce). */
+@keyframes notice-turn {
+  from { transform: translateZ(60px) rotateY(-9deg) rotateX(6deg); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  to { transform: none; }
+}
+/* The sun crossing the paper from the left, coming to rest on its upper right. */
+@keyframes notice-sun {
+  from { transform: translateX(-90%) rotate(-8deg) skewX(-14deg); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  to { transform: translateX(78%) rotate(-8deg) skewX(-14deg); }
+}

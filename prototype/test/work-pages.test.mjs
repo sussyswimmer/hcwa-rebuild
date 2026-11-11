@@ -11,6 +11,7 @@ import { ourWork, center, program } from "../src/pages/work.mjs";
 import { layout } from "../src/partials/layout.mjs";
 import { findBlockers } from "../src/render.mjs";
 import { workSheet } from "../src/pages/home/work-sheet.mjs";
+import { routes } from "../src/routes.mjs";
 
 const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8");
 const page = (fn, lang, key, prod = false) => str(fn(ctx(lang, key, prod)).body);
@@ -115,4 +116,38 @@ test("each page opens on its lit header and asks the head script for the sun-in"
     assert.match(out, /<section class="dusk"/, "the day ends at dusk");
   }
   assert.match(page(center, "vi", "greenBamboo"), /lit-head--unit" style="--unit:var\(--color-unit-green-bamboo\)"/);
+});
+
+// PLAN-M4 4.10 and 4.12: the generalised center and program templates.
+test("Cầu Hàn: its own header, unit and emblem; no health status anywhere on it; no figures or news sections", () => {
+  for (const lang of LANGS) {
+    const h = page(center, lang, "cauHan");
+    assert.match(h, /data-still="header-cau-han"/);
+    assert.match(h, /--unit:var\(--color-unit-cau-han\)/);
+    assert.doesNotMatch(h, /class="related\b|class="counts\b/, "no scoped figures, no tagged news");
+    // Who it serves names the families the project is for (work.json); nothing else on the page may point
+    // at any child's or family's health.
+    const rest = h.replace(new RegExp(esc(ctx(lang, "cauHan", false).tx(content.work.centers.find((x) => x.id === "cau-han").serves)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "");
+    assert.doesNotMatch(rest, /HIV|AIDS|nhiễm|infect|positive|dương tính/i);
+    assert.equal(page(center, lang, "greenBamboo").includes('data-still="header-green-bamboo"'), true, "Green Bamboo unchanged");
+  }
+});
+
+test("programs: Charity Class and the completed pilot use the program template without Little Rose's door", () => {
+  for (const lang of LANGS) {
+    const cc = page(program, lang, "charityClass");
+    assert.match(cc, /data-still="header-thrive-together"/);
+    assert.doesNotMatch(cc, /data-unit="little-rose"/, "Charity Class does not run at Little Rose");
+    assert.doesNotMatch(cc, /lit-head__funder/, "no funder named");
+    const dp = page(program, lang, "disabilityPilot");
+    assert.match(dp, /status--completed/);
+    assert.doesNotMatch(dp, /class="where\b/, "no centers, no 'where it runs'");
+    assert.doesNotMatch(dp, new RegExp(`href="${routes.partner[lang]}"`), "a completed project takes no new partners");
+    const urls = content.work.programPages["disability-pilot"].news;
+    assert.equal((dp.match(/<li class="dated">/g) ?? []).length, urls.length, "its two real posts only");
+    // Thrive Together keeps its Little Rose chip (name only) and partner CTA.
+    const tt = page(program, lang, "thriveTogether");
+    assert.match(tt, /data-unit="little-rose" data-door="closed"/);
+    assert.match(tt, new RegExp(`href="${routes.partner[lang]}"`));
+  }
 });
