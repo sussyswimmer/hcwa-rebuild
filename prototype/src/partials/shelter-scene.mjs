@@ -148,7 +148,8 @@ const line = () => {
 const desk = () => {
   const scallops = Array.from({ length: 9 }, (_, i) => `<path d="M${436 + i * 40} 690a20 14 0 0 0 40 0Z" style="${fill(i % 2 ? "tile-cream" : "tile-jade")}"/>`).join("");
   const stripes = Array.from({ length: 9 }, (_, i) => `<path d="M${436 + i * 40} 650h40v40h-40Z" style="${fill(i % 2 ? "tile-cream" : "tile-jade")}"/>`).join("");
-  return `<g filter="url(#lr-cut)">
+  // Pulled 36 units in and drawn at 0.92 about the middle, so the awning's right end clears the side feather.
+  return `<g filter="url(#lr-cut)" transform="translate(400 0) scale(0.92) translate(-436 0)">
     <path d="M430 650L456 618H778L800 650Z" style="${fill("tile-jade")}"/>
     ${stripes}${scallops}
     <circle class="lr-lamp-glow" cx="712" cy="780" r="120" fill="url(#lr-glow)"/>
@@ -192,7 +193,11 @@ const front = (rand) => {
   const blades = (x0, x1, base, h) => {
     const pts = [`M${x0} ${base}`];
     for (let x = x0; x < x1; x += 14 + rand() * 10) pts.push(`L${r1(x + 6)} ${r1(base - h * (0.5 + rand() * 0.6))}L${r1(x + 14)} ${base}`);
-    return pts.join("") + `L${x1} ${base + 200}H${x0}Z`;
+    // M6 fix: the grass ends in its own torn-paper foot a little under its blades (never a dark mass the scene's
+    // mask has to blur away): a jagged line back along the bottom.
+    let foot = `L${x1} ${base + 34}`;
+    for (let x = x1; x > x0; x -= 16 + rand() * 12) foot += `L${r1(x)} ${r1(base + 26 + rand() * 18)}`;
+    return pts.join("") + foot + `L${x0} ${base + 34}Z`;
   };
   const petals = Array.from({ length: 16 }, () => {
     const x = 140 + rand() * 520, y = 958 + rand() * 50;
@@ -200,8 +205,9 @@ const front = (rand) => {
   }).join("");
   const pot = (x, w) => `<path d="M${x} 900H${x + w}L${x + w - 14} 1010H${x + 14}Z" style="${fill("tile-ochre")}"/><rect x="${x - 6}" y="892" width="${w + 12}" height="16" rx="3" style="${fill("gold-700")}"/>
     <path d="M${x + w / 2} 892C${x + 4} 840 ${x - 20} 830 ${x - 10} 800M${x + w / 2} 892C${x + w / 2} 830 ${x + w / 2 + 10} 810 ${x + w / 2 + 6} 780M${x + w / 2} 892C${x + w} 850 ${x + w + 26} 840 ${x + w + 30} 812" style="${stroke("tile-jade", 7)}"/>`;
-  return `<g filter="url(#lr-cut)">
-    ${pot(10, 110)}${pot(684, 104)}
+  // Lifted 90 units so the pots and the grass sit inside the frame's safe area, clear of the foot's feather.
+  return `<g filter="url(#lr-cut)" transform="translate(0 -90)">
+    ${pot(76, 104)}${pot(620, 100)}
     <path d="${blades(-20, 820, 1010, 60)}" style="${fill("tile-jade")}"/>
     <path d="${blades(-20, 820, 1060, 50)}" style="${fill("tile-jade", 0.75)}"/>
     ${petals}

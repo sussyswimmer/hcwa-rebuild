@@ -137,6 +137,9 @@ export function paintMaterial(U, lights, own, { ao = null, vertexPaint = false, 
         vec3 col = mix(shade, albedo * uSunTint * wallSun(Nb, N, uLt[0]), min(f0, 1.));
         col = mix(col, albedo * uSpillTint * wallSun(Nb, N, uLt[1]), min(f1, 1.) * 0.85);
         col *= (1. + uGrad * (smoothstep(0., 2.2, vP.y) - .5)) * paintAo(vP);
+        // M6 fix: a blue paint stays blue under the warm sun and the flood (the indigo shutter leaf read mauve): its
+        // red never rises past 1.3x the paint's own red-to-blue ratio.
+        if (uPaint.b > uPaint.r) col.r = min(col.r, col.b * (uPaint.r / uPaint.b) * 1.3);
         // M6: paint passing the lens settles into its own shade (no screen-door dither).
         col = mix(col, uPaint * uShadeK * sky, nearK * nearK * (3. - 2. * nearK));
         gl_FragColor = vec4(col, 1.);

@@ -40,7 +40,7 @@ if (q.get("posters") !== "0" && still.scene.getObjectByProperty?.("type", "Mesh"
   posterAtlas = await loadPosterAtlas({ size: 2048 });
   posterUniforms().uPosterK.value = 1;
 }
-function hasPosters(scene) { let n = 0; scene.traverse((o) => { if (o.name?.startsWith("poster:")) n++; }); return n > 0; }
+function hasPosters(scene) { let n = 0; scene.traverse((o) => { if (o.name?.startsWith("posters:")) n++; }); return n > 0; }
 const { dpr } = gl.size;
 for (const p of still.passes) p.setSize(Math.round(W * dpr), Math.round(H * dpr));
 

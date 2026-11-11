@@ -73,7 +73,9 @@ export default defineConfig(() => {
       emptyOutDir: true,
       // The world chunk (three.js + world code, ~157 KB gzip) is a lazy import after load + idle (D6.7).
       chunkSizeWarningLimit: 700,
-      rolldownOptions: { input: htmlFiles(site) },
+      // three.js in its own stably named chunk (three-*.js), only ever reached through the world's lazy imports, so
+      // the logs and lcp.cjs find it by name (M6 fix: rolldown had named the shared chunk after wall-poster.js).
+      rolldownOptions: { input: htmlFiles(site), output: { advancedChunks: { groups: [{ name: "three", test: /node_modules[\\/]three[\\/]/ }] } } },
     },
     server: { fs: { allow: [here] } },
   };

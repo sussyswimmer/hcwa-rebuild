@@ -45,17 +45,36 @@ test("the shutters: the window is held fully open (the 'look out' plateau) befor
 test("the wheel glides without taking the scroll: Lenis lerp 0.07, native distance, no snap, touch native", () => {
   const wheel = read("../src/motion/smooth-wheel.js"), scroll = read("../src/motion/scroll.js");
   assert.match(wheel, /export const LERP = 0\.07;/);
+  // One set of options for both instances; a box that can still scroll keeps the wheel (a filled textarea).
+  assert.match(wheel, /lerp: LERP, wheelMultiplier: 1, smoothWheel: true, syncTouch: false, autoRaf: false, allowNestedScroll: true,/);
+  assert.match(wheel, /node\.closest\?\.\("dialog, select, \[data-lenis-prevent\]"\)/);
+  assert.match(scroll, /new Lenis\(lenisOptions\(\)\)/);
+  assert.match(wheel, /new Lenis\(lenisOptions\(\)\)/);
   for (const src of [wheel, scroll]) {
-    assert.match(src, /lerp: LERP, wheelMultiplier: 1, smoothWheel: true, syncTouch: false/);
     const code = src.replace(/\/\/.*$/gm, "");
     assert.doesNotMatch(code, /snap|normalizeScroll|preventDefault|ScrollSmoother/i);
+    // The frame-time guard hands a slow machine back to native scroll; Lenis is made before the first wheel tick.
+    assert.match(code, /frameGuard\(\)/);
+    assert.match(code, /goNative\(lenis\)/);
+    assert.match(code, /addEventListener\("pointermove", make, \{ passive: true, once: true \}\)/);
   }
   assert.doesNotMatch(wheel.replace(/\/\/.*$/gm, ""), /gsap|ScrollTrigger/, "the inner pages' chunk is Lenis alone");
   const main = read("../src/main.js");
   assert.match(main, /import\("\.\/motion\/smooth-wheel\.js"\)/, "loaded lazily");
-  assert.match(main, /if \(!scrolled && matchMedia\("\(pointer: fine\)"\)\.matches\)/, "only where the motion layer does not run, fine pointers only");
+  assert.match(main, /if \(scrolled \|\| heavy \|\| wheel \|\| wheelNative\(\) \|\| !matchMedia\("\(pointer: fine\)"\)\.matches\) return;/, "only where the motion layer does not run, fine pointers only, never on a heavy page");
+  assert.match(main, /const heavy = Boolean\(document\.querySelector\("\.newswall, \[data-steps\]"\)\);/, "not on the News wall or the Little Rose garden");
   // Reduced motion and pause: neither chunk starts (main.js motionOn()).
   assert.match(main, /if \(motionOn\(\)\) \{\n  startMotion\(\);\n  startWheel\(\);/);
+});
+
+test("the frame-time guard: three slow frames in one glide, a gap over 150 ms counting twice", async () => {
+  const { frameGuard } = await import("../src/motion/smooth-wheel.js").catch(() => ({}));
+  if (!frameGuard) return; // lenis' CSS import needs a bundler; the source checks above cover it
+  const g = frameGuard();
+  assert.equal([0, 16, 33, 50, 66].some((t) => g.slow(t)), false, "60 fps never trips it");
+  g.reset();
+  assert.equal(g.slow(0) || g.slow(200), false);
+  assert.equal(g.slow(260), true, "a 200 ms gap and a 60 ms gap");
 });
 
 test("the camera follows the scroll on a critically damped spring; the text never does", () => {

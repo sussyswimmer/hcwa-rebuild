@@ -1,11 +1,11 @@
 // The wall posters' art (M6; src/world/wall-posters-data.js has the set and the rules). Each design is drawn as a
 // procedural SVG from seeded numbers, in flat token inks on cream paper: a halftone screen in its shadows, the key plate
-// printed twice a little off register, at most one decorative word in the display face. Nothing else: no <image>, no
-// other text, no star shapes, no red or pink (test/wall-posters.test.mjs reads these sources).
+// printed twice a little off register. No lettering at all (M6 fix: words drawn into a texture are neither HTML nor
+// bilingual), no <image>, no star shapes, no red or pink (test/wall-posters.test.mjs reads these sources).
 //   node scripts/wall-posters.mjs          rasterise every design at the 2048 atlas's print size (headless Chromium)
 //                                          into node_modules/.cache/wall-posters/, then run
 //   python3 -I scripts/encode-wall-posters.py   to print, age and pack them (public/textures/wall-posters-*.webp)
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { color as TOK } from "../src/world/tokens.js";
@@ -34,7 +34,6 @@ const line = (x1, y1, x2, y2, stroke, sw, extra = {}) => el("line", { x1, y1, x2
 const screen = (id, c, r = 1.15) => el("pattern", { id, width: 3.6, height: 3.6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, circle(1.8, 1.8, r, c));
 // The key plate twice: a second impression in `ghost` 1.4 / 0.9 units off, under the key (misregistration).
 const key = (inner, ghost) => el("g", { transform: "translate(1.4 0.9)", opacity: 0.5 }, inner.replaceAll(/fill="#[0-9A-Fa-f]{6}"/g, `fill="${ghost}"`).replaceAll(/stroke="#[0-9A-Fa-f]{6}"/g, `stroke="${ghost}"`)) + inner;
-const word = (text, x, y, size, c, anchor = "start") => el("text", { x, y, "font-family": "Archivo HCWA", "font-weight": 700, "font-size": size, fill: c, "text-anchor": anchor, "letter-spacing": "0.01em" }, text);
 const svg = (defs, body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${el("defs", {}, defs)}${rect(0, 0, W, H, ink(PAPER))}${body}</svg>`;
 
 // A five-petal blossom: five discs round a centre (never a star polygon).
@@ -65,7 +64,7 @@ const DESIGNS = {
       foot += path(`M${f(x + 6)} ${f(top + 30)} L${f(x + w - 6)} ${f(top + 30)} L${f(x + w - 8)} 412 L${f(x + 8)} 412 Z`, "url(#hto)", { opacity: 0.9 });
       for (let j = 0; j < 4; j++) foot += circle(x + 6 + j * 9.5, top + 14 - (j % 2) * 5, 6.5, j % 2 ? sun : ink("tile-ochre-lit"));
     }
-    body += foot + word("Xuân", 22, 70, 46, k);
+    body += foot;
     return svg(defs, body);
   },
   // Cà phê: a phin dripping into a glass, a low stool in halftone, steam.
@@ -83,55 +82,101 @@ const DESIGNS = {
     for (const [y, r] of [[204, 2.6], [216, 2.2], [228, 1.8]]) body += ellipse(150, y, r * 0.8, r * 1.2, indigo);
     // Steam: three curls over the phin.
     for (const [x, s] of [[136, 1], [152, -1], [168, 1]]) body += path(`M${x} 128 C${x + 10 * s} 112 ${x - 10 * s} 100 ${x} 84 C${x + 8 * s} 72 ${x - 6 * s} 62 ${x} 50`, "none", { stroke: cream, "stroke-width": 3, "stroke-linecap": "round", opacity: 0.85 });
-    body += word("Cà phê", 24, 62, 40, cream);
     return svg(defs, body);
   },
-  // No word: a generic step-through scooter under tamarind leaves, the light coming through in dots.
+  // A Honda-Cub-type step-through (no badge, no plate, no rider) parked under a tamarind, the light through its fine
+  // leaves in dots: the step-through backbone, the front leg shield, small wheels, the rounded rear body and seat, the
+  // headlight in the handlebar cover. Tamarind leaves are pinnate: a thin rachis with many tiny paired leaflets.
   "cub-duoi-hang-me"() {
-    const r = rng(23), jade = ink("tile-jade"), sun = ink("sun-200"), indigo = ink("tile-indigo");
+    const r = rng(23), jade = ink("tile-jade"), sun = ink("sun-200"), indigo = ink("tile-indigo"), cream = ink("tile-cream");
     const defs = screen("htj", jade, 1.25);
-    let body = rect(0, 0, W, 210, "url(#htj)", { opacity: 0.7 });
-    // Tamarind: many small leaflets along hanging stems.
-    for (let s = 0; s < 9; s++) {
-      const x0 = 10 + s * 34 + r() * 10, len = 80 + r() * 110;
-      body += line(x0, 0, x0 + (r() - 0.5) * 30, len, jade, 1.5);
-      for (let t = 6; t < len; t += 7) { const x = x0 + ((r() - 0.5) * 30 * t) / len; body += ellipse(x - 6, t, 6, 2.4, jade, { transform: `rotate(-20 ${f(x - 6)} ${f(t)})` }) + ellipse(x + 6, t + 2, 6, 2.4, jade, { transform: `rotate(20 ${f(x + 6)} ${f(t + 2)})` }); }
+    let body = rect(0, 0, W, 196, "url(#htj)", { opacity: 0.55 });
+    // The tamarind: two branches in from the top corners, each carrying sprays of pinnate leaves that droop a little.
+    const leaf = (x, y, ang, len) => {
+      const pts = [];
+      for (let t = 0; t <= 1.0001; t += 1 / 16) pts.push([x + Math.cos(ang) * len * t, y + Math.sin(ang) * len * t + 10 * t * t]);
+      let out = path("M" + pts.map(([px, py]) => `${f(px)} ${f(py)}`).join(" L"), "none", { stroke: jade, "stroke-width": 0.9 });
+      for (let i = 1; i < pts.length; i++) {
+        const [px, py] = pts[i], deg = (ang * 180) / Math.PI;
+        for (const s of [-1, 1]) out += ellipse(px + Math.cos(ang + s * 1.35) * 3.2, py + Math.sin(ang + s * 1.35) * 3.2, 3.4, 1.25, jade, { transform: `rotate(${f(deg + s * 70)} ${f(px + Math.cos(ang + s * 1.35) * 3.2)} ${f(py + Math.sin(ang + s * 1.35) * 3.2)})` });
+      }
+      return out;
+    };
+    const branch = (pts) => pts.slice(1).map((q, i) => line(pts[i][0], pts[i][1], q[0], q[1], indigo, 5 - i * 1.1)).join("");
+    const left = [[-6, 18], [60, 44], [120, 58], [168, 92]], right = [[306, 6], [250, 34], [208, 40]];
+    body += branch(left) + branch(right);
+    for (const [pts] of [[left], [right]]) for (let i = 1; i < pts.length; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      for (let k = 0; k < 6; k++) {
+        const t = r(), x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+        body += leaf(x, y, (r() < 0.5 ? 0.4 : 2.5) + (r() - 0.5) * 0.9, 34 + r() * 30);
+      }
     }
-    // Dappled light on the ground and the scooter.
-    for (let i = 0; i < 42; i++) body += ellipse(r() * W, 250 + r() * 160, 4 + r() * 7, 2 + r() * 3, sun, { opacity: 0.9 });
-    // The scooter: wheels, the step-through body, the seat, the handlebar. No badge, no plate, no rider.
-    const bike = circle(86, 360, 30, indigo) + circle(86, 360, 13, sun) + circle(222, 360, 30, indigo) + circle(222, 360, 13, sun)
-      + path("M70 330 C78 300 104 296 130 318 L170 318 C176 296 196 282 214 292 L238 330 L214 340 C204 324 190 324 182 342 L128 342 C118 322 96 322 86 330 Z", jade)
-      + path("M156 300 L210 300 C214 292 206 286 196 288 L160 290 Z", indigo)
-      + line(98, 300, 82, 250, indigo, 5) + line(70, 250, 98, 246, indigo, 5) + ellipse(84, 270, 10, 7, jade);
+    // Dappled light on the ground and across the scooter.
+    for (let i = 0; i < 40; i++) body += ellipse(r() * W, 258 + r() * 150, 4 + r() * 7, 2 + r() * 3, sun, { opacity: 0.9 });
+    // The scooter, facing left: small wheels far apart, the low step-through between them.
+    const wheel = (x) => circle(x, 376, 25, indigo) + circle(x, 376, 15, cream) + circle(x, 376, 5, indigo);
+    const bike = wheel(76) + wheel(230)
+      // the rear body: a rounded shell over the engine and the rear wheel
+      + path("M168 352 C164 322 176 300 204 296 L246 296 C268 298 280 318 278 344 L268 352 Z", jade)
+      // the rear fender skirt over the wheel's top
+      + path("M200 352 C204 334 218 326 234 328 C250 330 262 340 264 352 Z", indigo, { opacity: 0.35 })
+      // the seat and the rack behind it
+      + rect(184, 284, 66, 13, indigo, { rx: 6 }) + line(250, 290, 276, 290, indigo, 3) + line(276, 290, 274, 300, indigo, 3)
+      // the backbone: from the steering head down in a low swoop to the rear body (the step-through)
+      + path("M104 262 C112 312 132 346 172 346 L172 336 C140 336 122 306 116 262 Z", jade)
+      // the floorboard and the engine under it
+      + rect(118, 346, 62, 8, indigo, { rx: 3 }) + path("M140 354 L178 354 L182 370 L146 372 Z", indigo)
+      // the exhaust along the right side to the back
+      + path("M150 368 C190 376 236 372 268 362", "none", { stroke: indigo, "stroke-width": 4, "stroke-linecap": "round" })
+      // the front leg shield: a broad curved panel from the head down to the floor, cream with its rim
+      + path("M98 248 C74 280 78 328 108 352 L138 352 C114 326 110 288 124 254 Z", cream, { stroke: indigo, "stroke-width": 2.2 })
+      // the fork and the front fender
+      + line(100, 262, 78, 376, indigo, 4) + path("M50 372 C52 346 70 334 90 338 C100 340 106 348 106 356 L96 354 C94 346 86 344 78 346 C66 348 60 358 60 372 Z", jade)
+      // the handlebar cover with the headlight in it, the grips
+      + path("M84 248 C84 236 100 230 118 232 C128 234 130 246 124 254 L92 258 C86 258 84 254 84 248 Z", jade)
+      + ellipse(86, 248, 7, 8, cream, { stroke: indigo, "stroke-width": 1.6 }) + line(106, 236, 130, 228, indigo, 3.2);
     body += key(bike, sun);
     return svg(defs, body);
   },
-  // Sen: lotus pads, a bud and an open flower in cream and apricot (never pink), ripples, a dragonfly.
+  // Sen: a lotus pond. Lotus leaves are round and stand above the water on their stems (unlike water lilies, whose
+  // notched pads float), cupped a little; one open flower with pointed petals, cream with apricot (never pink); a bud;
+  // a seed pod (gương sen) with its seed holes; ripples and a dragonfly.
   "ao-sen"() {
-    const r = rng(37), jade = ink("tile-jade"), cream = ink("tile-cream"), blue = ink("tile-indigo-lit"), apricot = ink("sun-300");
-    const defs = screen("htb", blue, 1.0);
-    let body = rect(0, 0, W, H, "url(#htb)", { opacity: 0.35 });
-    for (let i = 0; i < 7; i++) body += ellipse(150 + (r() - 0.5) * 40, 300 + i * 14, 120 - i * 6, 6 + i, "none", { stroke: blue, "stroke-width": 1.4, opacity: 0.7 });
-    // Pads: discs with a notch cut, jade, one in halftone.
-    // A pad seen low across the water: a flat ellipse, its veins from the centre, one notch to its edge.
-    const pad = (x, y, rr, rot) => ellipse(x, y, rr, rr * 0.42, jade) + [0, 1, 2, 3, 4, 5].map((k) => { const a = rot + (k / 6) * Math.PI * 2; return line(x, y, x + Math.cos(a) * rr * 0.86, y + Math.sin(a) * rr * 0.36, ink("tile-jade-lit"), 1.1); }).join("") + path(`M${f(x)} ${f(y)} L${f(x + rr * 1.02 * Math.cos(rot - 0.12))} ${f(y + rr * 0.43 * Math.sin(rot - 0.12))} L${f(x + rr * 1.02 * Math.cos(rot + 0.12))} ${f(y + rr * 0.43 * Math.sin(rot + 0.12))} Z`, cream);
-    body += pad(70, 330, 62, -0.4) + pad(230, 360, 54, 2.6) + pad(196, 286, 40, 1.2);
-    // Stems.
-    body += line(118, 300, 128, 180, jade, 4) + line(214, 278, 222, 118, jade, 3.5);
-    // The open flower: layered petals as ellipses, cream outside, apricot inside.
-    let flower = "";
-    for (const [a, c, len] of [[-70, cream, 46], [-40, cream, 50], [-110, cream, 50], [-15, cream, 40], [-165, cream, 40], [-55, apricot, 34], [-90, apricot, 38], [-125, apricot, 34]]) {
-      const rad = (a * Math.PI) / 180, cx = 128 + Math.cos(rad) * len * 0.5, cy = 176 + Math.sin(rad) * len * 0.5;
-      flower += ellipse(cx, cy, len * 0.52, len * 0.22, c, { transform: `rotate(${a} ${f(cx)} ${f(cy)})`, stroke: jade, "stroke-width": 1 });
-    }
-    flower += ellipse(128, 168, 12, 7, ink("sun-200"));
+    const r = rng(37), jade = ink("tile-jade"), lit = ink("tile-jade-lit"), cream = ink("tile-cream"), blue = ink("tile-indigo-lit"), deep = ink("tile-indigo"), apricot = ink("sun-300"), sun = ink("sun-200");
+    const defs = screen("htb", blue, 1.0) + screen("htj", jade, 1.1);
+    let body = rect(0, 250, W, 170, "url(#htb)", { opacity: 0.45 });
+    for (let i = 0; i < 6; i++) body += ellipse(150 + (r() - 0.5) * 50, 330 + i * 16, 128 - i * 8, 5 + i, "none", { stroke: blue, "stroke-width": 1.3, opacity: 0.7 });
+    // A raised lotus leaf: round, seen from a little above (an ellipse), its rim slightly wavy, cupped (a darker inner
+    // bowl toward the far side), veins from the centre where the stem meets it. No notch.
+    const lotusLeaf = (x, y, rr, tilt) => {
+      const n = 28, rim = [];
+      for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2, w = 1 + 0.05 * Math.sin(a * 7 + x); rim.push([x + Math.cos(a) * rr * w, y + Math.sin(a) * rr * 0.5 * w]); }
+      const d = "M" + rim.map(([px, py]) => `${f(px)} ${f(py)}`).join(" L") + " Z";
+      let g = path(d, jade) + ellipse(x, y - rr * 0.08, rr * 0.7, rr * 0.3, "url(#htj)", { opacity: 0.9 });
+      for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; g += line(x, y, x + Math.cos(a) * rr * 0.9, y + Math.sin(a) * rr * 0.45, lit, 1); }
+      g += circle(x, y, 3, lit);
+      return el("g", { transform: `rotate(${tilt} ${f(x)} ${f(y)})` }, g);
+    };
+    // Stems first (the leaves and flowers stand on them), from below the water line.
+    for (const [x0, x1, y1, w] of [[66, 62, 236, 3.4], [238, 232, 206, 3.2], [168, 172, 292, 3], [128, 124, 150, 3.4], [258, 250, 112, 2.8], [34, 40, 116, 2.6]]) body += path(`M${x0} 400 C${x0 + 6} 340 ${x1 - 6} ${y1 + 40} ${x1} ${y1}`, "none", { stroke: jade, "stroke-width": w, "stroke-linecap": "round" });
+    body += lotusLeaf(62, 236, 56, -6) + lotusLeaf(232, 206, 48, 8) + lotusLeaf(172, 292, 42, -3);
+    // The open flower: pointed petals in two rings, cream outside, apricot toward the heart, round the seed head.
+    const petal = (x, y, a, len, wd, c) => el("path", { d: `M0 0 Q${f(wd)} ${f(-len * 0.45)} 0 ${f(-len)} Q${f(-wd)} ${f(-len * 0.45)} 0 0 Z`, fill: c, stroke: jade, "stroke-width": 1, transform: `translate(${f(x)} ${f(y)}) rotate(${f(a)})` });
+    let flower = circle(124, 128, 70, "url(#htj)", { opacity: 0.55 });
+    for (const a of [-78, -50, 50, 78, -22, 22]) flower += petal(124, 156, a, 52, 15, cream);
+    for (const a of [-34, 34, -10, 10, 0]) flower += petal(124, 156, a, 44, 12, a === 0 ? apricot : cream);
+    flower += ellipse(124, 132, 13, 5, sun) + ellipse(124, 133, 9, 3, lit);
     body += flower;
-    // The bud.
-    body += path("M222 118 C206 100 210 76 222 60 C234 76 238 100 222 118 Z", cream, { stroke: jade, "stroke-width": 1.2 }) + path("M222 118 C214 104 216 88 222 76 C228 88 230 104 222 118 Z", apricot);
-    // A dragonfly: a thin body and four wings.
-    const fly = line(70, 70, 110, 92, ink("tile-indigo"), 2.4) + ellipse(84, 70, 14, 4, blue, { transform: "rotate(-60 84 70)", opacity: 0.8 }) + ellipse(92, 84, 14, 4, blue, { transform: "rotate(40 92 84)", opacity: 0.8 }) + ellipse(80, 76, 12, 3.6, blue, { transform: "rotate(-20 80 76)", opacity: 0.8 }) + ellipse(88, 66, 12, 3.6, blue, { transform: "rotate(70 88 66)", opacity: 0.8 });
-    body += key(fly, jade) + word("Sen", 278, 400, 44, jade, "end");
+    // A bud on its own stem.
+    body += path("M40 116 C26 98 30 74 40 58 C50 74 54 98 40 116 Z", cream, { stroke: jade, "stroke-width": 1.2 }) + path("M40 116 C34 102 35 86 40 74 C45 86 46 102 40 116 Z", apricot);
+    // The seed pod: a flat top full of seed holes over a cone that narrows to its stem, bending a little.
+    const pod = path("M234 92 C236 104 244 110 250 112 C256 110 264 104 266 92 Z", lit) + ellipse(250, 92, 16, 5.5, ink("tile-jade-lit"), { stroke: jade, "stroke-width": 1.2 })
+      + [[-9, -1], [-3, -2], [3, -2], [9, -1], [-6, 1.6], [0, 1.4], [6, 1.6]].map(([dx, dy]) => circle(250 + dx, 92 + dy, 1.5, deep)).join("");
+    body += el("g", { transform: "rotate(-14 250 112)" }, pod);
+    // A dragonfly over the water.
+    const fly = line(178, 60, 216, 80, deep, 2.4) + ellipse(190, 60, 14, 4, blue, { transform: "rotate(-60 190 60)", opacity: 0.8 }) + ellipse(198, 74, 14, 4, blue, { transform: "rotate(40 198 74)", opacity: 0.8 }) + ellipse(186, 66, 12, 3.6, blue, { transform: "rotate(-20 186 66)", opacity: 0.8 }) + ellipse(194, 56, 12, 3.6, blue, { transform: "rotate(70 194 56)", opacity: 0.8 });
+    body += key(fly, jade);
     return svg(defs, body);
   },
   // Mưa: rain over shophouse shutters, the street wet with their reflections, one bicycle.
@@ -155,10 +200,9 @@ const DESIGNS = {
     body += key(bike, sun);
     // Rain: long slanted lines over everything.
     for (let i = 0; i < 90; i++) { const x = r() * (W + 60) - 30, y = r() * H, l = 18 + r() * 26; body += line(x, y, x - l * 0.28, y + l, ink("tile-cream"), 1.1, { opacity: 0.55 }); }
-    body += word("Mưa", 22, 30, 30, ink("tile-cream"));
     return svg(defs, body);
   },
-  // No word: one kite high over terraced rice; its string runs off the lower edge, no flyer.
+  // One kite high over terraced rice; its string runs off the lower edge, no flyer.
   "dieu-dong-lua"() {
     const jade = ink("tile-jade"), sun = ink("sun-300"), indigo = ink("tile-indigo"), lit = ink("tile-jade-lit");
     const defs = screen("htj", jade, 1.2);
@@ -216,15 +260,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   let chromium;
   try { ({ chromium } = require("playwright")); } catch { ({ chromium } = require("/opt/node-tools/node_modules/playwright")); }
   mkdirSync(CACHE, { recursive: true });
-  const font = readFileSync(fileURLToPath(new URL("../public/fonts/archivo-w78-600-700.woff2", import.meta.url))).toString("base64");
   const browser = await chromium.launch();
   const [pw, ph] = PRINT_PX;
   const page = await browser.newPage({ viewport: { width: pw, height: ph }, deviceScaleFactor: 1 });
   for (const p of WALL_POSTERS) {
     const s = posterSvg(p.id).replace(`width="${W}" height="${H}"`, `width="${pw}" height="${ph}"`);
     writeFileSync(CACHE + p.id + ".svg", posterSvg(p.id));
-    await page.setContent(`<!doctype html><style>@font-face{font-family:"Archivo HCWA";src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:600 700}html,body{margin:0;background:#000}svg{display:block}</style>${s}`);
-    await page.evaluate(() => document.fonts.ready);
+    await page.setContent(`<!doctype html><style>html,body{margin:0;background:#000}svg{display:block}</style>${s}`);
     await page.screenshot({ path: CACHE + p.id + ".png", clip: { x: 0, y: 0, width: pw, height: ph } });
     console.log(`wall-posters: ${p.id} → ${CACHE}${p.id}.png`);
   }

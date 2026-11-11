@@ -10,7 +10,7 @@ export function attach(w) {
     flight: () => ({ ...w.solved(), at: { ...w.at }, path: { ...w.path }, span: JSON.parse(JSON.stringify(w.span)), set: w.inRoom() ? "room" : "corridor", walking: w.walking(), walk: w.walk.layout, lens: w.walk.lens }),
     table: () => w.flight.table?.rows, rects: () => readTextRects(w.section), parallax: w.parallax, shutters: w.shutters,
     // Freeze the flood at tween position v (QA frames of its peak on a slow GPU); null lets it run again.
-    flood: w.hold, memoryMB: () => gl.memoryMB, msaa: gl.msaa, info: () => ({ ...gl.renderer.info.render }), redraw: w.redraw,
+    flood: w.hold, memoryMB: () => w.memoryMB(), memory: () => ({ buffers: gl.memoryMB, ...w.texMB, total: w.memoryMB() }), msaa: gl.msaa, info: () => ({ ...gl.renderer.info.render }), redraw: w.redraw,
     lose: () => ext?.loseContext(), restore: () => ext?.restoreContext(), paused: w.paused, running: w.running, pointer: w.pointer,
     // The Blender wall maps' strength (0: the procedural walls), for before/after captures and the perf proxy.
     wallK: w.wallK,

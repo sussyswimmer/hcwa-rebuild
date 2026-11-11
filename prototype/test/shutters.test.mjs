@@ -1,6 +1,6 @@
 // PLAN H7 and 05-DESIGN D5.3 S3: the shutters' timeline is one set of numbers for the world and the motion
 // layer; the slats, leaves, blend and camera only move forward with the scroll; the flood is a one-shot the
-// scroll arms (once per crossing, held between 0.70 and 0.78, played back 1.6× faster, none while paused);
+// scroll arms (once per crossing, held between 0.64 and 0.72, played back 1.6× faster, none while paused);
 // the light the shader casts is the leaves the mesh draws; nothing in the set or the flood runs past sun-100;
 // the markup is decorative but for its skip link, in both languages, staging and production.
 import { test } from "node:test";
@@ -18,12 +18,12 @@ test("S3: the motion layer's timeline is the world's", async () => {
   for (const k of ["slats", "leaves", "flood", "unflood", "blend"]) assert.deepEqual(TIMELINE[k], SHUTTERS[k], k);
 });
 
-test("S3: slats 0 → 65° by 0.30, the leaves 0 → 110° by 0.66, held open to 0.76, the blend into sun-100 by 0.92; never back", () => {
-  assert.equal(slatAt(0), 0); assert.equal(slatAt(0.3), 65); assert.equal(slatAt(1), 65);
-  assert.equal(leafAt(0.3), 0); assert.equal(leafAt(0.66), 110); assert.equal(leafAt(1), 110);
+test("S3: slats 0 → 65° by 0.28, the leaves 0 → 110° by 0.60, held open to 0.70, the blend into sun-100 by 0.84; never back", () => {
+  assert.equal(slatAt(0), 0); assert.equal(slatAt(0.28), 65); assert.equal(slatAt(1), 65);
+  assert.equal(leafAt(0.28), 0); assert.equal(leafAt(0.6), 110); assert.equal(leafAt(1), 110);
   // M6 pacing: the "look out" plateau, the window fully open with nothing blending, over at least 0.1 of the stage.
-  for (let p = 0.66; p <= 0.76; p += 0.01) { assert.equal(leafAt(p), 110); assert.equal(blendAt(p), 0); }
-  assert.equal(blendAt(0.76), 0); assert.equal(blendAt(0.92), 1);
+  for (let p = 0.6; p <= 0.7; p += 0.01) { assert.equal(leafAt(p), 110); assert.equal(blendAt(p), 0); }
+  assert.equal(blendAt(0.7), 0); assert.equal(blendAt(0.84), 1);
   let prev = { s: -1, l: -1, b: -1, d: -1, o: -1 };
   for (const p of grid(400)) {
     const now = { s: slatAt(p), l: leafAt(p), b: blendAt(p), d: slatDuty(slatAt(p)), o: s3Open(p) };
@@ -35,16 +35,16 @@ test("S3: slats 0 → 65° by 0.30, the leaves 0 → 110° by 0.66, held open to
   assert.ok(slatDuty(65) > 0.6 && slatDuty(65) < 0.62);
 });
 
-test("S3: the flood fires once per crossing, holds between 0.70 and 0.78, plays back 1.6× faster, and not at all paused", () => {
+test("S3: the flood fires once per crossing, holds between 0.64 and 0.72, plays back 1.6× faster, and not at all paused", () => {
   const s = { on: false, v: 0 }, dt = 1 / 60;
   const run = (p, secs, paused = false) => { for (let t = 0; t < secs; t += dt) floodStep(s, p, dt, paused); };
-  run(0.77, 2);
-  assert.deepEqual(s, { on: false, v: 0 }, "not before 0.78");
+  run(0.71, 2);
+  assert.deepEqual(s, { on: false, v: 0 }, "not before 0.72");
   let frames = 0;
   while (s.v < 1) { floodStep(s, 0.8, dt); frames++; }
   assert.ok(Math.abs(frames * dt - 0.9) < 2 * dt, `forward in 900 ms (${(frames * dt).toFixed(3)} s)`);
-  run(0.72, 2);
-  assert.deepEqual(s, { on: true, v: 1 }, "held above 0.70: a visitor hovering at the threshold never sets it flickering");
+  run(0.66, 2);
+  assert.deepEqual(s, { on: true, v: 1 }, "held above 0.64: a visitor hovering at the threshold never sets it flickering");
   run(0.8, 2);
   assert.equal(s.v, 1, "it does not fire again while still past it");
   frames = 0;

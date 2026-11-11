@@ -76,10 +76,20 @@ const startWorld = () => {
 };
 
 // Every other page with motion on gets the same wheel glide as the home (motion/smooth-wheel.js: Lenis alone, no
-// GSAP), so a wheel tick never jumps 100 px on Contact or News (M6 pacing). Fine pointers only.
+// GSAP), so a wheel tick never jumps 100 px on Contact (M6 pacing). Fine pointers only, after load + idle (never
+// in the way of LCP), and never on a page whose scroll-linked paint is heavy (the News wall, the Little Rose
+// garden): there Lenis would make the visible scroll wait for the main thread, and native scroll keeps moving. A
+// visit whose glide was too slow once (smooth-wheel.js frameGuard) stays native.
 let wheel = null;
+const heavy = Boolean(document.querySelector(".newswall, [data-steps]"));
+const wheelNative = () => { try { return sessionStorage.getItem("hcwa:wheel") === "native"; } catch { return false; } };
 const startWheel = () => {
-  if (!scrolled && matchMedia("(pointer: fine)").matches) wheel ??= import("./motion/smooth-wheel.js").then((m) => m.startSmoothWheel());
+  if (scrolled || heavy || wheel || wheelNative() || !matchMedia("(pointer: fine)").matches) return;
+  wheel = true;
+  const go = () => { wheel = motionOn() ? import("./motion/smooth-wheel.js").then((m) => m.startSmoothWheel()) : null; };
+  const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 2000 }) : setTimeout(go, 200));
+  if (document.readyState === "complete") idle();
+  else addEventListener("load", idle, { once: true });
 };
 if (motionOn()) {
   startMotion();

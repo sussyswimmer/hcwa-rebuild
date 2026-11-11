@@ -40,7 +40,6 @@ const waysBar = (c, involve) => html`<nav class="ways" aria-label="${c.tx(involv
     const donate = w.id === "donate";
     return html`<li class="way way--${w.id}">
       <span class="way__tile" aria-hidden="true">${blockIcon("hoaThi", "way__block")}</span>
-      <strong class="way__title">${viKeep(c.tx(w.title))}</strong>
       ${button({ href: c.url(WAY_ROUTE[w.id]), label: donate ? c.t("donate") : c.tx(w.cta), kind: donate ? "primary" : "secondary", cls: "way__btn", attrs: !donate && w.cta.draft ? "data-draft" : "" })}
     </li>`;
   })}</ul>
@@ -60,7 +59,7 @@ export function getInvolved(c) {
   const body = html`
 ${stage("involve", head, {}, { min: 0.6 })}
 <div class="day day--involve">
-  ${louvers(c, involve.ways, { level: 2, cls: "louvers--page" })}
+  ${louvers(c, involve.ways, { level: 2, cls: "louvers--page", buttons: false })}
   <section class="faq container" aria-labelledby="faq-title">
     <h2 class="faq__title" id="faq-title" data-reveal="rise"><span>${viKeep(c.tx(involve.faqTitle))}</span></h2>
     <div class="faq__list" data-reveal="stagger">

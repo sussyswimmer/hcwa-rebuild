@@ -4,19 +4,19 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { color as TOK } from "../src/world/tokens.js";
-import { ATLAS, CORRIDOR_POSTERS, FORBIDDEN_INKS, LR_CLEAR, PAPER, S3_POSTERS, WALL_POSTERS, cellUv, corridorPosters } from "../src/world/wall-posters-data.js";
+import { ATLAS, CORRIDOR_POSTERS, FORBIDDEN_INKS, LR_CLEAR, PAPER, S3_POSTERS, WALL_POSTERS, atlasSizeFor, cellUv, corridorPosters, posterGpuMB } from "../src/world/wall-posters-data.js";
 import { posterSvg } from "../scripts/wall-posters.mjs";
 import { corridorLayout, readBeats } from "../src/world/journey.js";
 
 const file = (p) => new URL(`../${p}`, import.meta.url);
 const report = JSON.parse(readFileSync(file("src/world/wall-posters-report.json"), "utf8"));
 
-test("the set: unique ids, one decorative word at most, token inks only, never Little Rose's, brick or red", () => {
+test("the set: unique ids, no lettering, token inks only, never Little Rose's, brick or red", () => {
   const ids = WALL_POSTERS.map((p) => p.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const p of WALL_POSTERS) {
-    // One Vietnamese word (a compound such as "cà phê" is written as its two syllables), no digits, no dates.
-    if (p.word != null) assert.match(p.word, /^\p{L}+( \p{L}+)?$/u, `${p.id}: "${p.word}"`);
+    // No lettering (M6 fix): a word drawn into a texture is not HTML and has no English.
+    assert.equal(p.word, null, `${p.id}: no word`);
     for (const ink of [...p.inks, PAPER]) {
       assert.ok(TOK[ink], `${p.id}: ${ink} is a token`);
       assert.ok(!FORBIDDEN_INKS.includes(ink) && !/pink|rose|red|brick|error/.test(ink), `${p.id}: ${ink} is forbidden`);
@@ -28,12 +28,12 @@ test("the set: unique ids, one decorative word at most, token inks only, never L
 const hexes = (svg) => [...svg.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{6})"/g)].map((m) => m[1].toUpperCase());
 const texts = (svg) => [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
 
-test("the art: no image, no link, no text but the poster's word, every colour one of its inks", () => {
+test("the art: no image, no link, no text at all, every colour one of its inks", () => {
   for (const p of WALL_POSTERS) {
     const svg = posterSvg(p.id);
     assert.doesNotMatch(svg, /<image|<foreignObject|<use\b|href=|xlink|<script/i, `${p.id}: nothing from outside`);
-    assert.deepEqual(texts(svg), p.word ? [p.word] : [], `${p.id}: its word only`);
-    assert.equal((svg.match(/<text\b/g) ?? []).length, p.word ? 1 : 0);
+    assert.deepEqual(texts(svg), [], `${p.id}: no lettering`);
+    assert.doesNotMatch(svg, /<text\b|font-family/, `${p.id}: no text element`);
     const allowed = new Set([...p.inks, PAPER].map((k) => TOK[k].toUpperCase()));
     for (const h of hexes(svg)) assert.ok(allowed.has(h), `${p.id}: ${h} is not one of its inks`);
   }
@@ -76,7 +76,7 @@ test("the prints: no pink at all, red under 2%, the report matches the files", (
     assert.ok(r, `${p.id} printed`);
     assert.equal(r.pink, 0, `${p.id}: pink ${r.pink}`);
     assert.ok(r.red <= 0.02, `${p.id}: red ${r.red}`);
-    const sha = createHash("sha256").update(readFileSync(file(`public/textures/prints/${p.id}.webp`))).digest("hex").slice(0, 16);
+    const sha = createHash("sha256").update(readFileSync(file(`art/prints/${p.id}.webp`))).digest("hex").slice(0, 16);
     assert.equal(sha, r.sha, `${p.id}: the print changed since the report (run scripts/encode-wall-posters.py)`);
   }
 });
@@ -87,7 +87,7 @@ test("the atlases stay in budget and are the ones the report measured", () => {
     assert.ok(bytes <= kb * 1024, `${size} px: ${(bytes / 1024).toFixed(1)} KB > ${kb} KB`);
     assert.equal(createHash("sha256").update(readFileSync(path)).digest("hex").slice(0, 16), report.atlases[size].sha, `${size} px atlas stale`);
   }
-  // Home Tier 1 pays the 1024 atlas once, after the world is live (live.js); a phone the 512.
+  // Tier 1 and phones pay the 512 atlas once, after the world is live (live.js); Tier 2 the 1024.
   assert.ok(ATLAS.budgetKB[1024] <= 100 && ATLAS.budgetKB[512] <= 34);
   // Cells never overlap and stay inside the atlas.
   for (const size of [512, 1024, 2048]) for (let i = 0; i < 6; i++) { const [u0, v0, u1, v1] = cellUv(i, size); assert.ok(u0 >= 0 && v0 >= 0 && u1 <= 1 && v1 <= 1 && u1 > u0 && v1 > v0); }
@@ -95,6 +95,15 @@ test("the atlases stay in budget and are the ones the report measured", () => {
 
 const UNITS = ["green-bamboo", "little-rose", "cau-han"];
 const perms = (a) => (a.length <= 1 ? [a] : a.flatMap((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map((p) => [x, ...p])));
+
+test("the atlas sizes live: 512 on phones and Tier 1, 1024 on Tier 2, 2048 only for the stills; counted in GPU memory", () => {
+  assert.equal(atlasSizeFor({ tier: 1, width: 1440 }), 512);
+  assert.equal(atlasSizeFor({ tier: 2, width: 390 }), 512);
+  assert.equal(atlasSizeFor({ tier: 2, width: 1440 }), 1024);
+  assert.equal(posterGpuMB(512), 1.3);
+  assert.equal(posterGpuMB(1024), 5.3);
+  assert.match(readFileSync(file("src/world/live.js"), "utf8"), /texMB\.posters = posterGpuMB\(r\.size\)/);
+});
 
 test("Little Rose: no poster within half a bay and 1.5 m of its door, in any order of the bays", () => {
   assert.equal(LR_CLEAR, 4.75);
@@ -118,8 +127,8 @@ test("Little Rose: no poster within half a bay and 1.5 m of its door, in any ord
 
 test("the sets hang them: the corridor's door wall and S3's window wall, never the hero's rest frame", () => {
   const corridor = readFileSync(file("src/world/sets/corridor.js"), "utf8"), s3 = readFileSync(file("src/world/sets/shutters.js"), "utf8");
-  assert.match(corridor, /corridorPosters\(lay\)\.map/);
-  assert.match(s3, /const posters = full \? S3_POSTERS\.map/, "Get Involved's header room (not full) has none");
+  assert.match(corridor, /wallPosters\(\{ \.\.\.U, \.\.\.posterUniforms\(\) \}, lights, posterOwn, corridorPosters\(lay\)\.map/, "one mesh for the corridor's set");
+  assert.match(s3, /const posters = full \? wallPosters\(.*S3_POSTERS\.map/, "one mesh for S3's set; Get Involved's header room (not full) has none");
   // The hero's H1 covers its back wall in every bucket (PLAN.md section 9, M6): no poster there.
   assert.doesNotMatch(readFileSync(file("src/world/sets/room.js"), "utf8"), /wallPoster|wall-poster/);
   // Loaded only after the first frame: live.js asks for the atlas in idle time, poster.js (the LCP) never.

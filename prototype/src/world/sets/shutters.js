@@ -13,7 +13,7 @@ import { EXPOSURE, mixc, tok, vec } from "../colors.js";
 import { roomShade, roomSun, surfaceUniforms, tint } from "./common.js";
 import { SHUTTERS } from "../journey.js";
 import { WIN_Z } from "./places.js";
-import { posterUniforms, wallPoster } from "../objects/wall-poster.js";
+import { posterUniforms, wallPosters } from "../objects/wall-poster.js";
 import { S3_POSTERS } from "../wall-posters-data.js";
 
 // The shutters (05-DESIGN D6.2, D6.3; S3 in D5.3): a French window in the end wall of a lime-wash room,
@@ -133,21 +133,22 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
     U.uSunI.value = 1 + 0.6 * k;
     const dim = full ? 0.68 + 0.32 * open : 1; // linear: about 0.84 of the shade's sRGB when shut
     for (let i = 0; i < 3; i++) U.uShade.value[i].lerpVectors(base.shade[i], warm[i], Math.min(k * 2.2, 1)).multiplyScalar(dim);
-    outside.uniforms.uLow.value.copy(base.low).lerp(sun100, Math.min(k * 1.2, 0.6));
-    outside.uniforms.uHigh.value.copy(base.high).lerp(sun100, Math.min(k * 2, 1));
-    // The view pales into the flood with the sky: the canopy and the parapet keep a third of their shape.
-    if (base.leaf) { outside.uniforms.uLeaf.value.copy(base.leaf).lerp(sun100, Math.min(k * 1.5, 0.66)); outside.uniforms.uWall.value.copy(base.wall).lerp(sun100, Math.min(k * 1.5, 0.66)); }
+    // M6 fix ("the open shutters look out onto a blank cream void"): the view pales less as the leaves open, so the
+    // tamarind, the street's wall and the sky keep their shape through the look-out hold; only the flood pales it more.
+    outside.uniforms.uLow.value.copy(base.low).lerp(sun100, Math.min(k * 0.8, 0.45));
+    outside.uniforms.uHigh.value.copy(base.high).lerp(sun100, Math.min(k * 1.4, 0.8));
+    if (base.leaf) { outside.uniforms.uLeaf.value.copy(base.leaf).lerp(sun100, Math.min(k * 0.9, 0.5)); outside.uniforms.uWall.value.copy(base.wall).lerp(sun100, Math.min(k * 0.9, 0.5)); }
   };
   const project = (camera, out) => out.copy(FOCUS).project(camera);
 
   // Wall posters (M6, wall-posters-data.js S3_POSTERS): the live set and its stills only (Get Involved's header keeps
   // its own room), on the window wall either side of the window, 5 mm off it; the slat lines and the late sun cross
   // them as they cross the wall. The paint's own sun tint, so they warm with the leaves.
-  const posters = full ? S3_POSTERS.map((p, i) => wallPoster({ ...U, ...posterUniforms() }, lights, { uSunTint: paint.uniforms.uSunTint, uSpillTint: paint.uniforms.uSpillTint, uShadeK: { value: 0.74 } }, { id: p.id, w: p.w, at: [-0.005, p.y, WIN_Z + p.dz], seed: 41 + i * 5 })) : [];
+  const posters = full ? wallPosters({ ...U, ...posterUniforms() }, lights, { uSunTint: paint.uniforms.uSunTint, uSpillTint: paint.uniforms.uSpillTint, uShadeK: { value: 0.74 } }, S3_POSTERS.map((p, i) => ({ id: p.id, w: p.w, at: [-0.005, p.y, WIN_Z + p.dz], seed: 41 + i * 5 }))) : null;
 
   return {
     box, lights, U, sun, spec: sp, rig, paint, outside, posters,
-    objects: [shell, rig.group, plane, ...posters],
+    objects: [shell, rig.group, plane, ...(posters ? [posters] : [])],
     pose, setSun, setExposure, project,
     treeIndex: full ? 3 : -1,
     // For the still renderer: what frames the shot, what glows on its own.

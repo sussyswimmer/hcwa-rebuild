@@ -2,20 +2,21 @@
 // PROPAGANDA)"). Original prints of everyday Saigon life in the manner of 1960s-70s screen printing: flat inks, a
 // halftone in the shadows, a second plate a little off register, cream paper aged by the sun. Never propaganda: no
 // stars, flags, emblems, uniforms, leaders, slogans, crowds or rays; no brands, logos, plates or signage; no people's
-// faces and no children; at most one decorative word, no dates, no information. HCWA approves the set before
+// faces and no children; no lettering at all (M6 fix: words in a texture are not HTML and not bilingual), no dates,
+// no information. HCWA approves the set before
 // production (PLAN.md section 9). No three.js here: the tests, the art script and the world all read it.
 //   scripts/wall-posters.mjs   draws each design as SVG and rasterises it (headless Chromium)
 //   scripts/encode-wall-posters.py  prints and ages it, and packs the atlases (public/textures/wall-posters-*.webp)
 //   objects/wall-poster.js     hangs them: a curled sheet with its tape and its shadow, lit like the wall
 
-// The set. word: the one decorative word (display face) or null. inks: the token names it is printed in (on the
+// The set. word: always null (no lettering; kept so the encoder's reader stays the same). inks: the token names it is printed in (on the
 // paper, tile-cream). atlas: its cell in the atlases (null: a single print for the stills, not hung live).
 export const WALL_POSTERS = [
-  { id: "tet-hoa-mai", word: "Xuân", inks: ["tile-ochre", "tile-ochre-lit", "sun-300", "tile-jade", "ink-900"], atlas: 0, what: "A hoa mai branch across a pale sun disc, flower-market baskets at its foot" },
-  { id: "ca-phe-phin", word: "Cà phê", inks: ["world-wood", "tile-cream", "tile-indigo"], atlas: 1, what: "A phin dripping into a glass, a low stool, steam" },
-  { id: "cub-duoi-hang-me", word: null, inks: ["tile-jade", "sun-200", "tile-indigo"], atlas: 2, what: "A step-through scooter (no badge, no plate) parked under tamarind leaves, dappled light" },
-  { id: "ao-sen", word: "Sen", inks: ["tile-jade", "tile-jade-lit", "tile-cream", "tile-indigo-lit", "tile-indigo", "sun-300", "sun-200"], atlas: 3, what: "Lotus pads, a bud and an apricot flower, ripples, a dragonfly" },
-  { id: "pho-mua", word: "Mưa", inks: ["tile-indigo", "lime-300", "sun-200", "tile-cream"], atlas: 4, what: "Rain over shophouse shutters, reflections, one bicycle" },
+  { id: "tet-hoa-mai", word: null, inks: ["tile-ochre", "tile-ochre-lit", "sun-300", "tile-jade", "ink-900"], atlas: 0, what: "A hoa mai branch across a pale sun disc, flower-market baskets at its foot" },
+  { id: "ca-phe-phin", word: null, inks: ["world-wood", "tile-cream", "tile-indigo"], atlas: 1, what: "A phin dripping into a glass, a low stool, steam" },
+  { id: "cub-duoi-hang-me", word: null, inks: ["tile-jade", "sun-200", "tile-indigo", "tile-cream"], atlas: 2, what: "A Cub-type step-through (leg shield, small wheels; no badge, no plate) under a tamarind's fine pinnate leaves, dappled light" },
+  { id: "ao-sen", word: null, inks: ["tile-jade", "tile-jade-lit", "tile-cream", "tile-indigo-lit", "tile-indigo", "sun-300", "sun-200"], atlas: 3, what: "Round lotus leaves raised above the water, an apricot-hearted flower, a bud, a seed pod, ripples, a dragonfly" },
+  { id: "pho-mua", word: null, inks: ["tile-indigo", "lime-300", "sun-200", "tile-cream"], atlas: 4, what: "Rain over shophouse shutters, reflections, one bicycle" },
   { id: "dieu-dong-lua", word: null, inks: ["tile-jade", "tile-jade-lit", "sun-300", "tile-indigo", "tile-cream", "ink-900"], atlas: 5, what: "One kite high over terraced rice; its string runs off the edge, no flyer" },
   { id: "xe-banh-mi", word: null, inks: ["tile-ochre", "tile-cream", "ink-900"], atlas: null, what: "A bánh mì cart with a glass case and a parasol, no lettering" },
   { id: "cua-hieu", word: null, inks: ["tile-indigo", "lime-300", "sun-200", "tile-ochre", "tile-jade"], atlas: null, what: "A folding shophouse shutter half up, a potted plant and a stool" },
@@ -25,7 +26,8 @@ export const PAPER = "tile-cream";
 export const FORBIDDEN_INKS = ["unit-little-rose", "tile-brick", "tile-brick-lit", "error"];
 
 // The atlases: 3 × 2 cells, each the print with a margin for its tape and the shadow it casts on the wall.
-// 512 px for phones (< 600 px wide), 1024 px for Tier 1, 2048 px for Tier 2 and the stills. Budgets in KB.
+// 512 px for phones (< 600 px wide) and Tier 1, 1024 px for Tier 2, 2048 px for the stills only (M6 fix: the prints
+// cover a small part of the frame, and the 2048 atlas cost ~21 MB of GPU memory live). Budgets in KB.
 export const ATLAS = {
   cols: 3, rows: 2,
   sizes: { 512: { cell: [168, 235], gutter: 2 }, 1024: { cell: [336, 470], gutter: 4 }, 2048: { cell: [672, 940], gutter: 8 } },
@@ -35,7 +37,9 @@ export const ATLAS = {
 };
 // The print's own pixels at the 2048 atlas's scale (scripts render the art at this size).
 export const PRINT_PX = [Math.round(672 * (1 - 2 * ATLAS.margin[0])), Math.round(940 * (1 - 2 * ATLAS.margin[1]))];
-export const atlasSizeFor = ({ tier, width }) => (width < 600 ? 512 : tier >= 2 ? 2048 : 1024);
+export const atlasSizeFor = ({ tier, width }) => (width < 600 || tier < 2 ? 512 : 1024);
+// GPU memory of an atlas with its mipmaps (RGBA8, x 4/3), MB: counted in the world's memory figure (live.js).
+export const posterGpuMB = (size) => +((size * size * 4 * 4) / 3 / 2 ** 20).toFixed(1);
 
 // A cell's uv rect in an atlas of `size` px: [u0, v0, u1, v1], v from the bottom (WebGL, flipY).
 export function cellUv(index, size = 1024) {
@@ -53,9 +57,12 @@ export function cellUv(index, size = 1024) {
 // transom or pier. A poster that would break it is not hung (corridorPosters drops it).
 export const LR_CLEAR = 6.5 / 2 + 1.5;
 export const CORRIDOR_POSTERS = [
-  { id: "cub-duoi-hang-me", at: "end", w: 0.68, x: 100.35 },
-  { id: "dieu-dong-lua", unit: "green-bamboo", w: 0.5, off: 1.8 },
-  { id: "ao-sen", unit: "cau-han", w: 0.56, off: 1.9 },
+  // M6 fix ("the walls still look mostly plain at first glance"): a pair on the end wall, the Cub larger, and the bay
+  // prints a size up.
+  { id: "cub-duoi-hang-me", at: "end", w: 0.76, x: 100.43, y: 1.7 },
+  { id: "tet-hoa-mai", at: "end", w: 0.5, x: 99.47 },
+  { id: "dieu-dong-lua", unit: "green-bamboo", w: 0.6, off: 1.8 },
+  { id: "ao-sen", unit: "cau-han", w: 0.62, off: 1.9 },
 ];
 export const POSTER_Y = 1.6;
 // Height of a print w metres wide (the prints are 5:7.2).
@@ -79,7 +86,7 @@ export function corridorPosters(lay) {
     }
     const w = p.w, h = printH(w), reach = wall === "end" ? 0 : w / 2;
     if (lr && Math.abs(z - lr.zc) - reach <= LR_CLEAR) continue;
-    out.push({ id: p.id, wall, x: p.x ?? null, z, y: POSTER_Y, w, h });
+    out.push({ id: p.id, wall, x: p.x ?? null, z, y: p.y ?? POSTER_Y, w, h });
   }
   return out;
 }

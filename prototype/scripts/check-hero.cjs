@@ -149,11 +149,13 @@ async function extras(browser) {
     const clockFrozen = (await clock()) === tp;
     const pausedChange = await changed(page, c, d);
     await page.evaluate(() => document.querySelector(".hero__pause").click());
+    // The drawing buffers plus the loaded wall maps and poster atlas (M6 fix: textures count too).
     const mem = await page.evaluate(() => window.__hcwaWorld.memoryMB());
+    const memParts = await page.evaluate(() => window.__hcwaWorld.memory?.());
     const budget = tier === 2 ? 48 : 24;
     ok(ambient >= 0.6, `${tag}: the world moves with no input (${ambient}% of pixels change by > 12/255 over ${(t1 - t0).toFixed(2)} s of world time)`);
     ok(pausedChange === 0 && clockFrozen, `${tag}: pause freezes it (${pausedChange}% change, clock frozen ${clockFrozen})`);
-    ok(mem <= budget, `${tag}: drawing buffers ~${mem} MB <= ${budget} MB (D6.7)`);
+    ok(mem <= budget, `${tag}: GPU memory ~${mem} MB <= ${budget} MB (D6.7; ${JSON.stringify(memParts)})`);
     const row = { tag, ambient, worldSeconds: +(t1 - t0).toFixed(2), pausedChange, memoryMB: mem, parallax: await page.evaluate(() => window.__hcwaWorld.parallax()), pointer: [], scroll: [] };
     await bare(page);
     const [h1, intro] = await textRects(page);

@@ -2,11 +2,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { write } from "./batch.js";
 
 // S3's stage without the live world (PLAN H7, 05-DESIGN D5.3, D6.10): --p for the stills of its three beats
-// and the blend into sun-100, and the flood as a one-shot the scroll arms (is-flooded at 0.78, cleared under
-// 0.70, so hovering at the threshold never flickers). The live world reads the same numbers from
+// and the blend into sun-100, and the flood as a one-shot the scroll arms (is-flooded at 0.72, cleared under
+// 0.64, so hovering at the threshold never flickers). The live world reads the same numbers from
 // world/journey.js SHUTTERS (test/beats.test.mjs keeps them equal): motion/ never imports world/. The stage
 // is CSS (html.stages and a screen 640 px tall): this only arms it while that holds.
-export const TIMELINE = { slats: [0, 0.3], leaves: [0.3, 0.66], flood: 0.78, unflood: 0.7, blend: [0.76, 0.92] };
+export const TIMELINE = { slats: [0, 0.28], leaves: [0.28, 0.6], flood: 0.72, unflood: 0.64, blend: [0.7, 0.84] };
 
 export function initShutters() {
   const root = document.documentElement;

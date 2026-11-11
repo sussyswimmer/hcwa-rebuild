@@ -8,11 +8,13 @@ import { button, icon } from "./components.mjs";
 // under the home H2, h2 on Get Involved where the slats are the page's own sections).
 const ROUTE = { donate: "donate", volunteer: "volunteer", partner: "partner", "in-kind": "inKind" };
 
-export const louver = (c, w, { level = 3 } = {}) => {
-  const donate = w.id === "donate";
+// buttons: false (Get Involved, M6 fix): the header's ways bar already carries each way's button, so here the Ủng
+// hộ slat's title is a link like the others' and no slat repeats a button.
+export const louver = (c, w, { level = 3, buttons = true } = {}) => {
+  const donate = w.id === "donate" && buttons;
   const h = raw("h" + level);
   const title = html`<span class="louver__label">${viKeep(c.tx(w.title))}</span>`;
-  return html`<li class="louver${donate ? " louver--donate" : ""}" data-way="${w.id}">
+  return html`<li class="louver${w.id === "donate" ? " louver--donate" : ""}" id="way-${w.id}" data-way="${w.id}">
     <span class="louver__face" aria-hidden="true"></span>
     <${h} class="louver__title">${donate ? title : html`<a href="${c.url(ROUTE[w.id])}">${title}</a>`}</${h}>
     <div class="louver__body">
@@ -27,5 +29,5 @@ export const louver = (c, w, { level = 3 } = {}) => {
   </li>`;
 };
 
-export const louvers = (c, ways, { level = 3, cls = "" } = {}) =>
-  html`<ul class="louvers${cls ? " " + cls : ""}" data-reveal="stagger">${ways.map((w) => louver(c, w, { level }))}</ul>`;
+export const louvers = (c, ways, { level = 3, cls = "", buttons = true } = {}) =>
+  html`<ul class="louvers${cls ? " " + cls : ""}" data-reveal="stagger">${ways.map((w) => louver(c, w, { level, buttons }))}</ul>`;

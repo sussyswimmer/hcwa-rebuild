@@ -167,5 +167,40 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     ok(!r.sx, `${path} ${w}: no horizontal scroll`);
     await ctx.close();
   }
+  // 9. Wheel smoothing (M6 fix): a filled textarea keeps the wheel (it scrolls, the page stays put) on every page
+  // with a message box, and the News wall and the Little Rose garden never load the glide (native scroll).
+  for (const path of ["/lien-he/", "/en/contact/", "/chung-tay/tinh-nguyen/", "/en/get-involved/volunteer/", "/chung-tay/doi-tac-doanh-nghiep/", "/en/get-involved/partner/"]) {
+    const { ctx, requests } = await fresh();
+    const page = await ctx.newPage();
+    const ta = await page.goto(base + path + "?tier=1", { waitUntil: "load" }).then(() => page.$("main textarea"));
+    if (!ta) { ok(false, `${path}: a textarea to test`); await ctx.close(); continue; }
+    await page.mouse.move(5, 5);
+    // The glide's chunk comes in after load + idle; Lenis is made in idle time.
+    await page.waitForFunction(() => document.documentElement.classList.contains("lenis"), null, { timeout: 6000 }).catch(() => {});
+    await ta.fill(Array.from({ length: 60 }, (_, i) => `Dòng ${i + 1} của một lời nhắn dài.`).join("\n"));
+    await ta.evaluate((t) => { t.scrollTop = 0; t.scrollIntoView({ block: "center" }); });
+    await page.waitForTimeout(300);
+    const box = await ta.boundingBox();
+    const y0 = await page.evaluate(() => scrollY);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    for (let i = 0; i < 3; i++) { await page.mouse.wheel(0, 100); await page.waitForTimeout(60); }
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => ({ y: scrollY, top: document.querySelector("main textarea").scrollTop, lenis: document.documentElement.classList.contains("lenis") }));
+    ok(r.top >= 200 && Math.abs(r.y - y0) <= 2, `${path}: the wheel over a filled textarea scrolls the textarea (scrollTop ${r.top}), not the page (moved ${r.y - y0} px; glide ${r.lenis ? "on" : "off"})`);
+    await ctx.close();
+  }
+  for (const path of ["/tin-tuc/", "/en/news/", "/hoat-dong/co-so/hoa-hong-nho/", "/en/our-work/centers/little-rose/"]) {
+    const { ctx, requests } = await fresh();
+    const page = await ctx.newPage();
+    const res = await page.goto(base + path + "?tier=1", { waitUntil: "load" });
+    if (res.status() >= 400) { ok(false, `${path}: ${res.status()}`); await ctx.close(); continue; }
+    await page.mouse.move(700, 450);
+    await page.waitForTimeout(2500);
+    await page.mouse.wheel(0, 100);
+    await page.waitForTimeout(300);
+    const lenis = await page.evaluate(() => document.documentElement.classList.contains("lenis"));
+    ok(!lenis && !requests.some((u) => /smooth-wheel/.test(u)), `${path}: native wheel (no glide chunk on a page with heavy scroll-linked paint)`);
+    await ctx.close();
+  }
   await browser.close();
 })();

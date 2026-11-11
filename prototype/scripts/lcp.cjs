@@ -66,7 +66,7 @@ async function once(browser, base, query) {
     return {
       lcp: window.__lcp.at(-1), cls: window.__cls,
       fcp: performance.getEntriesByName("first-contentful-paint")[0]?.startTime,
-      load: nav.loadEventEnd, world: start(/\/assets\/world-/), three: start(/\/assets\/live-/),
+      load: nav.loadEventEnd, world: start(/\/assets\/world-/), three: start(/\/assets\/three-/),
       live: document.documentElement.classList.contains("world-live"), tier: document.documentElement.dataset.tier,
       long: window.__long.filter((e) => e.t < 10000), sunIn: window.hcwa?.state.sunIn,
       bytes: Math.round(res.reduce((s, e) => s + (e.transferSize || 0), 0) / 1024) + Math.round((nav.transferSize || 0) / 1024),

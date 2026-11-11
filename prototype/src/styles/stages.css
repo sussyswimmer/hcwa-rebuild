@@ -317,17 +317,17 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
    the stills of S3's three beats take turns as --p runs (motion/shutters.js), pushing in as the camera
    would, the flood a bloom of sun-100. */
 @media (min-height: 640px) {
-  html.stages .shutters { --s3: 200svh; --lead: 30svh; --rise: calc(var(--s3) * 0.3); padding: var(--lead) 0 0; margin-bottom: calc(-1 * var(--rise)); background: linear-gradient(to bottom, var(--s3-from), color-mix(in oklab, var(--s3-from) 90%, transparent) calc(var(--lead) * 0.2), color-mix(in oklab, var(--s3-from) 66%, transparent) calc(var(--lead) * 0.4), color-mix(in oklab, var(--s3-from) 36%, transparent) calc(var(--lead) * 0.6), color-mix(in oklab, var(--s3-from) 12%, transparent) calc(var(--lead) * 0.8), transparent var(--lead)); }
+  html.stages .shutters { --s3: 200svh; --lead: 30svh; --rise: calc(var(--s3) * 0.42); padding: var(--lead) 0 0; margin-bottom: calc(-1 * var(--rise)); background: linear-gradient(to bottom, var(--s3-from), color-mix(in oklab, var(--s3-from) 90%, transparent) calc(var(--lead) * 0.2), color-mix(in oklab, var(--s3-from) 66%, transparent) calc(var(--lead) * 0.4), color-mix(in oklab, var(--s3-from) 36%, transparent) calc(var(--lead) * 0.6), color-mix(in oklab, var(--s3-from) 12%, transparent) calc(var(--lead) * 0.8), transparent var(--lead)); }
   html.stages .shutters__track { position: relative; height: calc(100svh + var(--s3)); }
   html.stages .shutters__frame { position: sticky; top: 0; height: 100svh; aspect-ratio: auto; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(16svh * 0.125), rgb(0 0 0 / 0.16) calc(16svh * 0.250), rgb(0 0 0 / 0.32) calc(16svh * 0.375), rgb(0 0 0 / 0.50) calc(16svh * 0.500), rgb(0 0 0 / 0.68) calc(16svh * 0.625), rgb(0 0 0 / 0.84) calc(16svh * 0.750), rgb(0 0 0 / 0.96) calc(16svh * 0.875), black 16svh); }
   html.stages .shutters__view { display: block; transform-origin: 46% 44%; scale: calc(1 + var(--p, 1) * 0.1); }
   html.stages .shutters__view img { animation: none; }
   html.stages .shutters:not(.is-armed) :is(.shutters__view--closed, .shutters__view--louvers) { display: none; }
-  html.stages .shutters.is-armed .shutters__view--louvers { opacity: clamp(0, (var(--p, 0) - 0.07) / 0.23, 1); }
-  html.stages .shutters.is-armed .shutters__view--open { opacity: clamp(0, (var(--p, 0) - 0.36) / 0.3, 1); }
+  html.stages .shutters.is-armed .shutters__view--louvers { opacity: clamp(0, (var(--p, 0) - 0.06) / 0.22, 1); }
+  html.stages .shutters.is-armed .shutters__view--open { opacity: clamp(0, (var(--p, 0) - 0.33) / 0.27, 1); }
   /* The flood without the world: a bloom of sun-100 on the window, once per crossing (is-flooded), then the
      blend to flat sun-100 over 0.76-0.92, eased (smoothstep in calc). */
-  html.stages .shutters.is-armed .shutters__flood { display: block; position: absolute; inset: 0; --b: clamp(0, (var(--p, 0) - 0.76) / 0.16, 1); background: color-mix(in oklab, var(--color-sun-100) calc(var(--b) * var(--b) * (3 - 2 * var(--b)) * 100%), transparent); }
+  html.stages .shutters.is-armed .shutters__flood { display: block; position: absolute; inset: 0; --b: clamp(0, (var(--p, 0) - 0.7) / 0.14, 1); background: color-mix(in oklab, var(--color-sun-100) calc(var(--b) * var(--b) * (3 - 2 * var(--b)) * 100%), transparent); }
   html.stages .shutters__flood::before, html.stages .shutters__flood::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 46% 58% at 48% 42%, var(--color-sun-100) 30%, transparent 100%); opacity: 0; }
   html.stages .shutters__flood::before { transition: opacity 563ms var(--ease-out); }
   html.stages .shutters.is-flooded .shutters__flood::before { opacity: 0.45; transition-duration: var(--d-flood); }
@@ -339,4 +339,4 @@ html[data-motion="off"] .is-stage :is(.bays__head, .bay__text) > *, html[data-mo
   html[data-motion="off"] .shutters__flood::before, html[data-motion="off"] .shutters__flood::after { transition: none; animation: none; }
 }
 /* Phones arrive earlier (p 0.66, critique r2): the help heading comes up while the leaves still frame the view. */
-@media (min-height: 640px) and (max-width: 599.98px) { html.stages .shutters { --s3: 170svh; --lead: 24svh; --rise: calc(var(--s3) * 0.34); } }
+@media (min-height: 640px) and (max-width: 599.98px) { html.stages .shutters { --s3: 170svh; --lead: 24svh; --rise: calc(var(--s3) * 0.44); } }

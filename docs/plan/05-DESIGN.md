@@ -411,7 +411,8 @@ and reasons are in PLAN section 9 ("H4 corridor, fix round 1/2", "H5a focus floo
   one hung beside Little Rose's door. The fans are the only props.
 - **Open doors swing into their rooms** to 96°, hinged on the jamb nearer the camera, not out into the
   corridor (6.3, 6.4's 72° outward swing is superseded). Corridor paint and walls nearer than 1.4 m to the
-  lens fade out with a dither. Little Rose's door is unchanged: shut.
+  lens settle smoothly into their own flat shade (M6, 11 Nov: the dither threshold is gone; it read as
+  stipple where the screen meets the dado). Little Rose's door is unchanged: shut.
 - **Thresholds:** in front of every door the runner stops for 6 plain cream tiles (1.2 m), its border
   turning the corner, so each bay has its own rug and the transom emblem lands on plain cream (pool core
   ≥ 1.6:1 lit to unlit, drawn 1.5× its first size). Little Rose's rug is identical and gets plain daylight
@@ -451,6 +452,37 @@ is still pale; `check-sun-crisp` skips the corridor set; the first-10-second lon
 the 1.8 s LCP goal; `check-hero`'s ambient-motion check at 390 Tier 1 depends on when the first touch
 cloud arrives. HCWA still approves everything in 0.6.4 plus the doors opening into their rooms, the
 plain-tile floor, the program-row strips and the chips.
+
+**M6 as built (11 Nov 2026: answers Maxwell's 11 Nov feedback; binding where it differs from the above).**
+Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages", "M6 stills and gates",
+"M6 fix round", "M6 final recheck"); captures are in `qa/m6/`.
+- **Scroll:** the wheel glide is Lenis lerp 0.07 on every page with fine pointers and motion on (5.2),
+  except the News wall and the Little Rose garden, which scroll natively. A frame-time guard hands the wheel
+  back to native scroll on a slow machine. The world camera follows the scroll on a critically damped
+  spring (ω 9/s). Corridor doors hold longer (a door is about 612 px of scroll at 1440, 472 px at 390).
+- **Near fade and hems:** no dither anywhere near the lens (above). Hems, the pane mask, the passage band,
+  the dusk band and the footer sky ease on 8 stops (smoothstep or oklab), never linear. The dusk crossing
+  (sun-200 to blue-700) spans about half of a sky that is at least 560 px / 62svh tall, and words rise
+  into its dark part. While the bar's foot is over a dark sky the site header turns night (blue-900 at 92%,
+  `.is-dusk`); without JS it stays cream.
+- **Corridor to Centers:** on desktop the door index sits 24 px above the stage header in one block, and
+  the pane feathers 24svh top and bottom.
+- **Wall posters:** eight original screen prints of everyday Saigon life (no lettering, no people, no
+  flags, stars, brands or red/pink), hung on the corridor's end wall (a pair), in the Green Bamboo and Cầu
+  Hàn bays and on S3's window wall; never within 4.75 m of Little Rose's door. One draw per set; atlas
+  512 px on phones and Tier 1, 1024 on Tier 2. HCWA approves the set before production.
+- **Shutters (S3):** slats 0–0.28, leaves 0.28–0.60, hold 0.60–0.70, flood 0.72, blend 0.70–0.84; the help
+  heading rises 42% of S3 into the stage (44% on phones). Indigo paint keeps its hue under warm light.
+- **Contact:** a 2.5D gate opening on Tier 1 and 2 (the gate opens, letters drop into the box, the camera
+  walks in); its stage line fades out before the page's words reach it. **Get Involved:** the header is
+  open blue shutters onto a sunny street with the four ways as one-line tiles, one action each, above the
+  fold. **Little Rose:** a paper-cut walled garden (no figures, no door, no place, no pink or red, a
+  caption saying it is an illustration) with the five "what the home gives" lines beside it (1440) or
+  under it (390).
+- **Still open after M6:** the home's shutters beat is still about two screens with no words at 1440
+  (closed shutters, then the open window onto cream); the S3 view needs its own outside content. At 390
+  the Little Rose lines are small under the pinned garden. The home's first-10-second long task (about
+  290 ms) and Tier 2 GPU memory with textures counted (65 MB against 48) are over budget.
 
 ## 1. Color tokens
 
@@ -751,10 +783,19 @@ as they are and never count up.
 
 ### 5.2 Scroll infrastructure
 
-- **Native speed.** Lenis 1.3.27 smooths the wheel only: `{ lerp: 0.12, smoothWheel: true,
-  syncTouch: false, autoRaf: false }`, driven from `gsap.ticker` with `lagSmoothing(0)`,
-  `lenis.on("scroll", ScrollTrigger.update)`. Touch scrolling is fully native. No `snap`
-  anywhere, no `normalizeScroll`. Not started under reduced motion or pause.
+- **Native speed.** Lenis 1.3.27 smooths the wheel only: `{ lerp: 0.07, wheelMultiplier: 1,
+  smoothWheel: true, syncTouch: false, autoRaf: false, allowNestedScroll: true }` (M6: lerp 0.12 → 0.07,
+  a longer glide with the same distance per tick), driven from `gsap.ticker` with `lagSmoothing(0)`,
+  `lenis.on("scroll", ScrollTrigger.update)` on the home. Touch scrolling is fully native. No `snap`
+  anywhere, no `normalizeScroll`. Not started under reduced motion or pause. A box that can still
+  scroll the way the wheel goes (a filled textarea) keeps the wheel; dialogs and selects scroll natively.
+- **Inner pages (M6).** Pages without the motion layer get the same glide from a Lenis-only chunk
+  (`motion/smooth-wheel.js`, no GSAP), fine pointers only, loaded after load + idle; never on a page
+  whose scroll-linked paint is heavy (the News wall, the Little Rose garden), which stay native.
+  Lenis is made in idle time or at the first pointer move, so the first wheel tick is already smoothed.
+- **Frame-time guard (M6).** Three frames more than 50 ms apart in one glide (a gap over 150 ms counts
+  twice) hand the wheel back to native scroll for the rest of the visit (`sessionStorage hcwa:wheel`):
+  Lenis makes the visible scroll wait for the main thread, and native scroll does not.
 - **Stages are CSS sticky.** The canvas is `position: fixed` behind the page while a world
   section is in view; text panels inside world sections use `position: sticky`. (Until the
   passage exists, day 4, the canvas is `position: absolute` and scrolls with the hero like the

@@ -18,7 +18,7 @@ import { worldOff } from "./index.js";
 import { WALL_FADE, disposeWalls, loadWalls, setWallTier, wallUniforms } from "./walls.js";
 import { yieldNow } from "./textures.js";
 import { disposePosters, loadPosterAtlas, posterUniforms } from "./objects/wall-poster.js";
-import { atlasSizeFor } from "./wall-posters-data.js";
+import { atlasSizeFor, posterGpuMB } from "./wall-posters-data.js";
 
 // The live world (05-DESIGN D6, PLAN H2-H4, H7), with three.js. index.js loads it only once the GPU probe has
 // passed. It draws into the page's fixed canvas, reads the DOM (frame box, stage, text rects, beats) and
@@ -386,6 +386,9 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // The wall posters' atlas (objects/wall-poster.js; M6): the same way, after the first frame, faded in with the walls'
   // timing. Only the corridor and S3 hang them, so nothing at the handoff changes.
   const postersU = posterUniforms();
+  // GPU memory (05-DESIGN D6.7): the drawing buffers plus the loaded wall maps and poster atlas.
+  const texMB = { walls: 0, posters: 0 };
+  const memoryMB = () => +(gl.memoryMB + texMB.walls + texMB.posters).toFixed(1);
   let posters = null;
   const running = () => live && inView && visible && !lost && !dead;
   const kick = () => { if (!raf && running()) raf = requestAnimationFrame(tick); };
@@ -630,7 +633,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   kick();
 
   // QA hooks (?debug): their own chunk, never loaded otherwise.
-  if (debug) import("./debug.js").then((d) => d.attach({ gl, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
+  if (debug) import("./debug.js").then((d) => d.attach({ gl, memoryMB, texMB, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
 
   // The corridor, in idle time after the handoff, from the page's own cards (D6.5). It is needed first
   // behind the wash halfway through the passage; until it is ready the wash simply holds.
@@ -646,9 +649,10 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     walls = { k: 0 };
     dirty = true;
     kick();
+    texMB.walls = r.gpuMB;
     console.info(`[world] walls · ${r.size} px maps · ${r.kb} KB · GPU ~${r.gpuMB} MB · in ${Math.round(performance.now() - t0)} ms`);
   }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] walls unavailable, the procedural walls stay", err); });
-  // The posters' atlas: 512 px under 600 px wide, 1024 on Tier 1, 2048 on Tier 2 (wall-posters-data.js budgets).
+  // The posters' atlas: 512 px under 600 px wide and on Tier 1, 1024 on Tier 2 (wall-posters-data.js budgets).
   idle().then(async () => {
     if (dead) return;
     const r = await loadPosterAtlas({ size: atlasSizeFor({ tier, width: innerWidth }), signal: wallAbort.signal });
@@ -656,7 +660,8 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     posters = { k: 0 };
     dirty = true;
     kick();
-    console.info(`[world] posters · ${r.size} px atlas · ${r.kb} KB`);
+    texMB.posters = posterGpuMB(r.size);
+    console.info(`[world] posters · ${r.size} px atlas · ${r.kb} KB · GPU ~${texMB.posters} MB · world ~${memoryMB()} MB`);
   }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] posters unavailable, the walls stay bare", err); });
   // No cards still builds the corridor, empty: the camera always has somewhere to come out.
   idle().then(async () => {

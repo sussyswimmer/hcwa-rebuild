@@ -15,7 +15,7 @@ const render = (lang, prod = false) => { const c = ctx(lang, "getInvolved", prod
 const head = (body) => body.match(/<header class="gi-head">[\s\S]*?<\/header>/)[0];
 
 for (const lang of LANGS) {
-  test(`${lang}: the header's ways nav has all four ways, each a button to its own page`, () => {
+  test(`${lang}: the header's ways nav has all four ways, each one button to its own page`, () => {
     const { c, body } = render(lang);
     const h = head(body);
     const nav = h.match(/<nav class="ways" aria-label="([^"]+)">[\s\S]*?<\/nav>/);
@@ -28,8 +28,9 @@ for (const lang of LANGS) {
     ways.forEach((w, i) => {
       assert.match(items[i], new RegExp(`class="way way--${w.id}"`));
       assert.ok(items[i].includes(`href="${c.url(ROUTE[w.id])}"`), `${w.id} links to its page`);
-      const title = items[i].match(/<strong class="way__title">([\s\S]*?)<\/strong>/)?.[1];
-      assert.equal(title?.replace(/&nbsp;|\u00a0/g, " "), esc(c.tx(w.title)), `${w.id} names the way`);
+      // M6 fix: one line each, the tile and its one action; no label that repeats the button.
+      assert.doesNotMatch(items[i], /way__title/, `${w.id}: no separate label`);
+      assert.equal((items[i].match(/<a\b/g) ?? []).length, 1, `${w.id}: one link`);
       const label = w.id === "donate" ? c.t("donate") : c.tx(w.cta);
       assert.ok(items[i].includes(esc(label)), `${w.id} button says ${label}`);
     });

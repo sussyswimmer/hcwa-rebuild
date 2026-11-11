@@ -1584,3 +1584,134 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   only the 3 known home lines; tastegate 0 fail on all six (one heuristic "no CTA" warning each); mobile LCP median
   2.0-2.2 s on the three pages, CLS 0-0.001 (0.001 on EN pages predates M6), H1/intro stays the LCP on Get Involved and
   Little Rose. Captures: qa/m6/pages/before, after, after-2x, openings, tastegate.
+
+### M6 stills and gates (11 Nov 2026, after both M6 streams)
+- **Stills.** Every hero still (`npm run posters`) and every named still (`npm run posters -- --still all`) re-rendered
+  and re-encoded from the M6 world; all inside the encode-posters budgets, hero framing shifts unchanged (poster-frames.js
+  identical). The stills the world stream had not re-rendered (all lit headers except Contact, About, Impact and Cầu Hàn;
+  door cards, hub doors, gallery wall, story, 404, dusk, bay-little-rose) now carry the Blender wall maps and, where the
+  camera sees them, the corridor's end-wall print; the hero stills came out identical. bay-little-rose and the Little
+  Rose door crops: door shut, no print near it, no pink or red light. Before/after contact sheets: qa/m6/stills/sheet-*.jpg
+  (HEAD before M6 | tree at the start of this pass | after), with a per-still difference table in diff.json.
+- **Gate fixes (integration, not design).** check-page.cjs section 6 waited 6 s for the scroll-velocity spring to reach
+  0; with the M6 glide (Lenis lerp 0.07) under a busy software GPU it needs up to ~10 s, so the wait is 12 s (it failed
+  1 run in 2 under load, last value 0.0016). check-hero.cjs read `window.__hcwaWorld` as soon as the world went live;
+  the debug hooks chunk now arrives later (the poster atlas and wall maps decode in the same idle time), so the extras
+  crashed half way. It now waits for the hooks, and the live-world extras run to the end again (all pass but the known
+  Tier 1 ambient-motion timing at 390).
+- **Not fixed here.** Get Involved's first render is one 196-246 ms task on a 4x-throttled phone (pre-M6 on the same
+  machine: 132-157 ms): layout and style of the new header's inline SVG. LCP is fine (2.09 s), lcp.cjs's 200 ms
+  long-task line fails. The home has failed that line since M3 (338 ms pre-M6, 333 ms now on this machine).
+
+### M6 fix round (11 Nov 2026, critics of the three M6 streams)
+- **Contact stage line (must).** "Cổng luôn mở. Mời bạn vào." stayed pinned and landed on the office address (390) and
+  the form label (1440). It now fades out just before the page's first words reach it: over p 0.66 → 0.70 at the
+  screen's foot (phones, tablets), over p 0.80 → 0.88 where it stands higher (>= 1024 px). check-openings.cjs checks the
+  line's box against every other text box on every strip frame and on a 40 px sweep: no touch at either width, VI and EN.
+  On a wide screen the line now stands in the left half at H2 size (bottom 30svh) while the gate opens, so the left of
+  the run is not empty cream.
+- **Wheel and form fields (must).** Both Lenis instances share one set of options (motion/smooth-wheel.js
+  lenisOptions): `allowNestedScroll: true` and `prevent` for dialogs, selects and `[data-lenis-prevent]`. A filled
+  textarea scrolls under the wheel and the page stays put (check-page.cjs section 9, six pages: scrollTop 300, page 0 px).
+- **Poster draw calls (must).** Each set's prints are one merged mesh and one draw (objects/wall-poster.js
+  `wallPosters`: placement baked, atlas cell / curl / size as vertex attributes). Measured `?tier=1&debug=1` sweep of the
+  home, every 1% of the page: 390×844 max 13 calls, 1440×900 max 13 (budget 14; critics measured 15). test/world.test.mjs:
+  the corridor has one `posters:` mesh holding four prints.
+- **Wheel glide on weak machines (should).** Not loaded on pages with heavy scroll-linked paint (News wall, Little Rose
+  garden: native wheel, check-page section 9). A frame-time guard (three frames > 50 ms apart in one glide, a > 150 ms
+  gap counting twice) hands the wheel back to native scroll for the visit (sessionStorage hcwa:wheel). Lenis is made in
+  idle time or at the first pointer move, so the first wheel tick is smoothed too (Contact: 0,0,0,0,7,24,30… px by frame,
+  was a 100 px jump). The inner-page chunk loads after load + idle. 05-DESIGN 5.2 updated (lerp 0.07, inner-page chunk,
+  guard). Maxwell should still try it on his own trackpad.
+- **Poster GPU memory (should).** Live atlas: 512 px on phones and Tier 1, 1024 on Tier 2; 2048 for the stills only.
+  The world's memory figure (and check-hero's GPU line) now counts drawing buffers + wall maps + poster atlas: 1440 Tier 1
+  = 14.8 + 6.7 + 1.3 = 22.8 MB (budget 24); 390 Tier 1 = 3.8 + 6.7 + 1.3 = 11.8 MB.
+- **Poster lettering (should; departure closed).** No print carries a word any more (Xuân, Cà phê, Sen, Mưa removed);
+  the test now fails on any `<text>`. The prints are image-only decorative art; HCWA still approves the set.
+- **Poster art (should).** Sen redrawn as a lotus pond: round leaves standing above the water on stems (no notched
+  water-lily pads), pointed petals, a bud and a seed pod. The Cub redrawn with the step-through backbone, a broad front
+  leg shield, the headlight in the handlebar cover and smaller wheels; the tamarind as fine pinnate leaves. The end wall
+  now hangs a pair (the Cub, 0.76 m, and Tết hoa mai, 0.5 m) and the bay prints are a size up (0.6, 0.62 m); the Little
+  Rose rule holds in all six bay orders. The single prints moved out of public/ to prototype/art/prints/ (they shipped
+  with the deploy and nothing read them).
+- **Header over the night (should).** ui/header.js marks the dark half of every evening sky (a closing .dusk band, the
+  footer's sky, the footer); while the bar's foot is over it the bar and skirt take blue-900 at 92% and the words
+  on-dusk (`.is-dusk`). No pale band over the navy any more; without JS the bar stays cream.
+- **Dusk ramp (should).** Footer sky max(560px, 62svh), the .dusk band's sky max(600px, 66svh); the sun-200 → blue-700
+  crossing spans about 52% of the sky (over 30svh, was ~40 px at 1440) on eased oklab stops. The footer's org name
+  rises into the sky's dark last quarter (flex order: sky, name, room at 18:00, parapet, columns), and the .dusk band's
+  words rise into its last quarter. The dusk still fades in by opacity in the crossing instead of being pulled up into
+  the pale sky.
+- **Home shutters beat (should).** Slats 0 → 0.28, leaves 0.28 → 0.60, look-out hold 0.60 → 0.70 (20svh), flood 0.72
+  (cleared under 0.64), blend 0.70 → 0.84 (was 0.76 → 0.92); the help section rises 42% of S3 into the stage (44% on
+  phones), so "Bạn có thể giúp như thế nào" enters as the leaves finish and stands mid-screen during the blend. The
+  view outside pales less while the leaves open (only the flood pales it). Not done: a new outside layer (the Get
+  Involved street) behind the window: the outside is the world's own view shader; logged as a need.
+- **Get Involved (should).** The header's four tiles are one line each, the tile and its one action (no label that
+  repeats the button). The slats below hold the names and the detail and repeat no button (every slat title a link,
+  `louvers(..., { buttons: false })`; home's help slats keep theirs). One sun button on the page. The header is shorter
+  (min-height min(86svh - header, 720px)), so the gap under the window is gone at 1440.
+- **Little Rose (should).** The grass ends in its own torn-paper foot inside the frame (no dark mass for the mask to
+  blur); the front layer is lifted 90 units and its parallax halved (0.28 → 0.14); the pots moved in and the desk/awning
+  drawn at 0.92 about the middle, clear of the side feathers. 1440: the five lines at H2 size, 36svh apart, the one in
+  the middle of the screen ink-900 and the others ink-700, the section heading pinned at the column's top. 390: the
+  garden and its caption pinned under the header on the page's lime with a soft lime skirt; the lines rise in the space
+  beneath (no plate over the art) and pass behind it.
+- **Contact polish (should).** The courtyard runner is a perspective trapezoid as wide as the gate at its far end; the
+  phone dolly on the still is 1 → 1.06 (was 1.12).
+- **Coulds taken.** three.js has a stable chunk name (vite.config.js advancedChunks `three`), lcp.cjs matches
+  /assets/three-/. Blue paint keeps its hue under warm light (paint.js: red never above 1.3x the paint's own red/blue
+  ratio), so the indigo shutter leaf no longer reads mauve.
+- **Stills.** Re-rendered (`npm run posters -- --still all`, `npm run posters`) for the new prints, the paint clamp and
+  the S3 view; see qa/m6/fix/logs.
+- **Also.** The folded footer columns lose their 1 px underline (a rule, D0.5). check-openings.cjs counts a slat's
+  words under its own whole-row link layer (the Get Involved slats' titles are all links now).
+- **Checks on the final tree.** npm test 197/197; build, build:pages, check:links (46 pages, 0 dead) pass; PROD=1
+  blocked only by its guards (143, as before). export:wp, php wp/tests/run.php 8288/0, wp-static-check 0 errors (10
+  known warnings). check-openings: Contact, News, Get Involved all pass (Contact's line overlap sweep included).
+  check-page: all pass, with section 9 (textareas, native wheel on heavy pages). check-bays, check-tiles, check-sun-crisp
+  pass; light-contrast only the 3 known home lines at 390. Seam scan of the last screen of all 42 pages at 390 and 1440:
+  no row line under the header (y < 120) anywhere; the 390 rows left are the pause toggle's border. Mobile LCP (median
+  of 3, measured while check-hero ran): home 2356 ms (longest task 345), Contact 2180 (213), Get Involved 2004 (169),
+  Little Rose 2060 (228); three.js after LCP everywhere.
+- **check-hero, now counting textures.** Tier 2 at 1440 is 65.4 MB (drawing buffers 33.4 + Tier 2 wall maps 26.7 +
+  poster atlas 5.3) against 48 MB: it failed silently before, because only the buffers were counted. The poster share
+  is down from ~21 MB to 5.3 MB; the rest is the Tier 2 wall maps (1024 px). Lead's call: count textures in the 48 MB
+  (then the Tier 2 wall maps go to 512 px, 6.7 MB, total 45.4) or keep 48 MB for buffers only. Tier 1: 22.8 MB (1440),
+  13.9 MB (390). The other check-hero failures are the known 390 intro contrast (6.6-7.0) and Tier 1 ambient timing.
+
+### M6 final recheck (11 Nov 2026, on the final tree; captures and logs in qa/m6/final/)
+- **Gates.** npm test 197/197. build, build:pages, check:links and check:links:pages pass (46 pages, 0 dead).
+  PROD=1 build blocked only by its guards: 143 = 132 draft (44 data-draft, 44 [DRAFT, 44 bracket tokens) + 8 Little
+  Rose door + 2 donation + 1 traces. export:wp re-run, no change to the tree; php wp/tests/run.php 8288/0;
+  wp-static-check 0 errors, the 10 known warnings.
+- **Browser checks** (own preview on :4461, at most two browsers at once). check-page 50 PASS / 0 FAIL (section 9
+  included). check-openings: all pass (Contact, News, Get Involved; Tier 1 motion 55/32 Contact, 38/44 Get Involved).
+  check-bays 24 pass, check-tiles pass, check-sun-crisp pass (its shutters line still prints a stale "not built yet
+  (day 8)" skip: the shutters set is not checked). light-contrast: the 3 known home lines at 390 (6.7 < 7) of 254.
+  check-hero 345 pass / 37 fail, all in the known groups: 390 intro contrast 6.62-6.98 (and the six short phones),
+  Tier 1 ambient motion at 390, Tier 2 GPU memory 65.4 MB > 48 (buffers 33.4 + walls 26.7 + posters 5.3).
+  Draw calls, `?tier=1&debug=1` every 2% of the home: max 13 at 390x844 and at 1440x900 (budget 14); Tier 1 memory
+  11.8 MB (390) and 22.8 MB (1440).
+- **Every page** (46: VI, EN, 404s, components) at 390x844 and 1440x900, walked to the end: 0 console errors, 0 failed
+  requests or 4xx, one H1, no sideways scroll, no uppercase Vietnamese (qa/m6/final/pages/matrix.json). Reduced
+  motion, no JS and no WebGL on Little Rose, Get Involved, Contact and home (VI, EN, both widths): no content text
+  hidden; what the probe flags is navigation chrome by design (skip links, the corridor rail in the stacked layout,
+  breadcrumb steps folded on phones, Contact's stage line after it has faded at the page end).
+- **Mobile LCP** (median of 3, machine otherwise idle): home 2268 ms (longest task 293 ms, over 200 as since M3),
+  Contact 2112 ms (163; LCP is the header still), Get Involved 1988 ms (129), Little Rose 1988 ms (160). CLS <= 0.004;
+  three.js after LCP everywhere.
+- **Home strips**, 24 frames each, world live, 0 errors: VI 390 and 1440 at Tier 1 and Tier 2, EN 390 Tier 1, EN 1440
+  Tier 2 (qa/m6/final/strip/sheet-*.jpg). Screens: Contact, Get Involved, Little Rose (10 frames each) and the
+  corridor-to-Centers handoff (20 frames) at 390 Tier 1 and 1440 Tier 2 (qa/m6/final/sheet-*.jpg).
+- **Seam scan** (scripts/seam-scan.py) of the first and last screen of every page and every strip frame. Last
+  screens: no row in the header band; at 390 the only rows are the pause toggle's border. Still flagged: the
+  prototype review bar and the "View this page in English" bar end in straight edges on first screens (y 35/43 and
+  77/83; review chrome, but the language bar ships); the cream header skirt over the dusk crossing for one strip frame
+  (1440 EN f22, 390 EN f22) before the bar turns night, and always without JS; 3D geometry, tiles and art (columns) in
+  the strips.
+- **Still open (not green).** The shutters beat at 1440: two frames of closed shutters and one of the open window onto
+  cream with no words before "Bạn có thể giúp như thế nào" rises (f16-f18). At 390, f01 (the hero room's corner under
+  the buttons) and f20-f21 (partners to dusk) carry little. Little Rose at 390: one small line at a time under the
+  pinned garden, with empty space below. Contact and every inner page end on about one screen of dusk with no words
+  before the footer. Home long task 293 ms; Tier 2 GPU memory 65.4 MB with textures counted (lead's call, logged above).

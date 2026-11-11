@@ -10,7 +10,7 @@ casts on the wall, and the atlases are written:
     public/textures/wall-posters-2048.webp   Tier 2 and the stills   (budget 240 KB)
     public/textures/wall-posters-1024.webp   Tier 1                  (100 KB)
     public/textures/wall-posters-512.webp    phones under 600 px     (34 KB)
-plus every print alone at 300 px wide (public/textures/prints/<id>.webp) for the stills that show them on a wall,
+plus every print alone at 300 px wide (art/prints/<id>.webp: inputs for later stills, never shipped with the site),
 and src/world/wall-posters-report.json: the bytes, a hash of each file, and the red and pink share of every print
 (test/wall-posters.test.mjs fails on pink, on more than 2% red, on a stale report and over budget).
 """
@@ -150,7 +150,8 @@ def webp(img, quality, alpha_q=70):
 
 def main():
     prints, report = {}, {"atlases": {}, "prints": {}}
-    os.makedirs(os.path.join(OUT, "prints"), exist_ok=True)
+    PRINTS = os.path.join(PROTO, "art", "prints")
+    os.makedirs(PRINTS, exist_ok=True)
     for i, (pid, _) in enumerate(POSTERS):
         p = os.path.join(CACHE, pid + ".png")
         if not os.path.exists(p):
@@ -160,7 +161,7 @@ def main():
         red, pink = colour_share(aged)
         small = aged.resize((300, round(300 * aged.height / aged.width)), Image.LANCZOS)
         data = webp(small, 80)
-        open(os.path.join(OUT, "prints", pid + ".webp"), "wb").write(data)
+        open(os.path.join(PRINTS, pid + ".webp"), "wb").write(data)
         report["prints"][pid] = {"red": round(red, 4), "pink": round(pink, 4), "bytes": len(data), "sha": hashlib.sha256(data).hexdigest()[:16]}
     cells = {idx: cell(prints[pid], 500 + idx) for pid, idx in POSTERS if idx is not None}
     full = Image.new("RGBA", (2048, 2048), (0, 0, 0, 0))

@@ -1,4 +1,5 @@
-import { LinearFilter, LinearMipmapLinearFilter, Mesh, PlaneGeometry, SRGBColorSpace, ShaderMaterial, Texture } from "three";
+import { BufferAttribute, LinearFilter, LinearMipmapLinearFilter, Mesh, Object3D, PlaneGeometry, SRGBColorSpace, ShaderMaterial, Texture } from "three";
+import { mergeGeometries } from "./door.js";
 import { BLOCKS } from "../glsl/blocks.js";
 import { NOISE } from "../glsl/noise.js";
 import { aperturesGLSL } from "../glsl/apertures.js";
@@ -40,37 +41,39 @@ export async function loadPosterAtlas({ size = 1024, signal } = {}) {
 }
 export function disposePosters() { shared.uPosterTex.value?.dispose?.(); shared.uPosterTex.value = null; shared.uPosterK.value = 0; loaded = null; }
 
+// Every poster of a set is one mesh and one draw (M6 fix: Tier 1's draw-call budget, 05-DESIGN D6.7): each sheet's
+// placement is baked into the merged geometry, and what differs per print (its atlas cell, its curl, its size) rides
+// on vertex attributes, so the set's prints share one material.
 const VERT = /* glsl */ `
-uniform vec4 uCurl; // corner (uv), lift in metres, reach (fraction of the shorter side)
-uniform vec2 uSize;
-varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vCurl;
+attribute vec4 aCell; // the print's cell in the atlas (uv rect)
+attribute vec4 aCurl; // corner (uv), lift in metres, reach (fraction of the shorter side)
+attribute vec2 aSize; // the sheet's size, m
+varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vCurl; varying vec4 vCell;
 void main(){
-  vec2 d = (uv - uCurl.xy) * uSize;
-  float k = 1. - smoothstep(0., uCurl.w * min(uSize.x, uSize.y), length(d));
+  vec2 d = (uv - aCurl.xy) * aSize;
+  float k = 1. - smoothstep(0., aCurl.w * min(aSize.x, aSize.y), length(d));
   vCurl = k * k;
-  vec3 p = position + vec3(0., 0., uCurl.z * vCurl);
+  vec3 p = position + normal * (aCurl.z * vCurl);
   vec4 w = modelMatrix * vec4(p, 1.);
-  vP = w.xyz; vN = normalize(mat3(modelMatrix) * normal); vUv = uv;
+  vP = w.xyz; vN = normalize(mat3(modelMatrix) * normal); vUv = uv; vCell = aCell;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
 // U: the set's uniforms (lights, apertures); own: uSunTint, uSpillTint, uShadeK (as the set's paint).
-export function posterMaterial(U, lights, own, index) {
-  const c = cellUv(index, 2048); // the cells are at the same fractions in every atlas size
+export function posterMaterial(U, lights, own) {
   return new ShaderMaterial({
-    uniforms: { ...U, ...shared, ...own, uCell: { value: c }, uCurl: { value: [1, 0, 0, 0.3] }, uSize: { value: [1, 1] } },
+    uniforms: { ...U, ...shared, ...own },
     vertexShader: VERT,
     fragmentShader: /* glsl */ `
-      varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vCurl;
+      varying vec3 vP; varying vec3 vN; varying vec2 vUv; varying float vCurl; varying vec4 vCell;
       uniform sampler2D uPosterTex;
       uniform float uPosterK, uShadeK, uRef[2], uI[2];
-      uniform vec4 uCell;
       uniform vec3 uSunTint, uSpillTint;
       ${BLOCKS}
       ${NOISE}
       ${aperturesGLSL(lights)}
       void main(){
-        vec4 t = texture2D(uPosterTex, mix(uCell.xy, uCell.zw, vUv));
+        vec4 t = texture2D(uPosterTex, mix(vCell.xy, vCell.zw, vUv));
         float a = t.a * uPosterK;
         if (a < .004) discard;
         vec3 albedo = t.rgb, N = normalize(vN);
@@ -89,21 +92,33 @@ export function posterMaterial(U, lights, own, index) {
   });
 }
 
-// A hung poster: id (wall-posters-data.js), w (the print's width, m), at [x, y, z] (the print's centre), the wall's
-// normal axis (rotation about y: −π/2 faces −x), and a seed for its tilt and which corner curls.
+// One sheet's geometry, placed: id (wall-posters-data.js), w (the print's width, m), at [x, y, z] (the print's
+// centre), the wall's normal axis (rotation about y: −π/2 faces −x), and a seed for its tilt and which corner curls.
 const r01 = (s) => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
-export function wallPoster(U, lights, own, { id, w, at, rotY = -Math.PI / 2, seed = 1 }) {
+function sheet({ id, w, at, rotY = -Math.PI / 2, seed = 1 }) {
   const p = WALL_POSTERS.find((x) => x.id === id);
   if (!p || p.atlas == null) throw new Error(`wall poster ${id}: not in the atlas`);
   const [mx, my] = ATLAS.margin, cw = w / (1 - 2 * mx), [pw, ph] = ATLAS.sizes[2048].cell, ch = (cw * ph) / pw;
-  const mat = posterMaterial(U, lights, own, p.atlas);
+  const g = new PlaneGeometry(cw, ch, 8, 10);
+  const n = g.getAttribute("position").count;
+  const fill = (k, v) => new BufferAttribute(new Float32Array(Array.from({ length: n }, () => v).flat()), k);
+  g.setAttribute("aCell", fill(4, cellUv(p.atlas, 2048))); // the cells are at the same fractions in every atlas size
   // A bottom corner curls (the tape holds the top), 10-18 mm off the wall.
-  mat.uniforms.uCurl.value = [r01(seed) < 0.5 ? mx : 1 - mx, my, 0.01 + 0.008 * r01(seed + 1), 0.32];
-  mat.uniforms.uSize.value = [cw, ch];
-  const m = new Mesh(new PlaneGeometry(cw, ch, 8, 10), mat);
-  m.position.set(...at);
-  m.rotation.set(0, rotY, ((r01(seed + 2) - 0.5) * 2.4 * Math.PI) / 180, "YXZ");
+  g.setAttribute("aCurl", fill(4, [r01(seed) < 0.5 ? mx : 1 - mx, my, 0.01 + 0.008 * r01(seed + 1), 0.32]));
+  g.setAttribute("aSize", fill(2, [cw, ch]));
+  const o = new Object3D();
+  o.position.set(...at);
+  o.rotation.set(0, rotY, ((r01(seed + 2) - 0.5) * 2.4 * Math.PI) / 180, "YXZ");
+  o.updateMatrix();
+  g.applyMatrix4(o.matrix);
+  return g;
+}
+
+// A set's posters (a list of sheet specs, as above): one mesh, one material, one draw. Null when the list is empty.
+export function wallPosters(U, lights, own, list) {
+  if (!list.length) return null;
+  const m = new Mesh(mergeGeometries(list.map(sheet)), posterMaterial(U, lights, own));
   m.renderOrder = 2;
-  m.name = `poster:${id}`;
+  m.name = `posters:${list.map((x) => x.id).join(",")}`;
   return m;
 }

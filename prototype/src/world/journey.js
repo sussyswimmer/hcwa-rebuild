@@ -230,7 +230,9 @@ export const setAt = (p) => (p < (PASSAGE.plateau[0] + PASSAGE.plateau[1]) / 2 ?
 // M6 pacing: the slats over 0–0.30, the leaves over 0.30–0.66, then held fully open over 0.66–0.76 (the "look out"
 // plateau) before the blend over 0.76–0.92; the stage is 200svh (stages.css --s3).
 export const SHUTTERS = {
-  slats: [0, 0.3], leaves: [0.3, 0.66], flood: 0.78, unflood: 0.7, blend: [0.76, 0.92], sun: [0.85, 0.95],
+  // M6 fix: the help heading arrives as the leaves finish (the stage rises 42% of S3 into it), so the look-out hold
+  // (0.60 → 0.70) has words in it, and the cream blend is shorter (0.70 → 0.84, was 0.76 → 0.92).
+  slats: [0, 0.28], leaves: [0.28, 0.6], flood: 0.72, unflood: 0.64, blend: [0.7, 0.84], sun: [0.85, 0.95],
   push: 0.45, approachSlats: [0.15, 0.5],
   slatDeg: 65, leafDeg: 110, floodMs: 900, back: 1.6,
 };

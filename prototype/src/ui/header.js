@@ -10,6 +10,7 @@ export function initHeader() {
   document.body.prepend(sentinel);
   new IntersectionObserver(([e]) => header.classList.toggle("is-compact", !e.isIntersecting)).observe(sentinel);
   fitBar(header);
+  initNight(header);
 
   // Desktop submenus: toggle buttons; Escape, outside click and focus leaving the nav close them.
   const toggles = $$(".nav__toggle");
@@ -54,4 +55,28 @@ function fitBar(header) {
   const ro = new ResizeObserver(fit);
   for (const el of [bar, header.querySelector(".logo"), header.querySelector(".site-header__tools")]) if (el) ro.observe(el);
   document.fonts?.ready.then(fit);
+}
+
+// Over the night (M6 fix; components.css .is-dusk): a mark from halfway down each evening sky (a closing .dusk band,
+// the footer's sky) to its end; while one crosses the line just under the bar, the bar takes the night's fill.
+function initNight(header) {
+  const skies = [...document.querySelectorAll(".dusk, .site-footer")];
+  if (!skies.length || !("IntersectionObserver" in window)) return;
+  const marks = skies.map((s) => s.appendChild(Object.assign(document.createElement("div"), { ariaHidden: "true" })));
+  marks.forEach((m) => m.setAttribute("data-night", ""));
+  const on = new Set();
+  let io = null;
+  const watch = () => {
+    io?.disconnect();
+    const h = Math.round(header.getBoundingClientRect().bottom);
+    // Only the 1 px line at the bar's foot counts.
+    io = new IntersectionObserver((entries) => {
+      for (const e of entries) (e.isIntersecting ? on.add(e.target) : on.delete(e.target));
+      header.classList.toggle("is-dusk", on.size > 0);
+    }, { rootMargin: `${-h}px 0px ${-(innerHeight - h - 1)}px 0px` });
+    marks.forEach((m) => io.observe(m));
+  };
+  watch();
+  addEventListener("resize", () => { on.clear(); watch(); }, { passive: true });
+  new ResizeObserver(() => { on.clear(); watch(); }).observe(header);
 }

@@ -74,6 +74,17 @@
   mask-image: linear-gradient(black 8px, rgb(0 0 0 / 0.96) calc(8px + 40px * 0.125), rgb(0 0 0 / 0.84) calc(8px + 40px * 0.25), rgb(0 0 0 / 0.68) calc(8px + 40px * 0.375), rgb(0 0 0 / 0.50) calc(8px + 40px * 0.5), rgb(0 0 0 / 0.32) calc(8px + 40px * 0.625), rgb(0 0 0 / 0.16) calc(8px + 40px * 0.75), rgb(0 0 0 / 0.04) calc(8px + 40px * 0.875), transparent);
   transition: opacity var(--d-ui) var(--ease-out);
 }
+/* Over the night (M6 fix): once the bar's foot is over the dark half of the evening sky (a closing .dusk band, the
+   footer's sky, the footer), the bar and its skirt take the night's own fill and the words the night's colours
+   (ui/header.js, .is-dusk), so no pale bar and no pale skirt lie over the navy: the sky passes under it with no band.
+   Without JS the bar stays cream (the fallback). */
+.site-header.is-dusk { background-color: color-mix(in srgb, var(--color-blue-900) 92%, transparent); }
+.site-header.is-dusk::after { background: color-mix(in srgb, var(--color-blue-900) 92%, transparent); }
+.site-header.is-dusk :is(.logo, .nav__link, .nav__toggle, .menu-btn, .lang-switch, .lang-switch a) { color: var(--color-on-dusk); }
+.site-header.is-dusk .lang-switch > span[aria-hidden] { color: var(--color-on-dusk-2); }
+.site-header.is-dusk :is(.nav__link, .lang-switch a):hover { color: var(--color-sun-200); }
+.site-header.is-dusk :focus-visible { outline-color: var(--color-focus-on-dark); }
+.site-header :is(.logo, .nav__link, .nav__toggle, .menu-btn, .lang-switch, .lang-switch a) { transition: color var(--d-ui) var(--ease-out); }
 /* Over the hero: no fill, a 120 px world-ceiling scrim so nav text holds 7:1 over every sun state. */
 .site-header::before {
   content: ""; position: absolute; inset: 0 0 auto; height: 120px; z-index: -1; pointer-events: none; opacity: 0;
@@ -338,15 +349,18 @@ html:not(.js) .pause-toggle, html[data-reduced] .pause-toggle { display: none; }
    so the turn is carried by light, not by a band of mixed colour. The one gradient besides the light
    (D1 rules). */
 .dusk {
-  --sky: max(420px, 46svh); --pad: clamp(8px, 2vw, 32px);
-  position: relative; padding-block: calc(var(--sky) + var(--pad)) clamp(56px, 6vw, 96px); color: var(--color-on-dusk);
-  /* M6: each stretch between two colours is eased (smoothstep stops in oklab): no slope breaks, so no crease reads as a line. */
-  background: linear-gradient(in oklab to bottom, var(--color-sun-100) calc(var(--sky) * 0.0000), color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) calc(var(--sky) * 0.0750), color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) calc(var(--sky) * 0.1500), color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) calc(var(--sky) * 0.2250), var(--color-sun-200) calc(var(--sky) * 0.3000), color-mix(in oklab, var(--color-sun-200) 84%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3350), color-mix(in oklab, var(--color-sun-200) 50%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3700), color-mix(in oklab, var(--color-sun-200) 16%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.4050), color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) calc(var(--sky) * 0.4400), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 84%, var(--color-blue-700)) calc(var(--sky) * 0.4800), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 50%, var(--color-blue-700)) calc(var(--sky) * 0.5200), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 16%, var(--color-blue-700)) calc(var(--sky) * 0.5600), var(--color-blue-700) calc(var(--sky) * 0.6000), color-mix(in oklab, var(--color-blue-700) 84%, var(--color-blue-900)) calc(var(--sky) * 0.7000), color-mix(in oklab, var(--color-blue-700) 50%, var(--color-blue-900)) calc(var(--sky) * 0.8000), color-mix(in oklab, var(--color-blue-700) 16%, var(--color-blue-900)) calc(var(--sky) * 0.9000), var(--color-blue-900) calc(var(--sky) * 1.0000));
+  /* M6 fix: a longer evening (the day-to-night crossing, sun-200 → blue-700, spans 54% of a sky of at least 600 px /
+     66svh: over 30svh, never the 40 px step it was), and the band's words rise into the sky's dark last quarter, so
+     the band carries words rather than a screen of colour. */
+  --sky: max(600px, 66svh); --pad: clamp(8px, 2vw, 32px);
+  position: relative; padding-block: calc(var(--sky) * 0.74) clamp(56px, 6vw, 96px); color: var(--color-on-dusk);
+  /* Each stretch between two colours is eased (smoothstep stops in oklab): no slope breaks, so no crease reads as a line. */
+  background: linear-gradient(in oklab to bottom, var(--color-sun-100) calc(var(--sky) * 0.0000), color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) calc(var(--sky) * 0.0400), color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) calc(var(--sky) * 0.0800), color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) calc(var(--sky) * 0.1200), var(--color-sun-200) calc(var(--sky) * 0.1600), color-mix(in oklab, var(--color-sun-200) 84%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.2350), color-mix(in oklab, var(--color-sun-200) 50%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3100), color-mix(in oklab, var(--color-sun-200) 16%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3850), color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) calc(var(--sky) * 0.4600), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 84%, var(--color-blue-700)) calc(var(--sky) * 0.5200), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 50%, var(--color-blue-700)) calc(var(--sky) * 0.5800), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 16%, var(--color-blue-700)) calc(var(--sky) * 0.6400), var(--color-blue-700) calc(var(--sky) * 0.7000), color-mix(in oklab, var(--color-blue-700) 84%, var(--color-blue-900)) calc(var(--sky) * 0.7750), color-mix(in oklab, var(--color-blue-700) 50%, var(--color-blue-900)) calc(var(--sky) * 0.8500), color-mix(in oklab, var(--color-blue-700) 16%, var(--color-blue-900)) calc(var(--sky) * 0.9250), var(--color-blue-900) calc(var(--sky) * 1.0000));
 }
-/* The still stands in the sky's lower part and ends where the band's words begin: it fades in over its
-   top 40% (the warm sky shows through), holds, and sinks into the night above the title. */
-.dusk__still { position: absolute; z-index: 0; inset: calc(var(--sky) * 0.2) 0 auto; height: calc(var(--sky) * 0.8 + var(--pad)); pointer-events: none;
-  mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.35) 16%, rgb(0 0 0 / 0.8) 30%, black 40% 60%, rgb(0 0 0 / 0.6) 74%, rgb(0 0 0 / 0.22) 88%, transparent); }
+/* The still stands in the crossing and ends where the band's words begin: it comes in by opacity alone (eased, never
+   a hard top), so the screen's holes appear as the light goes, and sinks into the night above the title. */
+.dusk__still { position: absolute; z-index: 0; inset: calc(var(--sky) * 0.3) 0 auto; height: calc(var(--sky) * 0.42); pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.12) 14%, rgb(0 0 0 / 0.36) 28%, rgb(0 0 0 / 0.64) 42%, rgb(0 0 0 / 0.8) 54%, rgb(0 0 0 / 0.62) 68%, rgb(0 0 0 / 0.3) 84%, transparent); }
 .dusk__still picture, .dusk__still img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 60% 62%; }
 .dusk > .container { position: relative; z-index: 1; }
 /* Where the page closes on a dusk band, the band has already shown the room at 18:00: the footer starts
@@ -367,21 +381,38 @@ main:has(> :last-child.dusk) + .site-footer .footer-edge { margin-top: 0; }
 .dusk__btn { justify-self: start; }
 .dusk :focus-visible, .site-footer :focus-visible, .kit-dusk :focus-visible, .kit-states--dusk :focus-visible, .kit-states--dusk .is-focus { outline-color: var(--color-focus-on-dark); }
 
+/* Where the night starts under the header (ui/header.js turns the bar to .is-dusk there): from halfway down a sky. */
+[data-night] { position: absolute; left: 0; width: 1px; bottom: 0; pointer-events: none; visibility: hidden; }
+.dusk > [data-night] { top: calc(var(--sky) * 0.5); }
+.site-footer > [data-night] { top: calc(var(--foot-sky) * 0.45); }
+main:has(> :last-child.dusk) + .site-footer > [data-night] { top: 0; }
+
 /* ---------- footer (H11): dusk, every page ---------- */
-.site-footer { background: var(--color-blue-900); color: var(--color-on-dusk); }
+.site-footer {
+  --foot-sky: max(560px, 62svh);
+  position: relative; display: flex; flex-direction: column; background: var(--color-blue-900); color: var(--color-on-dusk);
+}
+/* M6 fix: the org's name rises into the sky's dark last quarter (the band carries words), then the room at 18:00
+   below it, then the parapet and the columns. A page that closes on a dusk band keeps parapet, then name. */
+.site-footer__sign { order: 1; margin-top: calc(var(--foot-sky) * -0.24); position: relative; z-index: 1; }
+.site-footer__still { order: 2; }
+.footer-edge { order: 3; }
+.site-footer__cols { order: 4; }
+.site-footer__bar { order: 5; }
+main:has(> :last-child.dusk) + .site-footer .site-footer__sign { order: 3; margin-top: 0; }
 .site-footer a { color: var(--color-on-dusk); }
 /* Every page ends at dusk: when a page does not already close on a dusk band, the footer brings the same
    evening sky down from the page's last light (--day-end, set by the page; lime wash by default). */
-.site-footer::before { content: ""; display: block; height: max(420px, 46svh); background: linear-gradient(in oklab to bottom, var(--day-end, var(--color-lime-100)) 0.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 84%, var(--color-sun-100)) 4.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 50%, var(--color-sun-100)) 8.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 16%, var(--color-sun-100)) 12.0%, var(--color-sun-100) 16.0%, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 20.0%, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 24.0%, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 28.0%, var(--color-sun-200) 32.0%, color-mix(in oklab, var(--color-sun-200) 84%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 35.5%, color-mix(in oklab, var(--color-sun-200) 50%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 39.0%, color-mix(in oklab, var(--color-sun-200) 16%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 42.5%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 46.0%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 84%, var(--color-blue-700)) 49.5%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 50%, var(--color-blue-700)) 53.0%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 16%, var(--color-blue-700)) 56.5%, var(--color-blue-700) 60.0%, color-mix(in oklab, var(--color-blue-700) 84%, var(--color-blue-900)) 70.0%, color-mix(in oklab, var(--color-blue-700) 50%, var(--color-blue-900)) 80.0%, color-mix(in oklab, var(--color-blue-700) 16%, var(--color-blue-900)) 90.0%, var(--color-blue-900) 100.0%); }
+.site-footer::before { content: ""; display: block; height: var(--foot-sky); background: linear-gradient(in oklab to bottom, var(--day-end, var(--color-lime-100)) 0.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 84%, var(--color-sun-100)) 2.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 50%, var(--color-sun-100)) 4.0%, color-mix(in oklab, var(--day-end, var(--color-lime-100)) 16%, var(--color-sun-100)) 6.0%, var(--color-sun-100) 8.0%, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 11.0%, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 14.0%, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 17.0%, var(--color-sun-200) 20.0%, color-mix(in oklab, var(--color-sun-200) 84%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 27.0%, color-mix(in oklab, var(--color-sun-200) 50%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 34.0%, color-mix(in oklab, var(--color-sun-200) 16%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) 41.0%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 48.0%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 84%, var(--color-blue-700)) 54.0%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 50%, var(--color-blue-700)) 60.0%, color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 16%, var(--color-blue-700)) 66.0%, var(--color-blue-700) 72.0%, color-mix(in oklab, var(--color-blue-700) 84%, var(--color-blue-900)) 79.0%, color-mix(in oklab, var(--color-blue-700) 50%, var(--color-blue-900)) 86.0%, color-mix(in oklab, var(--color-blue-700) 16%, var(--color-blue-900)) 93.0%, var(--color-blue-900) 100.0%); }
 main:has(> :last-child.dusk) + .site-footer::before { display: none; }
 /* The room at 18:00, once the world stream has rendered it: decorative, lazy, 3:1 (4:3 on phones). It rises
    30svh into the footer's own sky and fades in over its top 40%, so its gold holes carry the turn from
    day to night instead of a band of mixed colour. */
-.site-footer__still { position: relative; aspect-ratio: 3 / 1; overflow: hidden; margin-top: -30svh; }
+.site-footer__still { position: relative; aspect-ratio: 3 / 1; overflow: hidden; margin-top: -2svh; }
 .site-footer__still picture, .site-footer__still img { display: block; width: 100%; height: 100%; object-fit: cover; }
 /* Its top fades out of the sky and its foot sinks into the footer's night (eased), so the room has no
    top or bottom edge (D0.5). */
-.site-footer__still picture { mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.4) 16%, rgb(0 0 0 / 0.85) 30%, black 40% 58%, rgb(0 0 0 / 0.7) 72%, rgb(0 0 0 / 0.3) 86%, transparent); }
+.site-footer__still picture { mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.1) 12%, rgb(0 0 0 / 0.32) 24%, rgb(0 0 0 / 0.6) 36%, rgb(0 0 0 / 0.78) 46% 58%, rgb(0 0 0 / 0.6) 70%, rgb(0 0 0 / 0.28) 84%, transparent); }
 @media (max-width: 599px) { .site-footer__still { aspect-ratio: 4 / 3; } }
 /* The parapet at dusk: a row of Hoa thị holes holding the last light, the blocks themselves lost in the
    night. Only the holes are drawn, feathered top and bottom, so it is a seam of light, never a band. */
@@ -408,12 +439,13 @@ main:has(> :last-child.dusk) + .site-footer::before { display: none; }
 .foot-brand { display: grid; gap: 12px; align-content: start; max-width: 40ch; margin-bottom: 24px; color: var(--color-on-dusk-2); }
 .foot-brand__reg { font-size: var(--fs-sm); }
 /* Below 1024 px each column folds behind a disclosure button: a borderless row, a lit Hoa thị mark before
-   its title, a 1 px underline of evening light feathered at both ends. From 1024 px the button is gone
+   its title (no rule under it: M6 fix). From 1024 px the button is gone
    and the title is a plain heading (no tab stop that does nothing). */
 .foot-col__title { font: 600 1.0625rem / 1.3 var(--font-body); color: var(--color-on-dusk); letter-spacing: 0; }
 .foot-col__label { display: none; }
 .foot-col__toggle { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.foot-col__toggle::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: color-mix(in srgb, var(--color-on-dusk-2) 30%, transparent); mask-image: linear-gradient(to right, transparent, black 12% 88%, transparent); }
+/* M6 fix: no rule between the folded columns (D0.5); the rows are told apart by their own padding. */
+.foot-col__toggle::after { content: none; }
 .foot-col__toggle .icon { margin-left: auto; transition: rotate var(--d-hover) var(--ease-out); }
 .foot-col__toggle[aria-expanded="true"] .icon { rotate: 180deg; }
 .foot-col__mark { width: 12px; height: 12px; flex: none; fill: var(--color-sun-400); }

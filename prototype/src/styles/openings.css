@@ -58,9 +58,22 @@
 .s3d-linebox { position: relative; z-index: 3; background: var(--color-lime-100); box-shadow: 0 0 0 100vmax var(--color-lime-100); clip-path: inset(0 -100vmax); }
 .s3d-line { padding-block: 8px; font: 600 var(--fs-lg) / 1.6 var(--font-body); color: var(--color-ink-900); }
 html.stages[data-motion="on"] .s3d--contact .s3d-linebox { position: sticky; bottom: 3svh; margin-top: -3.5em; background: none; box-shadow: none; clip-path: none; }
+/* It leaves just before the page's first words reach it (M6 fix; check-openings.cjs checks it never touches other
+   words, on a 40 px sweep): at the screen's foot that is p 0.70 (faded over 0.66 → 0.70, so the frames before it still
+   have words); standing higher on a wide screen (below), p 0.90 (faded over 0.80 → 0.88). */
+html.stages[data-motion="on"] .s3d--contact .s3d-line { --line-out: clamp(0, (0.7 - var(--s3d-p)) / 0.04, 1); opacity: var(--line-out); }
 /* On desktop it fades in as the gate opens (the words above are still on screen); on phones, where the
    words come before the stage, it is there from the start. */
-@media (min-width: 600px) { html.stages[data-motion="on"] .s3d--contact .s3d-line { opacity: clamp(0, (var(--s3d-gate) - 0.35) / 0.3, 1); } }
+@media (min-width: 600px) { html.stages[data-motion="on"] .s3d--contact .s3d-line { opacity: min(clamp(0, (var(--s3d-gate) - 0.35) / 0.3, 1), var(--line-out)); } }
+/* M6 fix: on a wide screen the line stands in the left half at heading size while the gate opens on the right, so
+   the left of the run is never an empty field of cream. */
+@media (min-width: 1024px) {
+  html.stages[data-motion="on"] .s3d--contact .s3d-linebox { bottom: 30svh; }
+  html.stages[data-motion="on"] .s3d--contact .s3d-line { --line-out: clamp(0, (0.88 - var(--s3d-p)) / 0.08, 1); }
+  html.stages[data-motion="on"] .s3d--contact .s3d-line { max-width: min(12em, 44vw); font: 700 var(--fs-h2) / 1.6 var(--font-display); text-wrap: balance; }
+}
+/* Phones: a gentler dolly on the still, so the 960 crop is never shown soft. */
+@media (max-width: 599.98px) { html.stages[data-motion="on"] :is(.s3d--contact, .s3d--contact + .day) { --zoom: 0.06; } }
 /* On a phone it can sit over the picture's foot, so it rests on a soft plate of sunlit plaster (no edge). */
 @media (max-width: 599.98px) { html.stages[data-motion="on"] .s3d--contact .s3d-line { display: inline-block; padding: 6px 12px; margin-left: -12px; border-radius: 12px; background: color-mix(in srgb, var(--color-lime-50) 95%, transparent); box-shadow: 0 0 18px 10px color-mix(in srgb, var(--color-lime-50) 95%, transparent); } }
 

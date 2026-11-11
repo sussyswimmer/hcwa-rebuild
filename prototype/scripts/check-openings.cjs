@@ -33,7 +33,7 @@ function visibleText() {
   // Any CSS colour (rgb, oklab, color-mix…) to 0-255 RGBA, through a 1×1 canvas.
   const g = (window.__px ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true }));
   const paint = (c, solid) => { g.clearRect(0, 0, 1, 1); g.fillStyle = solid ? "#fff" : "rgba(0,0,0,0)"; g.fillRect(0, 0, 1, 1); g.fillStyle = c; g.fillRect(0, 0, 1, 1); return [...g.getImageData(0, 0, 1, 1).data]; };
-  const els = document.querySelectorAll("main h1, main h2, main h3, main p, main li, main a, main dt, main dd, main label, main time");
+  const els = document.querySelectorAll("main h1, main h2, main h3, main p, main li, main a, main dt, main dd, main label, main time, main .louver__label");
   for (const el of els) {
     if (!el.childNodes.length || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
     const r = el.getBoundingClientRect();
@@ -46,12 +46,33 @@ function visibleText() {
     // Skip text a stage layer covers on purpose (it never does, but say so if it did).
     const cx = Math.min(innerWidth - 1, Math.max(0, r.left + Math.min(r.width, 40) / 2)), cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
     const top = document.elementFromPoint(cx, cy);
-    if (top && !el.contains(top) && !top.contains(el)) continue;
+    // (A slat's whole-row link layer, its title's ::after, lies over its own words on purpose: those words count.)
+    if (top && !el.contains(top) && !top.contains(el) && !(top.matches("a") && el.closest("li")?.contains(top))) continue;
     // An element with its own solid fill (a chip, a button) is judged against that fill.
     const own = paint(cs.backgroundColor);
     out.push({ tag: el.tagName, text: el.textContent.trim().slice(0, 40), color: paint(cs.color, true), own: own && own[3] > 230 ? own : null, size: parseFloat(cs.fontSize), weight: Number(cs.fontWeight), box: [r.left, r.top, r.width, r.height] });
   }
   return out;
+}
+
+// Runs in the page (Contact, M6 fix): while the stage line can be seen at all, its box against every other
+// text box on screen (whatever is drawn on top). Returns the worst overlap.
+function lineOverlap() {
+  const line = document.querySelector(".s3d-line");
+  if (!line) return null;
+  let alpha = 1;
+  for (let e = line; e; e = e.parentElement) alpha *= Number(getComputedStyle(e).opacity);
+  if (alpha < 0.05) return { alpha, hits: [] };
+  const a = line.getBoundingClientRect(), vh = innerHeight, hits = [];
+  for (const el of document.querySelectorAll("main h1, main h2, main h3, main p, main li, main a, main dt, main dd, main label, main legend, main time, main .btn")) {
+    if (el === line || line.contains(el) || el.contains(line) || el.closest("[aria-hidden='true'], .sr-only, [hidden]")) continue;
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && !el.matches(".btn")) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > vh) continue;
+    const w = Math.min(a.right, r.right) - Math.max(a.left, r.left), h = Math.min(a.bottom, r.bottom) - Math.max(a.top, r.top);
+    if (w > 2 && h > 2) hits.push(el.textContent.trim().slice(0, 30));
+  }
+  return { alpha, hits };
 }
 
 // Runs in the page: each notice's box (with its transform) against the board's content box, and the
@@ -196,6 +217,8 @@ function meanDiff(a, b, [x0, y0, x1, y1], dy = 0) {
       if (name === "contact") {
         const m = await page.evaluate(stillScale);
         if (m) { maxScale = Math.max(maxScale, m); ok(m <= (w > 600 ? 1.3 : 0.75), `${tag} f${i}: still at ${m.toFixed(2)} css px per source px`); }
+        const lo = await page.evaluate(lineOverlap);
+        if (lo) ok(lo.hits.length === 0, `${tag} f${i} (p ${Number(state.p).toFixed(2)}): the stage line (opacity ${lo.alpha.toFixed(2)}) touches no other words (${lo.hits.join(" | ")})`);
       }
       if (name !== "news") {
         const boxes = await page.evaluate(stageBoxes, STAGE_BOX[name]);
@@ -216,6 +239,17 @@ function meanDiff(a, b, [x0, y0, x1, y1], dy = 0) {
         ok(ratios[k] >= need, `${tag} f${i} (p ${Number(state.p).toFixed(2)}): "${it.text}" ${ratios[k].toFixed(2)}:1 < ${need}`);
       });
       shots.push([file, Number(state.p).toFixed(2), state.y]);
+    }
+    // Contact: the same line check on a fine sweep (every 40 px), so no stretch between strip frames is missed.
+    if (name === "contact") {
+      const bad = [];
+      for (let y = 0; y <= span; y += 40) {
+        await page.evaluate((y) => window.scrollTo(0, y), y);
+        await page.waitForTimeout(30);
+        const lo = await page.evaluate(lineOverlap);
+        if (lo?.hits.length) bad.push(`y ${y} (opacity ${lo.alpha.toFixed(2)}): ${lo.hits.join(" | ")}`);
+      }
+      ok(bad.length === 0, `${tag}: the stage line never touches other words on a 40 px sweep (${bad.slice(0, 4).join("; ")})`);
     }
     ok(errors.length === 0, `${tag}: no console errors or 4xx (${errors.join("; ")})`);
     if (maxScale) console.log(`${tag}: still at most ${maxScale.toFixed(2)} css px per source px (x DPR for device pixels)`);

@@ -66,7 +66,9 @@ const court = () => {
   const tiles = [];
   for (let row = 0; row < 7; row++) {
     const t0 = row / 7, t1 = (row + 1) / 7, y0 = 40 + t0 * t0 * 200, y1 = 40 + t1 * t1 * 200;
-    const w0 = 180 + t0 * 420, w1 = 180 + t1 * 420;
+    // M6 fix: a perspective trapezoid whose far end is as wide as the gate between its piers (the floor box is 1.9
+    // gate widths wide, so the gate is 421 of its 800 units), widening toward the camera: it meets the gate.
+    const w0 = 440 + t0 * 340, w1 = 440 + t1 * 340;
     for (let col = 0; col < 4; col++) {
       const xa0 = 400 - w0 / 2 + (col * w0) / 4, xb0 = xa0 + w0 / 4, xa1 = 400 - w1 / 2 + (col * w1) / 4, xb1 = xa1 + w1 / 4;
       const pig = (row + col) % 2 ? "tile-indigo" : "tile-ochre";
