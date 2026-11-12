@@ -61,6 +61,8 @@
   "intro": { "vi": "Bạn có thể ủng hộ, tình nguyện, hợp tác hoặc tặng hiện vật.", "en": "You can donate, volunteer, partner with us or give in kind.", "draft": true },
   "welcomeTitle": { "vi": "Mời bạn cùng chung tay", "en": "Come and lend a hand", "draft": true },
   "waysLabel": { "vi": "Các cách chung tay", "en": "Ways to help" },
+  "_startNote": "M7: under the header's ways, what each way involves and where it starts. Built from content already here (ways[].text, the involve-pages lists and section titles, the donate page's two ways to give); no new facts.",
+  "startTitle": { "vi": "Mỗi cách bắt đầu thế nào", "en": "How each way begins", "draft": true },
   "faqTitle": { "vi": "Câu hỏi thường gặp", "en": "Common questions" },
   "_donatePageNote": "Donate page copy (PLAN P5). Labels are UI; sentences are [DRAFT] until HCWA approves them. No payment value ever lives here.",
   "donatePage": {

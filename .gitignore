@@ -28,3 +28,5 @@ qa/m5/
 # Blender bake output (regenerate with prototype/blender/walls.py).
 prototype/blender/out/
 qa/m6/
+# M7 fix-round QA captures (strips, probes): local only.
+qa/m7/

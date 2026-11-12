@@ -149,7 +149,9 @@ async function extras(browser) {
     const clockFrozen = (await clock()) === tp;
     const pausedChange = await changed(page, c, d);
     await page.evaluate(() => document.querySelector(".hero__pause").click());
-    // The drawing buffers plus the loaded wall maps and poster atlas (M6 fix: textures count too).
+    // Everything on the GPU (M7, memory.js): the drawing buffers, the shafts' target, the baked textures, and once they
+    // are in, the wall maps, the poster atlas and the corridor's runner (loaded in idle time: wait for all three).
+    await page.waitForFunction(() => { const m = window.__hcwaWorld.memory?.(); return m && m.walls && m.posters && m.gach; }, null, { timeout: 45000 }).catch(() => {});
     const mem = await page.evaluate(() => window.__hcwaWorld.memoryMB());
     const memParts = await page.evaluate(() => window.__hcwaWorld.memory?.());
     const budget = tier === 2 ? 48 : 24;

@@ -912,9 +912,9 @@ body:has(.day) { background: var(--color-sun-100); }
 .way--partner { --pig: var(--color-tile-indigo); }
 .way--in-kind { --pig: var(--color-tile-ochre-lit); }
 .way__tile { grid-area: tile; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig); }
-.way__block { width: 30px; height: 30px; overflow: visible; }
-.way__block .block-icon__light { fill: var(--color-tile-cream); }
-.way__block .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-tile-cream) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.way__block, .start__block { width: 30px; height: 30px; overflow: visible; }
+:is(.way__block, .start__block) .block-icon__light { fill: var(--color-tile-cream); }
+:is(.way__block, .start__block) .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-tile-cream) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
 .way__btn { grid-area: btn; justify-self: start; min-height: 44px; }
 .way__btn::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
 @media (hover: hover) { .way:hover { translate: 0 -2px; box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink-900) 8%, transparent), 0 22px 36px -18px color-mix(in srgb, var(--color-ink-900) 38%, transparent); } }
@@ -973,7 +973,41 @@ html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc
 
 /* The day after the header stays warm until the evening. */
 .day--involve { --day: var(--color-sun-100) 0, var(--color-sun-100) 42%, color-mix(in oklab, var(--color-sun-100), var(--color-lime-100)) 74%, var(--color-sun-100) 100%; }
-/* Padding, not margin: a margin would collapse through .day and open a band of body colour under the header. */
+/* "Mỗi cách bắt đầu thế nào" (M7, Maxwell 12 Nov: the four ways were listed twice in a row, tiles and then slats with
+   the same names and buttons, an empty band between). The tiles above stay the invitation (one button each); this is
+   what each way involves and where it starts: its line, its own list, and text links into the right part of its page.
+   It follows the tiles at the page's usual rhythm (the header's foot no longer pads out an empty band). No boxes, no
+   rules: each way stands on a feathered patch of sun behind its tile and name, closest-side so it fades to nothing
+   inside its own box. Padding, not margin: a margin would collapse through .day and open a band of body colour. */
+.start { display: grid; gap: clamp(28px, 3vw, 48px); padding-top: clamp(24px, 3vw, 44px); }
+.start__title { font-size: var(--fs-h2); max-inline-size: 12em; }
+.start__ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 48px 40px; }
+@media (min-width: 640px) { .start__ways { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .start__ways { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 36px; } }
+.start__way { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.start__way--donate { --pig: var(--color-tile-ochre); }
+.start__way--volunteer { --pig: var(--color-tile-jade); }
+.start__way--partner { --pig: var(--color-tile-indigo); }
+.start__way--in-kind { --pig: var(--color-tile-ochre-lit); }
+.start__way::before { content: ""; position: absolute; z-index: -1; inset: -32px -36px auto -36px; height: 168px; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-sun-200) 70%, transparent), color-mix(in srgb, var(--color-sun-200) 30%, transparent) 55%, transparent); }
+.start__name { display: flex; align-items: center; gap: 14px; font-size: var(--fs-h3); line-height: 1.25; }
+.start__tile { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig);
+  box-shadow: 0 10px 18px -12px color-mix(in srgb, var(--color-ink-900) 40%, transparent); }
+.start__text, .start__note { max-width: 34ch; color: var(--color-ink-900); }
+.start__label { margin-top: 4px; font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.start__list { list-style: none; margin: -6px 0 0; padding: 0; display: grid; gap: 2px; }
+.start__list li { display: flex; align-items: baseline; gap: 10px; }
+.start__list li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 2px; background: var(--pig); translate: 0 -2px; }
+.start__go { list-style: none; margin: auto 0 0; padding: 4px 0 0; display: grid; }
+@media (min-width: 1024px) {
+  /* The header ends where its words do (plus the window's own room), so the detail follows the tiles at once. */
+  .gi-head { min-height: min(calc(78svh - var(--hdr)), 640px); }
+  .gi-head__text { padding-bottom: 40px; }
+}
+
+/* WordPress's Get Involved pattern still prints the slats (hcwa/louvers, louvers--page) until the port takes the M6
+   header and this detail; the prototype no longer does. */
 .louvers--page { margin-top: 0; padding-top: clamp(32px, 5vw, 80px); }
 @media (max-width: 599.98px) { .louvers--page { padding-top: 48px; } }
 /* The slats open as they pass: each lit face widens from a sliver to its full patch (scroll-driven,

@@ -71,16 +71,32 @@ test("contact: Little Rose has no address or direct line, only the office and th
   }
 });
 
-test("get involved: four louvers as h2 slats, one sun button; home shares the same slats with no rules", () => {
+test("get involved: the four ways once (header tiles), then what each involves and where it starts; home keeps its slats", () => {
   for (const lang of LANGS) {
+    const c = ctx(lang, "getInvolved", false);
     const h = body(getInvolved, lang, "getInvolved");
-    assert.equal((h.match(/<li class="louver/g) ?? []).length, content.involve.ways.length);
-    assert.equal((h.match(/<h2 class="louver__title">/g) ?? []).length, content.involve.ways.length);
-    // M6 fix: the header's ways bar carries each way's button (Ủng hộ the one sun button); the slats below carry the
-    // names and the detail, every title a link, and repeat no button.
-    const louverList = h.match(/<ul class="louvers[\s\S]*?<\/ul>/)[0];
-    assert.equal((louverList.match(/class="btn/g) ?? []).length, 0, "no button repeated in the slats");
-    assert.equal((louverList.match(/<h2 class="louver__title"><a /g) ?? []).length, content.involve.ways.length, "every slat title is a link");
+    // M7 (Maxwell, 12 Nov): no second list of the same names and buttons under the header's tiles.
+    assert.doesNotMatch(h, /class="louvers|class="louver\b/, "no slats repeating the ways on the page");
+    const start = h.match(/<section class="start container"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(start, "the detail section follows the header");
+    assert.match(start, /<h2 class="start__title" id="start-title" data-draft/);
+    const items = start.match(/<li class="start__way start__way--[\w-]+" id="way-[\w-]+">[\s\S]*?<\/ul>\s*<\/li>/g) ?? [];
+    assert.equal(items.length, content.involve.ways.length);
+    content.involve.ways.forEach((w, i) => {
+      assert.match(items[i], new RegExp(`start__way--${w.id}"`));
+      assert.ok(items[i].includes(`<h3 class="start__name">`), `${w.id}: an h3 under the section's h2`);
+      assert.ok(items[i].includes(esc(w.text[lang])), `${w.id}: what it involves, from content`);
+      assert.equal((items[i].match(/class="btn/g) ?? []).length, 0, `${w.id}: no button (the tile above has it)`);
+      const links = items[i].match(/<a class="text-link" href="[^"]+#[^"]+"/g) ?? [];
+      assert.ok(links.length >= 1, `${w.id}: at least one link into the right part of its page`);
+    });
+    // Every word in the detail comes from content: the subpages' own lists are what the volunteer and partner ways list.
+    for (const a of content.involvePages.volunteer.areas) assert.ok(items[1].includes(esc(a.title[lang])));
+    for (const p of content.involvePages.partner.ways) assert.ok(items[2].includes(esc(p.title[lang])));
+    assert.ok(items[3].includes(esc(content.involvePages.inKind.first[lang])));
+    assert.ok(items[0].includes(`href="${c.url("donate")}#`), "donate starts on the donate page");
+    // No figures and no invented facts: the detail carries no digits at all.
+    assert.doesNotMatch(start.replace(/<[^>]+>|&#?\w+;/g, " "), /\d/, "no numbers in the detail");
     assert.equal((h.match(/btn--primary/g) ?? []).length, 1, "the ways bar's Ủng hộ, nothing else");
     assert.equal((h.match(/<details class="ask">/g) ?? []).length, content.involve.faq.length);
     const home = str(help(ctx(lang, "home", false)));
@@ -88,6 +104,9 @@ test("get involved: four louvers as h2 slats, one sun button; home shares the sa
   }
   const louverCss = pagesCss.match(/\.louvers? \{[^}]*\}|\.louver \{[\s\S]*?\n\}/g).join("\n");
   assert.doesNotMatch(louverCss, /border/, "slats are separated by light, never a rule (D0.5)");
+  const startCss = pagesCss.slice(pagesCss.indexOf(".start {"), pagesCss.indexOf(".louvers--page {"));
+  assert.ok(startCss.length > 500);
+  assert.doesNotMatch(startCss.replace(/\/\*[\s\S]*?\*\//g, ""), /border(?!-radius)|outline|shade-100/, "no boxes or rules in the detail (D0.5)");
 });
 
 test("404: the missing brick, the search and three ways on, nothing animated", () => {

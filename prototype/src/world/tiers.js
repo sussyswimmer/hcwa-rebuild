@@ -1,6 +1,8 @@
 // Tier decision and live gates (05-DESIGN D6.7). The head script picks 0/1/2 from cheap
 // signals before first paint; here the GPU gets its say, and the live gates step the world
 // down while it runs. sessionStorage hcwa:tier carries a downgrade to the next page.
+import { MSAA_PIXELS } from "./memory.js";
+
 const KEY = "hcwa:tier";
 export const store = {
   get() { try { const v = sessionStorage.getItem(KEY); return v == null ? null : Number(v); } catch { return null; } },
@@ -24,13 +26,12 @@ const LOW_GPU = /mali-(4|t6|t7|g31|g51|g52)|adreno[^0-9]*(3|4|50|51)\d\d|powervr
 
 export const CONTEXT_ATTRS = { alpha: false, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: "high-performance" };
 
-// GPU memory (05-DESIGN D6.7: Tier 1 24 MB, Tier 2 48 MB). Every canvas pays about 12 bytes a pixel
-// (depth, resolve, display); 4x MSAA adds about 32 more, so only a small drawing buffer can afford it.
-// Tier 1 renders the SDF screen (its holes are smooth without MSAA) at DPR <= 1.25 and never takes it.
-export const BYTES = { base: 12, msaa: 32 };
-export const MSAA_MAX_PIXELS = 1e6;
+// GPU memory (05-DESIGN D6.7, memory.js: 48 MB with every texture counted). Every canvas pays about 12 bytes a pixel
+// (depth, resolve, display); 4x MSAA adds about 32 more, so only a small drawing buffer can afford it: a window of at
+// most 0.85 M CSS pixels (renderer.js then holds the canvas to 0.85 M pixels whatever the DPR; M7: 1 M at DPR 1.75 was
+// 3 M pixels, 126 MB). Tier 1 renders the SDF screen (its holes are smooth without MSAA) at DPR <= 1.25 and never takes it.
 export const canvasPixels = (dpr = globalThis.devicePixelRatio || 1) => Math.round((globalThis.innerWidth || 1) * (globalThis.innerHeight || 1) * dpr * dpr);
-export const wantsMsaa = (tier, poster) => poster || (tier >= 2 && canvasPixels(1) <= MSAA_MAX_PIXELS);
+export const wantsMsaa = (tier, poster) => poster || (tier >= 2 && canvasPixels(1) <= MSAA_PIXELS);
 
 // Opens the WebGL2 context the renderer will use (attributes, MSAA included, are fixed at creation).
 export function probe(canvas, pageTier, { forced = forcedTier(), poster = false } = {}) {

@@ -96,13 +96,15 @@ test("the atlases stay in budget and are the ones the report measured", () => {
 const UNITS = ["green-bamboo", "little-rose", "cau-han"];
 const perms = (a) => (a.length <= 1 ? [a] : a.flatMap((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map((p) => [x, ...p])));
 
-test("the atlas sizes live: 512 on phones and Tier 1, 1024 on Tier 2, 2048 only for the stills; counted in GPU memory", () => {
+test("the atlas sizes live: 512 on phones and Tier 1, 1024 on Tier 2 where memory allows, 2048 only for the stills; counted in GPU memory", () => {
   assert.equal(atlasSizeFor({ tier: 1, width: 1440 }), 512);
   assert.equal(atlasSizeFor({ tier: 2, width: 390 }), 512);
   assert.equal(atlasSizeFor({ tier: 2, width: 1440 }), 1024);
   assert.equal(posterGpuMB(512), 1.3);
   assert.equal(posterGpuMB(1024), 5.3);
-  assert.match(readFileSync(file("src/world/live.js"), "utf8"), /texMB\.posters = posterGpuMB\(r\.size\)/);
+  const live = readFileSync(file("src/world/live.js"), "utf8");
+  assert.match(live, /gl\.track\("posters", posterGpuMB\(r\.size\)\)/);
+  assert.match(live, /Math\.min\(atlasSizeFor\(\{ tier, width: innerWidth \}\), planNow\(\)\.atlas\)/);
 });
 
 test("Little Rose: no poster within half a bay and 1.5 m of its door, in any order of the bays", () => {

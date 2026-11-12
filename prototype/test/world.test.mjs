@@ -90,7 +90,7 @@ test("the H1 takes the light uncapped; body text is capped at 40%", () => {
   assert.equal(U.uCapLv.value[0], 0.4);
 });
 
-test("Tier 2 stays inside its memory budget: 3 M pixels, supersampled when it has no MSAA", () => {
+test("Tier 2 stays inside its memory budget: 2.9 M pixels, supersampled when it has no MSAA", () => {
   const was = globalThis.devicePixelRatio;
   try {
     globalThis.devicePixelRatio = 1;
@@ -98,9 +98,46 @@ test("Tier 2 stays inside its memory budget: 3 M pixels, supersampled when it ha
     assert.equal(dprFor(1440, 900, 2, false, true), 1);
     globalThis.devicePixelRatio = 2;
     const d = dprFor(1440, 900, 2, false, false);
-    assert.ok(1440 * 900 * d * d <= 3e6 + 1e4, `${d}`);
+    assert.ok(1440 * 900 * d * d <= 2.9e6 + 2e4, `${d}`);
     assert.equal(dprFor(390, 844, 1, false, false), 1.25);
+    // MSAA (a small window): the canvas holds to 0.85 M pixels whatever the DPR (M7: 1.75 on a phone was 1 M, 44 MB).
+    const m = dprFor(390, 844, 2, false, true);
+    assert.ok(390 * 844 * m * m <= 0.85e6 + 1e4, `${m}`);
   } finally { globalThis.devicePixelRatio = was; }
+});
+
+// M7 (the lead's call, 12 Nov 2026): everything on the GPU counts, 48 MB on every tier and viewport; the 1024 wall
+// maps, the 1024 atlas and the 512 runner only where they fit.
+test("GPU memory with every texture counted stays inside 48 MB on both tiers at phone, laptop and desktop sizes", async () => {
+  const { BUDGET_MB, planTextures, wallsMB, atlasMB, gachMB, BAKED_MB, shaftMB, buffersMB, MSAA_PIXELS } = await import("../src/world/memory.js");
+  const { wallGpuMB } = await import("../src/world/walls.js");
+  const { posterGpuMB } = await import("../src/world/wall-posters-data.js");
+  assert.equal(BUDGET_MB, 48);
+  // The planner's sums are the ones the live line prints.
+  assert.equal(+wallsMB(512).toFixed(1), wallGpuMB(1));
+  assert.equal(+wallsMB(1024).toFixed(1), wallGpuMB(2));
+  assert.equal(+atlasMB(512).toFixed(1), posterGpuMB(512));
+  assert.equal(+atlasMB(1024).toFixed(1), posterGpuMB(1024));
+  assert.equal(+BAKED_MB.toFixed(2), 2.67);
+  const was = [globalThis.devicePixelRatio, globalThis.innerWidth, globalThis.innerHeight];
+  try {
+    for (const [w, h, dpr] of [[390, 844, 2], [390, 844, 3], [1440, 900, 1], [1440, 900, 2], [1920, 1080, 1], [1280, 720, 2], [1024, 768, 2], [2560, 1440, 1]]) for (const tier of [1, 2]) {
+      globalThis.devicePixelRatio = dpr;
+      const msaa = tier >= 2 && w * h <= MSAA_PIXELS;
+      const d = dprFor(w, h, tier, false, msaa), cw = Math.round(w * d), ch = Math.round(h * d);
+      const p = planTextures({ tier, width: w, cw, ch, msaa });
+      const total = buffersMB(cw, ch, msaa) + shaftMB(cw, ch, tier) + BAKED_MB + wallsMB(p.walls) + atlasMB(p.atlas) + gachMB(p.gach);
+      assert.ok(total <= BUDGET_MB, `${w}x${h}@${dpr} tier ${tier}: ${total.toFixed(1)} MB (${JSON.stringify(p)})`);
+      if (tier < 2) assert.deepEqual([p.walls, p.atlas, p.gach], [512, 512, 256], `${w}x${h} tier 1 takes the floor set`);
+      if (w < 600) assert.equal(p.walls, 512, "phones never take the 1024 maps");
+    }
+    // At 1440 on Tier 2 the 1024 maps would break the budget (the M6 figure was 65.4 MB): the plan takes 512.
+    globalThis.devicePixelRatio = 1;
+    const d = dprFor(1440, 900, 2, false, false);
+    assert.equal(planTextures({ tier: 2, width: 1440, cw: 1440 * d, ch: 900 * d }).walls, 512);
+    // A canvas small enough leaves room for them (the planner is a fit, not a ban).
+    assert.equal(planTextures({ tier: 2, width: 1024, cw: 1024, ch: 640 }).walls, 1024);
+  } finally { [globalThis.devicePixelRatio, globalThis.innerWidth, globalThis.innerHeight] = was; }
 });
 
 test("live gates step down Tier 2 → Tier 1 → lite → off, and stop on a pass", () => {

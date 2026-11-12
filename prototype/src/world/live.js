@@ -19,6 +19,7 @@ import { WALL_FADE, disposeWalls, loadWalls, setWallTier, wallUniforms } from ".
 import { yieldNow } from "./textures.js";
 import { disposePosters, loadPosterAtlas, posterUniforms } from "./objects/wall-poster.js";
 import { atlasSizeFor, posterGpuMB } from "./wall-posters-data.js";
+import { BAKED_MB, gachMB, planTextures } from "./memory.js";
 
 // The live world (05-DESIGN D6, PLAN H2-H4, H7), with three.js. index.js loads it only once the GPU probe has
 // passed. It draws into the page's fixed canvas, reads the DOM (frame box, stage, text rects, beats) and
@@ -69,6 +70,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   let tier = probed.tier;
   const gl = createRenderer(canvas, { context: probed.gl, tier });
   const room = await buildRoom({ gl, tier });
+  gl.track("baked", BAKED_MB); // the room's lime wash and terrazzo (textures.js), shared by every set
   const section = stage?.closest("[data-world]") ?? document.querySelector('[data-world="room"]');
   const passageEl = document.querySelector('[data-world="passage"]');
   const corridorEl = document.querySelector('[data-world="corridor"]');
@@ -386,9 +388,12 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // The wall posters' atlas (objects/wall-poster.js; M6): the same way, after the first frame, faded in with the walls'
   // timing. Only the corridor and S3 hang them, so nothing at the handoff changes.
   const postersU = posterUniforms();
-  // GPU memory (05-DESIGN D6.7): the drawing buffers plus the loaded wall maps and poster atlas.
-  const texMB = { walls: 0, posters: 0 };
-  const memoryMB = () => +(gl.memoryMB + texMB.walls + texMB.posters).toFixed(1);
+  // GPU memory (05-DESIGN D6.7, memory.js; M7): the renderer counts the drawing buffers, the shafts' target and every
+  // texture tracked here (baked, gach, walls, posters). The plan (made once the world is live, from the canvas it has)
+  // says which sizes the wall maps, the atlas and the runner can take inside the 48 MB.
+  const memoryMB = () => gl.memoryMB;
+  let plan = null;
+  const planNow = () => (plan ??= planTextures({ tier, width: innerWidth, cw: Math.round(view.w * gl.size.dpr), ch: Math.round(view.h * gl.size.dpr), msaa: gl.msaa }));
   let posters = null;
   const running = () => live && inView && visible && !lost && !dead;
   const kick = () => { if (!raf && running()) raf = requestAnimationFrame(tick); };
@@ -519,7 +524,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     lost = true;
     cancelAnimationFrame(raf); raf = 0;
     // The maps' texels were let go after upload: a restored context goes on with the procedural walls.
-    wallAbort.abort(); disposeWalls(); walls = null;
+    wallAbort.abort(); disposeWalls(); walls = null; gl.track("walls", 0);
     root.classList.remove("world-live");
     if (++losses > 1) return stop("context lost twice");
     restoreTimer = setTimeout(() => stop("context not restored"), 5000);
@@ -633,7 +638,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   kick();
 
   // QA hooks (?debug): their own chunk, never loaded otherwise.
-  if (debug) import("./debug.js").then((d) => d.attach({ gl, memoryMB, texMB, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
+  if (debug) import("./debug.js").then((d) => d.attach({ gl, memoryMB, plan: () => plan, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
 
   // The corridor, in idle time after the handoff, from the page's own cards (D6.5). It is needed first
   // behind the wash halfway through the passage; until it is ready the wash simply holds.
@@ -643,25 +648,25 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   idle().then(async () => {
     if (dead) return;
     const t0 = performance.now();
-    const r = await loadWalls({ renderer: gl.renderer, tier, yieldNow, signal: wallAbort.signal });
+    const r = await loadWalls({ renderer: gl.renderer, tier, yieldNow, signal: wallAbort.signal, size: planNow().walls });
     if (dead || lost) return disposeWalls();
     setWallTier(tier);
     walls = { k: 0 };
     dirty = true;
     kick();
-    texMB.walls = r.gpuMB;
-    console.info(`[world] walls · ${r.size} px maps · ${r.kb} KB · GPU ~${r.gpuMB} MB · in ${Math.round(performance.now() - t0)} ms`);
+    gl.track("walls", r.gpuMB);
+    console.info(`[world] walls · ${r.size} px maps · ${r.kb} KB · GPU ~${r.gpuMB} MB · in ${Math.round(performance.now() - t0)} ms · world ~${memoryMB()} MB (plan ${plan.walls}/${plan.atlas}/${plan.gach}, ~${plan.mb} MB)`);
   }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] walls unavailable, the procedural walls stay", err); });
   // The posters' atlas: 512 px under 600 px wide and on Tier 1, 1024 on Tier 2 (wall-posters-data.js budgets).
   idle().then(async () => {
     if (dead) return;
-    const r = await loadPosterAtlas({ size: atlasSizeFor({ tier, width: innerWidth }), signal: wallAbort.signal });
+    const r = await loadPosterAtlas({ size: Math.min(atlasSizeFor({ tier, width: innerWidth }), planNow().atlas), signal: wallAbort.signal });
     if (dead || lost) return disposePosters();
     posters = { k: 0 };
     dirty = true;
     kick();
-    texMB.posters = posterGpuMB(r.size);
-    console.info(`[world] posters · ${r.size} px atlas · ${r.kb} KB · GPU ~${texMB.posters} MB · world ~${memoryMB()} MB`);
+    gl.track("posters", posterGpuMB(r.size));
+    console.info(`[world] posters · ${r.size} px atlas · ${r.kb} KB · GPU ~${posterGpuMB(r.size)} MB · world ~${memoryMB()} MB`);
   }).catch((err) => { if (!dead && !wallAbort.signal.aborted) console.warn("[world] posters unavailable, the walls stay bare", err); });
   // No cards still builds the corridor, empty: the camera always has somewhere to come out.
   idle().then(async () => {
@@ -670,13 +675,15 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     if (dead) return;
     let slice = 0;
     const t0 = performance.now();
-    const c = await buildCorridor({ gl, tier, beats, textures: room.textures, traces: Boolean(corridorEl?.hasAttribute("data-traces")), onSlice: (ms) => { slice = Math.max(slice, ms); } });
+    const gachSize = planNow().gach;
+    const c = await buildCorridor({ gl, tier, beats, textures: room.textures, traces: Boolean(corridorEl?.hasAttribute("data-traces")), gachSize, onSlice: (ms) => { slice = Math.max(slice, ms); } });
     const baked = performance.now() - t0;
     c.setTier(tier);
     c.shafts.setSize(Math.round(view.w * gl.size.dpr), Math.round(view.h * gl.size.dpr));
     await c.compile();
     if (dead) return c.dispose();
     corridor = c;
+    gl.track("gach", gachMB(gachSize));
     dirty = true;
     kick();
     console.info(`[world] corridor · ${beats.length} doors (${beats.map((b) => `${b.unit} ${b.door}`).join(", ")}) · gạch bông baked ${c.bakedInWorker ? "in a worker" : "on the main thread"} in ${Math.round(baked)} ms, longest main-thread slice ${slice.toFixed(1)} ms`);

@@ -20,6 +20,8 @@ import { packFrom } from "./walls-pack.js";
 // glsl/walls.js holds the shading.
 export const WALL_KEYS = { plaster: "Pl", limewash: "Lw", dado: "Da", paint: "Pt", concrete: "Co" };
 // Map size per tier. Tier 2 at 1024 px costs ~28 MB of GPU memory (5 × 4 MB + mips); 512 px is ~7 MB (PLAN 9, M5).
+// Live, the 1024 maps are a Tier 2 luxury taken only where the whole world still fits in its 48 MB (memory.js
+// planTextures, M7); the stills always render with them.
 export const WALL_SIZE = { 1: 512, 2: 1024 };
 export const WALL_FADE = 700;
 // Real scale: metres one map covers on a wall, on paint, on a breeze block (each block takes its own corner of it).
@@ -41,8 +43,8 @@ export function wallUrl(name, size, normal = false) {
 const sizeFor = (tier) => WALL_SIZE[tier >= 2 ? 2 : 1];
 // Bytes the page downloads for a tier (every material; the budget test holds the same sums).
 export const wallBytes = (tier) => WALL_DATA.names.reduce((s, n) => s + WALL_DATA.bytes[sizeFor(tier)][n].reduce((a, b) => a + b, 0), 0);
-// GPU bytes once uploaded: RGBA8 with its mip chain.
-export const wallGpuMB = (tier) => +((WALL_DATA.names.length * sizeFor(tier) ** 2 * 4 * 4) / 3 / 2 ** 20).toFixed(1);
+// GPU bytes once uploaded: RGBA8 with its mip chain (by tier, or by size: { size }).
+export const wallGpuMB = (tier) => +((WALL_DATA.names.length * (tier?.size ?? sizeFor(tier)) ** 2 * 4 * 4) / 3 / 2 ** 20).toFixed(1);
 
 function texture({ data, size }, aniso) {
   const t = new DataTexture(data, size, size, RGBAFormat, UnsignedByteType);
@@ -72,10 +74,11 @@ function packed(name, size, signal) {
   });
 }
 
-// Fetches, packs and uploads every material for the tier, one upload a slice, then hands them to the shared uniforms.
-// Throws on any failure (nothing is handed over); the caller keeps the procedural look.
-export async function loadWalls({ renderer, tier, yieldNow, signal }) {
-  const size = sizeFor(tier), aniso = tier >= 2 ? 4 : 2;
+// Fetches, packs and uploads every material for the tier (at `size` when the memory plan chose one), one upload a
+// slice, then hands them to the shared uniforms. Throws on any failure (nothing is handed over); the caller keeps the
+// procedural look.
+export async function loadWalls({ renderer, tier, yieldNow, signal, size = sizeFor(tier) }) {
+  const aniso = tier >= 2 ? 4 : 2;
   const all = await Promise.all(WALL_DATA.names.map((n) => packed(n, size, signal)));
   const made = [];
   try {
@@ -95,7 +98,8 @@ export async function loadWalls({ renderer, tier, yieldNow, signal }) {
     t.image.data = null; // uploaded: the GPU holds it, the page need not
   }
   shared.uWallMix.value = tier >= 2 ? 1 : 0;
-  return { size, kb: Math.round(wallBytes(tier) / 1024), gpuMB: wallGpuMB(tier) };
+  const bytes = WALL_DATA.names.reduce((s, n) => s + WALL_DATA.bytes[size][n].reduce((a, b) => a + b, 0), 0);
+  return { size, kb: Math.round(bytes / 1024), gpuMB: wallGpuMB({ size }) };
 }
 
 // The named stills (still.js, offline): the tier's maps at full strength, at once (nothing fades in a render).

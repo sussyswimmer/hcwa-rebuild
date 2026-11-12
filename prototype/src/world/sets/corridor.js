@@ -246,8 +246,9 @@ export { EXIT, exitLook };
 // The runner bakes here, in idle slices after the hero is live (never on the LCP path): 256 px a pair with
 // anisotropy 2 on Tier 1, 512 and 4 on Tier 2. Fan shadows on Tier 2 only (the blade test in every sun lookup
 // took the phone proxy +80%); phones turn the fans and cast nothing.
-export async function buildCorridor({ gl, tier, beats, textures, traces = false, onSlice = null }) {
-  const gach = await bakeGachBong({ worker: true, size: tier >= 2 ? 512 : 256, aniso: tier >= 2 ? 4 : 2, rows: tier >= 2 ? 16 : 8, onSlice });
+// gachSize: the runner's texture size, 512 on Tier 2 and 256 on Tier 1, or what the memory plan allows (memory.js).
+export async function buildCorridor({ gl, tier, beats, textures, traces = false, onSlice = null, gachSize = tier >= 2 ? 512 : 256 }) {
+  const gach = await bakeGachBong({ worker: true, size: gachSize, aniso: tier >= 2 ? 4 : 2, rows: gachSize >= 512 ? 16 : 8, onSlice });
   const set = corridorScene({ ...textures, gach, beats, fanShadows: tier >= 2, traces });
   const scene = new Scene();
   scene.add(...set.objects);

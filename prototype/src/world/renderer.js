@@ -1,6 +1,7 @@
-import { BufferGeometry, Float32BufferAttribute, Mesh, NeutralToneMapping, OrthographicCamera, Scene, ShaderMaterial, SRGBColorSpace, Vector4, WebGLRenderer } from "three";
+import { BufferGeometry, Float32BufferAttribute, LinearFilter, Mesh, NeutralToneMapping, OrthographicCamera, Scene, ShaderMaterial, SRGBColorSpace, Vector4, WebGLRenderer, WebGLRenderTarget } from "three";
 import { EXPOSURE, tok } from "./colors.js";
 import { DITHER } from "./glsl/noise.js";
+import { MAX_PIXELS, MSAA_PIXELS, buffersMB } from "./memory.js";
 
 // One full-screen triangle, shared by the wash, the shaft passes and the debug views.
 export const fullscreen = () => {
@@ -12,18 +13,38 @@ export const fullscreen = () => {
 export const SCREEN_VERT = /* glsl */ `varying vec2 vU; void main(){ vU = uv; gl_Position = vec4(position.xy, 0., 1.); }`;
 
 // DPR caps (05-DESIGN D6.7): Tier 1 1.25, or 1.0 when that would pass 1.6 M canvas pixels;
-// Tier 2 1.75, at most 3 M pixels (the memory budget), and without MSAA at least 1.5 within that cap
-// (supersampled, so the instanced block edges stay clean); the lite gate drops to 1.0.
+// Tier 2 1.75, and without MSAA at least 1.5 (supersampled, so the instanced block edges stay clean); the lite gate
+// drops to 1.0. Every tier stays inside the memory budget (memory.js, M7: textures count too): at most 2.9 M pixels
+// without MSAA (so a very large window renders a little under DPR 1), 0.85 M with it (never under DPR 1 there: a
+// window grown past the MSAA size after load stays sharp, and the memory line says what it costs).
 export function dprFor(w, h, tier, lite, msaa = true) {
-  const d = globalThis.devicePixelRatio || 1;
-  if (lite) return Math.min(d, 1);
+  const d = globalThis.devicePixelRatio || 1, px = Math.max(w * h, 1), fit = Math.sqrt(MAX_PIXELS / px);
+  const r = (x) => Math.round(x * 100) / 100;
+  if (lite) return r(Math.min(d, 1, fit));
   if (tier >= 2) {
-    const cap = Math.sqrt(3e6 / Math.max(w * h, 1));
-    return Math.round(Math.min(msaa ? Math.min(d, 1.75) : Math.max(Math.min(d, 1.75), 1.5), cap) * 100) / 100;
+    if (msaa) return r(Math.min(d, 1.75, Math.max(Math.sqrt(MSAA_PIXELS / px), Math.min(d, 1))));
+    return r(Math.min(Math.max(Math.min(d, 1.75), 1.5), fit));
   }
   const c = Math.min(d, 1.25);
-  return w * h * c * c > 1.6e6 ? Math.min(d, 1) : c;
+  return r(Math.min(px * c * c > 1.6e6 ? Math.min(d, 1) : c, fit));
 }
+
+// The shafts' raymarch target (materials/shafts.js), one per renderer whatever the number of sets: a frame draws one
+// set's passes, never two (M7: three targets were 8.3 MB at 1440 on Tier 2). Counted: released by the last set.
+const targets = new WeakMap();
+export function shaftTarget(renderer) {
+  let t = targets.get(renderer);
+  if (!t) targets.set(renderer, (t = { rt: new WebGLRenderTarget(1, 1, { depthBuffer: false, minFilter: LinearFilter, magFilter: LinearFilter }), users: 0 }));
+  t.users++;
+  return t.rt;
+}
+export function releaseShaftTarget(renderer) {
+  const t = targets.get(renderer);
+  if (!t || --t.users > 0) return;
+  t.rt.dispose();
+  targets.delete(renderer);
+}
+const shaftTargetMB = (renderer) => { const rt = targets.get(renderer)?.rt; return rt && rt.width > 1 ? (rt.width * rt.height * 4) / 2 ** 20 : 0; };
 
 export function createRenderer(canvas, { context, tier, poster = false }) {
   const msaa = Boolean(context?.getContextAttributes?.().antialias);
@@ -107,14 +128,25 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   const ortho = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   let size = { w: 0, h: 0, dpr: 1 }, lite = false, fence = null;
+  // Textures the world has uploaded, MB by name (live.js: baked, gach, walls, posters), counted in memoryMB.
+  const textures = {};
   const clearC = light.clone();
   const ctx = renderer.getContext();
   return {
     renderer,
     ortho,
     get size() { return size; },
-    // Drawing-buffer memory estimate (D6.7), for the [world] line and check-hero.
-    get memoryMB() { const px = Math.round(size.w * size.dpr) * Math.round(size.h * size.dpr); return +((px * (12 + (msaa ? 32 : 0))) / 2 ** 20).toFixed(1); },
+    // GPU memory (D6.7, memory.js), for the [world] line and check-hero: the drawing buffers, the shafts' target and
+    // every texture the world has said it holds (track). memory: the same, by part.
+    get buffersMB() { return +buffersMB(Math.round(size.w * size.dpr), Math.round(size.h * size.dpr), msaa).toFixed(1); },
+    track(name, mbs) { if (mbs > 0) textures[name] = mbs; else delete textures[name]; },
+    get memory() {
+      const parts = { buffers: this.buffersMB, shafts: +shaftTargetMB(renderer).toFixed(1) };
+      for (const [k, v] of Object.entries(textures)) parts[k] = +v.toFixed(1);
+      const total = buffersMB(Math.round(size.w * size.dpr), Math.round(size.h * size.dpr), msaa) + shaftTargetMB(renderer) + Object.values(textures).reduce((a, b) => a + b, 0);
+      return { ...parts, total: +total.toFixed(1) };
+    },
+    get memoryMB() { return this.memory.total; },
     msaa,
     get tier() { return tier; },
     setTier(t, { lite: l = false } = {}) { tier = t; lite = l; },

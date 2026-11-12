@@ -1,9 +1,10 @@
-import { AddEquation, CustomBlending, LinearFilter, Matrix4, Mesh, OneFactor, OneMinusDstColorFactor, Scene, ShaderMaterial, Vector2, Vector3, WebGLRenderTarget } from "three";
+import { AddEquation, CustomBlending, Matrix4, Mesh, OneFactor, OneMinusDstColorFactor, Scene, ShaderMaterial, Vector2, Vector3 } from "three";
 import { APERTURE } from "../glsl/aperture.js";
 import { BLOCKS } from "../glsl/blocks.js";
 import { DISPLAY, LEAF, NOISE } from "../glsl/noise.js";
 import { CAPS } from "./caps.js";
-import { fullscreen, SCREEN_VERT } from "../renderer.js";
+import { fullscreen, releaseShaftTarget, SCREEN_VERT, shaftTarget } from "../renderer.js";
+import { shaftScale } from "../memory.js";
 import { EXPOSURE } from "../colors.js";
 
 // Light shafts (05-DESIGN D6.3): a full-screen raymarch into a reduced target (¼ res and
@@ -13,8 +14,9 @@ import { EXPOSURE } from "../colors.js";
 // (1 − (1 − dst)(1 − src)): light over light never clips one channel ahead of the others.
 // mask: { glsl, call } for sets lit through glsl/apertures.js (the stills): the chunk that defines the
 // light's mask and the expression that reads it at p; the room uses sunMask() and the canopy.
+// The target is the renderer's one shared target (renderer.js shaftTarget, M7 memory): every set sizes it the same.
 export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = null }) {
-  const rt = new WebGLRenderTarget(1, 1, { depthBuffer: false, minFilter: LinearFilter, magFilter: LinearFilter });
+  const rt = shaftTarget(gl);
   const local = {
     uInvP: { value: new Matrix4() },
     uInvV: { value: new Matrix4() },
@@ -76,13 +78,13 @@ export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = nul
   const compScene = new Scene().add(new Mesh(tri, composite));
   for (const s of [marchScene, compScene]) s.children[0].frustumCulled = false;
 
-  let scale = tier >= 2 ? 2 : 4, enabled = true;
+  let scale = shaftScale(tier), enabled = true;
   const pass = {
     scenes: [marchScene, compScene],
     get enabled() { return enabled; },
     set enabled(v) { enabled = v; },
     setTier(t) {
-      scale = t >= 2 ? 2 : 4;
+      scale = shaftScale(t);
       march.defines.STEPS = steps ?? (t >= 2 ? 24 : 16);
       march.needsUpdate = true;
     },
@@ -104,7 +106,7 @@ export function createShafts(gl, U, { box, tier, ortho, steps = null, mask = nul
       gl.render(compScene, ortho);
     },
     uniforms: local,
-    dispose() { rt.dispose(); march.dispose(); composite.dispose(); tri.dispose(); },
+    dispose() { releaseShaftTarget(gl); march.dispose(); composite.dispose(); tri.dispose(); },
   };
   return pass;
 }

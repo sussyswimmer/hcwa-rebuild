@@ -3,7 +3,6 @@ import { viKeep } from "../lib/vikeep.mjs";
 import { still as stillPicture, stillReady } from "../lib/posters.mjs";
 import { button, textLink, field, choiceField, consentField, formSent, copyButton, quatrefoil, icon, breadcrumb, duskBand } from "../partials/components.mjs";
 import { litHeader } from "../partials/lit-header.mjs";
-import { louvers } from "../partials/louvers.mjs";
 import { litWall } from "../partials/still.mjs";
 import { stage, litStageVars, skipOpening } from "../partials/scroll3d.mjs";
 import { involveWindow } from "../partials/involve-window.mjs";
@@ -32,7 +31,8 @@ const reachLines = (c, email) => {
 // and the four ways to help as a bar of tiles, each with its own button, all above the fold at 390 and
 // 1440. On the stage (html.stages, motion on) the shutters, already open, swing wide and the street comes
 // in as the visitor scrolls (styles/pages.css, the --s3d-cam track); at rest they stand wide open. Below
-// it the four ways again as slats with their longer lines, then the questions, then the evening.
+// it (M7, Maxwell 12 Nov: the four ways were listed twice in a row) no second list of the same names and buttons:
+// what each way involves and where it starts, then the questions, then the evening.
 const WAY_ROUTE = { donate: "donate", volunteer: "volunteer", partner: "partner", "in-kind": "inKind" };
 
 const waysBar = (c, involve) => html`<nav class="ways" aria-label="${c.tx(involve.waysLabel)}">
@@ -44,6 +44,39 @@ const waysBar = (c, involve) => html`<nav class="ways" aria-label="${c.tx(involv
     </li>`;
   })}</ul>
 </nav>`;
+
+// "Mỗi cách bắt đầu thế nào" (M7): the detail under the header's tiles, not a repeat of them. Each way says what it
+// involves (its line from involve.json), what is in it (the subpage's own list: the volunteer areas, the partner
+// forms) and where to start, as text links into the right part of its page (the donate page's two ways to give, what
+// to expect and the child-safety rules, the partner form, the needs list and the bakery). Every word comes from
+// content/draft; nothing new is claimed. No buttons here: the tiles above carry the one button per way.
+const waysStart = (c) => {
+  const { involve, involvePages: M } = c.content;
+  const D = involve.donatePage;
+  const pay = PAY_IDS[c.lang];
+  const V = M.volunteer, P = M.partner, K = M.inKind;
+  // [href, words] pairs: into the right part of the way's own page.
+  const at = (route, id, words) => [c.url(route) + "#" + id, c.tx(words)];
+  const detail = {
+    donate: { links: [at("donate", pay.vn, D.inVietnam), at("donate", pay.abroad, D.fromAbroad), at("donate", pay.tell, D.tellTitle)] },
+    volunteer: { label: V.lookTitle, list: V.areas.map((a) => a.title), links: [at("volunteer", "expect-title", V.expectTitle), at("volunteer", "safe-title", V.safetyTitle)] },
+    partner: { label: P.waysTitle, list: P.ways.map((w) => w.title), links: [at("partner", "partner-form", P.contactTitle)] },
+    "in-kind": { note: K.first, links: [at("inKind", "needs-title", K.needsTitle), [c.url("bakery"), c.t("bakery")]] },
+  };
+  return html`<section class="start container" aria-labelledby="start-title">
+    <h2 class="start__title" id="start-title"${c.d(involve.startTitle)} data-reveal="rise"><span>${viKeep(c.tx(involve.startTitle))}</span></h2>
+    <ul class="start__ways" data-reveal="stagger">${involve.ways.map((w) => {
+      const x = detail[w.id];
+      return html`<li class="start__way start__way--${w.id}" id="way-${w.id}">
+        <h3 class="start__name"><span class="start__tile" aria-hidden="true">${blockIcon("hoaThi", "start__block")}</span><span>${viKeep(c.tx(w.title))}</span></h3>
+        <p class="start__text"${c.d(w.text)}>${c.tx(w.text)}</p>
+        ${x.list ? html`<p class="start__label">${c.tx(x.label)}</p><ul class="start__list">${x.list.map((t) => html`<li>${c.tx(t)}</li>`)}</ul>` : ""}
+        ${x.note ? html`<p class="start__note"${c.d(x.note)}>${c.tx(x.note)}</p>` : ""}
+        <ul class="start__go">${x.links.map(([href, words]) => html`<li>${textLink(href, words)}</li>`)}</ul>
+      </li>`;
+    })}</ul>
+  </section>`;
+};
 
 export function getInvolved(c) {
   const { involve, site } = c.content;
@@ -59,7 +92,7 @@ export function getInvolved(c) {
   const body = html`
 ${stage("involve", head, {}, { min: 0.6 })}
 <div class="day day--involve">
-  ${louvers(c, involve.ways, { level: 2, cls: "louvers--page", buttons: false })}
+  ${waysStart(c)}
   <section class="faq container" aria-labelledby="faq-title">
     <h2 class="faq__title" id="faq-title" data-reveal="rise"><span>${viKeep(c.tx(involve.faqTitle))}</span></h2>
     <div class="faq__list" data-reveal="stagger">
