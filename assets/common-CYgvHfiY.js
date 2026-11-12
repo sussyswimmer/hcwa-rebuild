@@ -1,4 +1,4 @@
-import{F as e,P as t,S as n,c as r,g as i,i as a,k as o,u as s}from"./three-Dgmw-8ZC.js";import{Mt as c,Nt as l,bt as u,ct as d,d as f,gt as p,ht as m,jt as h,kt as g,lt as _,rt as v,st as y,u as b,ut as x,xt as S}from"./wall-poster--HyE4DWl.js";var C=e=>`
+import{F as e,P as t,S as n,c as r,g as i,i as a,k as o,u as s}from"./three-Dgmw-8ZC.js";import{Mt as c,Nt as l,bt as u,ct as d,d as f,gt as p,ht as m,jt as h,kt as g,lt as _,rt as v,st as y,u as b,ut as x,xt as S}from"./wall-poster-C-wKsBqz.js";var C=e=>`
 uniform sampler2D uGach, uGachB;
 uniform vec4 uGachP, uHouse, uWearP, uTrace;
 uniform vec3 uDadoShade, uDadoSun, uDadoLine, uDadoLineSun, uChalk;
