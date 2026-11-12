@@ -24,7 +24,7 @@ import { S3_POSTERS } from "../wall-posters-data.js";
 // The window is in the x = 0 wall, the room at x < 0, the window's centre at z = WIN_Z.
 
 export { WIN_Z };
-const BOX = { min: [-6, 0, -6], max: [0, 3.2, 4.2] };
+export const BOX = { min: [-6, 0, -6], max: [0, 3.2, 4.2] };
 const REVEAL = 0.24; // the wall's depth at the window: jambs, head and threshold catch the light
 const MARGIN = 0.06; // the frame around the leaves
 // Where the motes drift: the air the beams cross between the window and the camera.
@@ -34,7 +34,7 @@ const FOCUS = new Vector3(0, 1.05, WIN_Z); // the flare's centre: the middle of 
 // leaf, slat: degrees; t: the sun clock (S3, 0.85 → 0.95) or a fixed still sun; full: the live set and the
 // S3 stills (a tamarind outside, the wall's depth at the window, no colour past sun-100); without it the
 // scene is exactly Get Involved's header as rendered; plaster: its walls in a lit header's warm plaster.
-export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, full = false, plaster = false }) {
+export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, full = false, plaster = false, lite = false }) {
   const box = BOX;
   const sp = shutterSpec({ wx: 0, zc: WIN_Z, y0: 0.05, leaf, slat });
   const o = sp.opening;
@@ -80,10 +80,11 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
   const slatPaint = paint.clone();
   slatPaint.uniforms = { ...paint.uniforms, uWear: { value: 0 } };
   const rig = shutterRig(sp, paint, slatPaint);
-  // The street at 17:00 past the window. The live set and its stills (full): a tamarind across the top of the
-  // opening and a lit parapet low in it (objects/sky.js viewMaterial), so the open leaves reveal a place.
-  // Get Involved's header: gold low, paler high.
-  const outside = full ? viewMaterial({ parapet: 1.25, canopy: 2.05, trunk: [WIN_Z - 1.4, -1] })
+  // The street at 17:00 past the window. The live set and its stills (full): a Saigon street seen from the first floor
+  // (objects/sky.js viewMaterial, M7): shophouses across the road behind rolling shutters, the pavement in late sun, a
+  // parked Cub, a tamarind across the top of the opening, so the open leaves reveal a place, the same street as Get
+  // Involved's header. Get Involved's header still: gold low, paler high.
+  const outside = full ? viewMaterial({ zc: WIN_Z, trunk: -1.4, lite })
     : glowMaterial({ low: mixc(tok("sun-200"), tok("sun-400"), 0.35), high: mixc(tok("sun-100"), tok("sky"), 0.5), y0: 0.2, y1: 4, grain: 0.04,
       canopy: { color: mixc(mixc(tok("unit-green-bamboo"), tok("sun-400"), 0.5), tok("gold-700"), 0.2), amount: 0.32 } });
   const plane = new Mesh(new PlaneGeometry(14, 7), outside);
@@ -94,7 +95,7 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
   // Late afternoon (t 0.85): the shade is the plaster in the gold that fills the room, lime-300 toward
   // sun-200, never the morning rooms' cool grey.
   if (full || plaster) U.uShade.value.forEach((v) => v.lerp(vec(mixc(tok("lime-300"), tok("sun-200"), 0.4)), full ? 0.36 : 0.55));
-  const base = { shade: U.uShade.value.map((v) => v.clone()), sunT: U.uSunT.value.map((v) => v.clone()), low: outside.uniforms.uLow.value.clone(), high: outside.uniforms.uHigh.value.clone(), leaf: outside.uniforms.uLeaf?.value.clone(), wall: outside.uniforms.uWall?.value.clone() };
+  const base = { shade: U.uShade.value.map((v) => v.clone()), sunT: U.uSunT.value.map((v) => v.clone()), low: outside.uniforms.uLow?.value.clone(), high: outside.uniforms.uHigh?.value.clone() };
   // The light bouncing in off the floor patch warms the shade (sun-200 at most a third of the way).
   const warm = base.shade.map((v) => v.clone().lerp(vec(tok("sun-200")), 0.34));
   const sun100 = tok("sun-100"), rest = tok("sunRoom"), lime50 = tok("lime-50"), wallSun = tok("wallSun");
@@ -133,11 +134,14 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
     U.uSunI.value = 1 + 0.6 * k;
     const dim = full ? 0.68 + 0.32 * open : 1; // linear: about 0.84 of the shade's sRGB when shut
     for (let i = 0; i < 3; i++) U.uShade.value[i].lerpVectors(base.shade[i], warm[i], Math.min(k * 2.2, 1)).multiplyScalar(dim);
-    // M6 fix ("the open shutters look out onto a blank cream void"): the view pales less as the leaves open, so the
-    // tamarind, the street's wall and the sky keep their shape through the look-out hold; only the flood pales it more.
-    outside.uniforms.uLow.value.copy(base.low).lerp(sun100, Math.min(k * 0.8, 0.45));
-    outside.uniforms.uHigh.value.copy(base.high).lerp(sun100, Math.min(k * 1.4, 0.8));
-    if (base.leaf) { outside.uniforms.uLeaf.value.copy(base.leaf).lerp(sun100, Math.min(k * 0.9, 0.5)); outside.uniforms.uWall.value.copy(base.wall).lerp(sun100, Math.min(k * 0.9, 0.5)); }
+    // M6/M7 ("the open shutters look out onto a blank cream void"): the street pales only a little as the light rises,
+    // so the shophouses, the tamarind and the pavement keep their shape through the look-out; the flood pales it more
+    // (k 0.27 open → 0.15, 0.43 at the flood's peak → 0.26), and the blend into sun-100 does the rest.
+    if (outside.uniforms.uPale) outside.uniforms.uPale.value = Math.min(k * 0.6, 0.3);
+    else {
+      outside.uniforms.uLow.value.copy(base.low).lerp(sun100, Math.min(k * 0.8, 0.45));
+      outside.uniforms.uHigh.value.copy(base.high).lerp(sun100, Math.min(k * 1.4, 0.8));
+    }
   };
   const project = (camera, out) => out.copy(FOCUS).project(camera);
 
@@ -152,14 +156,15 @@ export function shuttersScene({ lime, terr, leaf = 104, slat = 65, t = null, ful
     pose, setSun, setExposure, project,
     treeIndex: full ? 3 : -1,
     // For the still renderer: what frames the shot, what glows on its own.
-    subject: [win, ...leaves], glow: [win], shafts: full ? 1.2 : false,
+    subject: [win, ...leaves], glow: [win], shafts: full ? +(1.2 * (1 - 0.6 * Math.min(leaf / 110, 1))).toFixed(2) : false,
   };
 }
 
 // The live S3 set (live.js): built in idle time after the corridor, sharing the room's baked textures.
 // Shafts and motes read the same light (the window, the leaves' slat gaps, the tamarind).
 export async function buildShutters({ gl, tier, textures }) {
-  const set = shuttersScene({ ...textures, leaf: 0, slat: 0, t: SHUTTERS.sun[0], full: true });
+  // Tier 1 draws the street's lighter noise (sky.js viewMaterial lite); the stills and Tier 2 the full one.
+  const set = shuttersScene({ ...textures, leaf: 0, slat: 0, t: SHUTTERS.sun[0], full: true, lite: tier < 2 });
   const scene = new Scene();
   scene.add(...set.objects);
   // Shafts and motes see the window and the leaves only: the tamarind's fbm at every step of every shaft
@@ -201,6 +206,7 @@ export async function buildShutters({ gl, tier, textures }) {
     sway(time) {
       treeP.z = treeAt.z + 0.22 * Math.sin(time * 0.37) + 0.07 * Math.sin(time * 1.13); treeP.w = treeAt.w + 0.12 * Math.sin(time * 0.29 + 1.7);
       if (swaying) set.outside.uniforms.uSway.value = 0.0105 * Math.sin(time * 2 * Math.PI * 0.15);
+      set.outside.uniforms.uTime.value = time; // the dapple on the street drifts with the world's clock (stops while paused)
     },
     compile: async () => {
       await gl.renderer.compileAsync(scene, camera);

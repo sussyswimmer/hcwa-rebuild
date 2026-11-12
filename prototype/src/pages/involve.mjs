@@ -27,30 +27,18 @@ const reachLines = (c, email) => {
 // ---------- Get Involved (P4) ----------
 
 // "Cửa mở" (M6): the first glance says come in. The header is a room in late-morning light with its
-// window's blue shutters thrown open onto a sunny street (partials/involve-window.mjs), a welcoming H1,
-// and the four ways to help as a bar of tiles, each with its own button, all above the fold at 390 and
-// 1440. On the stage (html.stages, motion on) the shutters, already open, swing wide and the street comes
-// in as the visitor scrolls (styles/pages.css, the --s3d-cam track); at rest they stand wide open. Below
-// it (M7, Maxwell 12 Nov: the four ways were listed twice in a row) no second list of the same names and buttons:
-// what each way involves and where it starts, then the questions, then the evening.
+// window's blue shutters thrown open onto a sunny street (partials/involve-window.mjs), a welcoming H1, the
+// sentence that names the four ways and one link down to them. On the stage (html.stages, motion on) the shutters,
+// already open, swing wide and the street comes in as the visitor scrolls (styles/pages.css, the --s3d-cam track);
+// at rest they stand wide open.
+// M7 fix round (Maxwell 12 Nov: the four ways were listed twice in a row; the critique: tiles in the header and then the
+// same icons and names again under them): each way is one object, listed once. Its tile and name, what it involves, its
+// own list where its page has one, text links into the right part of its page, and its one button, at the foot.
 const WAY_ROUTE = { donate: "donate", volunteer: "volunteer", partner: "partner", "in-kind": "inKind" };
 
-const waysBar = (c, involve) => html`<nav class="ways" aria-label="${c.tx(involve.waysLabel)}">
-  <ul class="ways__list">${involve.ways.map((w) => {
-    const donate = w.id === "donate";
-    return html`<li class="way way--${w.id}">
-      <span class="way__tile" aria-hidden="true">${blockIcon("hoaThi", "way__block")}</span>
-      ${button({ href: c.url(WAY_ROUTE[w.id]), label: donate ? c.t("donate") : c.tx(w.cta), kind: donate ? "primary" : "secondary", cls: "way__btn", attrs: !donate && w.cta.draft ? "data-draft" : "" })}
-    </li>`;
-  })}</ul>
-</nav>`;
-
-// "Mỗi cách bắt đầu thế nào" (M7): the detail under the header's tiles, not a repeat of them. Each way says what it
-// involves (its line from involve.json), what is in it (the subpage's own list: the volunteer areas, the partner
-// forms) and where to start, as text links into the right part of its page (the donate page's two ways to give, what
-// to expect and the child-safety rules, the partner form, the needs list and the bakery). Every word comes from
-// content/draft; nothing new is claimed. No buttons here: the tiles above carry the one button per way.
-const waysStart = (c) => {
+// Every word comes from content/draft (the way's line, the involve-pages lists and section titles, the donate page's
+// two ways to give); nothing new is claimed.
+const waysList = (c) => {
   const { involve, involvePages: M } = c.content;
   const D = involve.donatePage;
   const pay = PAY_IDS[c.lang];
@@ -63,16 +51,20 @@ const waysStart = (c) => {
     partner: { label: P.waysTitle, list: P.ways.map((w) => w.title), links: [at("partner", "partner-form", P.contactTitle)] },
     "in-kind": { note: K.first, links: [at("inKind", "needs-title", K.needsTitle), [c.url("bakery"), c.t("bakery")]] },
   };
-  return html`<section class="start container" aria-labelledby="start-title">
-    <h2 class="start__title" id="start-title"${c.d(involve.startTitle)} data-reveal="rise"><span>${viKeep(c.tx(involve.startTitle))}</span></h2>
-    <ul class="start__ways" data-reveal="stagger">${involve.ways.map((w) => {
+  return html`<section class="ways container" id="ways" aria-labelledby="ways-title">
+    <h2 class="ways__title" id="ways-title" data-reveal="rise"><span>${viKeep(c.tx(involve.waysLabel))}</span></h2>
+    <ul class="ways__list" data-reveal="stagger">${involve.ways.map((w) => {
       const x = detail[w.id];
-      return html`<li class="start__way start__way--${w.id}" id="way-${w.id}">
-        <h3 class="start__name"><span class="start__tile" aria-hidden="true">${blockIcon("hoaThi", "start__block")}</span><span>${viKeep(c.tx(w.title))}</span></h3>
-        <p class="start__text"${c.d(w.text)}>${c.tx(w.text)}</p>
-        ${x.list ? html`<p class="start__label">${c.tx(x.label)}</p><ul class="start__list">${x.list.map((t) => html`<li>${c.tx(t)}</li>`)}</ul>` : ""}
-        ${x.note ? html`<p class="start__note"${c.d(x.note)}>${c.tx(x.note)}</p>` : ""}
-        <ul class="start__go">${x.links.map(([href, words]) => html`<li>${textLink(href, words)}</li>`)}</ul>
+      const donate = w.id === "donate";
+      // The way's one button, to its own page: Ủng hộ is the only sun fill, and says "how to give" under its name.
+      const cta = donate ? D.howTitle : w.cta;
+      return html`<li class="way way--${w.id}" id="way-${w.id}">
+        <h3 class="way__name"><span class="way__tile" aria-hidden="true">${blockIcon("hoaThi", "way__block")}</span><span>${viKeep(c.tx(w.title))}</span></h3>
+        <p class="way__text"${c.d(w.text)}>${c.tx(w.text)}</p>
+        ${x.list ? html`<p class="way__label">${c.tx(x.label)}</p><ul class="way__list">${x.list.map((t) => html`<li>${c.tx(t)}</li>`)}</ul>` : ""}
+        ${x.note ? html`<p class="way__note"${c.d(x.note)}>${c.tx(x.note)}</p>` : ""}
+        <ul class="way__go">${x.links.map(([href, words]) => html`<li>${textLink(href, words)}</li>`)}</ul>
+        <p class="way__act">${button({ href: c.url(WAY_ROUTE[w.id]), label: c.tx(cta), kind: donate ? "primary" : "secondary", cls: "way__btn", attrs: cta.draft ? "data-draft" : "" })}</p>
       </li>`;
     })}</ul>
   </section>`;
@@ -86,13 +78,13 @@ export function getInvolved(c) {
     ${breadcrumb(c, [[c.t("getInvolved")]])}
     <h1 class="gi-head__title"${c.d(involve.welcomeTitle)}>${viKeep(c.tx(involve.welcomeTitle))}</h1>
     <p class="gi-head__intro"${c.d(involve.intro)}>${c.tx(involve.intro)}</p>
-    ${waysBar(c, involve)}
+    <p class="gi-head__go"${c.d(involve.seeWays)}>${textLink("#ways", c.tx(involve.seeWays))}</p>
   </div>
 </header>`;
   const body = html`
 ${stage("involve", head, {}, { min: 0.6 })}
 <div class="day day--involve">
-  ${waysStart(c)}
+  ${waysList(c)}
   <section class="faq container" aria-labelledby="faq-title">
     <h2 class="faq__title" id="faq-title" data-reveal="rise"><span>${viKeep(c.tx(involve.faqTitle))}</span></h2>
     <div class="faq__list" data-reveal="stagger">

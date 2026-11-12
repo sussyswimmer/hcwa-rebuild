@@ -95,7 +95,9 @@ test("Tier 2 stays inside its memory budget: 2.9 M pixels, supersampled when it 
   try {
     globalThis.devicePixelRatio = 1;
     assert.equal(dprFor(1440, 900, 2, false, false), 1.5);
-    assert.equal(dprFor(1440, 900, 2, false, true), 1);
+    // An MSAA context in a window grown past its size (M7 fix round): under DPR 1, never past 0.85 M pixels.
+    const g = dprFor(1440, 900, 2, false, true);
+    assert.ok(g < 1 && 1440 * 900 * g * g <= 0.85e6 + 1e4, `${g}`);
     globalThis.devicePixelRatio = 2;
     const d = dprFor(1440, 900, 2, false, false);
     assert.ok(1440 * 900 * d * d <= 2.9e6 + 2e4, `${d}`);
@@ -138,6 +140,38 @@ test("GPU memory with every texture counted stays inside 48 MB on both tiers at 
     // A canvas small enough leaves room for them (the planner is a fit, not a ban).
     assert.equal(planTextures({ tier: 2, width: 1024, cw: 1024, ch: 640 }).walls, 1024);
   } finally { [globalThis.devicePixelRatio, globalThis.innerWidth, globalThis.innerHeight] = was; }
+});
+
+// M7 fix round: the budget holds after a resize. The textures are chosen once, at load (planTextures); a window that
+// grows afterwards (900 × 900 maximised to 1440 × 900 held 68 MB with MSAA) gets the canvas the budget leaves them
+// (canvasCap), at a DPR under 1 if need be, with or without MSAA, on either tier.
+test("a window grown after load stays inside 48 MB: the canvas takes what the textures leave", async () => {
+  const { BUDGET_MB, planTextures, canvasCap, texturesMB, shaftMB, buffersMB, MSAA_PIXELS } = await import("../src/world/memory.js");
+  const was = globalThis.devicePixelRatio;
+  const total = (w, h, tier, msaa, plan, cap) => {
+    const d = dprFor(w, h, tier, false, msaa, cap), cw = Math.round(w * d), ch = Math.round(h * d);
+    return { d, mb: buffersMB(cw, ch, msaa) + shaftMB(cw, ch, tier) + texturesMB(plan) };
+  };
+  try {
+    for (const dpr of [1, 1.5, 2, 3]) for (const tier of [1, 2]) for (const [[w0, h0], [w1, h1]] of [[[900, 900], [1440, 900]], [[390, 844], [1920, 1080]], [[1024, 640], [2560, 1440]], [[800, 600], [3840, 2160]], [[1440, 900], [2560, 1440]]]) {
+      globalThis.devicePixelRatio = dpr;
+      const msaa = tier >= 2 && w0 * h0 <= MSAA_PIXELS;
+      const d0 = dprFor(w0, h0, tier, false, msaa);
+      const plan = planTextures({ tier, width: w0, cw: Math.round(w0 * d0), ch: Math.round(h0 * d0), msaa });
+      const cap = canvasCap({ tier, msaa, textures: plan.textures });
+      const at0 = total(w0, h0, tier, msaa, plan, Infinity), at1 = total(w1, h1, tier, msaa, plan, cap);
+      const tag = `${w0}x${h0} -> ${w1}x${h1} @${dpr} tier ${tier}${msaa ? " MSAA" : ""} (${JSON.stringify(plan)}, cap ${cap})`;
+      assert.ok(at0.mb <= BUDGET_MB, `${tag}: at load ${at0.mb.toFixed(1)} MB`);
+      assert.ok(at1.mb <= BUDGET_MB, `${tag}: grown ${at1.mb.toFixed(1)} MB at DPR ${at1.d}`);
+      // The cap never shrinks the canvas the window loaded with (it was planned to fit).
+      assert.ok(total(w0, h0, tier, msaa, plan, cap).d >= at0.d - 0.011, `${tag}: the loaded canvas keeps its DPR`);
+    }
+    // The reported case: MSAA at 900 × 900, grown to 1440 × 900, renders under DPR 1 rather than at 68 MB.
+    globalThis.devicePixelRatio = 1;
+    const plan = planTextures({ tier: 2, width: 900, cw: 900, ch: 900, msaa: true });
+    const d = dprFor(1440, 900, 2, false, true, canvasCap({ tier: 2, msaa: true, textures: plan.textures }));
+    assert.ok(d < 1 && 1440 * 900 * d * d <= MSAA_PIXELS, `MSAA grown: DPR ${d}`);
+  } finally { globalThis.devicePixelRatio = was; }
 });
 
 test("live gates step down Tier 2 → Tier 1 → lite → off, and stop on a pass", () => {

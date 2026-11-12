@@ -15,14 +15,17 @@ export const SCREEN_VERT = /* glsl */ `varying vec2 vU; void main(){ vU = uv; gl
 // DPR caps (05-DESIGN D6.7): Tier 1 1.25, or 1.0 when that would pass 1.6 M canvas pixels;
 // Tier 2 1.75, and without MSAA at least 1.5 (supersampled, so the instanced block edges stay clean); the lite gate
 // drops to 1.0. Every tier stays inside the memory budget (memory.js, M7: textures count too): at most 2.9 M pixels
-// without MSAA (so a very large window renders a little under DPR 1), 0.85 M with it (never under DPR 1 there: a
-// window grown past the MSAA size after load stays sharp, and the memory line says what it costs).
-export function dprFor(w, h, tier, lite, msaa = true) {
-  const d = globalThis.devicePixelRatio || 1, px = Math.max(w * h, 1), fit = Math.sqrt(MAX_PIXELS / px);
-  const r = (x) => Math.round(x * 100) / 100;
+// without MSAA, 0.85 M with it, and once the textures are loaded no more than what the budget leaves them (cap:
+// memory.js canvasCap). Those caps hold whatever the window does: a very large window, or one grown after load (M7 fix
+// round: 900 × 900 grown to 1440 × 900 held 68 MB), renders a little under DPR 1 rather than pass the budget. Under a
+// cap the DPR rounds down, so a rounding never passes it.
+export function dprFor(w, h, tier, lite, msaa = true, cap = Infinity) {
+  const d = globalThis.devicePixelRatio || 1, px = Math.max(w * h, 1);
+  const fitTo = (n) => Math.sqrt(n / px), fit = fitTo(Math.min(MAX_PIXELS, cap));
+  const r = (x) => (Number.isFinite(cap) ? Math.floor(x * 100 + 1e-6) : Math.round(x * 100)) / 100;
   if (lite) return r(Math.min(d, 1, fit));
   if (tier >= 2) {
-    if (msaa) return r(Math.min(d, 1.75, Math.max(Math.sqrt(MSAA_PIXELS / px), Math.min(d, 1))));
+    if (msaa) return r(Math.min(d, 1.75, fitTo(Math.min(MSAA_PIXELS, cap))));
     return r(Math.min(Math.max(Math.min(d, 1.75), 1.5), fit));
   }
   const c = Math.min(d, 1.25);
@@ -127,7 +130,7 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
   washScene.children[0].frustumCulled = false;
   const ortho = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  let size = { w: 0, h: 0, dpr: 1 }, lite = false, fence = null;
+  let size = { w: 0, h: 0, dpr: 1 }, lite = false, fence = null, cap = Infinity;
   // Textures the world has uploaded, MB by name (live.js: baked, gach, walls, posters), counted in memoryMB.
   const textures = {};
   const clearC = light.clone();
@@ -150,8 +153,11 @@ export function createRenderer(canvas, { context, tier, poster = false }) {
     msaa,
     get tier() { return tier; },
     setTier(t, { lite: l = false } = {}) { tier = t; lite = l; },
+    // The canvas's pixel cap once the textures are chosen (memory.js canvasCap); the next resize applies it.
+    limit(pixels) { cap = pixels > 0 ? pixels : Infinity; },
+    get cap() { return cap; },
     resize(w, h) {
-      const dpr = poster ? size.dpr : dprFor(w, h, tier, lite, msaa);
+      const dpr = poster ? size.dpr : dprFor(w, h, tier, lite, msaa, cap);
       if (w === size.w && h === size.h && dpr === size.dpr) return false;
       size = { w, h, dpr };
       renderer.setPixelRatio(dpr);

@@ -1715,3 +1715,189 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   the buttons) and f20-f21 (partners to dusk) carry little. Little Rose at 390: one small line at a time under the
   pinned garden, with empty space below. Contact and every inner page end on about one screen of dusk with no words
   before the footer. Home long task 293 ms; Tier 2 GPU memory 65.4 MB with textures counted (lead's call, logged above).
+
+### M7 chrome and pages (12 Nov 2026, Maxwell: Get Involved lists the ways twice; straight edges on the bars and the header skirt; captures in qa/m7/chrome/)
+- **Get Involved shows the four ways once.** The header keeps its tiles with one button each (above the fold at 390 and
+  1440). The slats under it are gone; in their place "Mỗi cách bắt đầu thế nào / How each way begins" (h2, data-draft)
+  gives each way its line, its own list where its page has one (volunteer areas, partner forms) and text links into
+  the right part of its page (the donate page's two ways to give and "tell us", what to expect and the child-safety
+  rules, the partner form, the needs list and the bakery). Every word comes from content/draft; no numbers (the test
+  checks for digits); no buttons (the tiles carry them). The header's foot no longer pads out an empty band at 1024+:
+  tiles to the next heading 64 px (390) and 126-138 px (1440), the widest empty run 68-138 px, was about 300.
+  WordPress's Get Involved pattern still prints the slats until the port takes this.
+- **Bars end in light.** The review note and the "View this page in English" pointer are the header's own plaster
+  (lime-50 at 92%, ink words; the toggle's on state gold-700, 5.3:1), so note, pointer and bar are one surface that
+  ends in the header's feathered skirt. Over the home hero (no bar fill) the scrim starts in that plaster and eases into
+  the ceiling over 20 px. The kit page's 6 px blue-700 top rule (read through the skirt as a line) is sun-200 like the
+  other morning heads.
+- **The header follows the evening (CSS scroll-driven, with or without JS).** Each sky (the closing .dusk band, the
+  footer) is a view timeline seen through a 1 px line under the bar. Over the sky's light half the bar and skirt take
+  the sky's own stops at 92% and hold the last one where ink-900 keeps 7:1 (#C5B295, 7.9:1); from the night mark (0.5 /
+  0.45 of the sky, unchanged) they take blue-900 and the night's words, in the same frame as the scroll. The home's
+  hero scrim steps aside over both, and the skirt shows there even before the bar compacts. Without JS the line uses the
+  uncompacted 80 px bar. ui/header.js's IntersectionObserver .is-dusk is now only the fallback for browsers without
+  scroll-driven animations (and its skirt now eases with the bar). No markup changed (WordPress header.php unchanged).
+- **Proof.** Luminance-step scan (qa/m7/chrome/tools/lum-scan.py: a row where 90% of columns step more than 6 levels)
+  on the first screen and five dusk-crossing frames (one frame after the jump and settled) of all 46 pages, 390x844 and
+  1440x900, with and without JS, an English browser so VI pages show the pointer: before 308 of 1574 shots flagged
+  (178 bar rows on 176 first screens, 211 header rows on 113 dusk frames, the kit rule), after 8 of 1564, none in the
+  chrome. night-probe.cjs: bar, skirt and logo switch between 3 px before and 3 px after each night mark on every mode.
+  Sheets: qa/m7/chrome/sheet-before-after-{390,1440}.jpg. Test: test/chrome-edges.test.mjs.
+- **Still open.** The 8 flagged shots are content at 390: the News list's and Team placeholders' card edges (tops +11-14,
+  bottoms about -52). In a browser without scroll-driven animations and without JS the bar stays cream over the dusk.
+
+### M7 world (12 Nov 2026, Maxwell: the shutters "open onto a blank cream view, then about two screens with no words"; Tier 2 GPU memory)
+- **S3 outside view.** `objects/sky.js viewMaterial` draws a Saigon street by ray from the camera through the window
+  (real depth and parallax): two-storey shophouses across the road in yellow, mint and cream wash, ground floors
+  behind rolling shutters (some half up, the shop in shade), ochre floor bands, arched upper windows with jade louvers,
+  sills, iron railings and potted plants, a cream cornice with a course of Hoa thị blocks; the cream tiled pavement in
+  late sun broken by the tamarind's shade; a parked Cub (no plate, no lettering), drawn over the facade as well as the
+  pavement; two sagging wires; the near tamarind's trunk and canopy across the top of the window (sways on Tier 2).
+  No people, no signage, no text, no children. Same tokens and street as Get Involved's header (`involve-window.mjs`).
+  `sets/shutters.js` uses it for the live set and the S3 stills (`uPale` ≤ 0.3 replaces the old low/high lerp, so the
+  street keeps its shape when open). The beams thin as the leaves open (density × (1 + 0.6·leaf)(1 − 0.75·leaf), the
+  flood brings them back; the stills' shafts 1.2 → 0.48 open): at full density they were a veil over the street.
+- **Wordless stretch.** The opening moved onto the approach (the section rising under the news): slats over
+  a 0.12–0.50, leaves over 0.50–1.00, open by the pin (`journey.js SHUTTERS`, `slatAt/leafAt/s3Open/s3Exposure` take
+  a; camera keys 0, 0.45, 0.58, 0.78, 1, 2). Stage 100svh (90svh phones), lead 14svh (12svh), `--rise: var(--s3)`: the
+  help heading comes up from the screen's foot as the frame pins, under the open window; flood 0.30 (unflood 0.22),
+  blend 0.28–0.62. The stills stage (world gone after the passage) reads `--a` from a second ScrollTrigger (section top
+  at the foot → track top at the top) and `--p` as before. Measured with qa/m7/world/tools/wordgap.cjs (30 px steps,
+  a word counts when its box is under the header, on top and at opacity > 0.35): longest run without words
+  **1440 1650 → 450 px (1.83 → 0.50 screens), 390 1350 → 450 px (1.60 → 0.53)**; 1440 Tier 2 0.50, EN 1440 0.47;
+  reduced motion (stacked) 1440 0.53, 390 0.14. Total home scroll at 1440: 14129 → 12941 px (S3 is 100svh shorter
+  and its words overlap it; no other section's dwell changed).
+- **check-sun-crisp** now gates the shutters set: the 17:00 sun through the window onto the terrazzo, penumbra under
+  the 65° slat gap (0.45–0.53 × gap, limit 0.6), incidence 65–70° accepted (raking bars by design); the shut slats'
+  5 mm gap reported as info (soft by design). The corridor skip names its real reason.
+- **GPU memory** (the lead's call; `world/memory.js`, `renderer.memory`, counted by check-hero with textures, one
+  48 MB budget on every tier). Measured live (qa/m7/world/memory-final.json, memory-1440-t2.json), MB total
+  (buffers / shafts / baked / walls / atlas / runner): 390x844@2 Tier 1 17.2 (5.9/0.1/2.7/6.7/1.3/0.5), Tier 2 47.8
+  (35.8 MSAA/0.8/…); 1440x900 Tier 1 26.3, Tier 2 47.3 (33.4/2.8/2.7/6.7/1.3/0.5; was 65.4); 1920x1080 Tier 1 35.4,
+  Tier 2 47.0. Every case takes the 512 maps / 512 atlas / 256 runner: at these sizes the 1024 maps (+20 MB) never fit
+  beside a supersampled canvas; the planner takes them where they do (a smaller Tier 2 canvas, test/world.test.mjs).
+- **Gates.** npm test 203/203; build, build:pages pass; PROD=1 build blocked only by its 143 guards; export:wp re-run;
+  php wp/tests/run.php 8300/0; wp-static-check 0 errors (10 known warnings). check-hero 349 pass / 33 fail, all in the
+  known groups (390 intro contrast 6.6–7.0, the six short phones, Tier 1 ambient motion at 390); its GPU memory lines
+  now pass (17.2 and 47.3 MB). Stills re-rendered: shutters-closed/-louvers/-open, inside the encode budgets.
+- **Captures** (qa/m7/world/): before/ and after/ 24-frame strips (VI 1440 Tier 1 and 2, 390 Tier 1, sheets
+  sheet-*.jpg), probe1/probe2 (S3 positions 1440/390 Tier 2), fallback/ (stills stage, reduced, no JS), stills-after.jpg
+  (new stills over the old). In the 1440 Tier 2 strip f18 the help heading had not finished its reveal at capture
+  time (SwiftShader frame time); the stepped measurement at Tier 2 has words there.
+
+### M7 fix round (12 Nov 2026, critique of the M7 streams; captures and logs in qa/m7/fix/)
+- **Get Involved: each way once, as one object** (the critique: the header tiles were followed at once by "Mỗi cách bắt
+  đầu thế nào", the same four icons and names in the same order, about three screens of repeat at 390; Maxwell's item 1
+  in substance). The header keeps the window, the H1, the intro that names the four ways, and one text link down to
+  them ("Xem các cách chung tay / See the ways to help", new `involve.seeWays`, draft). Under it "Các cách chung tay /
+  Ways to help" (the existing `waysLabel`, h2) lists each way once: its gạch tile and name (h3), its line, its page's
+  own list (volunteer areas, partner forms), text links into the right part of its page, and its one button at the foot
+  (Ủng hộ the only sun fill, labelled with the donate page's own "Cách ủng hộ / How to give" so the name is not said
+  twice in a row; the others their `cta`). `startTitle` is gone. Every name shows once on the page (involve-pages.test,
+  check-page 8: four ways, one button each, no name twice, the link above the fold at 390 and 1440). The ways buttons
+  are no longer above the fold (departure from M6 "Cửa mở": the header's link is, and the site header's Ủng hộ is always
+  there). At 1024+ the header is shorter (min(60svh − bar, 520 px)) and the window takes more of it, so the link to the
+  ways heading is 71–102 px at 1024–1440 (was 141–210) and 64 px at 390. WordPress's Get Involved pattern already lists
+  each way once (lit header, then hcwa/louvers slats); it has not taken the new objects.
+- **The header's foot meets no picture in one row** (Cầu Hàn and Green Bamboo first screens, VI and EN, 390 and 1440, JS
+  and no JS: a 9–11 level step over 65–92% of the width at the bar's foot). The cause was the center's unit mark
+  (`.lit-head--unit::before`: 3 px of solid unit paint right under the skirt, which shows 8% of what is under it). It is
+  now a soft wash with no solid core that rises out of the skirt (peak 17% at 54 px, gone by 104 px, its left end eased
+  over 72 px), and every lit header's still eases in from the plaster over its first 64 px (`--top`, a third
+  intersected mask). Header-foot scan (qa/m7/fix/tools/lum-scan.py --foot: 50% of columns over 4 levels in the top
+  260 px, thin lines dropped): both pages clean at 390 and 1440, JS and no JS.
+- **No backdrop blur on the bar or its skirt.** The bar is a backdrop root (its own blur, its view-transition-name), so
+  the skirt's blur never saw the page and the bar's ended square at its foot over whatever scrolled under it (white
+  words under the navy bar over the dusk, the tiles under the cream bar). Without the blur, words under the nav showed
+  through the 92% fill as legible ghosts (15 levels), so every chrome fill (the review note, the EN pointer, the bar,
+  the skirt, the evening and night keyframes, the hero scrim's first stop) is now 97% (a 6 level trace). Contrast is
+  unchanged or better (the fills are nearer their tokens). The blur also cost about 30 ms of the home's first long task
+  (below). The same soft wash replaces the 3 px solid unit band on `.sun-head--unit` (Little Rose's pink).
+- **GPU memory after a resize.** `memory.js canvasCap`: once the textures are planned (`live.js planNow`), the renderer
+  holds the canvas to what the budget leaves them (`renderer.limit`, `dprFor(..., cap)`, rounded down under a cap), MSAA
+  included and under DPR 1 if need be (`dprFor` no longer keeps an MSAA canvas at DPR ≥ 1). Load-then-grow, critic's
+  resize-mem.cjs: 900×900 → 1440×900 at DPR 1 **68.3 → 47.4 MB** (canvas 1137×711), at DPR 2 **66.8 → 46.8 MB**.
+  test/world.test.mjs adds a resize case (four DPRs × both tiers × five load/grow pairs); check-hero's extras add a
+  load-then-grow probe (four cases, every texture in before the grow).
+- **Home long task** (6–7 runs per build, lt-ab.cjs: Moto G, Slow 4G, 4x CPU, cold, gzip, stills path): **M6 279 ms
+  median (234–331), this round 252 ms (246–302)**, LCP medians 2304 / 2292 ms. The first task is the page's first style
+  and layout (trace: Layout 121 ms, UpdateLayoutTree 97 of 260). Switched off one at a time in flight: the scroll-driven
+  header block 290 ms, the `body:has()` rules 286, both 262, against 255 with them: no measurable cost, so they stay
+  (the night's word colours need the descendants). The header blur put back: 281 ms. Still over the 200 ms gate, as at
+  M6 (293 logged then).
+- **S3 street on Tier 1** (could): the live Tier 1 set draws the street with lighter noise (`viewMaterial lite`: the
+  canopy's mass from two octaves and no fine-leaf term, the road's dapple from one; about a third of the per-pixel noise);
+  Tier 2 and the stills keep the full street. SwiftShader S3 frames 390 Tier 1, mean of 0.70–0.80: 180 → 175 ms (the
+  window is a third of the frame there); not checked on a real mid-range Android.
+- **Proof.** All 46 pages, 390 and 1440, JS and no JS, English browser (qa/m7/chrome/tools/chrome-shots.cjs → qa/m7/fix/edges,
+  1564 shots): the 90%/6 scan flags 8, the same News and Team card edges as before, none in the chrome; the new header-foot
+  scan (lum-scan.py --foot, rows inside a feathered ramp dropped) flags 36, none at the bars or the header's foot (the GI
+  window's frame and the 404 lattice on first screens, dusk-band headings and text at 390). night-probe: bar, skirt and
+  logo switch within 3 px of each night mark, every mode, at 97%. check-page 56/0 (its Get Involved block rewritten).
+  check-hero 352 pass / 34 fail, all in the known groups (390 intro contrast 6.6–7.0, the six short phones); every GPU
+  memory line passes, the four load-then-grow cases 44.5–47.6 MB. light-contrast: the same 3 known 390 intro lines.
+  lcp.cjs home medians 2320 / 2260 / 2288 ms (tier 0 / 1 / default), Get Involved 2008 / 2000 / 2012 ms.
+- **Gates.** npm test 206/206; build, build:pages pass; PROD=1 build blocked only by its 143 guards; export:wp re-run; php
+  wp/tests/run.php 8298/0 (two golden cases fewer: the detail section's classes are gone); wp-static-check 0 errors, the
+  10 known warnings.
+
+### M7 final recheck (12 Nov 2026, on the final tree over HEAD 05c4d9e; captures and logs in qa/m7/final/)
+- **Gates.** npm test 206/206. build, build:pages, check:links and check:links:pages pass (46 pages, 0 dead). PROD=1
+  build blocked only by its 143 guards. export:wp re-run: no change to wp/ (md5 before and after identical); php
+  wp/tests/run.php 8298/0; wp-static-check 0 errors, the 10 known warnings. check-sun-crisp all pass (the shutters set
+  is gated: incidence 65–70°, penumbra 0.45–0.53 × gap).
+- **Browser checks** (own preview on :4173, at most two browsers at once, stopped by PID after). check-page 56/0
+  (Get Involved: four ways, one button each, no name twice, the link above the fold at 390, 1440 and 320, VI and EN).
+  check-hero 354 pass / 32 fail, all in the known groups: 390 intro contrast over the shaded base 6.62–6.98 (26 lines)
+  and the six short phones' silhouette under the H1; this run had no Tier 1 ambient-motion or pause-flake fail. Every
+  GPU memory line passes, the four load-then-grow cases 44.5–47.6 MB. check-openings all pass, check-bays 24/24,
+  check-tiles 16 ok, light-contrast the same 3 known 390 intro lines (6.7) of 254. night-probe: bar, skirt and logo
+  switch between 3 px before and 3 px after each night mark, at 97%. Draw calls, Tier 1, every 2% of the home: max 13
+  at 390, 1440, 1920 and 2560 (budget 14). tier-errors (3D stage pages, Tier 1 and 2, 390 and 1440): 0 bad. 0 page
+  errors over the 184 page loads of the edge sweep (46 pages × 4 modes).
+- **GPU memory**, MB, measured at the WebGL calls (qa/m7/final/tools/gpu-truth.cjs, whole home scrolled; textures +
+  drawing buffers) and, in brackets where it differs, the world's own count that check-hero reads:
+
+  | Viewport | Tier 1 | Tier 2 |
+  |---|---|---|
+  | 390x844 @2 | 17.2 | 44.5 (47.8, MSAA) |
+  | 1024x768 | – | 43.4 (46.4, MSAA) |
+  | 1440x900 | 26.3 | 47.3 |
+  | 1440x900 @2 | – | 47.3 |
+  | 1920x1080 | 35.4 (world count) | 46.9 (47.0) |
+  | 2560x1440 | 45.3 (world count) | 47.3 (47.4) |
+  | grown after load (resize-mem) | – | 900² → 1440x900 47.4 (@1), 46.8 (@2); 1024x640 → 1920x1080 47.6; 390x844@2 → 1440x900 46.8 |
+
+  Every case is within 48 MB. Every plan takes 512 px wall maps and a 512 px atlas (the 1024 px atlas only on a small
+  Tier 2 window such as 1024x640); no live viewport takes the 1024 px wall maps. Desktop Tier 2 headroom about 0.7 MB.
+- **Mobile LCP** (lcp.cjs, median of 3, machine otherwise idle): home 2272 / 2332 / 2256 ms (tier 0 / 1 / default),
+  CLS 0.004, three.js after LCP; longest task in the first 10 s 260 ms on the default path (runs 247–260; over the 200
+  ms gate as since M3, M6 293 logged). Get Involved 2104 / 2056 / 2092 ms, CLS 0, longest task 212 ms (runs 161–212:
+  now at or just over the gate; M6 129 logged, the M7 critic 190).
+- **Home strips** (qa/m7/final/strip/, 24 frames over the page plus 28 over the shutters beat, 0 errors, world live):
+  longest run without words over the beat VI 1440 Tier 1 and Tier 2 420 px (0.47 screen), EN 1440 Tier 2 0.43, VI 390
+  Tier 1 and Tier 2 390 px (0.46), EN 390 Tier 1 0.50; no JS and reduced motion 1440 0.50, 390 0.11. The window opens
+  onto the street (shophouses, louvred arches, wires, tamarind, a parked Cub; no people, no lettering) and the help
+  heading rises into it. Other wordless whole-page frames are the known ones (1440 f02 passage wall, f05 corridor
+  entry; 390 f04 corridor). Sheets: strip/sheet-whole-*.jpg, strip/sheet-beat-*.jpg; shutters/ (the beat, 1440
+  Tier 2 and 390 Tier 1).
+- **Get Involved** (qa/m7/final/gi/, VI and EN at 390 and 1440, plus 390 without JS): each way's name appears once;
+  header (window, H1, intro, "Xem các cách chung tay" link), then "Các cách chung tay" with each way's tile, line,
+  list, links and one button; the FAQ and the contact band follow. At 1440 the fourth way's two-line name ("Hiện vật và
+  Tiệm bánh Hoa Hồng Nhỏ") pushes its column's body about 30 px below the others (the critique's could, not taken).
+- **Luminance-step scans** of the whole of every page (edges.cjs: every 0.6 viewport, plus the top 260 px one frame
+  after each jump where the bar's foot is over an evening sky; English browser so VI pages show the EN bar): 390 and
+  1440, Tier 1 and no JS, 2170 shots in qa/m7/final/edges, reports in qa/m7/final/scans/. First screens: the
+  header-foot scan (50% of columns over 4 levels, top 260 px) flags none at the bars or the header's foot on any page
+  in any mode; the critique's three chrome edges are gone (Cầu Hàn and Green Bamboo header foot at y 103/151 and
+  115/163, the 390 EN review bar at y 43, the blur's square foot at y 59 over the dusk). Its only first-screen hit is
+  Get Involved's window lintel at 390 without JS (illustration). The 90%/6-level row scan: 1440 0 shots (JS and no
+  JS); 390 55 (JS) / 53 (no JS), all content: /components/ tables 35, home work-sheet floor joints (2 px grout lines)
+  8, News cards 6, Team placeholders 4, Our Work hub door stills' floor sill 2. Over scrolled frames at 390 the
+  header-foot scan also catches content under the bar: field and button outlines show through the 97% fill as 4–6
+  level traces (by design since the blur went; no edge at the bar's foot).
+- **Still open (not green).** Home long task 260 ms and Get Involved 212 ms against the 200 ms gate. check-hero's
+  known 390 intro-contrast and short-phone fails. News and Team card edges at 390. The 97% bar's faint trace of what
+  scrolls under it. A browser without scroll-driven animations and without JS (bar stays cream over the dusk): not
+  testable here (Chromium only). WordPress's Get Involved pattern has not taken the one-object ways (it lists each way
+  once as hcwa/louvers slats). No real mid-range Android check of the S3 street's frame time.

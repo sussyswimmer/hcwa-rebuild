@@ -662,15 +662,16 @@ for (const [name, s] of Object.entries(STILLS)) if (name.startsWith("hub-door-")
   SHOTS[name] = { scene: (o) => hub(o), crops: { door: hubDoor(hubDoorZ(HOME_BEATS.findIndex((b) => b.unit === s.unit))) } };
 }
 
-// S3 (sets/shutters.js) at its beats, each from the live camera's pose for its crop's frame shape: shut
-// (p 0), the slats turned (0.35), the leaves open (0.75), at the exposure the live set has there.
-const S3_STILLS = { "shutters-closed": 0, "shutters-louvers": SHUTTERS.slats[1], "shutters-open": SHUTTERS.leaves[1] };
-for (const [name, p] of Object.entries(S3_STILLS)) {
-  const crop = (bucket) => { const q = s3Pose(1, p, bucket, WIN_Z); return { pos: q.pos, look: q.look, fov: q.fov }; };
+// S3 (sets/shutters.js) at its beats, each from the live camera's pose for its crop's frame shape (M7: the beats are
+// on the approach a): shut (a at the slats' start), the slats turned, the leaves open (the pin), at the exposure the
+// live set has there, the street outside (objects/sky.js viewMaterial) in every one.
+const S3_STILLS = { "shutters-closed": SHUTTERS.slats[0], "shutters-louvers": SHUTTERS.slats[1], "shutters-open": SHUTTERS.leaves[1] };
+for (const [name, a] of Object.entries(S3_STILLS)) {
+  const crop = (bucket) => { const q = s3Pose(a, 0, bucket, WIN_Z); return { pos: q.pos, look: q.look, fov: q.fov }; };
   SHOTS[name] = {
     scene: (o) => {
-      const set = shuttersScene({ ...o, leaf: leafAt(p), slat: slatAt(p), t: s3Sun(p), full: true });
-      set.setExposure(s3Exposure(p, { peak: 0, held: 0 }), s3Open(p), Math.max(slatAt(p) / SHUTTERS.slatDeg, leafAt(p) / SHUTTERS.leafDeg));
+      const set = shuttersScene({ ...o, leaf: leafAt(a), slat: slatAt(a), t: s3Sun(a), full: true });
+      set.setExposure(s3Exposure(a, { peak: 0, held: 0 }), s3Open(a), Math.max(slatAt(a) / SHUTTERS.slatDeg, leafAt(a) / SHUTTERS.leafDeg));
       return set;
     },
     crops: { desk: crop("landscape"), mobile: crop("portrait") },

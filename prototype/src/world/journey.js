@@ -216,35 +216,37 @@ export const wash = (p) => (p <= PASSAGE.plateau[0] ? smooth(...PASSAGE.washIn, 
 export const setAt = (p) => (p < (PASSAGE.plateau[0] + PASSAGE.plateau[1]) / 2 ? "room" : "corridor");
 
 // ---- S3, the shutters (05-DESIGN D5.3 S3, PLAN H7) ----
-// Stage progress p (0..1 while the frame is pinned): the slats turn 0 → 65° over 0–0.35 (the gold lines on
-// the floor widen into bars), the leaves swing 0 → 110° into the room over 0.35–0.75 while the light rises,
-// the flood fires once at 0.78 (time-based, 900 ms: exposure overshoot, shaft flare, mote burst; it plays
-// back at 1.6× if the visitor scrolls back under 0.70), and the frame blends into flat sun-100 over
-// 0.75–0.90, where the help section arrives. The sun runs 0.85 → 0.95 (15:55 → 17:00). Before the frame is
-// pinned the camera already moves: the approach (a 0..1) is the section rising into place.
-// motion/shutters.js shows the stills from the same numbers (test/beats.test.mjs keeps them equal).
-// The live room does not wait for the pin: over the approach the camera pushes in from 6 m to 2.8 m (done by
-// a 0.45) and the slats already turn (a 0.15 → 0.50), the gold lines on the floor widening and brightening with
-// their angle, so the section rising into place is already the light coming in. The stage keeps its numbers
-// for the stills (motion/shutters.js), which only exist pinned.
-// M6 pacing: the slats over 0–0.30, the leaves over 0.30–0.66, then held fully open over 0.66–0.76 (the "look out"
-// plateau) before the blend over 0.76–0.92; the stage is 200svh (stages.css --s3).
+// M7 (Maxwell, 12 Nov 2026: the shutters "open onto a blank cream view, then about two screens with no words").
+// The opening happens while the section rises into place, so the window is open onto the street by the time the
+// frame pins and the help heading arrives right then; no more than about half a screen passes without words.
+// Two coordinates, both on the scroll:
+// - the approach a (0..1): from the section's top entering the screen's foot to the frame pinning (100svh plus the
+//   section's lead, the news leaving at the top). The camera pushes in from 6 m (done by a 0.45), the slats turn
+//   0 → 65° over 0.12–0.50 (the gold lines on the floor widening into bars), the leaves swing 0 → 110° into the room
+//   over 0.50–1.00 while the light rises (exposure 1.22 → 1.55), onto the street (objects/sky.js viewMaterial).
+// - the stage p (0..1 while the frame is pinned, stages.css --s3: 100svh, 90svh on phones). The help section rises the
+//   whole stage into it (--rise = --s3), so its heading comes up from the screen's foot as p leaves 0, under the open
+//   window: the look-out with words (0–0.28). The flood fires once at 0.30 (time-based, 900 ms: exposure overshoot,
+//   shaft flare, mote burst; it plays back at 1.6× if the visitor scrolls back under 0.22) and the frame blends into
+//   flat sun-100 over 0.28–0.62, as the help section's light covers it.
+// The sun runs 0.85 → 0.95 (15:55 → 17:00) over both. motion/shutters.js shows the stills from the same numbers
+// (--a and --p; test/shutters.test.mjs keeps them equal).
 export const SHUTTERS = {
-  // M6 fix: the help heading arrives as the leaves finish (the stage rises 42% of S3 into it), so the look-out hold
-  // (0.60 → 0.70) has words in it, and the cream blend is shorter (0.70 → 0.84, was 0.76 → 0.92).
-  slats: [0, 0.28], leaves: [0.28, 0.6], flood: 0.72, unflood: 0.64, blend: [0.7, 0.84], sun: [0.85, 0.95],
-  push: 0.45, approachSlats: [0.15, 0.5],
+  slats: [0.12, 0.5], leaves: [0.5, 1], // approach a
+  flood: 0.3, unflood: 0.22, blend: [0.28, 0.62], // stage p
+  sun: [0.85, 0.95], push: 0.45,
   slatDeg: 65, leafDeg: 110, floodMs: 900, back: 1.6,
 };
-export const slatAt = (p) => SHUTTERS.slatDeg * smooth(...SHUTTERS.slats, p);
-// The live slats over the approach (a) and the stage (p): already turned by the time the stage pins.
-export const slatLive = (a, p) => Math.max(SHUTTERS.slatDeg * smooth(...SHUTTERS.approachSlats, a), slatAt(p));
-export const leafAt = (p) => SHUTTERS.leafDeg * smooth(...SHUTTERS.leaves, p);
+// Over the approach a (1 once the frame is pinned).
+export const slatAt = (a) => SHUTTERS.slatDeg * smooth(...SHUTTERS.slats, a);
+export const leafAt = (a) => SHUTTERS.leafDeg * smooth(...SHUTTERS.leaves, a);
+// Over the stage p.
 export const blendAt = (p) => smooth(...SHUTTERS.blend, p);
-export const s3Sun = (p) => SHUTTERS.sun[0] + (SHUTTERS.sun[1] - SHUTTERS.sun[0]) * clamp01(p);
+// The sun over the whole beat: a + p (0..2).
+export const s3Sun = (s) => SHUTTERS.sun[0] + (SHUTTERS.sun[1] - SHUTTERS.sun[0]) * clamp01(s / 2);
 
 // The flood is a one-shot inside a scrub (review-animations): the scroll only arms it. s = { on, v }:
-// v is the tween's position (0..1 over 900 ms forward, 1.6× faster back). Between 0.70 and 0.78 it holds,
+// v is the tween's position (0..1 over 900 ms forward, 1.6× faster back). Between unflood and flood it holds,
 // so a visitor hovering at the threshold never sets it flickering. Paused (D6.10: "no flood"), it goes
 // straight to where it would settle. Returns whether anything changed.
 export function floodStep(s, p, dt, paused = false) {
@@ -269,20 +271,21 @@ export function floodAt(v, out = { peak: 0, held: 0 }) {
 // Exposure along S3 (D5.3): 1.22 at rest, 1.55 once the leaves are open, 1.75 at the flood's peak, 1.6
 // after it. The set turns it into light: a gain on the sun past full (lit plaster runs toward sun-100,
 // never white) and the room's shade warming with the light that bounces in.
-// How much of the window lets light in (0 shut, 1 open): the slats give a quarter of it, the leaves the rest.
-export const s3Open = (p, slat = slatAt(p)) => 0.25 * (slat / SHUTTERS.slatDeg) + 0.75 * smooth(...SHUTTERS.leaves, p);
-export const s3Exposure = (p, f) => 1.22 + 0.33 * smooth(...SHUTTERS.leaves, p) + 0.05 * f.held + 0.15 * f.peak;
+// How much of the window lets light in (0 shut, 1 open), over the approach a: the slats give a quarter of it, the
+// leaves the rest.
+export const s3Open = (a, slat = slatAt(a)) => 0.25 * (slat / SHUTTERS.slatDeg) + 0.75 * smooth(...SHUTTERS.leaves, a);
+export const s3Exposure = (a, f) => 1.22 + 0.33 * smooth(...SHUTTERS.leaves, a) + 0.05 * f.held + 0.15 * f.peak;
 
 // The camera (D6.2: eye height 1.10, the window ahead): along the scroll coordinate s (0..1 the approach,
 // 1..2 the stage) it comes round from the side of the room, where the slat light lies across the floor in
-// front of it, to square on to the window as the leaves open, then on into the light while the frame
-// blends away. Keys at the approach's start, the stage's start, the slats open, the leaves open, the end:
-// pos and look relative to the window's centre (x from the wall, y, z across), fov per frame shape. Yaw
-// turns 32° over 2.3 screens of scroll (D5.3: at most 40° per 60svh), the fov never changes, no roll, and
+// front of it, to square on to the window as the leaves open (by the pin, M7), then on into the light while the
+// frame blends away. Keys at the approach's start, the push done, two on the way round while the slats turn and the
+// leaves swing, the leaves open (the pin), the end: pos and look relative to the window's centre (x from the wall,
+// y, z across), fov per frame shape. Yaw turns at most 40° per 60svh (D5.3), the fov never changes, no roll, and
 // the camera only ever comes closer.
 export const S3_VIEW = {
-  // Keys (S3_KEYS): the approach's start, 0.45 of it (the push in is done: 6 m → 2.8 m), the stage's start, the
-  // slats' end, the leaves open, the end. A phone's narrow frame (critique r2) stops its dolly at 3.8 m on the
+  // Keys (S3_KEYS): the approach's start, 0.45 of it (the push in is done: 6 m → 2.8 m), 0.58 and 0.78 of it (coming
+  // round), the leaves open (the pin), the end. A phone's narrow frame (critique r2) stops its dolly at 3.8 m on the
   // axis with a wider lens: both leaves, folded back, keep about a fifth of its width each through the blend,
   // the view outside between them, never a blank gold frame.
   portrait: { fov: 72, pos: [[-5.93, -0.9], [-4.4, -0.45], [-4.15, -0.35], [-3.95, -0.22], [-3.85, -0.06], [-3.8, 0]], look: [[-0.4, 0.55, 0.15], [-0.38, 0.6, 0.12], [-0.35, 0.62, 0.1], [-0.2, 0.72, 0.05], [0, 0.95, 0], [0, 1.05, 0]] },
@@ -292,7 +295,7 @@ export const S3_VIEW = {
 };
 // Pose at approach a and stage p for a frame shape, relative to the window (centre z zc, wall x 0, room at
 // x < 0): { pos, look, fov }, into `out` when given.
-const S3_KEYS = [0, SHUTTERS.push, 1, 1 + SHUTTERS.slats[1], 1 + SHUTTERS.leaves[1], 2];
+export const S3_KEYS = [0, SHUTTERS.push, 0.58, 0.78, SHUTTERS.leaves[1], 2];
 // Monotone cubic through the keys (Fritsch–Carlson): no stop at a key, no overshoot, never back.
 function monotone(xs, ys, x) {
   const n = xs.length, i = Math.min(Math.max(xs.findLastIndex((k) => k <= x), 0), n - 2);

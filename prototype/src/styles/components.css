@@ -48,8 +48,11 @@
 .status--planned { background: var(--color-shade-100); color: var(--color-blue-700); }
 
 /* ---------- top bars ---------- */
-/* Runs out into the header bar's own lime-50, so the two never meet at an edge (D0.5). */
-.en-bar { background: linear-gradient(to bottom, var(--color-shade-100), color-mix(in srgb, var(--color-lime-50) 92%, transparent)); }
+/* M7 (Maxwell, 12 Nov: the pointer ended in a straight edge at its foot): the bar is the header's own plaster,
+   lime-50 at 97%, with no gradient of its own, so the review note above it, this pointer and the header read as one lit
+   surface that ends where the header does, in its feathered skirt (below). Over the home hero, where the header has
+   no fill, the hero's scrim starts in this plaster and eases into the world (the scrim rule under the header). */
+.en-bar { background: color-mix(in srgb, var(--color-lime-50) 97%, transparent); }
 .en-bar__inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; font-size: var(--fs-sm); }
 .en-bar a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .en-bar a .icon { width: 18px; height: 18px; }
@@ -58,28 +61,34 @@
 /* ---------- header (H1) ---------- */
 .site-header {
   position: relative; pointer-events: auto; height: var(--header-h);
-  /* One continuous page (D0.5): no rule under the bar. A 92% lime-50 surface with an 8 px backdrop blur
-     (the most D0.5 allows), so the 103 px H1 cannot ghost through the nav, and a feathered foot below. */
-  background: color-mix(in srgb, var(--color-lime-50) 92%, transparent);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  /* One continuous page (D0.5): no rule under the bar. A 97% lime-50 surface and a feathered foot below. M7 fix round:
+     no backdrop blur. The bar is a backdrop root (its own blur, its view-transition-name), so the skirt's blur never saw
+     the page and the bar's ended square at its foot: white words under the navy bar over the dusk, the tiles under the
+     cream bar, as a blurred haze cut off in a line. The fill alone hides what passes under the bar: 97% (was 92% with
+     the blur; at 92% words under the nav showed as legible ghosts, at 97% a trace of about 6 levels). Every bar fill
+     below (the bars, the skirt, the evening and the night) is at the same 97%. */
+  background: color-mix(in srgb, var(--color-lime-50) 97%, transparent);
   transition: height var(--d-ui) var(--ease-out), background-color var(--d-ui) var(--ease-out);
 }
-/* The feathered foot (the skirt): 48 px of the bar's own fill and its own 8 px blur, solid for 8 px, then eased out
-   over 40 px on smoothstep stops (M6: the 24 px foot without blur left the blur ending in a line at the bar's foot, and
-   its linear ramp a second crease 12 px lower). What passes under it is hidden by the bar or plainly clear. */
+/* The feathered foot (the skirt): 48 px of the bar's own fill, solid for 8 px, then eased out over 40 px on smoothstep
+   stops (M6: a linear ramp left a crease 12 px lower). No blur, like the bar (M7 fix round). */
 .site-header::after {
   content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 48px; pointer-events: none;
-  background: color-mix(in srgb, var(--color-lime-50) 92%, transparent);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--color-lime-50) 97%, transparent);
   mask-image: linear-gradient(black 8px, rgb(0 0 0 / 0.96) calc(8px + 40px * 0.125), rgb(0 0 0 / 0.84) calc(8px + 40px * 0.25), rgb(0 0 0 / 0.68) calc(8px + 40px * 0.375), rgb(0 0 0 / 0.50) calc(8px + 40px * 0.5), rgb(0 0 0 / 0.32) calc(8px + 40px * 0.625), rgb(0 0 0 / 0.16) calc(8px + 40px * 0.75), rgb(0 0 0 / 0.04) calc(8px + 40px * 0.875), transparent);
-  transition: opacity var(--d-ui) var(--ease-out);
+  /* The skirt changes fill with the bar, on the same clock (M7: it switched at once while the bar eased, so for a
+     frame a pale bar stood on a navy skirt). */
+  transition: opacity var(--d-ui) var(--ease-out), background-color var(--d-ui) var(--ease-out);
 }
 /* Over the night (M6 fix): once the bar's foot is over the dark half of the evening sky (a closing .dusk band, the
    footer's sky, the footer), the bar and its skirt take the night's own fill and the words the night's colours
    (ui/header.js, .is-dusk), so no pale bar and no pale skirt lie over the navy: the sky passes under it with no band.
-   Without JS the bar stays cream (the fallback). */
-.site-header.is-dusk { background-color: color-mix(in srgb, var(--color-blue-900) 92%, transparent); }
-.site-header.is-dusk::after { background: color-mix(in srgb, var(--color-blue-900) 92%, transparent); }
+   M7 (Maxwell, 12 Nov: the cream skirt showed as a pale band over the dark sky for a frame, and on every page without
+   JS): where the browser has scroll-driven animations the night is a view timeline on the sky itself (below), so the
+   bar, its skirt and its words change in the same frame as the scroll, with or without JS; ui/header.js's .is-dusk is
+   only the fallback for browsers without them. */
+.site-header.is-dusk { background-color: color-mix(in srgb, var(--color-blue-900) 97%, transparent); }
+.site-header.is-dusk::after { background: color-mix(in srgb, var(--color-blue-900) 97%, transparent); }
 .site-header.is-dusk :is(.logo, .nav__link, .nav__toggle, .menu-btn, .lang-switch, .lang-switch a) { color: var(--color-on-dusk); }
 .site-header.is-dusk .lang-switch > span[aria-hidden] { color: var(--color-on-dusk-2); }
 .site-header.is-dusk :is(.nav__link, .lang-switch a):hover { color: var(--color-sun-200); }
@@ -91,7 +100,7 @@
   background: linear-gradient(to bottom, color-mix(in srgb, var(--color-world-ceiling) 85%, transparent), transparent);
   transition: opacity var(--d-ui) var(--ease-out);
 }
-.site-header--over:not(.is-compact) { background-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.site-header--over:not(.is-compact) { background-color: transparent; }
 .site-header--over:not(.is-compact)::after { opacity: 0; }
 .site-header--over:not(.is-compact)::before { opacity: 1; }
 /* Phones and tablets: the portrait shot puts the screen behind the bar (frame.js gives the header up
@@ -100,6 +109,18 @@
   .site-header::before {
     height: calc(var(--header-h) + 64px);
     background: linear-gradient(to bottom, color-mix(in srgb, var(--color-world-ceiling) 85%, transparent) var(--header-h), transparent);
+  }
+}
+/* M7: under the staging bars (the review note, the EN pointer: plaster, see .en-bar) the scrim starts in their plaster
+   and eases into the ceiling on smoothstep stops over 40 px before it fades out as before, so over the world the bars
+   end in light, never at the line where they stop. Lighter than the ceiling behind ink, so the nav keeps its 7:1. */
+body:has(> :is(.proto-note, .en-bar:not([hidden]))) .site-header::before {
+  --bar: color-mix(in srgb, var(--color-lime-50) 97%, transparent); --ceil: color-mix(in srgb, var(--color-world-ceiling) 85%, transparent);
+  background: linear-gradient(in oklab to bottom, var(--bar) 0, color-mix(in oklab, var(--bar) 84%, var(--ceil)) 5px, color-mix(in oklab, var(--bar) 50%, var(--ceil)) 10px, color-mix(in oklab, var(--bar) 16%, var(--ceil)) 15px, var(--ceil) 20px, color-mix(in oklab, var(--ceil) 50%, transparent) 70px, transparent 120px);
+}
+@media (max-width: 1023px) {
+  body:has(> :is(.proto-note, .en-bar:not([hidden]))) .site-header::before {
+    background: linear-gradient(in oklab to bottom, var(--bar) 0, color-mix(in oklab, var(--bar) 84%, var(--ceil)) 5px, color-mix(in oklab, var(--bar) 50%, var(--ceil)) 10px, color-mix(in oklab, var(--bar) 16%, var(--ceil)) 15px, var(--ceil) 20px, var(--ceil) var(--header-h), transparent);
   }
 }
 .site-header__bar { height: 100%; display: flex; align-items: center; gap: 24px; }
@@ -352,7 +373,7 @@ html:not(.js) .pause-toggle, html[data-reduced] .pause-toggle { display: none; }
   /* M6 fix: a longer evening (the day-to-night crossing, sun-200 → blue-700, spans 54% of a sky of at least 600 px /
      66svh: over 30svh, never the 40 px step it was), and the band's words rise into the sky's dark last quarter, so
      the band carries words rather than a screen of colour. */
-  --sky: max(600px, 66svh); --pad: clamp(8px, 2vw, 32px);
+  --sky: var(--dusk-sky); --pad: clamp(8px, 2vw, 32px);
   position: relative; padding-block: calc(var(--sky) * 0.74) clamp(56px, 6vw, 96px); color: var(--color-on-dusk);
   /* Each stretch between two colours is eased (smoothstep stops in oklab): no slope breaks, so no crease reads as a line. */
   background: linear-gradient(in oklab to bottom, var(--color-sun-100) calc(var(--sky) * 0.0000), color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) calc(var(--sky) * 0.0400), color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) calc(var(--sky) * 0.0800), color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) calc(var(--sky) * 0.1200), var(--color-sun-200) calc(var(--sky) * 0.1600), color-mix(in oklab, var(--color-sun-200) 84%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.2350), color-mix(in oklab, var(--color-sun-200) 50%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3100), color-mix(in oklab, var(--color-sun-200) 16%, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700))) calc(var(--sky) * 0.3850), color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) calc(var(--sky) * 0.4600), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 84%, var(--color-blue-700)) calc(var(--sky) * 0.5200), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 50%, var(--color-blue-700)) calc(var(--sky) * 0.5800), color-mix(in oklab, color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700)) 16%, var(--color-blue-700)) calc(var(--sky) * 0.6400), var(--color-blue-700) calc(var(--sky) * 0.7000), color-mix(in oklab, var(--color-blue-700) 84%, var(--color-blue-900)) calc(var(--sky) * 0.7750), color-mix(in oklab, var(--color-blue-700) 50%, var(--color-blue-900)) calc(var(--sky) * 0.8500), color-mix(in oklab, var(--color-blue-700) 16%, var(--color-blue-900)) calc(var(--sky) * 0.9250), var(--color-blue-900) calc(var(--sky) * 1.0000));
@@ -387,9 +408,99 @@ main:has(> :last-child.dusk) + .site-footer .footer-edge { margin-top: 0; }
 .site-footer > [data-night] { top: calc(var(--foot-sky) * 0.45); }
 main:has(> :last-child.dusk) + .site-footer > [data-night] { top: 0; }
 
+/* The evening and the night by the scroll itself (M7, Maxwell 12 Nov: the cream skirt showed as a pale band over the
+   dark sky). Each evening sky (the closing .dusk band, the footer) is a view timeline seen through a 1 px line just
+   under the bar (the inset leaves only that line of the viewport). While that line crosses the sky's light half the bar
+   and its skirt take the sky's own colour under them (the same stops, in oklab, at 97%), down to the last stop where
+   ink-900 still holds 7:1 on it (sun-200 halfway to the crossing's middle, 7.9:1), and hold it; from the night mark (0.5
+   of a band's sky, 0.45 of the footer's, the footer's top when a band closed the page: the same marks as [data-night])
+   they take the night's fill and the night's words. So the skirt never lies pale over a dark sky, and the bar changes in
+   the same frame as the scroll, with or without JS. Outside those ranges the animations do nothing (fill none) and the
+   bar is its usual plaster. A state of the scroll position, not motion: it holds under reduced motion and pause. */
+:root {
+  --dusk-sky: max(600px, 66svh); --foot-sky-h: max(560px, 62svh); --night-line: var(--header-h);
+  --dusk-night: calc(var(--dusk-sky) * 0.5 + 1px); --foot-night: calc(var(--foot-sky-h) * 0.45 + 1px);
+  --eve-mid: color-mix(in oklab, var(--color-sun-400) 50%, var(--color-blue-700));
+}
+@media (min-width: 1024px) { :root { --night-line: var(--header-h-compact); } html:not(.js) { --night-line: var(--header-h-wide); } }
+/* (Without JS the bar never compacts, so its foot stays at the wide height.) */
+html:has(main > :last-child.dusk) { --foot-night: 1px; }
+@supports (animation-timeline: --a) and (timeline-scope: --a) {
+  html { timeline-scope: --night-band, --night-foot; }
+  .dusk { view-timeline: --night-band block; }
+  .site-footer { view-timeline: --night-foot block; }
+  .dusk, .site-footer { view-timeline-inset: var(--night-line) calc(100% - var(--night-line) - 1px); }
+  :where(.site-header), :where(.site-header)::after, :where(.site-header)::before,
+  :where(.site-header) :where(.logo, .nav__link, .nav__toggle, .menu-btn, .lang-switch, .lang-switch a, .lang-switch > span[aria-hidden], :focus-visible) {
+    animation-timing-function: linear; animation-fill-mode: none; animation-duration: auto;
+    animation-timeline: --night-band, --night-foot;
+    animation-range: cover var(--dusk-night) cover 100%, cover var(--foot-night) cover 100%;
+  }
+  /* The bar and its skirt: the evening (the sky's colour) and then the night, on each sky. */
+  :where(.site-header), :where(.site-header)::after, :where(.site-header)::before {
+    animation-timeline: --night-band, --night-band, --night-foot, --night-foot;
+    animation-range: cover 1px cover var(--dusk-night), cover var(--dusk-night) cover 100%, cover 1px cover var(--foot-night), cover var(--foot-night) cover 100%;
+  }
+  .site-header { animation-name: evening-band, night-fill, evening-foot, night-fill; }
+  /* The skirt shows over the evening and the night even where the bar has none (the home header before it compacts). */
+  .site-header::after { animation-name: evening-band-skirt, night-skirt, evening-foot-skirt, night-skirt; }
+  /* The hero's scrim (home, before the bar compacts) lies over the bar's own fill (the bar is a stacking context, its
+     view-transition-name), so it goes for the evening and the night. */
+  .site-header::before { animation-name: night-scrim, night-scrim, night-scrim, night-scrim; }
+  .site-header :is(.logo, .nav__link, .nav__toggle, .menu-btn, .lang-switch, .lang-switch a) { animation-name: night-ink, night-ink; }
+  .site-header .lang-switch > span[aria-hidden] { animation-name: night-ink-2, night-ink-2; }
+  .site-header :focus-visible { animation-name: night-focus, night-focus; }
+}
+/* Keyframe offsets are the sky's own stops (.dusk: 0.04 … 0.31 of --sky over a range of 0.5; the footer: 8% … 34% of
+   its sky over 0.45), each colour at the bar's 97%. */
+@keyframes evening-band {
+  0% { background-color: color-mix(in srgb, var(--color-lime-50) 97%, transparent); }
+  8% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 97%, transparent); }
+  16% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 97%, transparent); }
+  24% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 97%, transparent); }
+  32% { background-color: color-mix(in srgb, var(--color-sun-200) 97%, transparent); }
+  47% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 84%, var(--eve-mid)) 97%, transparent); }
+  62%, 100% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 50%, var(--eve-mid)) 97%, transparent); }
+}
+@keyframes evening-foot {
+  0% { background-color: color-mix(in srgb, var(--color-lime-50) 97%, transparent); }
+  17.8% { background-color: color-mix(in srgb, var(--color-sun-100) 97%, transparent); }
+  24.4% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 97%, transparent); }
+  31.1% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 97%, transparent); }
+  37.8% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 97%, transparent); }
+  44.4% { background-color: color-mix(in srgb, var(--color-sun-200) 97%, transparent); }
+  60% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 84%, var(--eve-mid)) 97%, transparent); }
+  75.6%, 100% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 50%, var(--eve-mid)) 97%, transparent); }
+}
+@keyframes evening-band-skirt {
+  0% { background-color: color-mix(in srgb, var(--color-lime-50) 97%, transparent); opacity: 1; }
+  8% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  16% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  24% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  32% { background-color: color-mix(in srgb, var(--color-sun-200) 97%, transparent); opacity: 1; }
+  47% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 84%, var(--eve-mid)) 97%, transparent); opacity: 1; }
+  62%, 100% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 50%, var(--eve-mid)) 97%, transparent); opacity: 1; }
+}
+@keyframes evening-foot-skirt {
+  0% { background-color: color-mix(in srgb, var(--color-lime-50) 97%, transparent); opacity: 1; }
+  17.8% { background-color: color-mix(in srgb, var(--color-sun-100) 97%, transparent); opacity: 1; }
+  24.4% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 84%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  31.1% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 50%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  37.8% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-100) 16%, var(--color-sun-200)) 97%, transparent); opacity: 1; }
+  44.4% { background-color: color-mix(in srgb, var(--color-sun-200) 97%, transparent); opacity: 1; }
+  60% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 84%, var(--eve-mid)) 97%, transparent); opacity: 1; }
+  75.6%, 100% { background-color: color-mix(in srgb, color-mix(in oklab, var(--color-sun-200) 50%, var(--eve-mid)) 97%, transparent); opacity: 1; }
+}
+@keyframes night-fill { from, to { background-color: color-mix(in srgb, var(--color-blue-900) 97%, transparent); } }
+@keyframes night-skirt { from, to { background-color: color-mix(in srgb, var(--color-blue-900) 97%, transparent); opacity: 1; } }
+@keyframes night-scrim { from, to { opacity: 0; } }
+@keyframes night-ink { from, to { color: var(--color-on-dusk); } }
+@keyframes night-ink-2 { from, to { color: var(--color-on-dusk-2); } }
+@keyframes night-focus { from, to { outline-color: var(--color-focus-on-dark); } }
+
 /* ---------- footer (H11): dusk, every page ---------- */
 .site-footer {
-  --foot-sky: max(560px, 62svh);
+  --foot-sky: var(--foot-sky-h);
   position: relative; display: flex; flex-direction: column; background: var(--color-blue-900); color: var(--color-on-dusk);
 }
 /* M6 fix: the org's name rises into the sky's dark last quarter (the band carries words), then the room at 18:00

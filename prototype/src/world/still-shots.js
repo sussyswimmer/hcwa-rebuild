@@ -105,7 +105,7 @@ export const STILLS = {
   // does not draw it; the stacked page (no JS, Tier 0, reduced motion, short screens) shows the open one.
   "shutters-closed": { kind: "frame", layers: PLAIN, page: "home", what: "The blue louvered shutters shut at 15:55: thin gold lines through the slats across the floor" },
   "shutters-louvers": { kind: "frame", layers: PLAIN, page: "home", what: "The slats turned 65°: the lines widened into bars of late sun" },
-  "shutters-open": { kind: "frame", layers: PLAIN, page: "home", what: "Both leaves swung into the room at 17:00, the window's whole patch of gold on the floor" },
+  "shutters-open": { kind: "frame", layers: PLAIN, page: "home", what: "Both leaves swung into the room at 17:00 onto a street of shophouses under a tamarind (no people, no lettering), the window's whole patch of gold on the floor" },
 };
 
 // A still may carry its own widths per crop (`widths: { desk: [...] }`); everything else is its kind's.

@@ -45,5 +45,18 @@ export function planTextures({ tier, width, cw, ch, msaa = false, budget = BUDGE
   const up = (key, size, cost) => { const extra = cost(size) - cost(plan[key]); if (used + extra <= budget) { plan[key] = size; used += extra; } };
   if (tier >= 2 && width >= 600) { up("walls", 1024, wallsMB); up("atlas", 1024, atlasMB); }
   if (tier >= 2) up("gach", 512, gachMB);
-  return { ...plan, mb: +used.toFixed(1) };
+  return { ...plan, mb: +used.toFixed(1), textures: +texturesMB(plan).toFixed(2) };
+}
+// What a plan's textures hold on the GPU (the baked pair included).
+export const texturesMB = (plan) => BAKED_MB + wallsMB(plan.walls) + atlasMB(plan.atlas) + gachMB(plan.gach);
+
+// The most drawing-buffer pixels a canvas may have once its textures are paid for (M7 fix round: the budget holds after
+// a resize too). The textures are loaded once, at the plan; a window that grows afterwards gets a canvas this size or
+// smaller (renderer.js dprFor: a lower DPR, under 1 if need be), never more memory. Per canvas pixel: the buffers (12 B,
+// 44 B with MSAA) and the shafts' target (4 B per shaft texel, ½ × ½ the canvas on Tier 2, ¼ × ¼ on Tier 1); the 0.99
+// leaves room for the shaft target's rounding up.
+export function canvasCap({ tier, msaa = false, textures = floorTexturesMB(), budget = BUDGET_MB }) {
+  const s = shaftScale(tier), perPixel = BYTES.base + (msaa ? BYTES.msaa : 0) + 4 / (s * s);
+  const pixels = Math.floor((0.99 * (budget - textures) * MB) / perPixel);
+  return Math.max(0, Math.min(pixels, msaa ? MSAA_PIXELS : MAX_PIXELS));
 }

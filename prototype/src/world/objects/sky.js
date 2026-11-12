@@ -67,7 +67,10 @@ export function streetPlane(U, { x, z, size = [40, 20] }) {
 //   tamarind's z. Uniforms the set drives: uPale (0..1, the late light washing the whole view toward sun-100 as the
 //   exposure rises), uSway (rad, the canopy about its trunk, Tier 2 only), uTime (the dapple's slow drift).
 export const STREET_VIEW = { street: -3.4, road: [2.6, 9.4], facade: 12, kerb: 0.15, bay: 4.2, ground: 3.4, band: 0.35, upper: 3.2, cornice: 0.55, tree: 2.3, cub: 10.7 };
-export function viewMaterial({ street = STREET_VIEW.street, zc = 0, trunk = -1.4 } = {}) {
+// lite (M7 fix round, Tier 1's live set): the canopy's mass from two noise octaves instead of four and no fine-leaf term,
+// and the road's dapple from one, about a third of the per-pixel noise (SwiftShader timed S3 frames about 20% slower
+// than M6 on 390 Tier 1). The stills keep the full street.
+export function viewMaterial({ street = STREET_VIEW.street, zc = 0, trunk = -1.4, lite = false } = {}) {
   const V = STREET_VIEW;
   const c = (name) => tok(name), v3 = (col) => vec(col);
   const sky = mixc(c("sun-200"), c("sun-100"), 0.35);
@@ -87,6 +90,7 @@ export function viewMaterial({ street = STREET_VIEW.street, zc = 0, trunk = -1.4
   const f = (n) => n.toFixed(3);
   return new ShaderMaterial({
     uniforms: U,
+    defines: lite ? { LITE: "" } : {},
     vertexShader: /* glsl */ `varying vec3 vP; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
       varying vec3 vP;
@@ -109,9 +113,15 @@ export function viewMaterial({ street = STREET_VIEW.street, zc = 0, trunk = -1.4
         vec2 o = vec2(${f(trunk)} + ZC, G + 5.);
         float s = sin(uSway), k = cos(uSway);
         q = mat2(k, s, -s, k) * (q - o) + o;
-        float mass = fbm(q * vec2(.55, .7) + 4.3) + .9 * smoothstep(top - 1.6, top + 1.4, q.y) - .78;
+        vec2 m = q * vec2(.55, .7) + 4.3;
+      #ifdef LITE
+        float mass = vn(m) * .62 + vn(m * 2.03) * .31 + .9 * smoothstep(top - 1.6, top + 1.4, q.y) - .78;
+        return smoothstep(-.03, .05, mass);
+      #else
+        float mass = fbm(m) + .9 * smoothstep(top - 1.6, top + 1.4, q.y) - .78;
         float fine = vn(q * vec2(9.5, 13.) + 1.7) * .6 + vn(q * vec2(23., 31.)) * .4;
         return smoothstep(-.03, .05, mass + (fine - .5) * .16);
+      #endif
       }
       // One shophouse front at (z, h): h above the street; the bay index picks its wash and how far its shutter is up.
       vec3 front(vec2 p, float w, out float shade){
@@ -215,23 +225,27 @@ export function viewMaterial({ street = STREET_VIEW.street, zc = 0, trunk = -1.4
             // The kerbs: a lit edge on each pavement.
             gc = mix(gc, uCream, cov(abs(g.x - ${f(V.road[1])}) - .06, w * tg) + cov(abs(g.x - ${f(V.road[0])}) - .06, w * tg));
             // The late sun on the pavement and the road, broken by the tamarinds' shade.
+          #ifdef LITE
+            float lit = smoothstep(.42, .58, vn(g.xz * vec2(.35, .5) + vec2(uTime * .01, 0.)) * .94 + .12 * far);
+          #else
             float lit = smoothstep(.42, .58, fbm(g.xz * vec2(.35, .5) + vec2(uTime * .01, 0.)) + .12 * far);
+          #endif
             gc = mix(gc * .82, mix(gc, uSunPatch, .55), lit);
             col = gc;
             dist = tg;
-            // The Cub, parked on the far pavement against a shop front.
-            vec3 sC = atX(ro, rd, ${f(V.cub)});
-            if (sC.z > 0. && sC.z < tg + .5) {
-              vec3 cc;
-              float a = cub(vec2(sC.y - (ZC + 1.6), sC.x - G - ${f(V.kerb)}), w * sC.z, cc);
-              col = mix(col, cc, a);
-              // Its shadow on the pavement.
-              col = mix(col, col * .8, cov(length((g.xz - vec2(${f(V.cub)}, ZC + 1.6)) * vec2(2.4, 1.)) - .9, .25) * far);
-            }
+            // The Cub's shadow on the far pavement.
+            col = mix(col, col * .8, cov(length((g.xz - vec2(${f(V.cub)}, ZC + 1.6)) * vec2(2.4, 1.)) - .9, .25) * far);
           }
         }
+        // The Cub, parked on the far pavement against a shop front: in front of whatever the ray met behind it.
+        vec3 sC = atX(ro, rd, ${f(V.cub)});
+        if (rd.x > 0. && sC.z > 0. && sC.z < dist + .5) {
+          vec3 cc;
+          float a = cub(vec2(sC.y - (ZC + 1.6), sC.x - G - ${f(V.kerb)}), w * sC.z, cc);
+          col = mix(col, cc, a);
+        }
         // Haze: the far planes take the late light.
-        col = mix(col, uHaze, smoothstep(6., 22., dist) * .35);
+        col = mix(col, uHaze, smoothstep(6., 22., dist) * .2);
         // Two overhead wires sagging across, in front of the facade.
         for (int i = 0; i < 2; i++) {
           float X = 6.5 + float(i) * 1.4;

@@ -57,9 +57,12 @@ function fitBar(header) {
   document.fonts?.ready.then(fit);
 }
 
-// Over the night (M6 fix; components.css .is-dusk): a mark from halfway down each evening sky (a closing .dusk band,
+// Over the night (M6 fix; components.css .is-dusk; M7: only where CSS cannot do it): a mark from halfway down each evening sky (a closing .dusk band,
 // the footer's sky) to its end; while one crosses the line just under the bar, the bar takes the night's fill.
 function initNight(header) {
+  // Where the browser has scroll-driven animations the night is CSS on the skies' view timelines (components.css,
+  // M7): same frame as the scroll, with or without JS. This is the fallback for the others.
+  if (window.CSS?.supports?.("animation-timeline: --a") && CSS.supports("timeline-scope: --a")) return;
   const skies = [...document.querySelectorAll(".dusk, .site-footer")];
   if (!skies.length || !("IntersectionObserver" in window)) return;
   const marks = skies.map((s) => s.appendChild(Object.assign(document.createElement("div"), { ariaHidden: "true" })));

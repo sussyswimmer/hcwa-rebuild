@@ -151,19 +151,25 @@ const ok = (cond, msg) => { console.log((cond ? "PASS " : "FAIL ") + msg); if (!
     ok(await page.evaluate(() => document.activeElement.classList.contains("skip-link")), "first Tab lands on the skip link");
     await ctx.close();
   }
-  // 8. Get Involved (M6 "Cửa mở"): the four ways and their buttons are above the fold at 390x844 and
-  // 1440x900, VI and EN, with the staging bars shown; at 320 the page never scrolls sideways.
+  // 8. Get Involved (M6 "Cửa mở"; M7 fix round: each way listed once, with its one button): the header's link down to the
+  // ways is above the fold at 390x844 and 1440x900, VI and EN, with the staging bars shown; the four ways each carry one
+  // button to their own page; no way's name shows twice on the page; at 320 the page never scrolls sideways.
   for (const [w, h] of [[390, 844], [1440, 900], [320, 640]]) for (const path of ["/chung-tay/", "/en/get-involved/"]) {
     const { ctx } = await fresh({ viewport: { width: w, height: h } });
     const page = await ctx.newPage();
     await page.goto(base + path + "?tier=1", { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     const r = await page.evaluate(() => ({
-      bottoms: [...document.querySelectorAll(".gi-head .way__btn")].map((b) => b.getBoundingClientRect().bottom),
+      go: document.querySelector(".gi-head__go a")?.getBoundingClientRect().bottom ?? Infinity,
+      buttons: [...document.querySelectorAll("#ways .way")].map((x) => x.querySelectorAll(".btn").length),
+      names: [...document.querySelectorAll("#ways .way__name")].map((n) => n.textContent.trim()),
+      text: document.querySelector("main").innerText,
       vh: innerHeight, sx: document.documentElement.scrollWidth > innerWidth,
     }));
-    ok(r.bottoms.length === 4, `${path} ${w}: four ways buttons in the header`);
-    if (w >= 390) ok(r.bottoms.every((b) => b < r.vh), `${path} ${w}x${h}: every ways button above the fold (${r.bottoms.map(Math.round).join(", ")} < ${r.vh})`);
+    ok(r.buttons.length === 4 && r.buttons.every((n) => n === 1), `${path} ${w}: four ways, one button each (${r.buttons.join(", ")})`);
+    const twice = r.names.filter((n) => r.text.split("\n").filter((l) => l.trim() === n).length > 1);
+    ok(twice.length === 0, `${path} ${w}: no way's name listed twice${twice.length ? " (" + twice.join(", ") + ")" : ""}`);
+    if (w >= 390) ok(r.go < r.vh, `${path} ${w}x${h}: the link to the ways above the fold (${Math.round(r.go)} < ${r.vh})`);
     ok(!r.sx, `${path} ${w}: no horizontal scroll`);
     await ctx.close();
   }

@@ -154,7 +154,8 @@ async function extras(browser) {
     await page.waitForFunction(() => { const m = window.__hcwaWorld.memory?.(); return m && m.walls && m.posters && m.gach; }, null, { timeout: 45000 }).catch(() => {});
     const mem = await page.evaluate(() => window.__hcwaWorld.memoryMB());
     const memParts = await page.evaluate(() => window.__hcwaWorld.memory?.());
-    const budget = tier === 2 ? 48 : 24;
+    // One budget on every tier and viewport (M7, the lead's call: memory.js BUDGET_MB), textures included.
+    const budget = 48;
     ok(ambient >= 0.6, `${tag}: the world moves with no input (${ambient}% of pixels change by > 12/255 over ${(t1 - t0).toFixed(2)} s of world time)`);
     ok(pausedChange === 0 && clockFrozen, `${tag}: pause freezes it (${pausedChange}% change, clock frozen ${clockFrozen})`);
     ok(mem <= budget, `${tag}: GPU memory ~${mem} MB <= ${budget} MB (D6.7; ${JSON.stringify(memParts)})`);
@@ -188,6 +189,26 @@ async function extras(browser) {
     ok(worst === 0, `${tag}: scrolling 0 → 100svh, 0% silhouette inside the H1 and intro on every frame (worst ${worst}%)`);
     rows.live.push(row);
     console.log(`  ${JSON.stringify(row)}`);
+    await ctx.close();
+  }
+  // 3. Load, then grow (M7 fix round): a window that loads small (an MSAA context, or room for the 1024 maps) and is then
+  //    enlarged, as when a desktop browser is maximised, stays inside the same 48 MB once every texture is in.
+  rows.grown = [];
+  for (const [[w0, h0], [w1, h1], dpr, tier] of [[[900, 900], [1440, 900], 1, 2], [[900, 900], [1440, 900], 2, 2], [[1024, 640], [1920, 1080], 1, 2], [[800, 600], [2560, 1440], 1, 1]]) {
+    const tag = `grow ${w0}x${h0} -> ${w1}x${h1} @${dpr} t${tier}`;
+    const ctx = await browser.newContext({ viewport: { width: w0, height: h0 }, deviceScaleFactor: dpr, locale: "vi-VN" });
+    const page = await ctx.newPage();
+    await page.goto(base + `/?tier=${tier}&debug=1`, { waitUntil: "load" });
+    const live = await page.waitForFunction(() => document.documentElement.classList.contains("world-live"), null, { timeout: 30000 }).then(() => true, () => false);
+    if (!live) { ok(false, `${tag}: world live`); await ctx.close(); continue; }
+    await page.waitForFunction(() => { const m = window.__hcwaWorld?.memory?.(); return m && m.walls && m.posters && m.gach; }, null, { timeout: 60000 }).catch(() => {});
+    const read = () => page.evaluate(() => { window.__hcwaWorld.redraw(); const c = document.querySelector("canvas.world, canvas"); return { canvas: c && `${c.width}x${c.height}`, msaa: window.__hcwaWorld.msaa, mem: window.__hcwaWorld.memory() }; });
+    const before = await read();
+    await page.setViewportSize({ width: w1, height: h1 });
+    await page.waitForTimeout(1500);
+    const after = await read();
+    rows.grown.push({ tag, before, after });
+    ok(before.mem.total <= 48 && after.mem.total <= 48, `${tag}: GPU memory ${before.mem.total} MB at load (${before.canvas}${before.msaa ? ", MSAA" : ""}), ${after.mem.total} MB grown (${after.canvas}) <= 48 MB`);
     await ctx.close();
   }
   return rows;

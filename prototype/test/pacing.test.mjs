@@ -35,11 +35,16 @@ test("the passage: the statement holds over most of the flight, and no stretch o
   assert.ok(PASSAGE.read[0] >= PASSAGE.plateau[0] && PASSAGE.read[1] <= PASSAGE.plateau[1]);
 });
 
-test("the shutters: the window is held fully open (the 'look out' plateau) before the blend", () => {
-  const s3 = svh(/html\.stages \.shutters \{ --s3: (\d+)svh;/);
-  assert.ok(s3 >= 200, `--s3 ${s3}svh`);
-  const hold = (SHUTTERS.blend[0] - SHUTTERS.leaves[1]) * s3;
-  assert.ok(hold >= 18, `held open for ${hold.toFixed(0)}svh`);
+test("the shutters (M7): open by the pin, then held open with the help heading coming up before the blend", () => {
+  const s3 = svh(/html\.stages \.shutters \{ --s3: (\d+)svh;/), phone = svh(/html\.stages \.shutters \{ --s3: (\d+)svh; --lead: \d+svh; --rise: var\(--s3\); \} \}/);
+  const lead = svh(/html\.stages \.shutters \{ --s3: \d+svh; --lead: (\d+)svh;/);
+  assert.ok(s3 >= 90 && phone >= 80, `--s3 ${s3} / ${phone}svh`);
+  // The look-out: the window fully open, nothing blending, while the heading rises (at least 18svh on phones).
+  assert.equal(SHUTTERS.leaves[1], 1, "the leaves finish as the frame pins");
+  assert.ok(SHUTTERS.blend[0] * phone >= 18, `held open for ${(SHUTTERS.blend[0] * phone).toFixed(0)}svh`);
+  // The words: the help heading's top reaches the screen's foot as the frame pins; before that only the lead and
+  // the last of the approach pass without words (the lead under 16svh).
+  assert.ok(lead <= 16, `lead ${lead}svh`);
 });
 
 test("the wheel glides without taking the scroll: Lenis lerp 0.07, native distance, no snap, touch native", () => {

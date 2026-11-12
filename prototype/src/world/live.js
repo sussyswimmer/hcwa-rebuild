@@ -12,14 +12,14 @@ import { tok } from "./colors.js";
 import { bezier } from "./tokens.js";
 import { cubicBezier, stepSpring } from "./ease.js";
 import { createFlight, journeyAt } from "./flight.js";
-import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatLive, walkPitch, washSpan, hemSpan, wash as washAt } from "./journey.js";
+import { DOOR_DEG, PASSAGE, SHUTTERS, WALK, WALK_OUT, blendAt, corridorLayout, doorAngle, floodAt, floodStep, leafAt, readBeats, s3Exposure, s3Open, s3Pose, s3Sun, setAt, slatAt, walkPitch, washSpan, hemSpan, wash as washAt } from "./journey.js";
 import { createWalk } from "./walk.js";
 import { worldOff } from "./index.js";
 import { WALL_FADE, disposeWalls, loadWalls, setWallTier, wallUniforms } from "./walls.js";
 import { yieldNow } from "./textures.js";
 import { disposePosters, loadPosterAtlas, posterUniforms } from "./objects/wall-poster.js";
 import { atlasSizeFor, posterGpuMB } from "./wall-posters-data.js";
-import { BAKED_MB, gachMB, planTextures } from "./memory.js";
+import { BAKED_MB, canvasCap, gachMB, planTextures } from "./memory.js";
 
 // The live world (05-DESIGN D6, PLAN H2-H4, H7), with three.js. index.js loads it only once the GPU probe has
 // passed. It draws into the page's fixed canvas, reads the DOM (frame box, stage, text rects, beats) and
@@ -62,7 +62,6 @@ const inOut = cubicBezier(bezier.inOut);
 const nextFrame = () => new Promise((ok) => requestAnimationFrame(ok));
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
-const smoothLeaf = (q) => leafAt(q) / SHUTTERS.leafDeg;
 
 export async function live({ canvas, stage, bus, probed, forced }) {
   const root = document.documentElement;
@@ -249,11 +248,13 @@ export async function live({ canvas, stage, bus, probed, forced }) {
     inRoom = !inS3 && set === "room";
     let scene = null, camera = cam, passes = [], glow = null, washColor = null;
     if (inS3) {
-      // S3: the camera comes round to the window as the section rises, then the slats turn, the leaves swing
-      // in, the flood, and the frame gives way to sun-100 for the help section. Without the set yet (a very
+      // S3: the camera comes round to the window as the section rises while the slats turn and the leaves swing in
+      // (M7: open by the pin), then the look-out as the help heading comes up, the flood, and the frame gives way
+      // to sun-100 for the help section. Without the set yet (a very
       // fast scroll), the frame is sun-100 and the section's stills show.
       const sp = span.shutters, yc = camAt(y), a = clamp01((yc - sp.from) / Math.max(sp.top - sp.from, 1)), q = clamp01((y - sp.top) / sp.len);
-      // The leaves and the camera on the spring (qc); the blend into the help section's sun-100 on the scroll (q).
+      // The slats, the leaves and the camera on the spring (a, qc); the blend into the help section's sun-100 on the
+      // scroll (q).
       const qc = clamp01((yc - sp.top) / sp.len);
       at.s3 = q;
       // Coming into S3 from elsewhere (a jump, or back from far away): the flood is where this crossing has
@@ -261,15 +262,17 @@ export async function live({ canvas, stage, bus, probed, forced }) {
       if (!wasS3 && floodHold == null) { flood.on = q >= SHUTTERS.flood; flood.v = flood.on ? 1 : 0; }
       wash = blendAt(q);
       if (shutters && wash < 1) {
-        const slat = slatLive(a, qc);
-        if (a + qc !== s3Last) { shutters.pose(leafAt(qc), slat); s3Last = a + qc; }
-        const t = s3Sun(q);
+        const slat = slatAt(a), leaf = leafAt(a) / SHUTTERS.leafDeg;
+        if (a + qc !== s3Last) { shutters.pose(leaf * SHUTTERS.leafDeg, slat); s3Last = a + qc; }
+        const t = s3Sun(a + q);
         if (Math.abs(t - s3Sunt) > 1e-4) { shutters.setSun(t); s3Sunt = t; }
         floodAt(flood.v, fl);
         // The gold lines brighten as the slats turn (their angle over 65°), then the open window carries it.
-        const e = s3Exposure(qc, fl), open = s3Open(qc, slat);
-        shutters.setExposure(e, open, Math.max(slat / SHUTTERS.slatDeg, smoothLeaf(qc)));
-        shutters.shafts.uniforms.uDensity.value = S3_SHAFTS * (1 + 0.6 * smoothLeaf(qc) + 0.4 * fl.peak);
+        const e = s3Exposure(a, fl), open = s3Open(a, slat);
+        shutters.setExposure(e, open, Math.max(slat / SHUTTERS.slatDeg, leaf));
+        // The beams thin as the leaves open (M7): looking out through the open window, the air between is a veil over
+        // the street; the flood brings them back for its moment.
+        shutters.shafts.uniforms.uDensity.value = S3_SHAFTS * ((1 + 0.6 * leaf) * (1 - 0.75 * leaf) + 0.6 * fl.peak);
         shutters.shafts.uniforms.uExposure.value = e;
         shutters.motes.uniforms.uBurst.value = fl.peak;
         shutters.U.uMotesA.value = 0.55 + 0.45 * open;
@@ -393,7 +396,15 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   // says which sizes the wall maps, the atlas and the runner can take inside the 48 MB.
   const memoryMB = () => gl.memoryMB;
   let plan = null;
-  const planNow = () => (plan ??= planTextures({ tier, width: innerWidth, cw: Math.round(view.w * gl.size.dpr), ch: Math.round(view.h * gl.size.dpr), msaa: gl.msaa }));
+  // The textures are loaded once, at the plan; from then on the canvas may only take what the budget leaves them
+  // (gl.limit, memory.js canvasCap), so a window grown after load renders at a lower DPR instead of passing 48 MB
+  // (M7 fix round: 900 × 900 grown to 1440 × 900 held 68 MB with MSAA).
+  const planNow = () => {
+    if (plan) return plan;
+    plan = planTextures({ tier, width: innerWidth, cw: Math.round(view.w * gl.size.dpr), ch: Math.round(view.h * gl.size.dpr), msaa: gl.msaa });
+    gl.limit(canvasCap({ tier, msaa: gl.msaa, textures: plan.textures }));
+    return plan;
+  };
   let posters = null;
   const running = () => live && inView && visible && !lost && !dead;
   const kick = () => { if (!raf && running()) raf = requestAnimationFrame(tick); };
@@ -638,7 +649,7 @@ export async function live({ canvas, stage, bus, probed, forced }) {
   kick();
 
   // QA hooks (?debug): their own chunk, never loaded otherwise.
-  if (debug) import("./debug.js").then((d) => d.attach({ gl, memoryMB, plan: () => plan, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
+  if (debug) import("./debug.js").then((d) => d.attach({ gl, memoryMB, plan: () => plan, room, corridor: () => corridor, tier: () => tier, frame: () => lastFrame, solved: () => solved, at, path, span, inRoom: () => inRoom, walking: () => walking, walk, flight, section, parallax: () => parallax, s3Set: () => shutters, shutters: () => ({ staged, built: Boolean(shutters), at: at.s3 ?? null, flood: { ...flood }, span: { ...span.shutters } }), hold: (v) => { floodHold = v; if (v != null) Object.assign(flood, { on: true, v }); dirty = true; kick(); }, redraw: () => draw(performance.now()), paused: () => paused, running, pointer: (x, y) => { target.x = px.x = x; target.y = py.x = y; px.v = py.v = 0; dirty = true; kick(); }, wallK: (v) => { if (v != null) { wallsU.uWallK.value = v; if (walls) walls.k = 1; } return wallsU.uWallK.value; } }));
 
   // The corridor, in idle time after the handoff, from the page's own cards (D6.5). It is needed first
   // behind the wash halfway through the passage; until it is ready the wash simply holds.

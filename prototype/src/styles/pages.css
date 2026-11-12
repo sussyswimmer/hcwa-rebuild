@@ -379,9 +379,13 @@ body:has(.day) { background: var(--color-sun-100); }
    so a subject with its own straight edge, the Our Work screen, emerges from the light instead of
    standing on it); --from/--to: the foot, measured per still so the fade is over before the straight
    line where wall meets floor. */
-.lit-head__media { --x0: 0%; --x1: 18%; --from: calc(100% - var(--seam)); --to: calc(100% - var(--seam) * 0.12); }
+/* --top (M7 fix round): the still eases in from the plaster under the header's skirt over its first 64 px on smoothstep
+   stops, so the bar's plaster never meets a dark wall in one row at its foot (Cầu Hàn and Green Bamboo stepped 9 to 11
+   levels there across most of the width: the bar's 8% shows the page, the skirt's 8% showed the still). */
+.lit-head__media { --x0: 0%; --x1: 18%; --from: calc(100% - var(--seam)); --to: calc(100% - var(--seam) * 0.12); --top: 64px; }
 .lit-head__media .lit {
   mask-image:
+    linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.04) calc(var(--top) * 0.125), rgb(0 0 0 / 0.16) calc(var(--top) * 0.25), rgb(0 0 0 / 0.32) calc(var(--top) * 0.375), rgb(0 0 0 / 0.5) calc(var(--top) * 0.5), rgb(0 0 0 / 0.68) calc(var(--top) * 0.625), rgb(0 0 0 / 0.84) calc(var(--top) * 0.75), rgb(0 0 0 / 0.96) calc(var(--top) * 0.875), black var(--top)),
     linear-gradient(to right, transparent var(--x0), rgb(0 0 0 / 0.5) calc(var(--x0) + (var(--x1) - var(--x0)) * 0.5), black var(--x1)),
     linear-gradient(to bottom, black var(--from), rgb(0 0 0 / 0.86) calc(var(--from) + (var(--to) - var(--from)) * 0.2), rgb(0 0 0 / 0.5) calc(var(--from) + (var(--to) - var(--from)) * 0.47), rgb(0 0 0 / 0.16) calc(var(--from) + (var(--to) - var(--from)) * 0.74), transparent var(--to));
   mask-composite: intersect;
@@ -401,9 +405,13 @@ body:has(.day) { background: var(--color-sun-100); }
   .lit-head__media[data-still="header-get-involved"] { --from: 52%; --to: 80%; }
   .lit-head__media[data-still="header-thrive-together"] { --from: 58%; --to: 88%; }
 }
-/* The unit's paint at the head of its page: 6 px of colour that thins out to the right and softens into the
-   still below it, a mark rather than a rule (D0.5). */
-.lit-head--unit::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 18px; background: linear-gradient(to bottom, var(--unit) 3px, color-mix(in srgb, var(--unit) 40%, transparent) 7px, transparent); mask-image: linear-gradient(to right, transparent, black 12px, black 30%, transparent 92%); }
+/* The unit's paint at the head of its page: a soft wash of its colour that thins out to the right, a mark rather than a
+   rule (D0.5). M7 fix round: it rises out of the header's skirt and sinks into the still, with no solid core at the
+   header's foot (its 3 px of solid paint sat under the skirt, which shows 8% of what is under it, so the bar's plaster
+   met it in one row: a 9 to 11 level step over 65 to 92% of the width on Cầu Hàn and Green Bamboo). */
+.lit-head--unit::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 1; height: 104px; pointer-events: none;
+  background: linear-gradient(to bottom, transparent 12px, color-mix(in srgb, var(--unit) 2%, transparent) 22px, color-mix(in srgb, var(--unit) 8%, transparent) 34px, color-mix(in srgb, var(--unit) 15%, transparent) 46px, color-mix(in srgb, var(--unit) 17%, transparent) 54px, color-mix(in srgb, var(--unit) 13%, transparent) 66px, color-mix(in srgb, var(--unit) 6%, transparent) 80px, color-mix(in srgb, var(--unit) 2%, transparent) 92px, transparent);
+  mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.5) 32px, black 72px, black 30%, transparent 92%); }
 .lit-head__text { display: grid; justify-items: start; align-content: center; gap: 0; min-width: 0; }
 .lit-head .breadcrumb ol, .lit-head .breadcrumb a { color: var(--color-ink-900); }
 .lit-head__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--color-ink-900); }
@@ -894,30 +902,9 @@ body:has(.day) { background: var(--color-sun-100); }
 .gi-head__title { margin-top: clamp(10px, 1.6vw, 24px); font-size: clamp(2.5rem, 1rem + 4.6vw, 5.25rem); font-weight: 700; max-inline-size: 9.5em; }
 .gi-head__intro { margin-top: clamp(12px, 1.4vw, 20px); max-width: 34ch; font-size: var(--fs-lg); line-height: var(--lh-lead); color: var(--color-ink-900); }
 
-/* The four ways: tiles of sunlit plaster with a shadow and no outline, each with its gạch tile in its own
-   pigment and one button (Ủng hộ is the only sun fill). The whole tile is the button's target. */
-.ways { margin-top: clamp(20px, 2.4vw, 32px); width: 100%; }
-.ways__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.way {
-  /* M6 fix: one line each, the tile and its one action (the slats below hold the names and the detail, so no word
-     shows twice in a tile and the four ways are not listed twice in a row). */
-  position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-areas: "tile btn"; gap: 8px 14px; align-items: center;
-  min-height: 76px; padding: 12px 16px; border-radius: 12px;
-  background: color-mix(in srgb, var(--color-lime-50) 92%, transparent);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink-900) 8%, transparent), 0 16px 30px -18px color-mix(in srgb, var(--color-ink-900) 34%, transparent);
-  transition: translate var(--d-hover) var(--ease-out), box-shadow var(--d-hover) var(--ease-out);
-}
-.way--donate { --pig: var(--color-tile-ochre); }
-.way--volunteer { --pig: var(--color-tile-jade); }
-.way--partner { --pig: var(--color-tile-indigo); }
-.way--in-kind { --pig: var(--color-tile-ochre-lit); }
-.way__tile { grid-area: tile; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig); }
-.way__block, .start__block { width: 30px; height: 30px; overflow: visible; }
-:is(.way__block, .start__block) .block-icon__light { fill: var(--color-tile-cream); }
-:is(.way__block, .start__block) .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-tile-cream) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
-.way__btn { grid-area: btn; justify-self: start; min-height: 44px; }
-.way__btn::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
-@media (hover: hover) { .way:hover { translate: 0 -2px; box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink-900) 8%, transparent), 0 22px 36px -18px color-mix(in srgb, var(--color-ink-900) 38%, transparent); } }
+/* One link down to the ways (M7 fix round: the four ways are listed once, below, each with its own button). */
+.gi-head__go { margin-top: clamp(14px, 1.8vw, 26px); }
+.gi-head__go .icon { rotate: 90deg; }
 
 /* The window. Its frame, the leaves and the sill are objects in the room (data-art), not seams. */
 .gi-stage { position: relative; pointer-events: none; }
@@ -940,7 +927,6 @@ body:has(.day) { background: var(--color-sun-100); }
   .gi-head__text { grid-area: 1 / 1; padding-top: clamp(12px, 1.6vw, 24px); }
   .gi-head__text > * { max-inline-size: min(100%, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
   .gi-head__title { max-inline-size: min(9.5em, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
-  .ways__list { grid-template-columns: repeat(2, minmax(min(260px, 100%), 1fr)); }
   .gi-stage { position: absolute; top: 0; right: 0; bottom: 0; width: 50vw; }
 }
 /* Below 1024 the window comes first, as a band of the room, and the words follow it. */
@@ -956,13 +942,7 @@ body:has(.day) { background: var(--color-sun-100); }
   .gi-head .breadcrumb li:nth-last-child(2)::before { content: none; }
   .gi-head__title { font-size: clamp(2.25rem, 1.2rem + 4.4vw, 2.75rem); }
   .gi-head__intro { font-size: 1.0625rem; }
-  .ways__list { gap: 10px; }
-  .way { min-height: 88px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "tile" "btn"; gap: 8px; padding: 10px; justify-items: start; }
-  .way__tile { width: 32px; height: 32px; }
-  .way__block { width: 24px; height: 24px; }
-  .way__btn { justify-self: stretch; justify-content: center; padding: 8px 10px; font-size: 0.9375rem; text-align: center; white-space: normal; }
 }
-@media (max-width: 339.98px) { .ways__list { grid-template-columns: minmax(0, 1fr); } }
 
 /* The stage: the leaves swing from 62° to 112° (already open at the first frame), the street comes toward
    the window (1 → 1.14) and its sun strengthens; the louver light turns and lengthens. */
@@ -973,41 +953,51 @@ html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc
 
 /* The day after the header stays warm until the evening. */
 .day--involve { --day: var(--color-sun-100) 0, var(--color-sun-100) 42%, color-mix(in oklab, var(--color-sun-100), var(--color-lime-100)) 74%, var(--color-sun-100) 100%; }
-/* "Mỗi cách bắt đầu thế nào" (M7, Maxwell 12 Nov: the four ways were listed twice in a row, tiles and then slats with
-   the same names and buttons, an empty band between). The tiles above stay the invitation (one button each); this is
-   what each way involves and where it starts: its line, its own list, and text links into the right part of its page.
-   It follows the tiles at the page's usual rhythm (the header's foot no longer pads out an empty band). No boxes, no
-   rules: each way stands on a feathered patch of sun behind its tile and name, closest-side so it fades to nothing
-   inside its own box. Padding, not margin: a margin would collapse through .day and open a band of body colour. */
-.start { display: grid; gap: clamp(28px, 3vw, 48px); padding-top: clamp(24px, 3vw, 44px); }
-.start__title { font-size: var(--fs-h2); max-inline-size: 12em; }
-.start__ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 48px 40px; }
-@media (min-width: 640px) { .start__ways { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1200px) { .start__ways { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 36px; } }
-.start__way { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
-.start__way--donate { --pig: var(--color-tile-ochre); }
-.start__way--volunteer { --pig: var(--color-tile-jade); }
-.start__way--partner { --pig: var(--color-tile-indigo); }
-.start__way--in-kind { --pig: var(--color-tile-ochre-lit); }
-.start__way::before { content: ""; position: absolute; z-index: -1; inset: -32px -36px auto -36px; height: 168px; pointer-events: none;
+/* The ways to help (M7 fix round; Maxwell 12 Nov: the four ways were listed twice in a row, tiles in the header and then
+   slats, later a detail section, with the same icons, names and buttons). Each way is one object, listed once: its gạch
+   tile and name, its line, its own list where its page has one, text links into the right part of its page, and its one
+   button at the foot (Ủng hộ the only sun fill), so the buttons line up across the row. It follows the header at the
+   page's usual rhythm. No boxes, no rules: each way stands on a feathered patch of sun behind its tile and name,
+   closest-side so it fades to nothing inside its own box. Padding, not margin: a margin would collapse through .day and
+   open a band of body colour. */
+.ways { display: grid; gap: clamp(28px, 3vw, 48px); padding-top: clamp(24px, 3vw, 44px); scroll-margin-top: calc(var(--header-h) + 16px); }
+.ways__title { font-size: var(--fs-h2); max-inline-size: 12em; }
+.ways__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 56px 40px; }
+@media (min-width: 640px) { .ways__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .ways__list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 36px; } }
+.way { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.way--donate { --pig: var(--color-tile-ochre); }
+.way--volunteer { --pig: var(--color-tile-jade); }
+.way--partner { --pig: var(--color-tile-indigo); }
+.way--in-kind { --pig: var(--color-tile-ochre-lit); }
+.way::before { content: ""; position: absolute; z-index: -1; inset: -32px -36px auto -36px; height: 168px; pointer-events: none;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--color-sun-200) 70%, transparent), color-mix(in srgb, var(--color-sun-200) 30%, transparent) 55%, transparent); }
-.start__name { display: flex; align-items: center; gap: 14px; font-size: var(--fs-h3); line-height: 1.25; }
-.start__tile { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig);
+.way__name { display: flex; align-items: center; gap: 14px; font-size: var(--fs-h3); }
+.way__tile { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 3px; background: var(--pig);
   box-shadow: 0 10px 18px -12px color-mix(in srgb, var(--color-ink-900) 40%, transparent); }
-.start__text, .start__note { max-width: 34ch; color: var(--color-ink-900); }
-.start__label { margin-top: 4px; font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
-.start__list { list-style: none; margin: -6px 0 0; padding: 0; display: grid; gap: 2px; }
-.start__list li { display: flex; align-items: baseline; gap: 10px; }
-.start__list li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 2px; background: var(--pig); translate: 0 -2px; }
-.start__go { list-style: none; margin: auto 0 0; padding: 4px 0 0; display: grid; }
+.way__block { width: 30px; height: 30px; overflow: visible; }
+.way__block .block-icon__light { fill: var(--color-tile-cream); }
+.way__block .block-icon__line { fill: none; stroke: color-mix(in srgb, var(--color-tile-cream) 55%, transparent); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.way__text, .way__note { max-width: 34ch; color: var(--color-ink-900); }
+.way__label { margin-top: 4px; font-size: var(--fs-meta); font-weight: 600; color: var(--color-ink-700); }
+.way__list { list-style: none; margin: -6px 0 0; padding: 0; display: grid; gap: 2px; }
+.way__list li { display: flex; align-items: baseline; gap: 10px; }
+.way__list li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 2px; background: var(--pig); translate: 0 -2px; }
+.way__go { list-style: none; margin: auto 0 0; padding: 4px 0 0; display: grid; }
+.way__act { margin-top: 6px; }
+.way__btn { min-height: 44px; }
 @media (min-width: 1024px) {
-  /* The header ends where its words do (plus the window's own room), so the detail follows the tiles at once. */
-  .gi-head { min-height: min(calc(78svh - var(--hdr)), 640px); }
+  /* The header ends where its words do (plus the window's own room), so the ways follow it at once: the window takes
+     more of a shorter header (M7 fix round: 210 px of empty band at 1440 between the link and the ways, now about 100). */
+  .gi-head { min-height: min(calc(60svh - var(--hdr)), 520px); }
   .gi-head__text { padding-bottom: 40px; }
+  .gi-window { top: 9%; height: 65%; }
+  .gi-sill { top: 76%; }
+  .gi-stripes { top: 80%; }
 }
 
-/* WordPress's Get Involved pattern still prints the slats (hcwa/louvers, louvers--page) until the port takes the M6
-   header and this detail; the prototype no longer does. */
+/* WordPress's Get Involved pattern lists the ways once too, as slats (hcwa/louvers, louvers--page) under its lit header,
+   until the port takes the M6 header and these objects. */
 .louvers--page { margin-top: 0; padding-top: clamp(32px, 5vw, 80px); }
 @media (max-width: 599.98px) { .louvers--page { padding-top: 48px; } }
 /* The slats open as they pass: each lit face widens from a sliver to its full patch (scroll-driven,
@@ -1212,7 +1202,9 @@ html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc
 }
 
 /* ---------- P8 components page (prototype only) ---------- */
-.sun-head--kit::before { background: var(--color-blue-700); }
+/* M7: the kit page's top rule was blue-700 and read through the header's 92% skirt as a 6 px line (D0.5); it takes the
+   morning heads' sun-200, which the skirt hides. */
+.sun-head--kit::before { background: var(--color-sun-200); }
 .sun-head--kit .sun-head__title { font-size: var(--fs-h1); max-inline-size: 10em; }
 .sun-head--kit .sun-head__intro { font-size: var(--fs-lg); font-weight: 400; max-width: 40ch; }
 .day--kit { --day: var(--color-sun-100) 0, var(--color-lime-100) 4%, var(--color-lime-100) 100%; }
@@ -1340,9 +1332,11 @@ html[data-motion="off"] .track__dot { transition: none; }
 .sun-head--shelter { --head: var(--color-lime-100); }
 .sun-head--morning::before, .sun-head--calm::before, .sun-head--shelter::before { background: var(--color-sun-200); }
 /* A center's paint as the band (Little Rose's pink): paint, not light, soaked into the wall like a brush
-   stroke: full for 3 px, then feathered down over about 15 px, faded in over 12 px at the left end and
-   thinning out to the right, so it never reads as a rule (05-DESIGN 0.5; fix round 1). */
-.sun-head--unit::before { height: 18px; background: linear-gradient(to bottom, var(--unit) 3px, color-mix(in srgb, var(--unit) 40%, transparent) 7px, transparent); mask-image: linear-gradient(to right, transparent, black 12px, black 30%, transparent 92%); }
+   stroke, faded in at the left end and thinning out to the right, so it never reads as a rule (05-DESIGN 0.5). */
+/* M7 fix round: the same soft wash as the lit header's unit mark (no solid core under the header's skirt). */
+.sun-head--unit::before { height: 104px;
+  background: linear-gradient(to bottom, transparent 12px, color-mix(in srgb, var(--unit) 2%, transparent) 22px, color-mix(in srgb, var(--unit) 8%, transparent) 34px, color-mix(in srgb, var(--unit) 15%, transparent) 46px, color-mix(in srgb, var(--unit) 17%, transparent) 54px, color-mix(in srgb, var(--unit) 13%, transparent) 66px, color-mix(in srgb, var(--unit) 6%, transparent) 80px, color-mix(in srgb, var(--unit) 2%, transparent) 92px, transparent);
+  mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.5) 32px, black 72px, black 30%, transparent 92%); }
 /* A center's facts above its title while its still is pending (Cầu Hàn): the lit header's meta line. */
 .sun-head__meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 6px; font-size: var(--fs-sm); font-weight: 500; color: var(--color-ink-900); }
 .sun-head__meta .icon { width: 18px; height: 18px; margin-right: 6px; vertical-align: -3px; }

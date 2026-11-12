@@ -464,25 +464,68 @@ Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages",
   the dusk band and the footer sky ease on 8 stops (smoothstep or oklab), never linear. The dusk crossing
   (sun-200 to blue-700) spans about half of a sky that is at least 560 px / 62svh tall, and words rise
   into its dark part. While the bar's foot is over a dark sky the site header turns night (blue-900 at 92%,
-  `.is-dusk`); without JS it stays cream.
+  `.is-dusk`); without JS it stays cream. **M7 (12 Nov):** the bar and its skirt follow the sky by a CSS scroll-driven
+  view timeline, with or without JS: over the light half they take the sky's own colour (92%), held where ink keeps 7:1,
+  then the night from the same mark; the review note and the EN pointer are the header's plaster and end in its skirt.
+  **M7 fix round:** no backdrop blur on the bar or its skirt (the bar is a backdrop root, so the skirt's blur saw nothing
+  and the bar's ended square at its foot over whatever scrolled under it), and every chrome fill is 97%, not 92%; a lit header's still eases in from the
+  plaster over its first 64 px and a center's unit mark is a soft wash with no solid core, so nothing meets the bar's
+  foot in one row. Get Involved lists the four ways once: the header names them in its intro and links down; each way
+  is one object (tile, name, line, its page's list, links into its page, one button).
 - **Corridor to Centers:** on desktop the door index sits 24 px above the stage header in one block, and
   the pane feathers 24svh top and bottom.
 - **Wall posters:** eight original screen prints of everyday Saigon life (no lettering, no people, no
   flags, stars, brands or red/pink), hung on the corridor's end wall (a pair), in the Green Bamboo and Cầu
   Hàn bays and on S3's window wall; never within 4.75 m of Little Rose's door. One draw per set; atlas
   512 px on phones and Tier 1, 1024 on Tier 2. HCWA approves the set before production.
-- **Shutters (S3):** slats 0–0.28, leaves 0.28–0.60, hold 0.60–0.70, flood 0.72, blend 0.70–0.84; the help
-  heading rises 42% of S3 into the stage (44% on phones). Indigo paint keeps its hue under warm light.
+- **Shutters (S3):** ~~slats 0–0.28, leaves 0.28–0.60, hold 0.60–0.70, flood 0.72, blend 0.70–0.84; the help
+  heading rises 42% of S3 into the stage (44% on phones)~~ (superseded by M7 below). Indigo paint keeps its hue under
+  warm light.
 - **Contact:** a 2.5D gate opening on Tier 1 and 2 (the gate opens, letters drop into the box, the camera
   walks in); its stage line fades out before the page's words reach it. **Get Involved:** the header is
-  open blue shutters onto a sunny street with the four ways as one-line tiles, one action each, above the
-  fold. **Little Rose:** a paper-cut walled garden (no figures, no door, no place, no pink or red, a
+  open blue shutters onto a sunny street ~~with the four ways as one-line tiles, one action each, above the
+  fold~~ (M7 fix round: the H1, the intro naming the four ways and one link down to them above the fold; the ways
+  follow, each one object with its own button). **Little Rose:** a paper-cut walled garden (no figures, no door, no place, no pink or red, a
   caption saying it is an illustration) with the five "what the home gives" lines beside it (1440) or
   under it (390).
-- **Still open after M6:** the home's shutters beat is still about two screens with no words at 1440
-  (closed shutters, then the open window onto cream); the S3 view needs its own outside content. At 390
-  the Little Rose lines are small under the pinned garden. The home's first-10-second long task (about
-  290 ms) and Tier 2 GPU memory with textures counted (65 MB against 48) are over budget.
+- **M7 shutters (12 Nov 2026, Maxwell: "the shutters open onto a blank cream view, then about two screens with no
+  words"; binding):** the opening happens on the approach, while the section rises into place under the news: slats
+  0 → 65° over a 0.12–0.50, leaves 0 → 110° over a 0.50–1.00, so the window is open by the pin. The stage is 100svh
+  (90svh on phones), the lead 14svh (12svh), and the help section rises the whole stage into it (`--rise: var(--s3)`):
+  its heading comes up from the screen's foot as the frame pins, under the open window (the look-out, p 0–0.28), then
+  the flood at 0.30 (unflood 0.22) and the blend to sun-100 over 0.28–0.62. The window looks out onto a Saigon street
+  drawn by the world (`objects/sky.js viewMaterial`, by ray, with parallax): two-storey shophouses in yellow, mint and
+  cream wash with rolling shutters and arched jade-louvered upper windows, a Hoa thị cornice, the pavement in late sun
+  under a tamarind's shade, a parked Cub (no plate, no lettering), two overhead wires; no people, no signage, no text;
+  the same street as Get Involved's header. The beams thin as the leaves open (density × (1 + 0.6·leaf)(1 − 0.75·leaf),
+  the flood brings them back), so the street is not veiled. Measured: at most 0.50 of a screen without words at 1440
+  and 0.53 at 390 (was 1.83 and 1.60); 0.53 / 0.14 with reduced motion.
+- **M7 GPU memory (the lead's call, 12 Nov 2026; binding):** one budget, 48 MB, on every tier and viewport, counting
+  the drawing buffers, the shafts' one shared target, the baked lime wash and terrazzo, the runner, the wall maps and the
+  poster atlas (`world/memory.js`, `renderer.memory`). The 1024 px wall maps, the 1024 px atlas and the 512 px runner
+  are taken only on desktop-class Tier 2 where the whole still fits (`planTextures`); otherwise 512 / 512 / 256. With
+  MSAA the canvas is held to 0.85 M pixels; without it 2.9 M. **M7 fix round:** the budget holds after a resize: once
+  the textures are chosen, the canvas may only take what the budget leaves them (`canvasCap`), so a window grown after
+  load renders at a lower DPR, under 1 if need be, MSAA included (900 × 900 grown to 1440 × 900 was 68 MB; now 47.4).
+- **What M7 closed (Maxwell, 12 Nov 2026; confirmed by the M7 final recheck, prototype/PLAN.md section 9):**
+  (1) Get Involved names each of the four ways once: the header carries the H1, the intro and one link down; each way
+  is one object below (tile, name, line, list, links, one button). (2) The home's shutters open onto a Saigon street,
+  not a blank cream view, and the longest stretch without words over the beat is 0.43–0.50 of a screen at 1440 and
+  390, Tier 1 and 2, VI and EN (was 1.6–1.8); 0.50 / 0.11 without JS or with reduced motion. (3) The review bar, the
+  "View this page in English" bar and the header skirt end in light: no straight edge at the bars or the header's foot
+  on any first screen (46 pages, 390 and 1440, with and without JS), the skirt turns night with the sky, and the bar
+  has no backdrop blur to cut off square. (4) Tier 2 GPU memory is within 48 MB on every measured tier and viewport,
+  counted with every texture and checked at the WebGL calls (desktop Tier 2 47.3 MB, phone Tier 2 44.5 MB measured,
+  47.8 MB by the world's own count), and after a window grows (46.8–47.6 MB). **No live viewport takes the 1024 px
+  wall maps today:** beside a supersampled canvas they never fit, so desktop Tier 2 draws the 512 px maps (no visible
+  loss next to M6 at 1440); desktop Tier 2 has about 0.7 MB of headroom.
+- **Still open after M7:** at 390 the Little Rose lines are small under the pinned garden. The home's
+  first-10-second long task is still over its 200 ms gate on the stills path (260 ms at the final recheck, M6 about
+  280): most of it is the first style and layout of the whole page; Get Involved's is at the gate (161–212 ms). Content
+  passing under the bar leaves a faint 4–6 level trace through its 97% fill (field and button outlines read as faint
+  lines there). In a browser without scroll-driven animations and without JS the bar stays cream over the dusk (not
+  testable here: Chromium only). WordPress's Get Involved pattern still lists the ways as hcwa/louvers slats (each
+  once) and has not taken the one-object layout. Content edges at 390 remain: the News and Team placeholder cards.
 
 ## 1. Color tokens
 

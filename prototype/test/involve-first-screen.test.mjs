@@ -1,5 +1,5 @@
-// M6 "Cửa mở": Get Involved's first screen says come in. Four ways to help in the header, each with its
-// own button to its own page (Ủng hộ the only sun button among them), a welcoming H1 from content, the
+// M6 "Cửa mở": Get Involved's first screen says come in: a welcoming H1 from content, the sentence naming the four
+// ways and one link down to them (M7 fix round: the ways, each with its own button, are listed once below), the
 // window drawn in SVG (no photo, no person, no lettering), and no shade or grey left on the page.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -15,27 +15,17 @@ const render = (lang, prod = false) => { const c = ctx(lang, "getInvolved", prod
 const head = (body) => body.match(/<header class="gi-head">[\s\S]*?<\/header>/)[0];
 
 for (const lang of LANGS) {
-  test(`${lang}: the header's ways nav has all four ways, each one button to its own page`, () => {
+  // M7 fix round (Maxwell 12 Nov: the four ways were listed twice in a row): the header names the ways in its intro and
+  // links down to them; the ways themselves, each with its one button, are listed once under it (involve-pages.test).
+  test(`${lang}: the header welcomes, names the four ways and links down to them`, () => {
     const { c, body } = render(lang);
     const h = head(body);
-    const nav = h.match(/<nav class="ways" aria-label="([^"]+)">[\s\S]*?<\/nav>/);
-    assert.ok(nav, "a labelled ways nav in the header");
-    assert.equal(nav[1], esc(content.involve.waysLabel[lang]));
-    const ways = content.involve.ways;
-    assert.equal(ways.length, 4);
-    const items = nav[0].match(/<li class="way way--[\w-]+">[\s\S]*?<\/li>/g);
-    assert.equal(items.length, ways.length);
-    ways.forEach((w, i) => {
-      assert.match(items[i], new RegExp(`class="way way--${w.id}"`));
-      assert.ok(items[i].includes(`href="${c.url(ROUTE[w.id])}"`), `${w.id} links to its page`);
-      // M6 fix: one line each, the tile and its one action; no label that repeats the button.
-      assert.doesNotMatch(items[i], /way__title/, `${w.id}: no separate label`);
-      assert.equal((items[i].match(/<a\b/g) ?? []).length, 1, `${w.id}: one link`);
-      const label = w.id === "donate" ? c.t("donate") : c.tx(w.cta);
-      assert.ok(items[i].includes(esc(label)), `${w.id} button says ${label}`);
-    });
-    assert.equal((nav[0].match(/btn--primary/g) ?? []).length, 1, "Ủng hộ is the only sun button among the ways");
-    assert.match(items[0], /btn--primary/);
+    assert.doesNotMatch(h, /<nav class="ways"|class="way\b|class="btn/, "no tiles or buttons in the header");
+    assert.ok(h.includes(esc(content.involve.intro[lang])), "the intro names the ways");
+    assert.match(h, new RegExp(`<a class="text-link" href="#ways"><span>${esc(content.involve.seeWays[lang])}</span>`));
+    assert.match(body, /<section class="ways container" id="ways"/, "the link lands on the ways");
+    assert.equal(content.involve.ways.length, 4);
+    for (const w of content.involve.ways) assert.ok(body.includes(`href="${c.url(ROUTE[w.id])}"`), `${w.id} links to its page`);
     // The H1 is the welcome, marked as draft wording; the page title stays the section's name.
     assert.match(h, new RegExp(`<h1 class="gi-head__title" data-draft>${esc(content.involve.welcomeTitle[lang]).replace(/ /g, "(?:&nbsp;| |\\u00a0)")}</h1>`));
     assert.equal(render(lang).page.title, c.t("getInvolved"));
