@@ -526,6 +526,25 @@ Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages",
   lines there). In a browser without scroll-driven animations and without JS the bar stays cream over the dusk (not
   testable here: Chromium only). WordPress's Get Involved pattern still lists the ways as hcwa/louvers slats (each
   once) and has not taken the one-object layout. Content edges at 390 remain: the News and Team placeholder cards.
+- **After M8 (13 Nov 2026, prototype/PLAN.md section 9 "M8 long tasks" and "M8 fix round"):** content-visibility
+  only where the browser really skips at the first frame: the home's sheets and the kit page, never an inner page. On a
+  phone every inner-page box is laid out at the first frame anyway, and on the first screen at desktop widths it
+  caused a layout shift. Little Rose's steps animate the parts they light, not the whole garden. Home 115–211 ms and the
+  kit 116–136 ms against HEAD's 246–412 and 446–696 on the same machine. Get Involved, Little Rose and /hoat-dong/ are at
+  HEAD's level, with runs still over 200 ms on a busy machine (their first screen's drawings). WordPress's Get Involved
+  now has the one-object ways (hcwa/involve-head, hcwa/ways). The Volunteer, Partner and In-kind pages are not ported to
+  WordPress yet, so the ways link to their tops. A header-fit layout shift (0.02–0.06, desktop, a different page each
+  load) is in M7 and M8 alike and still open.
+- **Still open after M8 (final recheck, 13 Nov 2026, PLAN section 9 "M8 final recheck"):** home's long task 128–163 ms
+  (median 148) and Get Involved's 134–193 (median 146), both under the 200 ms gate in every run; the inner pages are
+  at HEAD's level, and in a 3-run sweep of all 46 pages 10 had one run at or over 200 ms (the hub, Little Rose, News,
+  Contact, Volunteer, Cầu Hàn, Thrive Together, Partner, About, the VI news hub; HEAD gives the same on the pages
+  re-run against it), so "every page under 200 ms with margin" is not met. What remains is the first screen's own
+  drawing (hub doors, Little Rose's garden, Contact's gate, Get Involved's window): markup work. Single LCP runs reach
+  2.6–2.7 s on Little Rose EN and the EN hub (medians under 2.5 s in the sweep, at the limit in a busier interleaved
+  set, HEAD alike). Also still open: the desktop header-fit shift above, check-hero's known 390 fails, the three
+  unported WordPress Involve sub-pages, the News and Team placeholder card edges at 390, and no check on a real
+  mid-range Android.
 
 ## 1. Color tokens
 

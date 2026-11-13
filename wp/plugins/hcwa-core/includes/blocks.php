@@ -210,7 +210,7 @@ function hcwa_blocks_editor_vi(): array {
 		'List item'                                   => 'Mục trong danh sách',
 		'Link'                                        => 'Liên kết',
 		'Button'                                      => 'Nút',
-		'Questions'                                  => 'Câu hỏi',
+		'Questions'                                   => 'Câu hỏi',
 		'Common questions with one answer each.'      => 'Các câu hỏi thường gặp, mỗi câu một câu trả lời.',
 		'Answer'                                      => 'Câu trả lời',
 		'Gift examples'                               => 'Ví dụ khoản ủng hộ',

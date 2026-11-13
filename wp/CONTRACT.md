@@ -779,6 +779,22 @@ the lead commits.
   removing its ids from that list. The sitewide `bakery` page key (`hcwa_page_paths()`,
   used by the home help section and the Little Rose door) still carries `#tiem-banh`, the
   same gap outside Get Involved.
+  M8 final recheck (13 Nov, final tree): `php wp/tests/run.php` 8532 passed, 0 failed;
+  wp-static-check 0 errors and the 10 known warnings; export:wp re-run changes nothing. The
+  pattern's hcwa/involve-head and hcwa/ways, rendered with the test stubs, against the
+  prototype rendered fresh from its sources (qa/m8/final/gi-diff/, gitignored): staging differs
+  only in the five links into the unported pages above; production (sub-pages published, no
+  verified donation details) leaves out the draft header words and lines, falls back to the
+  page title for the H1, leaves out Donate's three panel links, and prints four ways with one
+  button each, Ủng hộ the only primary. Closed by M8: Get Involved's one-object ways and the
+  Donate links under rule 11. Still open: the Volunteer, Partner and In-kind ports (above);
+  `hcwa_render_involve_head()` assumes the ways are on the page when it has no post, and only
+  checks that the post's content holds `hcwa/ways`, not that it printed (the critic's could;
+  the locked pattern always prints it); `HCWA_Art` gained `drawing()`, so a provider from the
+  `hcwa_art_provider` filter must implement it (every provider in the repo does). No live
+  WordPress parity, smoke or editor run on the final tree (Docker's daemon is not running here);
+  the last live parity on `main` is the M8 entry above, from before the fix round's Donate
+  and anchor changes.
 - **Final recheck (9 Nov, final tree).** All gates of `docs/plan/11-WP-PORT.md` section 7
   were run again; results, and what is not green, are in "Final recheck" below.
 - The 5 Nov sections below are history. Where they mention `site.css`, `patterns.css`,

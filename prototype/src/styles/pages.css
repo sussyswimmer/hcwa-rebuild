@@ -996,8 +996,8 @@ html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc
   .gi-stripes { top: 80%; }
 }
 
-/* WordPress's Get Involved pattern lists the ways once too, as slats (hcwa/louvers, louvers--page) under its lit header,
-   until the port takes the M6 header and these objects. */
+/* .louvers--page: kept only for WordPress Get Involved pages saved before M8 (hcwa/louvers under the lit header). Since
+   M8 the WordPress pattern prints this page's header and one-object ways (hcwa/involve-head, hcwa/ways). */
 .louvers--page { margin-top: 0; padding-top: clamp(32px, 5vw, 80px); }
 @media (max-width: 599.98px) { .louvers--page { padding-top: 48px; } }
 /* The slats open as they pass: each lit face widens from a sliver to its full patch (scroll-driven,
@@ -1717,14 +1717,29 @@ html.stages[data-motion="on"] :is(.lr-layer--2, .lr-layer--3, .lr-layer--4, .lr-
 @keyframes lr-step-3 { from { --step-3: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-3: 1; } }
 @keyframes lr-step-4 { from { --step-4: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-4: 1; } }
 @keyframes lr-step-5 { from { --step-5: 0; animation-timing-function: cubic-bezier(0.3, 0.1, 0.6, 1); } to { --step-5: 1; } }
-@keyframes lr-run { from { --lr-p: 0; } to { --lr-p: 1; } }
+/* M8 fix round (long tasks): each step runs on the parts of the picture it lights, and the layers' drift is a transform
+   animation of their own. Run on the garden itself, the six inherited values restyled its whole drawing (about 400
+   elements) when the timelines attached in the first frame, inside the page's longest task, and again on every
+   scrolled frame; now only those parts (about 20) and the four layers, whose transforms the compositor can run. The
+   values and ranges are the same as before (--lr-p's linear run of the whole story is the drift from +0.5 to -0.5 of
+   each layer's depth). Without scroll-driven animations motion/scroll3d.js still writes --step-n and --lr-p on the
+   garden, and they inherit down to the same parts. */
+@keyframes lr-drift {
+  from { transform: translate3d(0, calc(0.5 * var(--d) * 100% / 1.3), 0); }
+  to { transform: translate3d(0, calc(-0.5 * var(--d) * 100% / 1.3), 0); }
+}
 @supports (animation-timeline: view()) and (timeline-scope: --a) {
-  html.stages[data-motion="on"] .lr-garden {
-    animation: lr-step-1 linear both, lr-step-2 linear both, lr-step-3 linear both, lr-step-4 linear both, lr-step-5 linear both, lr-run linear both;
-    animation-timeline: --lr-s1, --lr-s2, --lr-s3, --lr-s4, --lr-s5, --lr-story;
-    animation-duration: auto;
-    animation-range: cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 15% cover 50%, cover 0% cover 100%;
+  html.stages[data-motion="on"] :is(.lr-layer--2, .lr-layer--3, .lr-layer--4, .lr-layer--5) {
+    animation: lr-drift linear both; animation-duration: auto; animation-timeline: --lr-story; animation-range: cover 0% cover 100%;
   }
+  html.stages[data-motion="on"] :is(.lr-warm, .lr-glow, .lr-cushion, .lr-steam path, .lr-books-shut, .lr-books-open, .lr-lamp-glow, .lr-loaf, .lr-notebook, .lr-bloom, .lr-sun, .lr-line-glow) {
+    animation-timing-function: linear; animation-fill-mode: both; animation-duration: auto; animation-range: cover 15% cover 50%;
+  }
+  html.stages[data-motion="on"] :is(.lr-warm, .lr-glow) { animation-name: lr-step-1; animation-timeline: --lr-s1; }
+  html.stages[data-motion="on"] :is(.lr-cushion, .lr-steam path) { animation-name: lr-step-2; animation-timeline: --lr-s2; }
+  html.stages[data-motion="on"] :is(.lr-books-shut, .lr-books-open, .lr-lamp-glow, .lr-loaf) { animation-name: lr-step-3; animation-timeline: --lr-s3; }
+  html.stages[data-motion="on"] :is(.lr-notebook, .lr-bloom) { animation-name: lr-step-4; animation-timeline: --lr-s4; }
+  html.stages[data-motion="on"] :is(.lr-sun, .lr-line-glow) { animation-name: lr-step-5; animation-timeline: --lr-s5; }
 }
 /* Tier 2: the sheets move in the breeze (6 s, only while the garden is on screen; never with motion off). */
 @keyframes lr-sway { from { transform: rotate(-1.4deg) skewX(1deg); } to { transform: rotate(1.4deg) skewX(-1deg); } }

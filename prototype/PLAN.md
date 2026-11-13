@@ -1919,7 +1919,8 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   (content-visibility: auto) and keep their last size (contain-intrinsic-size: auto, with a measured first estimate per
   box): the home's sheets' containers and programs, the corridor's track, the inner pages' `.day > .container`
   sections, the closing dusk band's container, the footer's columns, the kit's sections and its contrast table (now in a
-  `.pairs-box`). overflow-clip-margin: 3000px so the paint containment cuts nothing. (b) ui/cv-warm.js: after load, in
+  `.pairs-box`). (Narrowed in the fix round below to the home and the kit: on the inner pages it caused desktop layout
+  shifts and a second pass.) overflow-clip-margin: 3000px so the paint containment cuts nothing. (b) ui/cv-warm.js: after load, in
   idle time, each box far from the view is laid out once (.cv-warm for one frame, one box per frame), so the page has
   its real height long before anyone scrolls; boxes within a screen of the view are left to the browser (toggling those
   made Chrome score their words as a layout shift); again after a width change; "boxes" on the bus then refreshes
@@ -1928,18 +1929,14 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   ResizeObserver's first call (after the first layout, before the first paint); cv-warm reads innerWidth only from the
   load on. (e) reveals.js reads a skipped box's own rect, never a rect inside it (that would lay the box out).
   (f) scripts/lcp.cjs: DIST=<dir> measures another build; the long-task line gives each run and the median.
-- **Before → after** (lcp.cjs, 5 runs, default path; machine otherwise idle, same session): **home** longest task
-  median 247 → 140 ms, max 272 → 161 (runs 247, 247, 231, 272, 246 → 140, 122, 118, 161, 159); median LCP 2248 → 2128
-  ms (tier 0 2260 → 2224, tier 1 2292 → 2176), CLS 0.004 → 0.000. One earlier 5-run set of the same code had one 208
-  ms run (134, 161, 148, 208, 108); in traces the outliers are the same first pass with its style time doubled (S113
-  over 324 elements against 58–85), the machine's variance. **Get Involved** 131 / 152 → 135 / 169 ms (runs 114, 152,
-  131, 123, 140 → 115, 75, 154, 169, 135), LCP 1980 → 1988 ms, CLS 0: within the gate before and after on this machine
-  (M7's 161–212 came from a busier one); its first pass is the header window, on screen. Traced attribution after:
-  home's first pass S 324 elements / L 352 objects (was 706 / 808), the motion start split into tasks of 60–100 ms.
-- **Every page** (lt.cjs, 1 run each, then 5 runs on the slowest): all 46 under 200 ms: median of pages 134 ms, max
-  198 (/en/get-involved/volunteer/ in the 1-run pass; 69–139 over 5, before 120–152). 5 runs: /hoat-dong/ 141–198,
-  /tin-tuc/ 100–169, /chung-tay/ung-ho/ 101–157, /en/contact/ 106–153, /en/about/team/ 91–111, /components/ 77–140 and
-  /en/components/ 70–121 (before 381–459: the kit page laid out all 2139 elements first). Max LCP of any page 2292 ms.
+- **Before → after** (every 5-run set, not the best one; lcp.cjs default path, longest task in the first 10 s). This
+  first pass, as measured by its developer: **home** 247, 247, 231, 272, 246 → 140, 122, 118, 161, 159, and an earlier
+  set of the same code 134, 161, 148, 208, 108 (qa/m8/perf/lcp-final.log also had a 208); median LCP 2248 → 2128 ms.
+  **Get Involved** 114, 152, 131, 123, 140 → 115, 75, 154, 169, 135, and 191 in lcp-final.log. The critic's runs of
+  the same build: Get Involved 152, 118, 153, 113, 206 (HEAD 190, 170, 134, 128, 155), Little Rose 85, 205, 169, 180, 160
+  (HEAD 138, 135, 156, 172, 141). So the gate was not met on Get Involved, and Little Rose got worse. The fix round below
+  has the numbers for the shipped code.
+- **Every page** (this first pass, 1 run each): median 134 ms, max 198. That claim did not hold up: see the fix round.
 - **Nothing visual lost** (qa/m8/perf/tools/allpages.cjs + imgdiff2.py, before build vs after): all 46 pages at 390 and
   1440 with JS (after the warm-up) and 15 pages (one per template) at 390 and 1440 without JS (after one pass down the
   page): page heights and every section's top identical; screenshots at 4–6 positions per page equal within a 1 px
@@ -1947,11 +1944,132 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   the stills and default, phone and desktop, 24 positions): ScrollTrigger progress, the header's night state and
   colour, the stage classes and the reveals identical at every step (the shutters' stale is-armed after the world
   gives up is no longer set: it was never styled without html.stages). Anchors (/#contact, /#help, /en/#partners) stay
-  put through the warm-up. CLS: Thrive Together's 0.107 is the known header shift (0.104 before, also in the before
-  build); every other page 0.000–0.006.
+  put through the warm-up. CLS at the phone width only (lcp.cjs's 412 px): Thrive Together's 0.107 is the known header
+  shift (0.104 before). Not measured at desktop widths, where this pass made Our Work 0.132 at 1024 (HEAD 0.003): see the
+  fix round.
 - **Gates.** npm test 206/206; build, build:pages, check:links (46 pages, 0 dead) pass; PROD=1 build blocked only by its
   143 guards; export:wp re-run; php wp/tests/run.php 8521/0; wp-static-check 0 errors, the 10 known warnings.
 - **Still open.** Home's first pass still varies 110–210 ms with the machine (style time per element doubles in some
   runs); Get Involved's first pass is its on-screen window. The metric fallbacks' local() names (Arial, Liberation) do
   not exist on Android, so a phone pays for 12 failed lookups and gets no metric fallback: a font-stack question for
   the design stream. Not checked on a real mid-range Android.
+
+### M8 fix round (13 Nov 2026; tools, logs and builds in qa/m8/fix/)
+- **Desktop layout shift (must).** content-visibility on a box that is on the screen at load: Chrome first lays it out
+  at zero height, renders it a frame later and scores that as a shift (Our Work 0.132 at 1024, /hoat-dong/ 0.104, Team
+  0.029). A probe of what Chrome actually skips at the first frame (tools/skipped-first.cjs, 412x823, page JS blocked)
+  showed that on a phone **no inner-page box is ever skipped at the first frame**: everything within about five screens
+  is laid out in that same task. Skipping it first only adds a second style and layout pass. Get Involved's traces:
+  S 588 + 57 elements and L 650 + 704 objects, against HEAD's single S 638 / L 704. Only the home's sheets, dusk band
+  and footer columns (7+ screens down) and the kit's later sections are really skipped. So layout.css and ui/cv-warm.js now
+  scope the rule to those: `.page-home` sheets, track, dusk and footer columns; `.kit__body > .kit-sec ~ .kit-sec ~
+  .kit-sec`, `.kit-sec > .pairs-box`; `.page-kit` footer columns. No `.day > .container` and no inner dusk; the WordPress Get
+  Involved pattern (page-involve) gets none. The corridor's track stays. It is laid out at the first frame, but its
+  separate pass is cheaper than its share of the first one (home traced 162–186 ms with it, 177–197 without).
+  test/cv-boxes.test.mjs keeps the CSS and JS lists equal and the rule off `.day`.
+  **CLS after vs HEAD** (tools/cls-all.cjs: every page, load and one scroll through, at 390, 1024, 1280, 1440 and 1920;
+  1 to 3 runs per width for each build): Our Work 0.132 → 0.002 (1024), 0.104 → 0.001 (1280); /hoat-dong/ 0.104 → 0.001;
+  Team 0.029 → 0.001. Max load CLS per width after / HEAD: 390 0.000 / 0.000, 1024 0.029 / 0.061, 1280 0.002 / 0.035,
+  1440 0.029 / 0.025, 1920 0.027 / 0.027. Every row over HEAD + 0.005 is one header-fit shift (sources nav.nav,
+  site-header__tools, then main, 50–200 ms after load). It lands on a different page each run, in HEAD as often as after
+  (HEAD's full run had 4 pages with it, the shipped build's 2), and no page shows it twice. The fixed ones, in HEAD too:
+  /en/about/policies/ 0.020–0.029 and the disability-rights pilot 0.027 at 1920.
+- **Little Rose's 407-element recalc (must).** Traced with invalidation tracking (tools/trace-inv.cjs). It is the
+  garden's scroll-driven animations attaching at the first frame. The six registered, inherited properties (--step-1 …
+  --step-5, --lr-p) were animated on `.lr-garden`, so its whole drawing (about 400 elements) was restyled then, and on
+  every scrolled frame. It is in HEAD's first task too (traces/lrh-*), so nothing moved it there; it lands in or next to
+  that task with timing. Fix (pages.css): each step now runs on the parts it lights (about 20 elements). The layers'
+  drift is a transform animation of their own (lr-drift on --lr-story, compositor-friendly), with the same values and
+  ranges. The scroll3d.js fallback still writes the properties on the garden. Computed opacity, transform and
+  dash offset of every part and layer at 16 scroll positions, 412 and 1440: identical to before (≤ 0.01 px rounding;
+  tools/lr-steps.cjs). The attach recalc is now 197 elements, 14 ms (header plus parts).
+- **Long tasks, every 5-run set on the shipped code** (default path; this machine was slower and noisier than the first
+  pass's: HEAD's home ran 246–412 here against 231–272 there, and LCPs were about 250 ms higher):
+  - **Home**, lcp.cjs: 126, 115, 161, 164, 133 (median 133) and 188, 152, 198, 155, 162 (162). Interleaved against HEAD
+    (tools/ab.sh, critic's lcp-default copy): 182, 175, 166, 147, 230 vs 258, 248, 258, 401, 304; 119, 146, 143, 204,
+    177 vs 238, 403, 200, 394, 412; 153, 211, 184, 206, 177 (without the track's skip) vs 294, 292, 246, 309, 278.
+  - **Get Involved**, lcp.cjs: 151, 174, 159, 184, 125 (median 159) and 192, 227, 192, 160, 202 (192). Interleaved:
+    207, 148, 125, 136, 133 vs HEAD 158, 180, 133, 125, 127. That is HEAD's level: its first pass is the on-screen window
+    and the ways, which nothing can skip.
+  - **Little Rose**, lcp.cjs with the garden fix: 153, 135, 179, 157, 221 (median 157); before it, 229, 172, 167, 195,
+    201. Interleaved before the garden fix: 201, 257, 181, 188, 205 vs HEAD 224, 150, 172, 219, 136; with it 180, 129,
+    125, 207, 203.
+  - **Kit**: 120, 126, 136, 133, 116 vs HEAD 696, 446, 528, 457, 536. **/hoat-dong/**: 181, 223, 244, 105, 165 vs HEAD
+    142, 265, 198, 122, 220.
+  - **Every page, 1 run** (44 routes): median 132 ms, one over 200 (/hoat-dong/ 255; HEAD is over 200 on it too). Max
+    LCP 2616 ms (/hoat-dong/, at 2512–2576 median here in HEAD and after alike).
+  - **Verdict.** The home and the kit are well under HEAD in every set. The inner pages are back at HEAD's level, and
+    Little Rose's first task is lighter. The brief's target (every run under 200 ms, median at most 170) is not shown on
+    this machine for Get Involved, Little Rose or /hoat-dong/, whose HEAD runs miss it as well. Their first pass is the
+    first screen's own drawing: Get Involved's window (340 SVG elements), Little Rose's garden (387) and the hub's doors.
+    Making those cheaper is markup work on the drawings.
+- **Gates.** npm test 208/208 (new test/cv-boxes.test.mjs); build, build:pages, check:links (46 pages, 0 dead); PROD=1
+  blocked only by its 143 guards; export:wp re-run after the last change; php wp/tests/run.php 8532/0;
+  wp-static-check 0 errors, 10 known warnings.
+- **WordPress (shoulds).** `hcwa_way_html()`: the Donate way's links follow `hcwa_donate_parts()` (slip links only with
+  the slip panels, the tell link only with the tell form), as hcwa/sun-head's jumps do, and production asserts are in
+  involve-markup-test.php. The Volunteer, Partner and In-kind pages are not ported, so the ways link to their tops
+  (`hcwa_ways_unprinted_anchors()`). That is a known gap in CONTRACT.md Status with the follow-up, plus a parity allow
+  entry. Rule 11's wording covers both.
+
+### M8 final recheck (13 Nov 2026, on the final tree over checkpoint 196bca8; captures and logs in qa/m8/final/)
+- **Small changes on the final tree.** pages.css: the `.louvers--page` comment now says it is kept only for WordPress
+  Get Involved pages saved before M8 (comment only; the generated CSS is unchanged, only the export's version hash
+  moved). wp/plugins/hcwa-core/includes/blocks.php: the `'Questions'` editor label's alignment (the M8 WP critic's
+  could). export:wp re-run after both.
+- **Gates.** npm test 208/208. build, build:pages, check:links and check:links:pages pass (46 pages, 0 dead). PROD=1
+  build blocked only by its 143 guards. export:wp run twice: the second run changes nothing in wp/. php
+  wp/tests/run.php 8532/0; wp-static-check 0 errors, the 10 known warnings; `php -l` clean on blocks.php.
+- **Browser checks** (own preview on :4173, stopped by PID after; at most two browsers at once). check-page 56/0.
+  check-openings all pass. light-contrast the same 3 known 390 intro lines (6.7) of 254. check-hero 350 pass / 36
+  fail, all in the known groups: 390 intro contrast over the shaded base and the short phones' silhouette (34 lines;
+  vi-390-t2's intro at 6.97 this run, 7.04 in the critic's HEAD run: the borderline line of that group) and Tier 1's
+  ambient-motion probe at 390 (VI and EN, also failing in the critic's HEAD and after runs). Every GPU memory line
+  passes.
+- **Long tasks and LCP** (lcp.cjs conditions, default path; home and Get Involved with lcp.cjs itself, 5 runs, every
+  other page with the same script limited to the default path, 3 runs, serial, one browser; full table in
+  qa/m8/final/perf-table.md):
+  - **Home** 148, 163, 128, 134, 158 (median 148, max 163). LCP median 2212 / 2172 / 2164 ms (tier 0 / 1 / default),
+    CLS 0, three.js after LCP. **Get Involved** 173, 142, 146, 134, 193 (median 146, max 193). LCP 1956 / 2020 / 2040
+    ms, CLS 0. Both under the gate in every run; home has its margin, Get Involved's 193 does not.
+  - **Every page** (46): median of the page medians 149 ms. 10 pages had one run at or over 200 ms: /en/our-work/
+    239, 250, 264; /en/our-work/centers/little-rose/ 270, 227, 161; /en/news/ 249; /en/contact/ 218;
+    /en/get-involved/volunteer/ 216; /en/our-work/centers/cau-han-project/ 227; Thrive Together (VI) 210;
+    /en/get-involved/partner/ 204; /ve-chung-toi/ 205; /tin-tuc/ 201. Most of them ran in the sweep's first half: their
+    VI twins ran later at 137–160 median (/hoat-dong/ 135, 146, 137).
+  - **Interleaved against HEAD** (8c24879, the critic's build; tools/ab.sh, 1 run per call, alternating): /en/contact/
+    146 vs 161 median over 8 (max 173 vs 175), /en/our-work/ 162 vs 159 (max 192 vs 191); over 5: Little Rose EN 154 vs
+    133 (max 246 vs 217), Volunteer EN 149 vs 140. So the inner pages are at HEAD's level, and both builds give
+    single runs over 200 ms on the hub, Little Rose and Contact on this machine.
+  - **LCP.** Every page's median in the sweep is under 2.5 s (highest 2252 ms, /en/contact/). Single runs reach 2720
+    ms (Little Rose EN) and 2632 (/en/our-work/). In the interleaved sets those two pages' medians were 2588 / 2512
+    (Little Rose EN, final / HEAD) and 2480 / 2444 (/en/our-work/): at or over the 2.5 s limit in HEAD too, on a
+    busier stretch of the machine. CLS on the phone: 0.000–0.006 except Thrive Together's known 0.104 header shift.
+- **Home strips** (qa/m8/final/strip/, VI Tier 1, 24 frames over the page plus 28 over the shutters beat, 1440x900
+  and 390x844): world live, 0 page errors; longest wordless run over the beat 420 px (0.47 screen) at 1440 and 390 px
+  (0.46) at 390, the same as M7's final recheck. Sheets: strip/sheet-whole-vi-1440-t1.jpg and -390-t1.jpg; nothing
+  out of place against the M7 frames.
+- **WordPress against the prototype, Get Involved markup** (qa/m8/final/gi-diff/: tools/proto-gi.mjs renders the
+  prototype fresh from its sources, tools/wp-gi.php renders the pattern's hcwa/involve-head and hcwa/ways with the
+  test stubs). The pattern holds hcwa/sections > hcwa/involve-head, hcwa/day > hcwa/ways, hcwa/faq, hcwa/dusk-band;
+  the fresh prototype header and ways equal the golden cases byte for byte (VI and EN). Staging: the only differences
+  are the five links into the unported pages, which go to their tops (`#expect-title`, `#safe-title`, `#partner-form`,
+  `#needs-title`, `#tiem-banh`), the known gap. Production (sub-pages published, no verified donation details):
+  draft header words and lines left out (the H1 falls back to the page title), Donate's three panel links left out,
+  four ways with one button each and Ủng hộ the only sun button.
+- **Housekeeping.** No scratch build left in prototype/ (only the older untracked prototype/qa/m4 and the preview's
+  ignored .site/). qa/m8/ is in .gitignore. No server or browser of this recheck left running (the http.server on
+  :4900 is not ours and was left alone).
+- **What M8 closed.** The home's first-10-second long task (M7 260 ms, M6 280–293) is now 128–163 ms on this machine,
+  and the kit page's (446–696 in HEAD) 123–173 (VI and EN). Get Involved is under 200 in every run of this recheck (max 193). WordPress's
+  Get Involved takes the M7 one-object ways (hcwa/involve-head, hcwa/ways), with Donate's links following rule 11.
+- **Still open (not green).** The brief's "every page under 200 ms with margin, median at most 170" is not met: Get
+  Involved's max is 193 (no margin), 9 pages have a median over 170 in this sweep, and 10 pages had a run over 200
+  ms; HEAD does the same on the pages re-run against it. Their first task is the first screen's own drawing (the
+  hub's doors, Little Rose's garden, Contact's gate, the window), markup work for a later milestone. LCP single runs
+  over 2.5 s on Little Rose EN and /en/our-work/ (medians under 2.5 s in the sweep, at the limit in the interleaved
+  sets, HEAD alike). The desktop header-fit layout shift (0.02–0.06, a different page each load, M7 too). check-hero's
+  known 390 intro-contrast, short-phone and Tier 1 ambient-motion fails. The Volunteer, Partner and In-kind pages are
+  not ported to WordPress (the ways link to their tops). Not run here: a live WordPress parity or smoke run (Docker's
+  daemon is not running), a desktop-width CLS sweep on the final tree (the fix round's cls-all.cjs ran on the same
+  layout CSS), a real mid-range Android.
