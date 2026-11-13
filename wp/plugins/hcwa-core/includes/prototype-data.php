@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 return array(
-	'version' => 'd226f54370943036db312aa2bc92ed2fdf9e655ff0f71a9719ea2de56310e309',
+	'version' => '24ab94cf487f4feb7031cf0db2db95135daa562f059fa03b38549464bb5a682d',
 	'areas' => array(
 		'education',
 		'protection',

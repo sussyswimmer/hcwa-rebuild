@@ -201,6 +201,14 @@
       "match": "",
       "reason": "The page above this section is 29 px shorter at 390 (the news rows without the prototype's wrapped external-link icon, 2.8 'News list'), so the frame strip (5.5) lands the footer's lines a fraction of a pixel apart (WordPress sits 28.8 px higher, 13538.95 against 13567.75) and anti-aliased text differs by 1.26% in the band; the one page-length day gradient (05-DESIGN 0.5) also shifts its tone by that fraction. Same markup and height; the matrix's own footer shot differs by 0.12%.",
       "owner": "templates"
+    },
+    {
+      "route": "*",
+      "section": "main>.day>section#ways.ways",
+      "kind": "links",
+      "match": "^/(chung-tay/(tinh-nguyen|doi-tac-doanh-nghiep|hien-vat)|en/get-involved/(volunteer|partner|in-kind))/(#(expect-title|safe-title|partner-form|needs-title|tiem-banh|bakery))?$",
+      "reason": "Known gap (CONTRACT.md Status, M8 fix round): the Volunteer, Partner and In-kind pages are not ported, so no WordPress page prints the ids the prototype's ways jump to; hcwa_ways_unprinted_anchors() links those ways to the page's top until each is ported.",
+      "owner": "templates"
     }
   ]
 }

@@ -46,10 +46,20 @@ body:has(> .proto-note):has(> .en-bar:not([hidden])) { --bars-h: 84px; }
    (.cv-warm, one at a time, never a box within a screen of the view) so the page has its real height before
    anyone scrolls. The paint clip that comes with it is pushed out of reach (overflow-clip-margin), so nothing that
    overflows a box (a lattice row, a glow, a focus ring) is cut; every page was compared before and after at 390 and
-   1440, with and without JS (qa/m8/perf), heights, section tops and pixels the same. The corridor's track holds the
-   sticky frame (its containing block already) and has its explicit height on the stage. Without JS the browser does
-   the same as the visitor scrolls. */
-:is(.wall > .container, .wall > section, .bays-section > .bays__track, .day > .container, .kit__body > .kit-sec, .kit-sec > .pairs-box, .dusk > .container, .site-footer__cols) {
+   1440, with and without JS (qa/m8/perf), heights, section tops and pixels the same. Without JS the browser does the
+   same as the visitor scrolls.
+   Only boxes the browser really skips at the first frame get it (M8 fix round, qa/m8/fix): a box Chrome finds near
+   the view at its first frame (on a phone that is everything within about five screens of the top, measured on every
+   page at 412x823 with tools/skipped-first.cjs) is laid out in that same task anyway, so skipping it first only adds
+   a second style and layout pass (Get Involved's ways and FAQ, Little Rose's give), and a box on
+   the screen at load is first laid out at zero height and then rendered a frame later, which Chrome scores as a
+   layout shift (Our Work 0.13 at 1024). That leaves the home's sheets, its dusk band and footer columns (seven
+   screens down and more) and the corridor's track (near at the first frame, but its second pass is cheaper than its
+   share of the first: home 162-186 ms traced with it, 177-197 without; the track holds the sticky frame, its
+   containing block already, and has its explicit height on the stage), and the kit's sections from the third (the second is near at the first frame), its contrast table and its footer columns; the
+   inner pages are short enough that none of their boxes is ever skipped at the first frame, so none has it.
+   */
+:is(.page-home .bays-section > .bays__track, .page-home .wall > .container, .page-home .wall > section, .page-home .wall ~ .dusk > .container, .page-home .site-footer__cols, .kit__body > .kit-sec ~ .kit-sec ~ .kit-sec, .kit-sec > .pairs-box, .page-kit .site-footer__cols) {
   content-visibility: auto; contain-intrinsic-size: auto none auto var(--cv-h, 640px); overflow-clip-margin: 3000px;
 }
 /* Until a box has been laid out once it holds this height (measured on the home at 412 and 1440 px): close, so the
@@ -70,4 +80,4 @@ body:has(> .proto-note):has(> .en-bar:not([hidden])) { --bars-h: 84px; }
   #partners > .container, .dusk > .container { --cv-h: 240px; }
   .site-footer__cols { --cv-h: 480px; }
 }
-:is(.wall > .container, .wall > section, .bays-section > .bays__track, .day > .container, .kit__body > .kit-sec, .kit-sec > .pairs-box, .dusk > .container, .site-footer__cols).cv-warm { content-visibility: visible; }
+:is(.page-home .bays-section > .bays__track, .page-home .wall > .container, .page-home .wall > section, .page-home .wall ~ .dusk > .container, .page-home .site-footer__cols, .kit__body > .kit-sec ~ .kit-sec ~ .kit-sec, .kit-sec > .pairs-box, .page-kit .site-footer__cols).cv-warm { content-visibility: visible; }

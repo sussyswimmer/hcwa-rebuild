@@ -968,17 +968,20 @@ function hcwa_render_involve_head( array $a, ?WP_Post $post ): string {
 
 /**
  * Where each way's text links go, in the order of its links[] words: the right part of the
- * way's own page (prototype waysList()). [page key, fragment] pairs; the Donate fragments are
- * the Donate page's ids in the page language.
+ * way's own page (prototype waysList()). [page key, fragment, part] triples; the Donate
+ * fragments are the Donate page's ids in the page language, and each names the Donate part
+ * that prints it (hcwa_donate_parts(): the slip panels or the tell form), so a link is left out
+ * when its panel is (rule 11, as hcwa_render_sun_head() does). A fragment the target page does
+ * not print yet is dropped (hcwa_ways_unprinted_anchors()).
  *
- * @return array<string, array{route: string, links: array<int, array{0: string, 1: string}>}>
+ * @return array<string, array{route: string, links: array<int, array{0: string, 1: string, 2?: string}>}>
  */
 function hcwa_ways_targets(): array {
 	$pay = hcwa_pay_ids();
 	return array(
 		'donate'    => array(
 			'route' => 'donate',
-			'links' => array( array( 'donate', $pay['vn'] ), array( 'donate', $pay['abroad'] ), array( 'donate', $pay['tell'] ) ),
+			'links' => array( array( 'donate', $pay['vn'], 'slip' ), array( 'donate', $pay['abroad'], 'slip' ), array( 'donate', $pay['tell'], 'tell' ) ),
 		),
 		'volunteer' => array(
 			'route' => 'volunteer',
@@ -993,6 +996,19 @@ function hcwa_ways_targets(): array {
 			'links' => array( array( 'inKind', 'needs-title' ) ),
 		),
 	);
+}
+
+/**
+ * Ids the ways would jump to on pages WordPress does not print yet. The Volunteer, Partner and
+ * In-kind pages are still the seed's placeholder pages (CONTRACT.md Status, known gap: the
+ * prototype's involve-more pages are not ported), so until each is ported its links open the
+ * page at its top, never a fragment that goes nowhere. The bakery link is In-kind's #tiem-banh
+ * (#bakery in English). Remove an id here when its page prints it.
+ *
+ * @return string[]
+ */
+function hcwa_ways_unprinted_anchors(): array {
+	return array( 'expect-title', 'safe-title', 'partner-form', 'needs-title', 'tiem-banh', 'bakery' );
 }
 
 /**
@@ -1025,19 +1041,27 @@ function hcwa_way_html( array $w ): string {
 		$list  = ( '' !== $label['text'] ? '<p class="way__label"' . hcwa_draft_attr( $label['draft'] ) . '>' . esc_html( $label['text'] ) . '</p>' : '' ) . '<ul class="way__list">' . $list . '</ul>';
 	}
 
-	$links = array();
-	$words = array_values( (array) ( $w['links'] ?? array() ) );
+	$links    = array();
+	$words    = array_values( (array) ( $w['links'] ?? array() ) );
+	$parts    = $donate ? hcwa_donate_parts() : array();
+	$unprint  = hcwa_ways_unprinted_anchors();
+	$fragment = static fn( string $f ): string => '' === $f || in_array( $f, $unprint, true ) ? '' : '#' . $f;
 	foreach ( $targets[ $id ]['links'] as $i => $to ) {
-		$t     = hcwa_draft_text( hcwa_attr_text( is_scalar( $words[ $i ] ?? null ) ? (string) $words[ $i ] : '' ) );
-		$base  = hcwa_page_url_live( $to[0] );
+		$t    = hcwa_draft_text( hcwa_attr_text( is_scalar( $words[ $i ] ?? null ) ? (string) $words[ $i ] : '' ) );
+		$base = hcwa_page_url_live( $to[0] );
+		// A Donate link whose panel does not print (production without verified details or a way to tell us).
+		if ( isset( $to[2] ) && empty( $parts[ $to[2] ] ) ) {
+			continue;
+		}
 		if ( '' !== $t['text'] && '' !== $base ) {
-			$links[] = array( $base . '#' . $to[1], $t['text'], $t['draft'] );
+			$links[] = array( $base . $fragment( $to[1] ), $t['text'], $t['draft'] );
 		}
 	}
 	if ( 'in-kind' === $id ) {
 		$bakery = hcwa_page_url_live( 'bakery' );
 		if ( '' !== $bakery ) {
-			$links[] = array( $bakery, hcwa_t( 'bakery' ), false );
+			$hash    = (string) strstr( $bakery, '#' );
+			$links[] = array( substr( $bakery, 0, strlen( $bakery ) - strlen( $hash ) ) . $fragment( ltrim( $hash, '#' ) ), hcwa_t( 'bakery' ), false );
 		}
 	}
 	$go = '';

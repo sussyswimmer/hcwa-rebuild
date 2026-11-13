@@ -590,6 +590,13 @@ editable in Polylang.
     louvers without the arrow; a way in `hcwa/ways` keeps its name, line and list but loses
     the links and the button into an unpublished page; `p.partners__links` drops its items and is left out when
     empty; dusk bands drop the button). Staging links every page, as the prototype does.
+    A link into a part of a page prints only when that part prints: the Donate way in
+    `hcwa/ways` links to `#trong-nuoc` / `#tu-nuoc-ngoai` (`#in-vietnam` / `#from-abroad`) only
+    while `hcwa_donate_parts()['slip']` and to `#bao-cho-hoi` (`#tell-us`) only while
+    `['tell']`, exactly as `hcwa/sun-head` gates its jump links; on production without
+    verified details and without forms or a contact line it keeps only its button. A way's
+    link into a page WordPress does not print the id on yet (`hcwa_ways_unprinted_anchors()`:
+    the Volunteer, Partner and In-kind pages, not ported, see Status) goes to that page's top.
 12. **Left-out sections (11-WP-PORT.md 2.1 rules 10 to 12).** A section whose heading is
     left out drops its `aria-labelledby`; a section left with nothing under its heading
     is left out (the four world sections excepted). A sun head or hero whose title is left
@@ -760,6 +767,18 @@ the lead commits.
   more than once. Get Involved is no longer lit (the prototype's page has no lit header since
   M6). Parity on `main` (Get Involved VI and EN, 390 and 1440, every matrix mode): 0 differing
   sections, structure, text, links and pixels all pass (qa/m8/wp/parity/).
+  M8 fix round: the Donate way's three links follow `hcwa_donate_parts()` (rule 11), with
+  production assertions in `involve-markup-test.php`.
+  **Known gap (follow-up for the lead): the Volunteer, Partner and In-kind pages are not
+  ported.** In WordPress they are still the seed's placeholder pages, so none prints the ids
+  the prototype's ways jump to (`#expect-title`, `#safe-title`, `#partner-form`,
+  `#needs-title`, the bakery's `#tiem-banh` / `#bakery`). Until each is ported from
+  `prototype/src/pages/involve-more.mjs`, the ways link to the page's top
+  (`hcwa_ways_unprinted_anchors()`; the golden comparison strips those ids from the
+  prototype's markup and fails once the prototype stops printing them). Porting a page means
+  removing its ids from that list. The sitewide `bakery` page key (`hcwa_page_paths()`,
+  used by the home help section and the Little Rose door) still carries `#tiem-banh`, the
+  same gap outside Get Involved.
 - **Final recheck (9 Nov, final tree).** All gates of `docs/plan/11-WP-PORT.md` section 7
   were run again; results, and what is not green, are in "Final recheck" below.
 - The 5 Nov sections below are history. Where they mention `site.css`, `patterns.css`,

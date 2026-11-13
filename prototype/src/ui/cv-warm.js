@@ -1,12 +1,14 @@
 import { bus } from "../bus.js";
 
-// M8 long tasks: the content boxes below the fold skip their style and layout until they come near the screen
-// (layout.css, content-visibility: auto), so the first paint lays out the first screen only. This lays each box out
+// M8 long tasks: on the home and the kit page the content boxes far below the fold skip their style and layout until
+// they come near the screen (layout.css, content-visibility: auto; it says why no inner page has any), so the first
+// paint lays out much less. This lays each box out
 // once, one per frame in idle time after the first paint (html stays as it is: the box alone gets .cv-warm for one
 // frame), so each keeps its real size (contain-intrinsic-size: auto) and the page has its real height long before
 // anyone scrolls to a stage or a footer link. "boxes" on the bus says the sizes are in (motion/scroll.js refreshes
 // ScrollTrigger then). Again after a width change, which changes every box's height.
-export const CV_BOXES = ".wall > .container, .wall > section, .bays-section > .bays__track, .day > .container, .kit__body > .kit-sec, .kit-sec > .pairs-box, .dusk > .container, .site-footer__cols";
+// The same list as layout.css (test/cv-boxes.test.mjs keeps them equal).
+export const CV_BOXES = ".page-home .bays-section > .bays__track, .page-home .wall > .container, .page-home .wall > section, .page-home .wall ~ .dusk > .container, .page-home .site-footer__cols, .kit__body > .kit-sec ~ .kit-sec ~ .kit-sec, .kit-sec > .pairs-box, .page-kit .site-footer__cols";
 const idle = (fn) => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 50));
 
 export function initWarm() {

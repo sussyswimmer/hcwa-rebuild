@@ -22,13 +22,16 @@ hcwa_theme_register_art();
 $hcwa_gen_dir = $hcwa_theme_dir . '/assets/generated';
 $hcwa_art_of  = static fn( $p ) => new HCWA_Theme_Art( '/', $hcwa_gen_dir );
 // The stub apply_filters() runs these two hooks for this file only (hcwa_test_reset() clears it).
-$GLOBALS['hcwa_test']['run_filters'] = array( 'hcwa_art_provider', 'hcwa_lang' );
+$GLOBALS['hcwa_test']['run_filters'] = array( 'hcwa_art_provider', 'hcwa_lang', 'hcwa_forms_enabled' );
 $GLOBALS['hcwa_test']['hooks']['hcwa_art_provider'] = array( array( $hcwa_art_of, 10, 1 ) );
 $GLOBALS['hcwa_test']['hooks']['hcwa_lang']         = array( array( static fn( $l ) => $GLOBALS['hcwa_lang_now'] ?? $l, 10, 1 ) );
 hcwa_art( true );
 
 // The prototype prints root-relative links and escapes ' as &#39;; WordPress prints the site URL and &#039;.
 $hcwa_norm = static fn( string $html ): string => str_replace( array( 'https://hcwa.test/', '&#039;' ), array( '/', '&#39;' ), $html );
+// Known gap (CONTRACT.md Status): the Volunteer, Partner and In-kind pages are not ported, so the ways link to their
+// tops; the prototype's links into them carry the ids those pages print there.
+$hcwa_unported = static fn( string $html ): string => (string) preg_replace( '/(href="[^"#]*)#(?:' . implode( '|', hcwa_ways_unprinted_anchors() ) . ')"/', '$1"', $html );
 
 // The pattern's blocks, by name: [attrs] of hcwa/involve-head, hcwa/ways, and the body.
 $hcwa_pattern = static function ( string $lang ) use ( $hcwa_theme_dir ): array {
@@ -77,7 +80,8 @@ if ( null === $hcwa_golden ) {
 		$hcwa_head = $hcwa_norm( hcwa_render_involve_head( (array) ( $hcwa_p['hcwa/involve-head'] ?? array() ), $hcwa_post ) );
 		$hcwa_ways = $hcwa_norm( hcwa_render_ways( (array) ( $hcwa_p['hcwa/ways'] ?? array() ) ) );
 		hcwa_assert_same( "\n" . $hcwa_case['head'], $hcwa_head, "$hcwa_lang: hcwa/involve-head prints the prototype's header (window, breadcrumb, H1, intro, see-ways link)" );
-		hcwa_assert_same( "\n  " . $hcwa_case['ways'], $hcwa_ways, "$hcwa_lang: hcwa/ways prints the prototype's ways section" );
+		hcwa_assert_same( "\n  " . $hcwa_unported( $hcwa_case['ways'] ), $hcwa_ways, "$hcwa_lang: hcwa/ways prints the prototype's ways section (links into the unported pages without their ids)" );
+		hcwa_assert_true( $hcwa_unported( $hcwa_case['ways'] ) !== $hcwa_case['ways'], "$hcwa_lang: the golden still links into the unported pages' ids (drop this and hcwa_ways_unprinted_anchors() once they are ported)" );
 		// Through render.php, as WordPress runs it.
 		$hcwa_render = static function ( string $name, array $attributes ) use ( $hcwa_post ): string {
 			$file    = dirname( __DIR__ ) . '/plugins/hcwa-core/blocks/' . $name . '/render.php';
@@ -131,7 +135,13 @@ $hcwa_draft['ways'][1]['items'][0]  = '[DRAFT: Dạy kèm]';
 $hcwa_draft['ways'][1]['links'][0]  = '[DRAFT: Bạn sẽ làm gì]';
 $hcwa_html                          = hcwa_render_ways( $hcwa_draft );
 hcwa_assert_contains( '<li data-draft>Dạy kèm</li>', $hcwa_html, 'ways: a draft list item is outlined' );
-hcwa_assert_contains( '#expect-title" data-draft><span>Bạn sẽ làm gì</span>', $hcwa_html, 'ways: a draft link is outlined' );
+hcwa_assert_contains( 'href="https://hcwa.test/chung-tay/tinh-nguyen/" data-draft><span>Bạn sẽ làm gì</span>', $hcwa_html, 'ways: a draft link is outlined' );
+// No fragment into a page WordPress does not print it on yet (known gap: Volunteer, Partner, In-kind not ported).
+hcwa_assert_false( (bool) preg_match( '/#(expect-title|safe-title|partner-form|needs-title|tiem-banh|bakery)"/', $hcwa_html ), 'ways: no link into an id no WordPress page prints' );
+// Staging: Donate's three links go to its three panels.
+foreach ( array( 'trong-nuoc', 'tu-nuoc-ngoai', 'bao-cho-hoi' ) as $hcwa_frag ) {
+	hcwa_assert_contains( 'href="https://hcwa.test/chung-tay/ung-ho/#' . $hcwa_frag . '"', $hcwa_html, "ways (staging): Donate links to #$hcwa_frag" );
+}
 
 // Production: the four pages are published (the stub's get_page_by_path() finds them).
 foreach ( array( 'chung-tay/ung-ho' => 8811, 'chung-tay/tinh-nguyen' => 8812, 'chung-tay/doi-tac-doanh-nghiep' => 8813, 'chung-tay/hien-vat' => 8814 ) as $hcwa_path => $hcwa_id ) {
@@ -144,7 +154,18 @@ hcwa_assert_false( str_contains( $hcwa_html, 'data-draft' ), 'production: no dra
 hcwa_assert_false( str_contains( $hcwa_html, 'Dạy kèm' ) || str_contains( $hcwa_html, 'Bạn sẽ làm gì' ) || str_contains( $hcwa_html, 'way__text' ), 'production: draft words are left out' );
 hcwa_assert_contains( '<a class="btn btn--secondary way__btn" href="https://hcwa.test/chung-tay/tinh-nguyen/">Tình nguyện</a>', $hcwa_html, 'production: a draft button label falls back to the way\'s name' );
 hcwa_assert_contains( '<a class="btn btn--primary way__btn" href="https://hcwa.test/chung-tay/ung-ho/">Cách ủng hộ</a>', $hcwa_html, 'production: Ủng hộ keeps its verified label' );
-hcwa_assert_contains( 'href="https://hcwa.test/chung-tay/hien-vat/#tiem-banh"', $hcwa_html, 'production: the bakery link while In-kind is published' );
+hcwa_assert_contains( '<a class="text-link" href="https://hcwa.test/chung-tay/hien-vat/"><span>Tiệm bánh', $hcwa_html, 'production: the bakery link (to In-kind, not ported yet) while In-kind is published' );
+// Rule 11 for Donate's links: no verified details and no way to tell us on production, so the Donate page prints
+// neither its slip panels nor its tell form, and the ways link to none of them (as hcwa/sun-head leaves its jumps out).
+hcwa_assert_same( array( 'slip' => false, 'tell' => false ), hcwa_donate_parts(), 'production: Donate prints no slip and no tell form here' );
+hcwa_assert_false( (bool) preg_match( '/ung-ho\/#/', $hcwa_html ), 'production: no Donate link into a panel that does not print' );
+hcwa_assert_contains( 'way__btn" href="https://hcwa.test/chung-tay/ung-ho/"', $hcwa_html, 'production: Donate keeps its button' );
+// Forms on (the tell form prints): its link comes back, the slip links stay out.
+$GLOBALS['hcwa_test']['hooks']['hcwa_forms_enabled'] = array( array( static fn() => true, 10, 1 ) );
+$hcwa_html = hcwa_render_ways( $hcwa_ways );
+hcwa_assert_contains( 'href="https://hcwa.test/chung-tay/ung-ho/#bao-cho-hoi"', $hcwa_html, 'production, forms on: the tell link' );
+hcwa_assert_false( (bool) preg_match( '/ung-ho\/#(trong-nuoc|tu-nuoc-ngoai)"/', $hcwa_html ), 'production, forms on: no slip links without verified details' );
+unset( $GLOBALS['hcwa_test']['hooks']['hcwa_forms_enabled'] );
 
 $hcwa_html = hcwa_render_involve_head( $hcwa_head, $hcwa_post );
 hcwa_assert_contains( '<h1 class="gi-head__title">' . hcwa_vi_keep( 'Chung tay' ) . '</h1>', $hcwa_html, 'production: a draft welcome heading falls back to the page title' );
@@ -188,4 +209,4 @@ hcwa_assert_same(
 );
 // Its intro is the page description.
 hcwa_assert_same( 'Bạn có thể ủng hộ, tình nguyện, hợp tác hoặc tặng hiện vật.', hcwa_page_description( $hcwa_post )['text'], 'description: the header intro (staging)' );
-unset( $GLOBALS['hcwa_lang_now'], $GLOBALS['hcwa_test']['hooks']['hcwa_art_provider'], $GLOBALS['hcwa_test']['hooks']['hcwa_lang'] );
+unset( $GLOBALS['hcwa_lang_now'], $GLOBALS['hcwa_test']['hooks']['hcwa_art_provider'], $GLOBALS['hcwa_test']['hooks']['hcwa_lang'], $GLOBALS['hcwa_test']['hooks']['hcwa_forms_enabled'] );
