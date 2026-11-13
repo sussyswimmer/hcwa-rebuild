@@ -3,7 +3,7 @@
 // three.js was requested relative to the LCP, and on the default path (no flag: headless Chromium has
 // a software GPU, so this is the stills path CI's Lighthouse takes) no long task over 200 ms in the
 // first 10 s. Serves dist/ gzipped, as GitHub Pages does.
-//   npm run build && node scripts/lcp.cjs [runs=3] [path=/]
+//   npm run build && node scripts/lcp.cjs [runs=3] [path=/]      (DIST=<dir> measures another build of the site)
 // Conditions: Moto G Power viewport (412 x 823, DPR 1.75), Slow 4G as DevTools applies it
 // (562.5 ms RTT, 1474.56 kbps down, 675 kbps up), CPU 4x slower. Exits 1 over 2.5 s.
 const { chromium } = require("playwright");
@@ -14,7 +14,7 @@ const path = require("path");
 
 const runs = Number(process.argv[2] || 3);
 const route = process.argv[3] || "/";
-const dist = path.join(__dirname, "../dist");
+const dist = process.env.DIST ? path.resolve(process.env.DIST) : path.join(__dirname, "../dist");
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".avif": "image/avif", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".ico": "image/x-icon", ".txt": "text/plain" };
 const GZIP = /^(text\/|application\/json|image\/svg)/;
 const gz = new Map();
@@ -92,7 +92,8 @@ async function once(browser, base, query) {
     const after = all.every((r) => r.three == null || r.three > (r.lcp?.t ?? Infinity));
     console.log(`${label}: median LCP ${Math.round(lcp)} ms (limit 2500, goal 1800) · max CLS ${Math.max(...all.map((r) => r.cls)).toFixed(3)} · three.js after LCP: ${after}`);
     const longest = Math.max(0, ...all.flatMap((r) => r.long.map((e) => e.d)));
-    if (!query) console.log(`${label}: longest main-thread task in the first 10 s ${longest} ms (limit 200)`);
+    const each = all.map((r) => Math.max(0, ...r.long.map((e) => e.d)));
+    if (!query) console.log(`${label}: longest main-thread task in the first 10 s ${longest} ms (limit 200; median ${median(each)}, runs ${each.join(", ")})`);
     if (lcp > 2500 || !after || (!query && longest > 200)) fail = true;
   }
   await browser.close();

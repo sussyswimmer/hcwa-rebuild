@@ -38,7 +38,8 @@ Port checks (docs/plan/11-WP-PORT.md 5.7), on every seeded view unless --legacy:
     URL every loaded chunk imports the entry from; no hcwaI18n, Fraunces, jQuery, wp-embed or
     emoji script; on sections pages no global-styles or wp-block-library style
   - <html>: data-tier and data-motion after load, data-lit exactly on the lit pages
-  - body children in the 11-WP-PORT.md 2.2 order; .lit-head + .day on lit inner pages;
+  - body children in the 11-WP-PORT.md 2.2 order; .lit-head + .day on lit inner pages (Get Involved:
+    its window header, then the four ways once each);
     main ends on a dusk band where the page has one
   - every language-switch link equals the page's hreflang alternate; every header, sheet
     and footer link on this site answers 200 in the page's language
@@ -361,8 +362,9 @@ def check(target: dict, base: str, status: int | None, redirects: list[str], fin
 GENERATED = REPO / "wp" / "themes" / "hcwa-2026" / "assets" / "generated"
 I18N_KEYS = ("copy", "copied", "copyFailed", "f_sending", "f_send", "e_summary", "close", "motionPause",
              "motionPlay", "draftHide", "draftShow")
-LIT_PAGES = {"page-home", "page-work", "page-center", "page-program", "page-involve", "page-contact"}
-SECTIONS_PAGES = LIT_PAGES | {"page-donate", "page-gap"}
+LIT_PAGES = {"page-home", "page-work", "page-center", "page-program", "page-contact"}
+# Get Involved opens on its own header since M7/M8 (hcwa/involve-head: the window stage, not lit).
+SECTIONS_PAGES = LIT_PAGES | {"page-involve", "page-donate", "page-gap"}
 DUSK_PAGES = {"page-home", "page-work", "page-center", "page-program", "page-involve", "page-donate"}
 # 11-WP-PORT.md 2.2: body children in this order (each optional except the ones the page needs).
 BODY_ORDER = [
@@ -522,6 +524,8 @@ PORT_JS = r"""
       .map(a => a.href).filter(h => h.startsWith(origin)).map(h => h.split('#')[0]))],
     litHead: !!document.querySelector('main > .lit-head'),
     litHeadDay: !!document.querySelector('main > .lit-head + .day'),
+    involveHeadDay: !!document.querySelector('main > .s3d--involve > .gi-head h1') && !!document.querySelector('main > .s3d--involve + .day > .ways#ways'),
+    waysOnce: [...document.querySelectorAll('main .way[id^="way-"]')].map(w => w.id),
     endsOnDusk: !!document.querySelector('main > :last-child.dusk'),
     beats: document.querySelectorAll('[data-beat]').length,
     beatsOutside: [...document.querySelectorAll('[data-beat]')].filter(b => !centers || !centers.contains(b)).length,
@@ -640,6 +644,12 @@ def port_checks(target: dict, html: str, port: dict, requests: list[dict], ctx: 
             break
     if page_class in LIT_PAGES - {"page-home"} and not port.get("litHeadDay"):
         fails.append("port body: no main > .lit-head + .day on a lit page")
+    if page_class == "page-involve":
+        if not port.get("involveHeadDay"):
+            fails.append("port body: no main > .s3d--involve header followed by the ways on Get Involved")
+        ways = port.get("waysOnce") or []
+        if sorted(ways) != sorted(set(ways)) or len(ways) != 4:
+            fails.append(f"port body: Get Involved lists the four ways once each (got {ways})")
     if page_class in DUSK_PAGES and not port.get("endsOnDusk"):
         fails.append("port body: main does not end on its dusk band")
 

@@ -127,7 +127,7 @@ foreach ( $hcwa_pattern_files as $hcwa_file ) {
 		}
 		$hcwa_names[] = $hcwa_name;
 		hcwa_assert_true( isset( $hcwa_meta[ $hcwa_name ] ), "$hcwa_base: $hcwa_name is an hcwa-core block" );
-		if ( in_array( $hcwa_name, array( 'hcwa/hero', 'hcwa/lit-header', 'hcwa/sun-head' ), true ) ) {
+		if ( in_array( $hcwa_name, array( 'hcwa/hero', 'hcwa/lit-header', 'hcwa/involve-head', 'hcwa/sun-head' ), true ) ) {
 			++$hcwa_h1;
 		}
 		if ( 'hcwa/day' === $hcwa_name ) {

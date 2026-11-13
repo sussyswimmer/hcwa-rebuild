@@ -18,6 +18,7 @@ import { initSunIn } from "./motion/sun-in.js";
 import { initUiRest } from "./ui/index.js";
 import { initHeroPlate } from "./hero-plate.js";
 import { initScroll3d } from "./motion/scroll3d.js";
+import { initWarm } from "./ui/cv-warm.js";
 
 // Loading order (05-DESIGN D6.9): head-inline.js has set data-tier / data-motion / sun-pending;
 // this module (deferred) boots the sun-in and the UI, then the motion layer, then the world.
@@ -36,6 +37,8 @@ initEnBar(); // before paint: the pointer bar changes the hero's height
 initHeroPlate();
 initScroll3d(); // the Contact and News openings (PLAN-M4 5): native scroll only, no GSAP or Lenis
 requestAnimationFrame(() => setTimeout(initUiRest));
+// The boxes below the fold skip layout until near the screen (layout.css); each is laid out once after load (M8).
+initWarm();
 
 // Fonts are in the HTTP cache from here on: later pages skip waiting for them before the sun-in.
 document.fonts?.ready.then(() => { root.classList.add("wf"); store.set("hcwa:wf", "1", "sessionStorage"); });

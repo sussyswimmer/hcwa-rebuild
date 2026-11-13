@@ -36,8 +36,10 @@ export function initHeroPlate() {
   };
   let pending = 0;
   const later = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(check); };
-  new ResizeObserver(later).observe(inner);
+  // The observer's first call is the first check, after the first layout and before the first paint (M8: not a
+  // layout forced in main.js's own task); later ones wait for the next frame.
+  let first = true;
+  new ResizeObserver(() => (first ? ((first = false), check()) : later())).observe(inner);
   addEventListener("resize", later, { passive: true });
   document.fonts?.ready.then(later);
-  check();
 }

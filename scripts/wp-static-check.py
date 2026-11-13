@@ -87,12 +87,14 @@ DIST = THEME / "assets" / "dist"
 EXPORT_CMD = "npm --prefix prototype ci && npm --prefix prototype run export:wp"
 # Files the export writes and the repo commits (11-WP-PORT.md 1.3, 6.2).
 GENERATED_FILES = ("head-inline.staging.js", "head-inline.production.js", "page-reveal.js", "stills.json",
-                   "guards.json", "classes.json", "sources.json", "svg/gach-sprite.svg")
+                   "guards.json", "classes.json", "sources.json", "svg/gach-sprite.svg", "drawings/involve-window.html")
 GENERATED_ELSEWHERE = (CORE / "includes" / "prototype-data.php", TESTS / "fixtures" / "golden.json")
 # 11-WP-PORT.md 4.1: the blocks after the port, and the ones it deletes.
 PORT_BLOCKS_NEW = ("sections", "day", "lit-header", "sun-head", "dusk-band", "hero", "passage", "corridor",
                    "work-sheet", "shutters", "help", "work-hub", "louvers", "faq", "gifts", "contact-reach",
-                   "contact-units")
+                   "contact-units",
+                   # M8: the Get Involved header and its one-object ways (prototype pages/involve.mjs, M7).
+                   "involve-head", "ways")
 PORT_BLOCKS_KEPT = ("news-latest", "partner-wall", "donation-methods", "impact-strip", "program-list",
                     "report-list", "announcement-bar", "language-notice")
 PORT_BLOCKS_DELETED = ("center-grid",)
@@ -919,9 +921,14 @@ def check_patterns(report: Report, blocks: dict, tokens: dict[Path, dict], dump:
         for cat in [c.strip() for c in fields.get("Categories", "").split(",") if c.strip()]:
             if cat not in categories | core_cats:
                 report.error("patterns", where, f"category {cat!r} is not registered")
-        for name in parse_block_comments(text, where, report, blocks, balance=True):
+        names = parse_block_comments(text, where, report, blocks, balance=True)
+        for name in names:
             if name.startswith("pattern:"):
                 refs.append((name[8:], where))
+        # M7/M8: the ways to help are listed once per page (Maxwell, 12 Nov 2026: never twice in a row).
+        ways_blocks = [n for n in names if n in ("hcwa/ways", "hcwa/louvers", "hcwa/help")]
+        if len(ways_blocks) > 1:
+            report.error("patterns", where, f"the ways to help are listed more than once on the page ({', '.join(ways_blocks)})")
         if "<!-- wp:" not in text:
             report.error("patterns", where, "no block markup")
 

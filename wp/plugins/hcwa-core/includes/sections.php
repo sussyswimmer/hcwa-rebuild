@@ -403,8 +403,8 @@ function hcwa_is_sections_page( ?WP_Post $post ): bool {
 
 /**
  * A page's own description, as the prototype's layout() prints it in <meta name=description>
- * and og:description: a sections page's intro (the first hcwa/hero, hcwa/lit-header or
- * hcwa/sun-head in its hcwa/sections block), a center's "who we serve" line, a program's
+ * and og:description: a sections page's intro (the first hcwa/hero, hcwa/lit-header,
+ * hcwa/involve-head or hcwa/sun-head in its hcwa/sections block), a center's "who we serve" line, a program's
  * summary. Through hcwa_attr_text() and hcwa_draft_text(): off production the inner text of
  * a draft marker (no "[DRAFT: ]" brackets, as visible text), on production '' while draft.
  * ['text' => '', 'draft' => false] for anything else.
@@ -429,7 +429,7 @@ function hcwa_page_description( $post = null ): array {
 	} elseif ( hcwa_is_sections_page( $post ) ) {
 		$sections = hcwa_sections_find( parse_blocks( (string) $post->post_content ) );
 		foreach ( (array) ( $sections['innerBlocks'] ?? array() ) as $block ) {
-			if ( in_array( $block['blockName'] ?? '', array( 'hcwa/hero', 'hcwa/lit-header', 'hcwa/sun-head' ), true ) ) {
+			if ( in_array( $block['blockName'] ?? '', array( 'hcwa/hero', 'hcwa/lit-header', 'hcwa/involve-head', 'hcwa/sun-head' ), true ) ) {
 				$raw = is_scalar( $block['attrs']['intro'] ?? null ) ? (string) $block['attrs']['intro'] : '';
 				break;
 			}

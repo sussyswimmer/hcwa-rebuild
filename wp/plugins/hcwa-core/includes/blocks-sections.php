@@ -933,6 +933,165 @@ function hcwa_render_louvers( array $a ): string {
 }
 
 /**
+ * hcwa/involve-head on Get Involved (prototype getInvolved() header, "Cửa mở", M6/M7): the
+ * room's window with its shutters thrown open onto the street (HCWA_Art::drawing(), decorative),
+ * the breadcrumb, the H1, the intro and the one link down to the ways, inside the prototype's
+ * scroll stage (data-scroll3d="involve"; at rest, without JS or with reduced motion the shutters
+ * stand open and the text is all HTML). The H1 falls back to the page title while the welcome
+ * heading is a draft on production (2.1 rule 10); the link prints only when the page has the
+ * ways it jumps to (rule 11).
+ *
+ * @param array        $a    title, intro, seeWays.
+ * @param WP_Post|null $post The page.
+ */
+function hcwa_render_involve_head( array $a, ?WP_Post $post ): string {
+	$page  = $post ? hcwa_attr_text( (string) get_the_title( $post ) ) : '';
+	$page  = '' !== $page ? $page : hcwa_t( 'getInvolved' );
+	$title = hcwa_blocks_text( $a, 'title' );
+	$h1    = '' !== $title['text'] ? $title : array(
+		'text'  => $page,
+		'draft' => false,
+	);
+	$intro = hcwa_blocks_text( $a, 'intro' );
+	$see   = hcwa_blocks_text( $a, 'seeWays' );
+	$ways  = ! $post || false !== strpos( (string) $post->post_content, '<!-- wp:hcwa/ways' );
+	return "\n" . '<div class="s3d s3d--involve" data-scroll3d="involve" data-s3d-min="0.6"><header class="gi-head">' . "\n  "
+		. hcwa_art()->drawing( 'involve-window' ) . "\n  "
+		. '<div class="container gi-head__text">' . "\n    "
+		. hcwa_breadcrumb_html( $post ? hcwa_page_trail( $post, $page ) : array( array( $page ) ) ) . "\n    "
+		. '<h1 class="gi-head__title"' . hcwa_draft_attr( $h1['draft'] ) . '>' . esc_html( hcwa_vi_keep( $h1['text'] ) ) . '</h1>' . "\n    "
+		. ( '' !== $intro['text'] ? '<p class="gi-head__intro"' . hcwa_draft_attr( $intro['draft'] ) . '>' . esc_html( $intro['text'] ) . '</p>' : '' ) . "\n    "
+		. ( $ways && '' !== $see['text'] ? '<p class="gi-head__go"' . hcwa_draft_attr( $see['draft'] ) . '>' . hcwa_text_link_html( '#ways', $see['text'] ) . '</p>' : '' ) . "\n  "
+		. '</div>' . "\n"
+		. '</header></div>';
+}
+
+/**
+ * Where each way's text links go, in the order of its links[] words: the right part of the
+ * way's own page (prototype waysList()). [page key, fragment] pairs; the Donate fragments are
+ * the Donate page's ids in the page language.
+ *
+ * @return array<string, array{route: string, links: array<int, array{0: string, 1: string}>}>
+ */
+function hcwa_ways_targets(): array {
+	$pay = hcwa_pay_ids();
+	return array(
+		'donate'    => array(
+			'route' => 'donate',
+			'links' => array( array( 'donate', $pay['vn'] ), array( 'donate', $pay['abroad'] ), array( 'donate', $pay['tell'] ) ),
+		),
+		'volunteer' => array(
+			'route' => 'volunteer',
+			'links' => array( array( 'volunteer', 'expect-title' ), array( 'volunteer', 'safe-title' ) ),
+		),
+		'partner'   => array(
+			'route' => 'partner',
+			'links' => array( array( 'partner', 'partner-form' ) ),
+		),
+		'in-kind'   => array(
+			'route' => 'inKind',
+			'links' => array( array( 'inKind', 'needs-title' ) ),
+		),
+	);
+}
+
+/**
+ * One way to help as one object (prototype waysList(), M7 fix round): its tile and name, what
+ * it involves, its page's own list where it has one, text links into its page, and its one
+ * button at the foot. Ủng hộ is the only sun (primary) button. A link or button whose page is
+ * not published on production is left out (hcwa_page_url_live()); a button label that is a
+ * draft on production falls back to the way's name, so the way keeps its way in.
+ *
+ * @param array $w id, title, text, label, items[], note, links[], cta.
+ */
+function hcwa_way_html( array $w ): string {
+	$id      = (string) ( $w['id'] ?? '' );
+	$targets = hcwa_ways_targets();
+	$title   = hcwa_blocks_item_text( $w, 'title' );
+	if ( ! isset( $targets[ $id ] ) || '' === $title['text'] ) {
+		return '';
+	}
+	$donate = 'donate' === $id;
+	$text   = hcwa_blocks_item_text( $w, 'text' );
+	$note   = hcwa_blocks_item_text( $w, 'note' );
+
+	$list = '';
+	foreach ( (array) ( $w['items'] ?? array() ) as $item ) {
+		$t     = hcwa_draft_text( hcwa_attr_text( is_scalar( $item ) ? (string) $item : '' ) );
+		$list .= '' !== $t['text'] ? '<li' . hcwa_draft_attr( $t['draft'] ) . '>' . esc_html( $t['text'] ) . '</li>' : '';
+	}
+	if ( '' !== $list ) {
+		$label = hcwa_blocks_item_text( $w, 'label' );
+		$list  = ( '' !== $label['text'] ? '<p class="way__label"' . hcwa_draft_attr( $label['draft'] ) . '>' . esc_html( $label['text'] ) . '</p>' : '' ) . '<ul class="way__list">' . $list . '</ul>';
+	}
+
+	$links = array();
+	$words = array_values( (array) ( $w['links'] ?? array() ) );
+	foreach ( $targets[ $id ]['links'] as $i => $to ) {
+		$t     = hcwa_draft_text( hcwa_attr_text( is_scalar( $words[ $i ] ?? null ) ? (string) $words[ $i ] : '' ) );
+		$base  = hcwa_page_url_live( $to[0] );
+		if ( '' !== $t['text'] && '' !== $base ) {
+			$links[] = array( $base . '#' . $to[1], $t['text'], $t['draft'] );
+		}
+	}
+	if ( 'in-kind' === $id ) {
+		$bakery = hcwa_page_url_live( 'bakery' );
+		if ( '' !== $bakery ) {
+			$links[] = array( $bakery, hcwa_t( 'bakery' ), false );
+		}
+	}
+	$go = '';
+	foreach ( $links as $link ) {
+		$go .= '<li>' . hcwa_text_link_html( $link[0], $link[1], hcwa_draft_attr( $link[2] ) ) . '</li>';
+	}
+
+	$cta  = hcwa_blocks_item_text( $w, 'cta' );
+	$cta  = '' !== $cta['text'] ? $cta : array(
+		'text'  => $title['text'],
+		'draft' => $title['draft'],
+	);
+	$href = hcwa_page_url_live( $targets[ $id ]['route'] );
+	$act  = '' !== $href ? '<p class="way__act">' . hcwa_button_html( $href, $cta['text'], $donate ? 'primary' : 'secondary', hcwa_draft_attr( $cta['draft'] ), 'way__btn' ) . '</p>' : '';
+
+	return '<li class="way way--' . esc_attr( $id ) . '" id="way-' . esc_attr( $id ) . '">' . "\n        "
+		. '<h3 class="way__name"><span class="way__tile" aria-hidden="true">' . hcwa_art()->block_icon( 'hoaThi', 'way__block' ) . '</span><span' . hcwa_draft_attr( $title['draft'] ) . '>' . esc_html( hcwa_vi_keep( $title['text'] ) ) . '</span></h3>' . "\n        "
+		. ( '' !== $text['text'] ? '<p class="way__text"' . hcwa_draft_attr( $text['draft'] ) . '>' . esc_html( $text['text'] ) . '</p>' : '' ) . "\n        "
+		. $list . "\n        "
+		. ( '' !== $note['text'] ? '<p class="way__note"' . hcwa_draft_attr( $note['draft'] ) . '>' . esc_html( $note['text'] ) . '</p>' : '' ) . "\n        "
+		. ( '' !== $go ? '<ul class="way__go">' . $go . '</ul>' : '' ) . "\n        "
+		. $act . "\n      "
+		. '</li>';
+}
+
+/**
+ * hcwa/ways on Get Involved: "Các cách chung tay / Ways to help", each way once, as one object
+ * (prototype waysList()). The section is #ways, the target of the header's link.
+ *
+ * @param array $a title, ways[].
+ */
+function hcwa_render_ways( array $a ): string {
+	$items = '';
+	$seen  = array();
+	foreach ( hcwa_blocks_ways( $a ) as $w ) {
+		// Each way once, whatever the stored list holds.
+		if ( isset( $seen[ $w['id'] ] ) ) {
+			continue;
+		}
+		$seen[ $w['id'] ] = true;
+		$items           .= hcwa_way_html( $w );
+	}
+	if ( '' === $items ) {
+		return '';
+	}
+	$title = hcwa_blocks_text( $a, 'title' );
+	$h2    = '' !== $title['text'] ? '<h2 class="ways__title" id="ways-title" data-reveal="rise"><span' . hcwa_draft_attr( $title['draft'] ) . '>' . esc_html( hcwa_vi_keep( $title['text'] ) ) . '</span></h2>' : '';
+	return "\n  " . '<section class="ways container" id="ways"' . ( '' !== $h2 ? ' aria-labelledby="ways-title"' : '' ) . ">\n    "
+		. $h2 . "\n    "
+		. '<ul class="ways__list" data-reveal="stagger">' . $items . '</ul>' . "\n  "
+		. '</section>';
+}
+
+/**
  * hcwa/faq: the questions, each with its answer (one shared answer until HCWA writes them).
  *
  * @param array $a title, faq[] ({q, a}), answer.

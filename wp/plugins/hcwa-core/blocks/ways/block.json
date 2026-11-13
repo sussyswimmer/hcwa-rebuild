@@ -1,0 +1,70 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/ways",
+	"title": "Ways to help, one by one",
+	"category": "hcwa",
+	"icon": "list-view",
+	"description": "Each way to help once: its name, what it involves, links into its page and one button. Donate is the only sun button.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"ways": {
+			"type": "array",
+			"default": [],
+			"role": "content",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"enum": [
+							"donate",
+							"volunteer",
+							"partner",
+							"in-kind"
+						]
+					},
+					"title": {
+						"type": "string"
+					},
+					"text": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"note": {
+						"type": "string"
+					},
+					"links": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"cta": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"multiple": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

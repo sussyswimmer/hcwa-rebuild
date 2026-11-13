@@ -30,3 +30,5 @@ prototype/blender/out/
 qa/m6/
 # M7 fix-round QA captures (strips, probes): local only.
 qa/m7/
+# M8 captures (long tasks, WordPress Get Involved parity): local only.
+qa/m8/

@@ -62,7 +62,7 @@ export function components(c) {
   // ---- colour ----
   const swatches = Object.entries(TOKENS.colors).filter(([n]) => !n.startsWith("world-"));
   const color = html`<ul class="swatches">${swatches.map(([n, hex]) => html`<li><span class="swatch" style="background:var(--color-${n})"></span><code>--color-${n}</code><span class="swatch__hex">${hex}</span></li>`)}</ul>
-  <table class="pairs">
+  <div class="pairs-box"><table class="pairs">
     <caption class="sr-only">${k(S.color)}</caption>
     <tbody>${PAIRS.map((p) => {
       const fg = TOKENS.colors[tok(p.texto)], bg = TOKENS.colors[tok(p.fondo)];
@@ -77,7 +77,7 @@ export function components(c) {
         <td class="pair__result">${ok ? k(K.pass) : k(K.fail)}</td>
       </tr>`;
     })}</tbody>
-  </table>`;
+  </table></div>`;
 
   // ---- block set ----
   const usesOf = (kind) => [

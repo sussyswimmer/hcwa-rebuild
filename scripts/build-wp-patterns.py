@@ -100,12 +100,40 @@ def our_work(c: dict, lang: str) -> str:
     ])
 
 
+# The Get Involved page's ways (prototype pages/involve.mjs waysList(), M7 one-object ways): each way's
+# name and line, its page's list (from involve-pages.json), the words of its links into that page
+# (in the order hcwa_ways_targets() gives their targets) and its one button.
+def involve_ways(c: dict, lang: str) -> list[dict]:
+    involve, pages = c["involve"], c["involve-pages"]
+    d, v, p, k = involve["donatePage"], pages["volunteer"], pages["partner"], pages["inKind"]
+    detail = {
+        "donate": {"links": [d["inVietnam"], d["fromAbroad"], d["tellTitle"]], "cta": d["howTitle"]},
+        "volunteer": {"label": v["lookTitle"], "items": [a["title"] for a in v["areas"]], "links": [v["expectTitle"], v["safetyTitle"]]},
+        "partner": {"label": p["waysTitle"], "items": [w["title"] for w in p["ways"]], "links": [p["contactTitle"]]},
+        "in-kind": {"note": k["first"], "links": [k["needsTitle"]]},
+    }
+    out = []
+    for w in involve["ways"]:
+        x = detail[w["id"]]
+        row = {"id": w["id"], "title": text(w["title"], lang), "text": text(w["text"], lang)}
+        if "label" in x:
+            row["label"] = text(x["label"], lang)
+            row["items"] = [text(t, lang) for t in x["items"]]
+        if "note" in x:
+            row["note"] = text(x["note"], lang)
+        row["links"] = [text(t, lang) for t in x["links"]]
+        row["cta"] = text(x.get("cta") or w["cta"], lang)
+        out.append(row)
+    return out
+
+
 def get_involved(c: dict, lang: str) -> str:
     site, involve = c["site"], c["involve"]
     return sections([
-        block("hcwa/lit-header", {"still": "header-get-involved", "size": "display", "intro": text(involve["intro"], lang)}),
+        block("hcwa/involve-head", {"title": text(involve["welcomeTitle"], lang), "intro": text(involve["intro"], lang),
+                                    "seeWays": text(involve["seeWays"], lang)}),
         day("involve", [
-            block("hcwa/louvers", {"ways": ways(involve, lang)}),
+            block("hcwa/ways", {"title": text(involve["waysLabel"], lang), "ways": involve_ways(c, lang)}),
             block("hcwa/faq", {"title": text(involve["faqTitle"], lang), "faq": [{"q": text(f["q"], lang)} for f in involve["faq"]],
                                "answer": text(involve["faqAnswer"], lang)}),
         ]),
@@ -168,8 +196,8 @@ PAGES = {
                       ("Trang Hoạt động: đầu trang, bộ lọc, các cửa cơ sở, các dự án, dải hoàng hôn.",
                        "The Our Work page: header, filters, center doors, programs, evening band.")),
     "page-get-involved": (get_involved, ("Chung tay", "Get Involved"), "chung tay, get involved, volunteer, faq",
-                          ("Trang Chung tay: đầu trang, các cách giúp, câu hỏi thường gặp, dải hoàng hôn.",
-                           "The Get Involved page: header, ways to help, common questions, evening band.")),
+                          ("Trang Chung tay: đầu trang với khung cửa sổ mở, từng cách chung tay, câu hỏi thường gặp, dải hoàng hôn.",
+                           "The Get Involved page: header with the open window, the ways to help one by one, common questions, evening band.")),
     "page-donate": (donate, ("Ủng hộ", "Donate"), "ủng hộ, donate, bank, transfer",
                     ("Trang Ủng hộ: đầu trang, ví dụ khoản ủng hộ, phiếu chuyển khoản, báo cho Hội, liên kết tin cậy, dải hoàng hôn.",
                      "The Donate page: header, gift examples, transfer slip, tell us you gave, trust links, evening band.")),
@@ -211,7 +239,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--check", action="store_true", help="exit 1 and name the stale patterns; write nothing")
     args = ap.parse_args()
-    c = {name: load(name) for name in ("site", "work", "involve")}
+    c = {name: load(name) for name in ("site", "work", "involve", "involve-pages")}
     stale = []
     for name in PAGES:
         for lang in LANGS:

@@ -543,6 +543,44 @@ return array(
 		'editorScript' => 'file:./index.js',
 		'render'       => 'file:./render.php',
 	),
+	'involve-head'     => array(
+		'$schema'      => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion'   => 3,
+		'name'         => 'hcwa/involve-head',
+		'title'        => 'Get Involved header',
+		'category'     => 'hcwa',
+		'icon'         => 'welcome-widgets-menus',
+		'description'  => 'The Get Involved header: the open window onto the street, the heading, the intro and the link down to the ways.',
+		'textdomain'   => 'hcwa',
+		'attributes'   => array(
+			'title'   => array(
+				'type'    => 'string',
+				'default' => '',
+				'role'    => 'content',
+			),
+			'intro'   => array(
+				'type'    => 'string',
+				'default' => '',
+				'role'    => 'content',
+			),
+			'seeWays' => array(
+				'type'    => 'string',
+				'default' => '',
+				'role'    => 'content',
+			),
+		),
+		'usesContext'  => array(
+			'postId',
+			'postType',
+		),
+		'supports'     => array(
+			'html'     => false,
+			'reusable' => false,
+			'multiple' => false,
+		),
+		'editorScript' => 'file:./index.js',
+		'render'       => 'file:./render.php',
+	),
 	'language-notice'  => array(
 		'$schema'      => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion'   => 3,
@@ -915,6 +953,76 @@ return array(
 		'supports'     => array(
 			'html'     => false,
 			'reusable' => false,
+		),
+		'editorScript' => 'file:./index.js',
+		'render'       => 'file:./render.php',
+	),
+	'ways'             => array(
+		'$schema'      => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion'   => 3,
+		'name'         => 'hcwa/ways',
+		'title'        => 'Ways to help, one by one',
+		'category'     => 'hcwa',
+		'icon'         => 'list-view',
+		'description'  => 'Each way to help once: its name, what it involves, links into its page and one button. Donate is the only sun button.',
+		'textdomain'   => 'hcwa',
+		'attributes'   => array(
+			'title' => array(
+				'type'    => 'string',
+				'default' => '',
+				'role'    => 'content',
+			),
+			'ways'  => array(
+				'type'    => 'array',
+				'default' => array(),
+				'role'    => 'content',
+				'items'   => array(
+					'type'       => 'object',
+					'properties' => array(
+						'id'    => array(
+							'type' => 'string',
+							'enum' => array(
+								'donate',
+								'volunteer',
+								'partner',
+								'in-kind',
+							),
+						),
+						'title' => array(
+							'type' => 'string',
+						),
+						'text'  => array(
+							'type' => 'string',
+						),
+						'label' => array(
+							'type' => 'string',
+						),
+						'items' => array(
+							'type'  => 'array',
+							'items' => array(
+								'type' => 'string',
+							),
+						),
+						'note'  => array(
+							'type' => 'string',
+						),
+						'links' => array(
+							'type'  => 'array',
+							'items' => array(
+								'type' => 'string',
+							),
+						),
+						'cta'   => array(
+							'type' => 'string',
+						),
+					),
+				),
+			),
+		),
+		'supports'     => array(
+			'html'     => false,
+			'reusable' => false,
+			'multiple' => false,
 		),
 		'editorScript' => 'file:./index.js',
 		'render'       => 'file:./render.php',

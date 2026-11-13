@@ -106,6 +106,15 @@ interface HCWA_Art {
 	 * @param string $path Path relative to the bundle.
 	 */
 	public function asset_url( string $path ): string;
+
+	/**
+	 * A drawn scene the prototype prints whole, as markup ('involve-window': the Get Involved
+	 * header's window onto the street), '' when missing. Decorative (aria-hidden) and never a
+	 * photo: no person, no child, no lettering.
+	 *
+	 * @param string $name Drawing name (assets/generated/drawings/<name>.html).
+	 */
+	public function drawing( string $name ): string;
 }
 
 /**
@@ -171,6 +180,11 @@ class HCWA_Art_None implements HCWA_Art {
 
 	/** @inheritDoc */
 	public function asset_url( string $path ): string {
+		return '';
+	}
+
+	/** @inheritDoc */
+	public function drawing( string $name ): string {
 		return '';
 	}
 }
@@ -271,6 +285,11 @@ class HCWA_Art_Guard implements HCWA_Art {
 	/** @inheritDoc */
 	public function asset_url( string $path ): string {
 		return $this->inner->asset_url( $path );
+	}
+
+	/** @inheritDoc */
+	public function drawing( string $name ): string {
+		return $this->inner->drawing( $name );
 	}
 }
 

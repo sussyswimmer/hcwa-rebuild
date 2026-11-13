@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hcwa/involve-head",
+	"title": "Get Involved header",
+	"category": "hcwa",
+	"icon": "welcome-widgets-menus",
+	"description": "The Get Involved header: the open window onto the street, the heading, the intro and the link down to the ways.",
+	"textdomain": "hcwa",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"intro": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		},
+		"seeWays": {
+			"type": "string",
+			"default": "",
+			"role": "content"
+		}
+	},
+	"usesContext": [
+		"postId",
+		"postType"
+	],
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"multiple": false
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

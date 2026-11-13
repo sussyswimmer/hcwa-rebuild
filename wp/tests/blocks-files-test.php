@@ -30,6 +30,11 @@ $hcwa_contract = array(
 		'callUs'  => $hcwa_text(),
 		'writeUs' => $hcwa_text(),
 	),
+	'involve-head'     => array(
+		'title'   => $hcwa_text(),
+		'intro'   => $hcwa_text(),
+		'seeWays' => $hcwa_text(),
+	),
 	'sun-head'         => array(
 		'intro'      => $hcwa_text(),
 		'go'         => $hcwa_text(),
@@ -69,6 +74,10 @@ $hcwa_contract = array(
 	),
 	'louvers'          => array(
 		'ways' => $hcwa_list(),
+	),
+	'ways'             => array(
+		'title' => $hcwa_text(),
+		'ways'  => $hcwa_list(),
 	),
 	'faq'              => array(
 		'title'  => $hcwa_text(),

@@ -1,3 +1,5 @@
+import { CV_BOXES } from "../ui/cv-warm.js";
+
 // Fade-ups for content still below the fold (05-DESIGN D5.4: 12 px, 520 ms). data-reveal="stagger" reveals
 // its children one after another (stagger-cascade: 60 ms, at most 5 steps). Content is visible by default:
 // .reveal-pending is added only when motion is allowed, so no JS, reduced motion and pause show everything.
@@ -14,7 +16,12 @@ export function initReveals() {
   // data-reveal-on="entry": as soon as it crosses the foot (the help heading rising into the shutters' flood).
   const entry = new IntersectionObserver(seen, { rootMargin: "100000px 0px 0px 0px" });
   // Every rect is read before any class is written: one style and layout pass, not one per section.
-  const below = [...document.querySelectorAll("[data-reveal]")].filter((el) => el.getBoundingClientRect().top > innerHeight);
+  // A group inside a box that skips its layout (layout.css, M8) is below the fold when its box is: its own rect would
+  // lay the box out now, in this task.
+  const below = [...document.querySelectorAll("[data-reveal]")].filter((el) => {
+    const box = el.parentElement?.closest(CV_BOXES);
+    return (box && box.getBoundingClientRect().top > innerHeight) || el.getBoundingClientRect().top > innerHeight;
+  });
   below.forEach((el) => {
     targets(el).forEach((t, i) => {
       if (el.dataset.reveal === "stagger") t.style.setProperty("--i", Math.min(i, MAX_STEPS - 1));

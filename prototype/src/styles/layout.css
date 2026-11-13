@@ -37,3 +37,37 @@ body:has(> .proto-note):has(> .en-bar:not([hidden])) { --bars-h: 84px; }
 
 /* ---------- article layout ---------- */
 .cover { margin-top: 32px; }
+
+/* ---------- M8 long tasks: lay out what is off the screen only as it comes near ---------- */
+/* The first style and layout pass of a page was its longest main-thread task (home 220-330 ms on a Moto G, 4x CPU):
+   every sheet down to the footer was styled and laid out before the first paint. The content boxes below the fold
+   skip that work until they come near the screen (content-visibility: auto), keeping the size they last had
+   (contain-intrinsic-size: auto), and main.js lays each one out once in idle time after the first paint
+   (.cv-warm, one at a time, never a box within a screen of the view) so the page has its real height before
+   anyone scrolls. The paint clip that comes with it is pushed out of reach (overflow-clip-margin), so nothing that
+   overflows a box (a lattice row, a glow, a focus ring) is cut; every page was compared before and after at 390 and
+   1440, with and without JS (qa/m8/perf), heights, section tops and pixels the same. The corridor's track holds the
+   sticky frame (its containing block already) and has its explicit height on the stage. Without JS the browser does
+   the same as the visitor scrolls. */
+:is(.wall > .container, .wall > section, .bays-section > .bays__track, .day > .container, .kit__body > .kit-sec, .kit-sec > .pairs-box, .dusk > .container, .site-footer__cols) {
+  content-visibility: auto; contain-intrinsic-size: auto none auto var(--cv-h, 640px); overflow-clip-margin: 3000px;
+}
+/* Until a box has been laid out once it holds this height (measured on the home at 412 and 1440 px): close, so the
+   page's length barely moves before the warm-up, or as a no-JS visitor scrolls. */
+#centers > .bays__track { --cv-h: 2660px; }
+#work > .container { --cv-h: 1800px; }
+#work > .programs { --cv-h: 1440px; }
+#news > .container { --cv-h: 1250px; }
+#partners > .container, .dusk > .container { --cv-h: 310px; }
+.site-footer__cols { --cv-h: 1130px; }
+.kit__body > .kit-sec { --cv-h: 2000px; }
+.kit-sec > .pairs-box { --cv-h: 5000px; }
+@media (min-width: 1024px) {
+  #centers > .bays__track { --cv-h: 3000px; }
+  #work > .container { --cv-h: 960px; }
+  #work > .programs { --cv-h: 1210px; }
+  #news > .container { --cv-h: 710px; }
+  #partners > .container, .dusk > .container { --cv-h: 240px; }
+  .site-footer__cols { --cv-h: 480px; }
+}
+:is(.wall > .container, .wall > section, .bays-section > .bays__track, .day > .container, .kit__body > .kit-sec, .kit-sec > .pairs-box, .dusk > .container, .site-footer__cols).cv-warm { content-visibility: visible; }

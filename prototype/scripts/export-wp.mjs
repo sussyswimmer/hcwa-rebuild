@@ -5,7 +5,8 @@
 // 2. Writes the markup and data the theme and hcwa-core print without the bundle, all from the
 //    prototype's own functions, so nothing is copied by hand:
 //      wp/themes/hcwa-2026/assets/generated/   head-inline (both variants), page-reveal.js, svg/*.svg,
-//                                              stills.json, guards.json, classes.json, sources.json
+//                                              drawings/*.html, stills.json, guards.json, classes.json,
+//                                              sources.json
 //      wp/plugins/hcwa-core/includes/prototype-data.php
 //      wp/tests/fixtures/golden.json           input and output pairs for the PHP ports
 //    and the editor palette in wp/themes/hcwa-2026/theme.json (settings.color.palette only).
@@ -39,6 +40,7 @@ import { BUCKETS as WORLD_BUCKETS } from "../src/world/buckets.js";
 import { cropsOf } from "../src/world/still-shots.js";
 import { hasStill, stillAspect } from "../src/partials/still.mjs";
 import { EMBLEMS, doorLight } from "../src/world/objects/door.js";
+import { involveWindow } from "../src/partials/involve-window.mjs";
 import { parse as parseTokens } from "./tokens-to-js.mjs";
 
 export const PROTO = resolve(import.meta.dirname, "..");
@@ -577,6 +579,19 @@ export function golden(stills, rendered) {
       known.add(out);
     }
   }
+  // Get Involved (M7 one-object ways): the prototype's own header and ways section in both languages,
+  // cut from the rendered page, for hcwa/involve-head and hcwa/ways rendered from the page pattern.
+  g.involve = [];
+  for (const lang of ["vi", "en"]) {
+    const page = rendered.find((r) => r.key === "getInvolved" && r.lang === lang);
+    if (!page) throw new Error(`export-wp: the Get Involved page (${lang}) was not rendered`);
+    const cut = (start, end) => {
+      const i = page.html.indexOf(start), j = i < 0 ? -1 : page.html.indexOf(end, i);
+      if (j < 0) throw new Error(`export-wp: Get Involved (${lang}) has no ${start}…${end}`);
+      return page.html.slice(i, j + end.length);
+    };
+    g.involve.push({ lang, head: cut('<div class="s3d s3d--involve"', "</header></div>"), ways: cut('<section class="ways container"', "</section>") });
+  }
   g.head_inline = { staging: headInlineJs(false), production: headInlineJs(true) };
   g.page_reveal = pageRevealJs();
   return g;
@@ -666,6 +681,9 @@ export async function generate({ dist = DIST } = {}) {
     out.set(gen(`svg/rail-transom-${emblem}.svg`), str(screenArt(emblem, { cols: 3, rows: 1, cls: "rail__transom" })));
     out.set(gen(`svg/plate-mark-${emblem}.svg`), str(blockIcon(emblem, "plate__mark")));
   }
+
+  // Drawn scenes the blocks print whole (HCWA_Art::drawing()): the Get Involved window (hcwa/involve-head).
+  out.set(gen("drawings/involve-window.html"), str(involveWindow()));
 
   const stills = await stillsJson();
   // The PHP builder's algorithm, in JS, must give back every picture the prototype prints.

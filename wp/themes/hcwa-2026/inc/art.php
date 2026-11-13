@@ -2,7 +2,8 @@
 /**
  * The theme's art for hcwa-core (docs/plan/11-WP-PORT.md 1.4): stills, the hero posters and the
  * gạch, transom and emblem SVG, all built from the export's files in assets/generated/
- * (stills.json and svg/) and the bundle in assets/dist/, so the markup is the prototype's own.
+ * (stills.json, svg/ and drawings/) and the bundle in assets/dist/, so the markup is the
+ * prototype's own.
  *
  * hcwa-core declares the HCWA_Art interface and wraps whatever provider the 'hcwa_art_provider'
  * filter gives in HCWA_Art_Guard (which refuses the stills showing the Little Rose door until
@@ -92,6 +93,13 @@ function hcwa_theme_declare_art(): void {
 		 * @var array<string, string>
 		 */
 		private $svg = array();
+
+		/**
+		 * Drawings read so far (assets/generated/drawings/).
+		 *
+		 * @var array<string, string>
+		 */
+		private $drawings = array();
 
 		/**
 		 * @param string|null $base      URL of the bundle folder (tests use '/'); default assets/dist/.
@@ -366,6 +374,18 @@ function hcwa_theme_declare_art(): void {
 		/** @inheritDoc */
 		public function asset_url( string $path ): string {
 			return $this->base . ltrim( $path, '/' );
+		}
+
+		/** @inheritDoc */
+		public function drawing( string $name ): string {
+			if ( ! preg_match( '/^[a-z0-9-]+$/', $name ) ) {
+				return '';
+			}
+			if ( ! isset( $this->drawings[ $name ] ) ) {
+				$path                    = $this->dir . '/drawings/' . $name . '.html';
+				$this->drawings[ $name ] = is_readable( $path ) ? (string) file_get_contents( $path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local theme file.
+			}
+			return $this->drawings[ $name ];
 		}
 	}
 }

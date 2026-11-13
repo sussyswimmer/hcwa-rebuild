@@ -1901,3 +1901,57 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   scrolls under it. A browser without scroll-driven animations and without JS (bar stays cream over the dusk): not
   testable here (Chromium only). WordPress's Get Involved pattern has not taken the one-object ways (it lists each way
   once as hcwa/louvers slats). No real mid-range Android check of the S3 street's frame time.
+
+### M8 long tasks (13 Nov 2026, Maxwell: "fix the long tasks"; tools, logs and captures in qa/m8/perf/)
+- **What the long task was.** Traced with CDP (qa/m8/perf/tools/lt.cjs: lcp.cjs's Moto G conditions, Slow 4G, 4x CPU,
+  cold, gzip, stills path, plus a trace of each run and what the longest tasks were made of). Home: (1) the first style
+  and layout pass, 220–330 ms: UpdateLayoutTree about 100 ms over 706 elements and Layout about 115 ms over 808 objects,
+  the whole page down to the footer styled and laid out before the first paint (in about half the runs inside main.js's
+  own task, forced by reads at module evaluation: the header's fit, the hero plate's check and, later, innerWidth);
+  about 40 ms of it is font matching (the metric fallbacks' local() lookups and system fallback). Selector matching is
+  small (selector stats: 48 ms over all 41 recalcs unthrottled); emptying the CSS takes the warm rebuild from 96 to 17
+  ms, and the work sheet alone is 40 of the 96. (2) The motion layer's start, 140–340 ms: the chunk's evaluation plus
+  startScroll, the passage, the stages and the shutters, each forcing a style and layout of most of the page, in one
+  task. The scroll-driven header block and body:has() were not it (M7, and the selector stats agree). Get Involved's
+  first pass is mostly its on-screen header window (the window's SVG drawing and leaves: hiding .gi-stage takes 40 ms
+  off; the street SVG alone nothing), which stays.
+- **Fixes.** (a) layout.css: the content boxes below the fold skip style and layout until they come near the screen
+  (content-visibility: auto) and keep their last size (contain-intrinsic-size: auto, with a measured first estimate per
+  box): the home's sheets' containers and programs, the corridor's track, the inner pages' `.day > .container`
+  sections, the closing dusk band's container, the footer's columns, the kit's sections and its contrast table (now in a
+  `.pairs-box`). overflow-clip-margin: 3000px so the paint containment cuts nothing. (b) ui/cv-warm.js: after load, in
+  idle time, each box far from the view is laid out once (.cv-warm for one frame, one box per frame), so the page has
+  its real height long before anyone scrolls; boxes within a screen of the view are left to the browser (toggling those
+  made Chrome score their words as a layout shift); again after a width change; "boxes" on the bus then refreshes
+  ScrollTrigger (motion/scroll.js). (c) motion/index.js: the motion layer starts one part per task (scheduler.yield, else
+  setTimeout). (d) No layout read in main.js's first task: the header's fit and the hero plate's first check are their
+  ResizeObserver's first call (after the first layout, before the first paint); cv-warm reads innerWidth only from the
+  load on. (e) reveals.js reads a skipped box's own rect, never a rect inside it (that would lay the box out).
+  (f) scripts/lcp.cjs: DIST=<dir> measures another build; the long-task line gives each run and the median.
+- **Before → after** (lcp.cjs, 5 runs, default path; machine otherwise idle, same session): **home** longest task
+  median 247 → 140 ms, max 272 → 161 (runs 247, 247, 231, 272, 246 → 140, 122, 118, 161, 159); median LCP 2248 → 2128
+  ms (tier 0 2260 → 2224, tier 1 2292 → 2176), CLS 0.004 → 0.000. One earlier 5-run set of the same code had one 208
+  ms run (134, 161, 148, 208, 108); in traces the outliers are the same first pass with its style time doubled (S113
+  over 324 elements against 58–85), the machine's variance. **Get Involved** 131 / 152 → 135 / 169 ms (runs 114, 152,
+  131, 123, 140 → 115, 75, 154, 169, 135), LCP 1980 → 1988 ms, CLS 0: within the gate before and after on this machine
+  (M7's 161–212 came from a busier one); its first pass is the header window, on screen. Traced attribution after:
+  home's first pass S 324 elements / L 352 objects (was 706 / 808), the motion start split into tasks of 60–100 ms.
+- **Every page** (lt.cjs, 1 run each, then 5 runs on the slowest): all 46 under 200 ms: median of pages 134 ms, max
+  198 (/en/get-involved/volunteer/ in the 1-run pass; 69–139 over 5, before 120–152). 5 runs: /hoat-dong/ 141–198,
+  /tin-tuc/ 100–169, /chung-tay/ung-ho/ 101–157, /en/contact/ 106–153, /en/about/team/ 91–111, /components/ 77–140 and
+  /en/components/ 70–121 (before 381–459: the kit page laid out all 2139 elements first). Max LCP of any page 2292 ms.
+- **Nothing visual lost** (qa/m8/perf/tools/allpages.cjs + imgdiff2.py, before build vs after): all 46 pages at 390 and
+  1440 with JS (after the warm-up) and 15 pages (one per template) at 390 and 1440 without JS (after one pass down the
+  page): page heights and every section's top identical; screenshots at 4–6 positions per page equal within a 1 px
+  shift and antialiasing (the kit's contrast table 1–2 px lower in its new box). Home behaviour (behave.cjs, staged with
+  the stills and default, phone and desktop, 24 positions): ScrollTrigger progress, the header's night state and
+  colour, the stage classes and the reveals identical at every step (the shutters' stale is-armed after the world
+  gives up is no longer set: it was never styled without html.stages). Anchors (/#contact, /#help, /en/#partners) stay
+  put through the warm-up. CLS: Thrive Together's 0.107 is the known header shift (0.104 before, also in the before
+  build); every other page 0.000–0.006.
+- **Gates.** npm test 206/206; build, build:pages, check:links (46 pages, 0 dead) pass; PROD=1 build blocked only by its
+  143 guards; export:wp re-run; php wp/tests/run.php 8521/0; wp-static-check 0 errors, the 10 known warnings.
+- **Still open.** Home's first pass still varies 110–210 ms with the machine (style time per element doubles in some
+  runs); Get Involved's first pass is its on-screen window. The metric fallbacks' local() names (Arial, Liberation) do
+  not exist on Android, so a phone pays for 12 failed lookups and gets no metric fallback: a font-stack question for
+  the design stream. Not checked on a real mid-range Android.

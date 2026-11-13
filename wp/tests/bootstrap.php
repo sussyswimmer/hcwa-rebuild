@@ -175,8 +175,14 @@ if ( ! function_exists( 'has_action' ) ) {
 	}
 }
 if ( ! function_exists( 'apply_filters' ) ) {
-	/** Passthrough: returns the value unchanged. */
+	/**
+	 * Passthrough: returns the value unchanged, except for the hooks a test lists in
+	 * $GLOBALS['hcwa_test']['run_filters'] (cleared by hcwa_test_reset()), whose callbacks run.
+	 */
 	function apply_filters( $hook, $value, ...$args ) {
+		if ( in_array( $hook, (array) ( $GLOBALS['hcwa_test']['run_filters'] ?? array() ), true ) && function_exists( 'hcwa_test_run_filters' ) ) {
+			return hcwa_test_run_filters( $hook, $value, ...$args );
+		}
 		return $value;
 	}
 }

@@ -179,7 +179,9 @@
 	 * whose items keep their order and count (the pattern sets them; staff change words only).
 	 *
 	 * @param {Object} props  Block props.
-	 * @param {Array}  fields [{ key, label, when? }] or [{ key, label, list: [{ key, label }] }].
+	 * @param {Array}  fields [{ key, label, when? }] or [{ key, label, list: [{ key, label, strings?, ifPresent? }] }];
+	 *                        a sub-field with `strings` is an array of plain strings in each item;
+	 *                        `strings` and `ifPresent` fields show only on items that carry them.
 	 * @return {Array} Elements.
 	 */
 	function textFields( props, fields ) {
@@ -211,20 +213,48 @@
 						'div',
 						{ key: i, className: 'hcwa-text-list__item' },
 						el( 'span', { className: 'hcwa-text-list__n' }, wp.i18n.sprintf( __( 'Item %d', 'hcwa' ), i + 1 ) ),
-						field.list.map( function ( sub ) {
+						field.list.filter( function ( sub ) {
+							// A sub-field the item does not carry (a way without a list or a note) is not offered.
+							if ( sub.strings ) {
+								return item && Array.isArray( item[ sub.key ] ) && item[ sub.key ].length > 0;
+							}
+							return ! sub.ifPresent || ( item && 'string' === typeof item[ sub.key ] );
+						} ).map( function ( sub ) {
+							var set = function ( value ) {
+								var copy = items.map( function ( x ) {
+									return Object.assign( {}, x );
+								} );
+								copy[ i ][ sub.key ] = value;
+								var next = {};
+								next[ field.key ] = copy;
+								props.setAttributes( next );
+							};
+							if ( sub.strings ) {
+								// A list of plain strings inside the item (a way's list, its link words):
+								// one field per string, the count and order fixed by the pattern.
+								var strings = item[ sub.key ];
+								return el(
+									'div',
+									{ key: sub.key, className: 'hcwa-text-list__strings' },
+									strings.map( function ( s, j ) {
+										return el( TextField, {
+											key: j,
+											label: sub.label + ' ' + ( j + 1 ),
+											value: s,
+											onChange: function ( value ) {
+												var copy = strings.slice();
+												copy[ j ] = value;
+												set( copy );
+											},
+										} );
+									} )
+								);
+							}
 							return el( TextField, {
 								key: sub.key,
 								label: sub.label,
 								value: item ? item[ sub.key ] : '',
-								onChange: function ( value ) {
-									var copy = items.map( function ( x ) {
-										return Object.assign( {}, x );
-									} );
-									copy[ i ][ sub.key ] = value;
-									var next = {};
-									next[ field.key ] = copy;
-									props.setAttributes( next );
-								},
+								onChange: set,
 							} );
 						} )
 					);

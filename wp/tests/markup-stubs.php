@@ -199,6 +199,23 @@ if ( ! function_exists( 'get_page_by_path' ) ) {
 		return $id ? get_post( $id ) : null;
 	}
 }
+if ( ! function_exists( 'get_post_ancestors' ) ) {
+	/**
+	 * Ancestor IDs, nearest first, from post_parent (as WordPress returns them).
+	 *
+	 * @param int|WP_Post $post Post.
+	 * @return int[]
+	 */
+	function get_post_ancestors( $post ) {
+		$post = get_post( $post );
+		$out  = array();
+		while ( $post && $post->post_parent && ! in_array( (int) $post->post_parent, $out, true ) ) {
+			$out[] = (int) $post->post_parent;
+			$post  = get_post( $post->post_parent );
+		}
+		return $out;
+	}
+}
 if ( ! function_exists( 'get_post_field' ) ) {
 	function get_post_field( $field, $post = null, $context = 'display' ) {
 		$post = get_post( $post );

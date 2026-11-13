@@ -145,6 +145,7 @@ interface HCWA_Art {
 	public function screen_art( string $emblem, string $cls ): string;
 	public function block_icon( string $emblem, string $cls ): string;
 	public function asset_url( string $path ): string;
+	public function drawing( string $name ): string;                   // M8: generated/drawings/<name>.html ('involve-window'), '' when missing
 }
 ```
 
@@ -169,7 +170,8 @@ interface HCWA_Art {
   `blocks/blocks-manifest.php`): containers `hcwa/sections`, `hcwa/day`; home sections
   `hcwa/hero`, `hcwa/passage`, `hcwa/corridor`, `hcwa/work-sheet`, `hcwa/news-latest`,
   `hcwa/shutters`, `hcwa/help`, `hcwa/partner-wall`, `hcwa/dusk-band`; inner pages
-  `hcwa/lit-header`, `hcwa/sun-head`, `hcwa/work-hub`, `hcwa/louvers`, `hcwa/faq`,
+  `hcwa/lit-header`, `hcwa/involve-head`, `hcwa/sun-head`, `hcwa/work-hub`, `hcwa/ways`,
+  `hcwa/louvers` (kept registered for pages saved before M8; no pattern uses it), `hcwa/faq`,
   `hcwa/gifts`, `hcwa/donation-methods`, `hcwa/contact-reach`, `hcwa/contact-units`;
   shared `hcwa/impact-strip`, `hcwa/program-list`, `hcwa/report-list`,
   `hcwa/language-notice`, `hcwa/announcement-bar`. (`hcwa/center-grid` was deleted by the
@@ -186,8 +188,12 @@ interface HCWA_Art {
   dusk-band `anchor`, `titleId`, `title`*, `lines` (phone | email | sponsorship), `actions`
   (donate | volunteer | partner | contact), `note`* · lit-header `still`, `size` ("" |
   display | program), `title`*, `intro`*, `actions` ("" | reach), `callUs`*, `writeUs`* ·
-  sun-head `intro`*, `go`*, `jumpAbroad`*, `jumpTell`* · work-hub `centersLead`*,
-  `programsLead`* · louvers `ways`* · faq `title`*, `faq`* (array of {q, a}), `answer`* ·
+  involve-head `title`*, `intro`*, `seeWays`* · sun-head `intro`*, `go`*, `jumpAbroad`*,
+  `jumpTell`* · work-hub `centersLead`*, `programsLead`* · ways `title`*, `ways`* (array of
+  {id: donate | volunteer | partner | in-kind, title, text, label?, items?: string[], note?,
+  links: string[], cta}; `links` are the words of the way's links in the order
+  `hcwa_ways_targets()` gives their targets, the in-kind bakery link is the `bakery` UI string)
+  · louvers `ways`* · faq `title`*, `faq`* (array of {q, a}), `answer`* ·
   gifts `title`*, `gifts`* · donation-methods: the labels of the slip and the tell form
   (`howTitle`*, `tabsLabel`*, `inVietnam`*, `fromAbroad`*, `qr`*, `pendingNote`*, `paypal`*,
   `toCenterTitle`*, `tellTitle`*, `tellLead`*, …, `bankFields`*, `abroadFields`*; never a
@@ -386,6 +392,10 @@ hcwa_page_is_published( string $key, ?string $lang = null ): bool
 hcwa_page_url_live( string $key, ?string $lang = null ): string  // '' on production when the page is not published
 hcwa_queried_attachment_id(): int          // the attachment the main query shows, whatever the query
 hcwa_art( bool $reset = false ): HCWA_Art  // HCWA_Art_Guard around the theme's provider or HCWA_Art_None
+hcwa_render_involve_head( array $a, ?WP_Post $post ): string  // M8 Get Involved header (prototype getInvolved())
+hcwa_render_ways( array $a ): string       // M8 the ways, each once, as one object (prototype waysList())
+hcwa_way_html( array $w ): string          // one way: tile + name h3, line, list, links, one button
+hcwa_ways_targets(): array                 // each way's page key and link fragments (Donate's in the page language)
 ```
 
 `scripts/wp-static-check.py` compares every signature in this block with the code.
@@ -577,7 +587,8 @@ editable in Polylang.
     impact and the reports anchor, policies and its anchors, partners, news) use
     `hcwa_page_url_live()`: on production '' for a page that is not published, and the
     caller leaves the link out (louver labels and Donate's trust items stay as words, the
-    louvers without the arrow; `p.partners__links` drops its items and is left out when
+    louvers without the arrow; a way in `hcwa/ways` keeps its name, line and list but loses
+    the links and the button into an unpublished page; `p.partners__links` drops its items and is left out when
     empty; dusk bands drop the button). Staging links every page, as the prototype does.
 12. **Left-out sections (11-WP-PORT.md 2.1 rules 10 to 12).** A section whose heading is
     left out drops its `aria-labelledby`; a section left with nothing under its heading
@@ -697,7 +708,7 @@ the lead commits.
 - **Built.** The assets stream's export (milestone A: `vite.wp.config.js`,
   `export-wp.mjs`, `assets/generated/**`, `prototype-data.php`, `golden.json`) and theme
   head and enqueue; the templates stream's content model (3.2), core functions (above),
-  the 25 blocks, every template and template part, the generated page patterns, the
+  the 25 blocks (27 since M8), every template and template part, the generated page patterns, the
   draft-scan `printed` column and the coverage rows for the new fields; the harness
   (`scripts/wp-parity/`, the smoke and seed extensions, the static check).
 - **Locking spike:** contentOnly passed, 15 of 15 checks (Decisions above).
@@ -731,6 +742,24 @@ the lead commits.
   the head metadata with the prototype; the allow entries for the EN 390 news shift are
   scoped to 390, and the two lit-header logo entries were deleted once the mask made them
   unnecessary.
+- **M8 (13 Nov 2026): Get Involved takes the prototype's M7 one-object ways.** Two new blocks:
+  `hcwa/involve-head` (the window stage `div.s3d.s3d--involve` with the drawn window from
+  `HCWA_Art::drawing( 'involve-window' )`, breadcrumb, H1, intro and the see-ways link, printed
+  only when the page holds `hcwa/ways`) and `hcwa/ways` (`section.ways#ways`, each way once:
+  tile, name h3, line, its page's list, text links into its page, one button; Ủng hộ the only
+  primary button). The Get Involved patterns use them in place of `hcwa/lit-header` and
+  `hcwa/louvers`; `hcwa/louvers` stays registered (no pattern uses it; `hcwa/help` on the home
+  page still prints the louver rows). The export writes `assets/generated/drawings/involve-window.html`
+  and golden cases `involve` (the prototype's own header and ways section in VI and EN, cut
+  from its rendered page); `wp/tests/involve-markup-test.php` renders both blocks from the
+  generated patterns and matches them byte for byte. On production a draft welcome heading
+  falls back to the page title, a draft button label to the way's name, draft lines and list
+  items are left out, and links and buttons into unpublished pages are left out (rule 11).
+  The shared editor's list fields take string arrays (`strings: true`) and fields only some
+  items carry (`ifPresent: true`). The static check fails a page pattern that lists the ways
+  more than once. Get Involved is no longer lit (the prototype's page has no lit header since
+  M6). Parity on `main` (Get Involved VI and EN, 390 and 1440, every matrix mode): 0 differing
+  sections, structure, text, links and pixels all pass (qa/m8/wp/parity/).
 - **Final recheck (9 Nov, final tree).** All gates of `docs/plan/11-WP-PORT.md` section 7
   were run again; results, and what is not green, are in "Final recheck" below.
 - The 5 Nov sections below are history. Where they mention `site.css`, `patterns.css`,

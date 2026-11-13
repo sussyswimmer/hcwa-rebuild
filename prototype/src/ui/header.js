@@ -49,9 +49,10 @@ function fitBar(header) {
       header.classList.add(step);
     }
   };
-  fit();
   // The bar for the window, the logo and the tools for the text size (they grow with it; the nav may be
-  // hidden). The result does not depend on the classes it sets, so this never loops.
+  // hidden). The result does not depend on the classes it sets, so this never loops. The first fit is the
+  // observer's first call, after the first layout and before the first paint (M8: not a layout forced in this
+  // module's own task).
   const ro = new ResizeObserver(fit);
   for (const el of [bar, header.querySelector(".logo"), header.querySelector(".site-header__tools")]) if (el) ro.observe(el);
   document.fonts?.ready.then(fit);

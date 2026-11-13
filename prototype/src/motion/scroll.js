@@ -95,6 +95,9 @@ export function startScroll() {
   // A scroll or a refresh wakes GSAP's ticker; once it is over, back to sleep.
   ScrollTrigger.addEventListener("scrollEnd", () => settleSoon());
   ScrollTrigger.addEventListener("refresh", () => settleSoon(400));
+  // The boxes below the fold have their real heights once main.js has laid each out (ui/cv-warm.js, M8): every
+  // start and end after them moves.
+  bus.addEventListener("boxes", () => ScrollTrigger.refresh());
   // Only the live world and a sticky stage read progress. With neither on this page (Tier 0, the GPU probe
   // said no and the stage went back to stacked) ScrollTrigger is switched off, and with it the rAF loop it
   // keeps alive for Firefox.
