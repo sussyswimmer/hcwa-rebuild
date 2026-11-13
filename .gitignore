@@ -32,3 +32,5 @@ qa/m6/
 qa/m7/
 # M8 captures (long tasks, WordPress Get Involved parity): local only.
 qa/m8/
+# M9 Get Involved window captures: local only.
+qa/m9/

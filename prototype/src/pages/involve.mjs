@@ -27,7 +27,7 @@ const reachLines = (c, email) => {
 // ---------- Get Involved (P4) ----------
 
 // "Cửa mở" (M6): the first glance says come in. The header is a room in late-morning light with its
-// window's blue shutters thrown open onto a sunny street (partials/involve-window.mjs), a welcoming H1, the
+// window's painted louvered shutters thrown open onto a sunny street (partials/involve-window.mjs), a welcoming H1, the
 // sentence that names the four ways and one link down to them. On the stage (html.stages, motion on) the shutters,
 // already open, swing wide and the street comes in as the visitor scrolls (styles/pages.css, the --s3d-cam track);
 // at rest they stand wide open.

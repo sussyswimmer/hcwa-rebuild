@@ -906,35 +906,156 @@ body:has(.day) { background: var(--color-sun-100); }
 .gi-head__go { margin-top: clamp(14px, 1.8vw, 26px); }
 .gi-head__go .icon { rotate: 90deg; }
 
-/* The window. Its frame, the leaves and the sill are objects in the room (data-art), not seams. */
-.gi-stage { position: relative; pointer-events: none; }
-.gi-window { position: absolute; left: 18%; right: 18%; top: 12%; height: 56%; perspective: 1200px; }
-.gi-street { position: absolute; inset: 0; overflow: hidden; border-radius: 2px; }
-.gi-street__art { display: block; width: 100%; height: 100%; transform-origin: 50% 60%; }
-.gi-sunwash { position: absolute; inset: 0; background: var(--color-sun-200); opacity: 0.3; }
-.gi-reveal { position: absolute; inset: 0; box-shadow: inset 0 0 0 5px var(--color-lime-50), inset 14px 16px 26px -8px color-mix(in srgb, var(--color-ink-900) 26%, transparent); }
-.gi-leaf { --a: 112deg; position: absolute; top: 0; bottom: 0; width: 50%; backface-visibility: visible; box-shadow: 0 12px 18px -6px color-mix(in srgb, var(--color-ink-900) 24%, transparent); }
-.gi-leaf svg { display: block; width: 100%; height: 100%; }
-.gi-leaf--l { left: 0; transform-origin: 0 50%; transform: rotateY(calc(-1 * var(--a))); }
-.gi-leaf--r { right: 0; transform-origin: 100% 50%; transform: rotateY(var(--a)); }
-.gi-sill { position: absolute; left: 15%; right: 15%; top: 68%; height: 14px; border-radius: 2px; background: var(--color-lime-50); box-shadow: 0 10px 18px -8px color-mix(in srgb, var(--color-ink-900) 30%, transparent); }
-/* The louver light under the sill: soft slanted bands of sun, feathered on every side. */
-.gi-stripes { position: absolute; left: 12%; right: 6%; top: 72%; bottom: 0; opacity: 0.6; transform-origin: 50% 0; transform: skewX(-18deg);
-  background: repeating-linear-gradient(to bottom, var(--color-sun-300) 0 9px, transparent 9px 22px);
-  mask-image: radial-gradient(ellipse 50% 60% at 50% 20%, black 30%, rgb(0 0 0 / 0.5) 60%, transparent); }
+/* The window (M9, Maxwell 13 Nov: "make the animation on the right more realistic and fix it up"; M9 fix round: the
+   header's main picture again, wider and nearly the stage's height). The box is the room-side outline of a deep
+   opening in a thick wall; .gi-room puts one perspective on it, its origin on the window, and holds the planes
+   (partials/involve-window.mjs): the street at the far end of the reveal in a thin painted casement frame, the soffit
+   and the sill (as deep as the wall, the sill running out over a nosing), two jambs splayed 22.76°, and the two
+   leaves, each hinged on its jamb's outer edge and exactly the opening's height, swinging in from 62° to 102° (rest)
+   without leaving the wall's thickness, so they never pass the outline or cross the sill. Geometry in cqw of the box
+   (container-type: size; every projected height is a fraction of the box's, so the box's aspect is free): the opening
+   is 70.3 wide, each leaf 35.15, the wall 35.4 deep, so even square to the wall (90°) a leaf's free edge stays 0.25
+   inside the room face; the jambs splay 22.76° (rotateY 67.24° about the room face), so at rest (102°) a leaf stands
+   10.76° off its jamb and a strip of the jamb, with the leaf's shadow on it, shows. The sun is high and to the upper
+   left, beyond the street: the right jamb, the sill and, as it opens, the right leaf are in sun; the left jamb, the
+   soffit and the left leaf in shade. --t is the swing (1 at rest, --s3d-cam on the stage) and --a its angle; shading
+   and the leaves' shadows follow --t, by opacity and transform only. Objects in the room (data-art), not seams; no
+   bars of light, no white. */
+.gi-stage { --t: 1; --a: calc(62deg + 40deg * var(--t)); position: relative; pointer-events: none; }
+.gi-window { position: absolute; top: 3%; bottom: 15%; left: 50%; aspect-ratio: 1.04; translate: -50% 0; container-type: size;
+  --wo: 70.3cqw; --side: 14.85cqw; --lw: 35.15cqw; --wd: 35.4cqw; --nose: 3cqw;
+  --plaster: var(--color-lime-50);
+  --shade: color-mix(in oklab, var(--color-lime-300) 72%, var(--color-ink-700));
+  --bounce: color-mix(in oklab, var(--color-lime-300), var(--color-sun-200) 45%);
+  --lit: color-mix(in oklab, var(--color-sun-100), var(--color-sun-200) 40%);
+  --soft-ink: color-mix(in srgb, var(--color-ink-900) 30%, transparent);
+  /* The joinery's paint: a weathered Saigon blue-green, greyed by sun and dust (the jade of the louvers across the
+     road, a little bluer and duller). */
+  --paint: color-mix(in oklab, color-mix(in oklab, var(--color-tile-jade-lit), var(--color-tile-indigo-lit) 20%), var(--color-lime-300) 32%);
+  --paint-dk: color-mix(in oklab, var(--paint), var(--color-ink-900) 34%);
+  --paint-lt: color-mix(in oklab, var(--paint), var(--color-lime-50) 30%); }
+.gi-room { position: absolute; inset: 0; perspective: 240cqw; perspective-origin: 50% 58%; }
+/* The art after the words (M9): with JS, the window's drawing is skipped until the page has loaded and painted
+   (main.js adds .is-lit), then fades in; its box is fixed, so nothing moves. Without JS it is there from the first
+   frame; if the script never runs, it shows itself after 4 s. */
+html.js .gi-window:not(.is-lit) { content-visibility: hidden; animation: gi-late 0s 4s forwards; }
+@keyframes gi-late { to { content-visibility: visible; } }
+html[data-motion="on"] .gi-window.is-lit { animation: gi-lit 0.7s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+@keyframes gi-lit { from { opacity: 0; } }
+.gi-room > * { position: absolute; display: block; backface-visibility: visible; }
+/* The street: the sky behind, the far side (SVG), the haze, the tamarind nearer (SVG), the sun on it. No SVG gradient
+   (Chromium repaints gradient-filled SVG shapes on every scrolled frame): the sky and the haze are CSS. */
+.gi-street { left: var(--side); width: var(--wo); top: 0; height: 100%; overflow: hidden; transform: translateZ(calc(-1 * var(--wd)));
+  background: linear-gradient(to bottom, var(--color-sun-100), color-mix(in oklab, var(--color-sun-200), var(--color-sun-100) 40%) 30%); }
+.gi-street > * { position: absolute; inset: 0; display: block; width: 100%; height: 100%; transform-origin: 50% 66%; }
+.gi-haze { background: linear-gradient(to bottom, color-mix(in srgb, var(--color-sun-100) 58%, transparent), color-mix(in srgb, var(--color-sun-100) 26%, transparent) 36%, color-mix(in srgb, var(--color-sun-100) 12%, transparent) 70%, color-mix(in srgb, var(--color-sun-100) 6%, transparent)); }
+.gi-sunwash { opacity: 0.5;
+  background: radial-gradient(ellipse 90% 60% at 18% 0%, var(--color-sun-100), color-mix(in srgb, var(--color-sun-100) 30%, transparent) 55%, transparent 80%); }
+/* The casement frame the leaves hang from: thin, in the leaves' paint, its head and left member in shade, its right
+   member in sun, and the reveal's shade falling softly into the opening (no keyline, no mount). */
+.gi-street::after { content: ""; position: absolute; inset: 0;
+  box-shadow: inset 1cqw 0 0 0 var(--paint-dk), inset -1cqw 0 0 0 var(--paint-lt), inset 0 1cqw 0 0 color-mix(in oklab, var(--paint-dk), var(--color-ink-900) 18%),
+    inset 0 -0.7cqw 0 0 var(--paint), inset 1.6cqw 2.2cqw 4cqw 0 color-mix(in srgb, var(--color-ink-900) 20%, transparent); }
+/* The soffit: in shade, lighter toward the street (its bounce) and a little darker where it meets the frame. Top edge
+   = the room face, bottom = the opening. */
+.gi-soffit { left: 0; top: 0; width: 100%; height: var(--wd); transform-origin: 50% 0; transform: rotateX(-90deg);
+  clip-path: polygon(0 0, 100% 0, 85.15% 100%, 14.85% 100%);
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--shade), var(--color-ink-700) 12%), var(--bounce) 82%, color-mix(in oklab, var(--bounce), var(--color-ink-700) 14%)); }
+/* The sill: far edge at the opening, front edge on the nosing (3cqw into the room, 1.5cqw wider each side). In sun,
+   but for the left jamb's shadow; while the left leaf stands across the light its shadow lies on the sill as a soft
+   wedge that slides back to the jamb as it opens. It is horizontal, so it is drawn flat at its projection (perspective
+   240cqw from 50% 58%: the opening's edge, 35.4cqw back, at scale 240 / 275.4; the nosing, 3cqw forward, at
+   240 / 237; heights are fractions of the box's, whatever its aspect): a clipped plane in 3D cost a dropped frame in
+   every few while scrolling (M9 frame probe). */
+.gi-sill { left: -2.15%; width: 104.3%; top: 94.6%; height: 5.93%;
+  clip-path: polygon(20.63% 0, 79.37% 0, 97.94% 91.06%, 99.38% 91.06%, 100% 100%, 0 100%, 0.62% 91.06%, 2.06% 91.06%);
+  background: linear-gradient(105deg, var(--shade) 0, color-mix(in oklab, var(--shade), var(--lit) 40%) 24%, var(--lit) 42%),
+    var(--lit); }
+.gi-sill::before { content: ""; position: absolute; inset: 0; transform: translateX(calc(-34% * var(--t))); opacity: calc(0.7 * (1 - var(--t)));
+  background: linear-gradient(100deg, var(--shade) 0, var(--shade) 30%, color-mix(in oklab, var(--shade), transparent 60%) 44%, transparent 60%); }
+/* The jambs, splayed 22.76° (rotateY 67.24° about the room-face edge): from the room face to the opening, a little
+   darker where they meet the frame. */
+.gi-jamb { top: 0; height: 100%; width: 38.39cqw; overflow: hidden; }
+.gi-jamb--l { left: 0; transform-origin: 0 50%; transform: rotateY(67.24deg);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-ink-900) 12%, transparent), transparent 22%, transparent 80%, color-mix(in srgb, var(--color-ink-900) 8%, transparent)),
+    linear-gradient(to right, var(--shade), var(--bounce) 84%, color-mix(in oklab, var(--bounce), var(--color-ink-700) 16%)); }
+.gi-jamb--r { right: 0; transform-origin: 100% 50%; transform: rotateY(-67.24deg);
+  background: linear-gradient(200deg, color-mix(in oklab, var(--shade), var(--lit) 30%) 0 12%, transparent 30%),
+    linear-gradient(to right, color-mix(in oklab, var(--lit), var(--color-lime-300) 30%), var(--lit) 14%, color-mix(in oklab, var(--lit), var(--color-sun-200) 50%) 60%, var(--lit)); }
+/* The leaves' shadows on their jambs, both soft (no bars): darkest by the hinge, where the leaf stands nearest its
+   jamb, and reaching further while the leaf stands out across the light. */
+.gi-jamb::before { content: ""; position: absolute; inset: 0; }
+.gi-jamb--l::before { opacity: calc(0.3 + 0.45 * var(--t));
+  background: linear-gradient(to left, var(--soft-ink), color-mix(in srgb, var(--color-ink-900) 12%, transparent) 50%, transparent 80%); }
+.gi-jamb--r::before { transform-origin: 0 50%; transform: scaleX(calc(1.5 - 0.5 * var(--t))); opacity: calc(0.75 - 0.2 * var(--t));
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-ink-900) 24%, transparent), color-mix(in srgb, var(--color-ink-900) 12%, transparent) 30%, transparent 62%); }
+/* A leaf: a stile-and-rail frame of painted wood round two louver panels. Each blade has a lit top edge, a face and a
+   shadowed underside over a gap of light, a shade darker toward the foot; the stiles carry a faint vertical grain, the
+   paint is chipped at the edges to the pale undercoat and grimed along the bottom rail, and the leaf stands on the sill
+   with a little contact shadow. */
+.gi-leaf { top: 0; height: 100%; width: var(--lw);
+  --wear: color-mix(in oklab, var(--paint), var(--color-lime-100) 62%);
+  --gap: color-mix(in oklab, var(--color-sun-100) 80%, var(--paint));
+  --rec: color-mix(in srgb, var(--color-ink-900) 36%, transparent);
+  --grime: color-mix(in srgb, var(--color-ink-900) 16%, transparent);
+  --p: 2.4cqh;
+  --blades: repeating-linear-gradient(to bottom, var(--gap) 0, var(--gap) calc(var(--p) * 0.1), var(--paint-lt) calc(var(--p) * 0.16), var(--paint-lt) calc(var(--p) * 0.26),
+    var(--paint) calc(var(--p) * 0.34), var(--paint) calc(var(--p) * 0.66), var(--paint-dk) calc(var(--p) * 0.76), var(--paint-dk) calc(var(--p) * 0.94), var(--gap) var(--p));
+  --tone: linear-gradient(to bottom, color-mix(in srgb, var(--color-lime-50) 10%, transparent), transparent 35%, color-mix(in srgb, var(--color-ink-900) 4%, transparent) 70%, color-mix(in srgb, var(--color-ink-900) 9%, transparent));
+  --grain: repeating-linear-gradient(to right, transparent 0 0.5cqw, color-mix(in srgb, var(--color-ink-900) 6%, transparent) 0.62cqw, transparent 0.8cqw 1.5cqw, color-mix(in srgb, var(--color-lime-50) 8%, transparent) 1.65cqw, transparent 1.9cqw 2.3cqw, color-mix(in srgb, var(--color-ink-900) 4%, transparent) 2.42cqw, transparent 2.6cqw 3.7cqw);
+  --chip: color-mix(in srgb, var(--wear) 70%, transparent);
+  background:
+    radial-gradient(0.45cqw 1.6cqh at 1.2% 18%, var(--chip) 30%, transparent 100%),
+    radial-gradient(0.4cqw 2.2cqh at 1.1% 63%, var(--chip) 30%, transparent 100%),
+    radial-gradient(0.5cqw 1.3cqh at 98.8% 31%, var(--chip) 30%, transparent 100%),
+    radial-gradient(0.4cqw 1.9cqh at 98.9% 84%, var(--chip) 30%, transparent 100%),
+    radial-gradient(2.2cqw 0.35cqh at 34% 99.4%, var(--chip) 30%, transparent 100%),
+    radial-gradient(1.6cqw 0.3cqh at 66% 47.4%, var(--chip) 30%, transparent 100%),
+    linear-gradient(to top, var(--grime), transparent 5%),
+    var(--grain) 0 0 / 11% 100% no-repeat,
+    var(--grain) 100% 0 / 11% 100% no-repeat,
+    linear-gradient(to bottom, var(--rec), transparent 1.6cqh) 50% 10.2% / 78% 41% no-repeat,
+    linear-gradient(to bottom, var(--rec), transparent 1.6cqh) 50% 88.3% / 78% 40% no-repeat,
+    var(--tone) 50% 10.2% / 78% 41% no-repeat,
+    var(--tone) 50% 88.3% / 78% 40% no-repeat,
+    var(--blades) 50% 10.2% / 78% 41% no-repeat,
+    var(--blades) 50% 88.3% / 78% 40% no-repeat,
+    linear-gradient(to bottom, var(--paint-lt) 0, var(--paint) 1.2cqh, var(--paint) 45%, var(--paint-dk) 47.6%, var(--paint-lt) 48.4%, var(--paint) 50%, var(--paint) 98%, var(--paint-dk)),
+    var(--paint); }
+.gi-leaf::before, .gi-leaf::after { content: ""; position: absolute; inset: 0; }
+/* The free stile's worn edge and the hinge side's iron, the contact shadow where the bottom rail stands on the sill,
+   then the leaf's light: --t turns the left leaf from the light and the right leaf into it. */
+.gi-leaf--l { left: var(--side); transform-origin: 0 50%; transform: translateZ(calc(-1 * var(--wd))) rotateY(calc(-1 * var(--a)));
+  box-shadow: inset -0.35cqw 0 0 var(--wear), inset 0.25cqw 0 0 var(--paint-dk), 0 1.4cqw 1.2cqw -1cqw color-mix(in srgb, var(--color-ink-900) 45%, transparent); }
+.gi-leaf--r { right: var(--side); transform-origin: 100% 50%; transform: translateZ(calc(-1 * var(--wd))) rotateY(var(--a));
+  box-shadow: inset 0.35cqw 0 0 var(--wear), inset -0.25cqw 0 0 var(--paint-dk), 0 1.4cqw 1.2cqw -1cqw color-mix(in srgb, var(--color-ink-900) 40%, transparent); }
+.gi-leaf--l::before { background: var(--color-ink-900); opacity: calc(0.12 + 0.26 * var(--t)); }
+.gi-leaf--r::before { background: var(--color-ink-900); opacity: calc(0.34 - 0.26 * var(--t)); }
+.gi-leaf--r::after { background: linear-gradient(to bottom, var(--color-sun-200), var(--color-sun-100)); opacity: calc(0.18 * var(--t)); }
+.gi-leaf--l::after { background: linear-gradient(to right, transparent 60%, color-mix(in srgb, var(--color-sun-100) 50%, transparent)); opacity: calc(0.6 - 0.5 * var(--t)); }
+/* The sill's nosing: one object the whole width, its top edge catching the sun, its front turned from it (a little
+   deeper in the left jamb's shade, never cut off), its soft shadow on the wall under it and, below that, the warm
+   light the sunlit sill throws back onto the wall (no line at any edge, no bars, no white). */
+.gi-ledge { left: -1.5cqw; width: calc(100% + 3cqw); top: 100%; height: 3.4cqw; border-radius: 0.5cqw 0.5cqw 1.2cqw 1.2cqw / 0.4cqw 0.4cqw 1cqw 1cqw; transform: translateZ(var(--nose));
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-ink-900) 9%, transparent), color-mix(in srgb, var(--color-ink-900) 3%, transparent) 26%, transparent 44%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--lit), var(--color-sun-100) 70%) 0, var(--lit) 18%, color-mix(in oklab, var(--lit), var(--color-lime-300) 20%) 36%, color-mix(in oklab, var(--lit), var(--color-lime-300) 30%) 100%); }
+.gi-ledge::before, .gi-ledge::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; }
+.gi-ledge::before { left: -12%; right: -12%; height: 26cqw; opacity: calc(0.45 + 0.55 * var(--t));
+  background: radial-gradient(ellipse 50% 100% at 50% 0, color-mix(in srgb, var(--color-sun-200) 75%, transparent), color-mix(in srgb, var(--color-sun-200) 30%, transparent) 45%, transparent 75%); }
+.gi-ledge::after { height: 8cqw;
+  background: radial-gradient(ellipse 54% 100% at 50% 0, color-mix(in srgb, var(--color-ink-900) 10%, transparent), color-mix(in srgb, var(--color-ink-900) 4%, transparent) 45%, transparent); }
 @media (min-width: 1024px) {
   .gi-head { --hdr: var(--header-h-wide); min-height: min(calc(86svh - var(--hdr)), 720px); }
   .gi-head__text { grid-area: 1 / 1; padding-top: clamp(12px, 1.6vw, 24px); }
   .gi-head__text > * { max-inline-size: min(100%, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
   .gi-head__title { max-inline-size: min(9.5em, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
   .gi-stage { position: absolute; top: 0; right: 0; bottom: 0; width: 50vw; }
+  /* Nearly the stage's height, as wide as the half allows: the header's main picture. */
+  .gi-window { top: 4%; bottom: 12%; left: 50%; aspect-ratio: 1.22; max-width: 92%; }
 }
 /* Below 1024 the window comes first, as a band of the room, and the words follow it. */
 @media (max-width: 1023.98px) {
-  .gi-stage { height: clamp(190px, 26svh, 340px); }
-  .gi-window { left: 24%; right: 24%; top: 8%; height: 74%; }
-  .gi-sill { left: 21%; right: 21%; top: 82%; height: 10px; }
-  .gi-stripes { top: 86%; }
+  .gi-stage { height: clamp(220px, 36svh, 320px); }
   .gi-head__text { margin-top: -6px; }
 }
 @media (max-width: 599.98px) {
@@ -944,12 +1065,20 @@ body:has(.day) { background: var(--color-sun-100); }
   .gi-head__intro { font-size: 1.0625rem; }
 }
 
-/* The stage: the leaves swing from 62° to 112° (already open at the first frame), the street comes toward
-   the window (1 → 1.14) and its sun strengthens; the louver light turns and lengthens. */
-html.stages[data-motion="on"] .gi-leaf { --a: calc(62deg + 50deg * var(--s3d-cam)); will-change: transform; }
-html.stages[data-motion="on"] .gi-street__art { transform: scale(calc(1 + 0.14 * var(--s3d-cam))); will-change: transform; }
-html.stages[data-motion="on"] .gi-sunwash { opacity: calc(0.12 + 0.24 * var(--s3d-sun)); }
-html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc(4deg * var(--s3d-cam))) scaleY(calc(1 + 0.3 * var(--s3d-cam))); will-change: transform; }
+/* The stage: the leaves swing from 62° to 102° (already open at the first frame; --t follows the camera), the street
+   comes toward the window, the tree on this side faster than the far side (parallax), and its sun strengthens; the
+   shading and the leaves' shadows follow (each its own layer, so a scrolled frame is a transform and opacity change:
+   the street is rastered once). */
+html.stages[data-motion="on"] .gi-stage { --t: var(--s3d-cam); }
+html.stages[data-motion="on"] .gi-leaf { will-change: transform; }
+html.stages[data-motion="on"] .gi-leaf::before,
+html.stages[data-motion="on"] .gi-leaf::after,
+html.stages[data-motion="on"] .gi-jamb::before,
+html.stages[data-motion="on"] .gi-sill::before,
+html.stages[data-motion="on"] .gi-ledge::before { will-change: opacity, transform; }
+html.stages[data-motion="on"] .gi-street__art { transform: scale(calc(1 + 0.12 * var(--s3d-cam))); will-change: transform; }
+html.stages[data-motion="on"] .gi-street__tree { transform: scale(calc(1 + 0.26 * var(--s3d-cam))); will-change: transform; }
+html.stages[data-motion="on"] .gi-sunwash { opacity: calc(0.2 + 0.4 * var(--s3d-sun)); will-change: opacity; }
 
 /* The day after the header stays warm until the evening. */
 .day--involve { --day: var(--color-sun-100) 0, var(--color-sun-100) 42%, color-mix(in oklab, var(--color-sun-100), var(--color-lime-100)) 74%, var(--color-sun-100) 100%; }
@@ -991,9 +1120,6 @@ html.stages[data-motion="on"] .gi-stripes { transform: skewX(-18deg) rotate(calc
      more of a shorter header (M7 fix round: 210 px of empty band at 1440 between the link and the ways, now about 100). */
   .gi-head { min-height: min(calc(60svh - var(--hdr)), 520px); }
   .gi-head__text { padding-bottom: 40px; }
-  .gi-window { top: 9%; height: 65%; }
-  .gi-sill { top: 76%; }
-  .gi-stripes { top: 80%; }
 }
 
 /* .louvers--page: kept only for WordPress Get Involved pages saved before M8 (hcwa/louvers under the lit header). Since

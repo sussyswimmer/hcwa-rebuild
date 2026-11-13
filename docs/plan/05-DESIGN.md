@@ -483,7 +483,7 @@ Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages",
   warm light.
 - **Contact:** a 2.5D gate opening on Tier 1 and 2 (the gate opens, letters drop into the box, the camera
   walks in); its stage line fades out before the page's words reach it. **Get Involved:** the header is
-  open blue shutters onto a sunny street ~~with the four ways as one-line tiles, one action each, above the
+  open ~~blue~~ shutters (M9: a weathered blue-green, below) onto a sunny street ~~with the four ways as one-line tiles, one action each, above the
   fold~~ (M7 fix round: the H1, the intro naming the four ways and one link down to them above the fold; the ways
   follow, each one object with its own button). **Little Rose:** a paper-cut walled garden (no figures, no door, no place, no pink or red, a
   caption saying it is an illustration) with the five "what the home gives" lines beside it (1440) or
@@ -545,6 +545,34 @@ Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages",
   set, HEAD alike). Also still open: the desktop header-fit shift above, check-hero's known 390 fails, the three
   unported WordPress Involve sub-pages, the News and Team placeholder card edges at 390, and no check on a real
   mid-range Android.
+- **M9 Get Involved window (13 Nov 2026, Maxwell: "can you make the animation on the right more realistic and fix it
+  up"; binding as built, prototype/PLAN.md section 9 "M9 Get Involved window", "M9 fix round", "M9 final
+  recheck"):** the window is a deep opening in a thick wall drawn in CSS 3D planes inside one perspective (soffit, two
+  splayed jambs, a sill and one continuous nosing) with an inline SVG street at the outer opening. The two leaves are
+  hinged on the jambs' outer edges, exactly the opening's height and shorter than the wall is deep, so at every angle
+  they stay inside the window's outline (a test checks every whole degree). They swing 62° → 102° with the stage
+  (`--a = 62deg + 40deg * --t`); 102° is the rest pose, the one no-JS and reduced-motion visitors see, with a strip of
+  each jamb and its leaf's shadow showing. Paint: a weathered Saigon blue-green (tile-jade-lit with 20% tile-indigo-lit,
+  greyed toward lime-300), stile grain, thin chips to the undercoat, a grimed bottom rail, blades lighter at the top of
+  each panel; a thin casement frame in the same paint. Light: the sun high and upper left beyond the street; leaf
+  shadows are soft occlusion on the jambs and a soft wedge on the sill; under the sill only the nosing's soft shadow
+  and a warm sun-200 glow, **no bars, no stripes, no white**. The street: a far side (two shophouse bays, jade
+  louvers, iron balconies, grilles half up, a parked Cub with no plate, badge or lettering) behind a CSS haze, a near
+  tamarind that zooms faster than the far side (1 → 1.26 against 1.12); no people, no signage, no text. **Rules that
+  stay:** no SVG gradient, turbulence or blur filter in the drawing (Chromium re-rasters gradient-filled SVG shapes on
+  every scrolled frame; a test bans them), no repeating gradient, lime-50 or white in the light layers; with JS the
+  drawing is skipped (content-visibility) until load and fades in, so the first frame is the words alone; the window's
+  box is fixed (CLS 0). Size: 471 x 386 px at 1440 (box at 4% / 12% of the stage, aspect 1.22), 259 x 249 px at 390
+  (stage clamp(220px, 36svh, 320px)). 92 elements, 25.5 kB raw / 6.8 kB gzip, no request. WordPress prints the
+  exported drawing whole.
+- **Still open after M9 (final recheck, 13 Nov 2026):** Get Involved's first long task has no margin: lcp.cjs exits 1
+  on 1 of 5 VI runs (207 ms; EN max 186), and interleaved runs go over 200 in HEAD and M9 alike. The window is out of
+  the first pass (style 332–340 elements against HEAD's 1006–1014); what is left is the page's own style and layout
+  forced during main.js's module evaluation. One GPU task over 100 ms (129) after the reveal in 1 of 3 traced runs.
+  On phones the larger window puts the header's words 85 px lower (H1 at 456 px of 844; the first way's links below
+  the fold). The window's CSS is in the site-wide stylesheet (+1.7 kB gzip on every page); light-contrast has no Get
+  Involved zone (checked by hand: 18 lines, 0 below the bar); with main.js blocked the fallback shows the 62° pose.
+  HCWA has not approved the street or the shutter colour.
 
 ## 1. Color tokens
 

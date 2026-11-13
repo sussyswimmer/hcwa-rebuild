@@ -2073,3 +2073,253 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   not ported to WordPress (the ways link to their tops). Not run here: a live WordPress parity or smoke run (Docker's
   daemon is not running), a desktop-width CLS sweep on the final tree (the fix round's cls-all.cjs ran on the same
   layout CSS), a real mid-range Android.
+
+### M9 Get Involved window (13 Nov 2026, Maxwell: "can you make the animation on the right more realistic and fix it up"; captures, tools and logs in qa/m9/)
+- **What read as fake** (the lead's look at 1440): leaves floating free of the window (overhanging top and bottom,
+  in front of the sill), flat saturated blue trapezoids with white lines, no wall thickness, a floating white sill
+  bar wider than the window, a flat cartoon street, hard horizontal light bands under the sill, no leaf shadows.
+- **Route chosen: (b), a rebuilt construction in CSS 3D planes with a rebuilt inline SVG street; no rasters.** Route
+  (a) was mocked on the same 1440 and 390 headers (qa/m9/routes/compare-*.png, tools/route-a.cjs): the S3 world's own
+  street (the home's shutters-open still, cropped to the opening) behind the same new construction. It lost on every
+  count: the world's street is washed toward sun-100 by design (uPale) and reads as haze at this size, the crop
+  carries the world window's own sill as a straight white line, the leaves would need an alpha pass the stills
+  pipeline does not have, and a raster would be an LCP candidate larger than the intro on a phone (the opening is
+  about 150 x 150 px at 412 wide, the intro paragraph about 360 x 56), so the LCP would move to an image that loads
+  after the words. (b) costs no request and paints with the words or after them, never instead of them.
+- **Construction** (partials/involve-window.mjs, pages.css "The window (M9 ...)"). The window box is the room-side
+  outline of a deep opening in a thick wall (aspect 0.98, centred on the stage). Inside it one perspective (240cqw,
+  origin 50% 58%: on the window) holds the planes, sized in cqw of the box (container-type: size): the street (SVG)
+  at the outer opening, 35.4cqw back; the soffit; two jambs splayed 22.76° (rotateY 67.24° about the room-face edge);
+  the two leaves, each hinged on its jamb's outer edge (translateZ(-wd) then rotateY(-a | a)), exactly the opening's
+  height, 35.15cqw wide; the sill drawn flat at its projection (see performance) running out over a nosing; the
+  nosing's front; and the sun's pool below. Because the wall (35.4) is deeper than a leaf (35.15), at every angle from
+  62° to 112° a leaf stays inside the wall's thickness (free edge at most 0.25cqw short of the room face at 90°): it
+  never passes the outline, never overhangs top or bottom, never crosses the sill, and its top and bottom edges run
+  along the soffit and sill, so the foreshortening is right by construction. At 112° (rest) each leaf folds back
+  against its jamb, 0.76° clear. test/involve-first-screen.test.mjs checks the hinge transforms, the full-height
+  leaves, the splay and the free edge staying behind the room face at every whole degree from 62 to 112.
+- **Leaves.** Painted wood in a weathered Saigon blue (tile-indigo-lit 58% into lime-300, worn toward lime-100 at the
+  edges and the lock rail), a stile-and-rail frame (stiles 11%, top and mid rails with a recess shadow), two louver
+  panels whose blades each have a lit top edge, a face and a shadowed underside over a gap of light (one element per
+  leaf, layered gradients), a lighter free-stile edge and iron on the hinge side. Shading follows the swing (--t):
+  the left leaf turns out of the sun (ink 10% → 40%), the right leaf into it (shade 36% → 6%, a sun glaze to 16%).
+- **Shadows and light.** The sun is high and upper left, beyond the street: the right jamb and the sill are lit, the
+  left jamb and the soffit in shade with bounce toward the street. The left leaf's occlusion on its jamb darkens as it
+  comes back against it; on the lit right jamb the right leaf's shadow carries its louvers' light as slanted bars,
+  moving toward the hinge and sharpening as the leaf closes on the jamb (transform and opacity from --t). While the
+  leaves stand across the light the left leaf's louvers stripe the sill. The pool on the floor is a sheared,
+  feathered patch (masked on all four sides) whose louver bars are sharp by the window and blur with distance, and
+  fade as the leaves open; no band reaches its edge.
+- **Street** (one inline SVG, viewBox 300 x 440, the S3 street's inks from world/objects/sky.js): the hazed far block
+  behind; two shophouse bays in vàng and mint wash with an ochre cornice and floor band, arched French windows with
+  jade louvers (one pattern-filled path) and iron balconies, grilles half up over the cool shops, soft shadows under
+  the cornice, band and balconies; the cream pavement and the road; a parked Cub (step-through frame, curved leg
+  shield, round lamp in the bar cowl, deep front fender, rear rack; no plate, no badge, no lettering) with its contact
+  shadow; sun dapple on the ground; two sagging wires; atmospheric haze (stronger at the top); the near tamarind's
+  trunk and crown, the crown broken into leaves with the sky through them by one turbulence-displacement filter, its
+  sunlit lobes on the upper left, its shade on the shopfronts; a painted frame round the opening. No people.
+- **Elements and bytes.** The drawing is 79 elements (M8: 339): 15.4 KB raw / 3.9 KB gzip (M8: 25.0 / 3.0). Main CSS
+  42.1 → 43.7 KB gzip; main JS +35 B. No image, no request. Get Involved's HTML 60.5 → 50.8 KB raw (10.4 → 11.1 KB
+  gzip).
+- **Art after the words.** The first builds of the new drawing painted with the words and moved the LCP from about
+  2.42 s to 2.9–3.1 s in the interleaved runs (ab1.tsv: the first frame waited for the drawing; variants in qa/m9/var
+  showed the cost spread over the street, the planes and the filters, not in style or layout). So with JS the window's
+  drawing is skipped (content-visibility: hidden) until the page has loaded and painted, then main.js adds .is-lit and
+  it fades in (0.7 s, motion on only); its box is fixed, so nothing moves (CLS 0). No JS: drawn from the first frame.
+  If main.js never runs, a CSS animation shows it after 4 s (checked with the script blocked). The reveal is one 31 ms
+  task after load in a trace (layout of 8 objects). Traced first pass: style 640 → 307 elements, layout 704 → 374
+  objects (the second 368-element recalc of HEAD's first second is gone).
+- **Performance** (lcp.cjs conditions; dist builds in qa/m9/dist-head (ecd8094) and dist-after):
+  - Interleaved against HEAD, Get Involved, 5 rounds (logs/ab-final.tsv): longest task after 133, 113, 169, 133, 133
+    (median 133, max 169) vs HEAD 151, 188, 136, 139, 155 (median 151, max 188); LCP after 2416, 2392, 2448, 2384,
+    2456 (median 2416) vs HEAD 2332, 2428, 2388, 2428, 2424 (median 2424); CLS 0 in both. The earlier set on the
+    deferred build (ab3.tsv): after 132, 141, 234, 133, 212 vs HEAD 140, 181, 181, 154, 136; LCP the same.
+  - lcp.cjs 5 on the final build (logs/lcp-after-final.log): default path LCP median 2008 ms (tier 0 2032, tier 1
+    1976), CLS 0, the intro paragraph the LCP element in every run; longest task 164, 132, 121, 159, 215 (median
+    159), so the script exits 1 on that one run. HEAD with lcp.cjs in the same hour: 182, 141, 136, 156, 224 (median
+    156), LCP median 2020. Every long task in the first 10 s of the probe runs (tools/lcp-res.cjs) is the first style
+    and layout pass at about 1.82 s (101–159 ms); the window is no longer in it and the reveal is under 50 ms. The
+    over-200 runs land on that same first pass in both builds (HEAD 4 of 20 runs here, after 3 of 21).
+  - Scroll through the stage (tools/fps.cjs, Tier 1, 120 frames, 1440 and 390, software GPU): 0 frames over 20 ms in
+    4 runs, as HEAD. A clip-path (or mask) on the 3D-transformed sill cost a dropped frame in every few at 1440 (14–19
+    of 118), so the horizontal sill is drawn flat at its exact projection (constants in pages.css), and the animated
+    pseudo-layers (leaf shading, jamb shadows, pool bars) are their own layers (will-change), so a scrolled frame is
+    transform and opacity only.
+- **Straight edges** (scripts/seam-scan.py, logs/seam.log). The light under the window (tools/lightcrop.cjs: from
+  the nosing to the header's foot): HEAD 6 row lines at 1440 and 1 at 390, now none at either. The header captures:
+  every remaining row line at 390 is also in HEAD's captures at the same rows (text and link underlines below the
+  window); HEAD's window rows (sill and bands, 82–257) are gone. At 1440 the column hits are the jambs' and leaves'
+  vertical edges inside the window (objects, data-art), as HEAD's leaf edges were.
+- **Fallbacks** (tools/fallbacks.cjs, logs/fallbacks.log, build/fallbacks/): no JS and reduced motion show the rest
+  pose (112°) and the whole drawing; motion on starts at 62°; main.js blocked shows the drawing after 4 s. No WebGL
+  anywhere on the page.
+- **WordPress.** The block prints the exported drawing whole (hcwa_art()->drawing('involve-window')) and the theme
+  takes pages.css and main.js from the export, so WP renders the same window; no PHP change. involve-markup-test.php's
+  "drawn inline, no photo, no lettering, no request" holds. export:wp re-run (twice: the second changes nothing).
+- **Gates.** npm test 210/210 (involve-first-screen.test.mjs: two new tests, the swing assertion updated); build,
+  build:pages and check:links (46 pages, 0 dead) pass; PROD=1 blocked only by its 143 guards; php wp/tests/run.php
+  8532/0; wp-static-check 0 errors, the 10 known warnings.
+- **Captures** (qa/m9/build/): before/ and after/ (rest pose at each width plus 6 scroll frames, p 0 → 0.85 of the
+  stage), before-sheet.jpg, after-sheet.jpg, sheets-before-after.jpg, rest-before-after-1440.png and -390.png;
+  routes/ (the route comparison); look/ (angle studies at 62°–112°).
+- **Departures and open.** The window is drawn in CSS planes plus SVG, not rendered stills (route (a) above). The
+  art waits for load with JS on (CLAUDE.md "3D/art after the text"; it painted with the words in M6–M8). Rest pose
+  unchanged at 112°, but the leaves now fold back into the reveal there, so at rest they read as the shutters thrown
+  open against the wall's thickness rather than as two panels standing in the room. The window is smaller at 1440 than
+  M8's (the leaves now live inside its outline). The pool's bars are soft horizontal stripes (the louvers' shadows on a
+  floor are horizontal); they pass the scan but are still stripes. HCWA has not seen the new street. Not checked on a real
+  mid-range Android or a live WordPress (Docker not running).
+
+### M9 fix round (13 Nov 2026; tools, logs, captures and the build in qa/m9/fix/)
+- **Size.** The window was shrunk by an M7 rule further down pages.css (`.gi-window { top: 5%; bottom: 24% }` at
+  1024+), not only by the M9 geometry. That rule is gone; the box now sits at top 4%, bottom 12% of the stage with
+  aspect 1.22 at 1024+ (471 x 386 px at 1440, about 490 px with the nosing; M9 first build 320 x 327), and on phones the
+  stage is clamp(220px, 36svh, 320px) with the box at 3% / 15%, aspect 1.04 (259 x 249 px at 390, 66% of the width;
+  first build 151 x 154). Every projected height (sill, nosing) is a fraction of the box's, so the aspect is free and
+  the leaves stay inside the outline at any size (the test checks the swing). Captures: rest-before-after-1440.png,
+  -390.png (HEAD ecd8094 left).
+- **Light without bars or white.** .gi-stripes is removed (markup and CSS). Under the sill: the nosing's soft shadow
+  and below it a warm sun-200 glow (the light the sunlit sill throws back), growing with --t. On the sill: the left
+  leaf's shadow is a soft wedge that slides back to its jamb as it opens (no dashes). On the jambs: both leaf shadows
+  are soft occlusion gradients, darkest by the hinge, reaching further while the leaf stands across the light (no
+  comb). A test bans repeating gradients, lime-50 and white in those five layers.
+- **Rest pose 102°** (was 112°): --a is 62° + 40° x --t, so at rest each leaf stands 10.76° off its splayed jamb and a
+  strip of jamb with the leaf's shadow shows; the wall's thickness reads in the no-JS and reduced-motion picture too.
+  The test now also checks the free edge never crosses its jamb at any whole degree.
+- **Paint.** The joinery is a weathered Saigon blue-green (tile-jade-lit with 20% tile-indigo-lit, greyed 32% toward
+  lime-300; the jade louvers across the road are the same family). The radial highlight blobs are gone; the stiles
+  carry a faint vertical grain, the paint is chipped to the pale undercoat along the stile and rail edges (thin,
+  elongated chips), the bottom rail is grimed, the blades are a shade lighter at the top of each panel and darker
+  toward its foot, and each leaf has a contact shadow where it stands on the sill.
+- **Frame and reveal.** The periwinkle mount and indigo keyline round the street are gone. The opening has a thin
+  casement frame in the leaves' paint (head and left member in shade, right member in sun, sill rail) and the
+  reveal's shade falls softly into it; soffit and jambs darken a little where they meet it.
+- **Nosing.** One object the whole width: a sunlit top edge, a front turned from the sun (a little deeper in the left
+  jamb's shade but never cut off), its soft shadow on the wall under it.
+- **Street.** Two depths: the far side (SVG) and, in front of a CSS haze, the tamarind (SVG) whose trunk is lit, mid
+  and shaded, with six tapering limbs into the crown; the crown is leaflet sprigs (patterns of small solid shapes with
+  gaps, three tile sizes turned at different angles), dense inside each lobe and sparse at its rim, a light layer on
+  the sunlit upper left. On the stage the tree zooms faster than the far side (1 → 1.26 against 1 → 1.12: parallax).
+  The Cub has three body values (lit top, body, underside), a cream leg shield with a darker inside, thin tyres and
+  plain rims (no hub dots), and sits under the haze. The ground dapple is soft-edged and fainter; the shops have a back
+  shelf and a lamp's warm pool. Soft shapes are stacked translucent copies (no blur), 8 steps where a glow is broad.
+- **Raster (the should on re-rastering).** Cause found with invalidation tracing (tools/inval.cjs): Chromium paint-
+  invalidates every SVG shape filled with an SVG gradient, directly or through a pattern, on each frame the stage
+  scrolls, whatever the custom properties do (freezing every --s3d-* and --t on the stage changed nothing; a solid or
+  a pattern of solid shapes is not invalidated; filtered shapes are not either). So the drawing has no SVG gradient
+  (the sky and the haze are CSS on HTML boxes, the bark and shops are flat tones) and no turbulence or blur filter
+  (a test bans both). Swing at 4x CPU (critic's fps4x.cjs, logs gates/fps4x-ab.log, interleaved with HEAD):
+  RasterTask 23–29 ms at 1440 and 7.6–9.5 ms at 390 DPR 3, against HEAD 211–233 and 82–91 and the first M9 build's
+  880–930 and 250–280; paints per swing 10–22 against about 250. Frames over 20 ms in the same interleaved runs:
+  fix 44 / 52 (1440) and 84 / 24 (390), HEAD 46 / 51 and 38 / 88: no difference outside this machine's noise, which
+  was large this afternoon. Style per swing 1426–2203 ms against HEAD 1362–2097 (about 125 elements per frame against
+  HEAD's 360).
+- **GPU at reveal** (critic's threads.cjs, lcp.cjs profile): GPU tasks over 50 ms after load were 90–250 ms across
+  runs on this build, and the same with the whole room hidden (.gi-room display:none: 93–263), the leaves hidden
+  (87–216) or the window at its old size (85–231): on this machine they are no longer the window's. HEAD showed
+  59–129 in the same window of time. Not resolved; noted in the report.
+- **Long tasks, Get Involved** (lcp.cjs conditions, 5 rounds interleaved with HEAD ecd8094, gates/ab.tsv):
+  - VI: longest task fix 181, 133, 169, 195, 189 (median 181, max 195) vs HEAD 253, 154, 263, 153, 133 (median 154,
+    max 263); LCP fix median 2420 ms vs HEAD 2512.
+  - EN: fix 115, 147, 174, 186, 178 (median 174, max 186) vs HEAD 219, 175, 186, 157, 160 (median 175, max 219);
+    LCP fix median 2392 vs HEAD 2532. CLS 0 (EN 0.001 in HEAD) throughout.
+  - lcp.cjs 5 /chung-tay/ on the fix build (gates/lcp-fix.log): default path LCP median 2004 ms, the intro paragraph
+    every run, CLS 0; longest task 184, 143, 209, 155, 121 (median 155), so it exits 1 on one run.
+  - **The gate still has no margin, and the window is no longer its cause** (critique, M9 traces): the window left the
+    first pass (style 1005–1014 → 339–348 elements, layout 712 → 383–390 objects), but the pass still takes 122–210 ms,
+    style 44–97 ms: it is a style and layout forced inside main.js's module evaluation and its cost follows the page's
+    CSS (about 237 KB), not the element count. Further work is the lead's call ("first pass beyond the window"):
+    stop forcing the first layout from script (scroll3d's synchronous measure() and header.js's getBoundingClientRect
+    both run during module evaluation) and cut the selector-matching cost of the main CSS.
+- **Bytes and elements.** 92 elements (first M9 build 79, M8 339); 25.5 KB raw / 6.8 KB gzip (first M9 build 15.4 /
+  3.9): the leaf patterns and lobes, kept short (whole units for anything larger than a leaf, tiles drawn at 2x in
+  whole units and scaled down). No image, no request.
+- **Straight edges** (seam-scan.py, gates/seam.log, seam-head.log). Under the window no row lines at either width
+  (HEAD's sill, band and stripe rows at 390 rest, 349–700 px, are gone). The rows left in the 390 captures inside the
+  window are the opening's head and sill edge (the casement frame against soffit and sill; at 390 the opening is 47% of
+  the width, over the scan's 40% span); the rest are text and link underlines, as in HEAD. At 1440 the column hits are
+  the window's outer edge and the leaves' edges (objects, data-art), as HEAD's leaf edge.
+- **Fallbacks** (caps/fix-cap.json): reduced motion and no JS show the rest pose (102°) with the whole drawing; main.js
+  blocked shows it after 4 s (content-visibility hidden at 1 s, visible at 4.6 s); motion on starts at 62°. Requests on
+  the page are the logo, one SVG and the dusk still, as before.
+- **WordPress.** export:wp re-run (twice, the second changes nothing); the block prints the exported drawing whole and
+  takes pages.css from the export, so WP renders the same window with no PHP change.
+- **Gates.** npm test 212/212; build, build:pages, check:links (46 pages, 0 dead) pass; PROD=1 blocked only by its
+  existing guards (the same list); php wp/tests/run.php 8532/0; wp-static-check 0 errors, the 10 known warnings.
+
+### M9 final recheck (13 Nov 2026, on the final tree over HEAD ecd8094; captures, tools and logs in qa/m9/final/)
+- **No source change in this recheck.** It re-ran every gate the M9 gates critic ran, on the tree the fix round left.
+  HEAD was rebuilt fresh from ecd8094 (byte-identical to qa/m9/dist-head) for the A/B runs and the HEAD captures, in
+  a scratch worktree that is now removed.
+- **Gates.** npm test 212/212. build, build:pages, check:links and check:links:pages pass (46 pages, 0 dead). PROD=1
+  build blocked only by its 143 guards (the list matches the critic's line for line, apart from the pid and the
+  temp file name). export:wp run twice: neither run changed a file in wp/ (md5 of the tree before, between and after).
+  php wp/tests/run.php 8532/0; wp-static-check 0 errors, the 10 known warnings.
+- **Browser checks** (own vite preview on :4173, stopped by PID after; never more than one browser at a time).
+  check-page 56/0. light-contrast fails the same 3 known home intro lines at 390 (6.7 < 7) of 254, as at HEAD.
+  light-contrast still has no Get Involved zone (the critic's could, not done); a copy with `.gi-head__text` added
+  (qa/m9/final/tools/lc-gi.mjs) measures 18 lines on /chung-tay/ and /en/get-involved/, 0 below the bar.
+- **Long tasks and LCP, Get Involved** (lcp.cjs conditions):
+  - lcp.cjs 5 on the final build (gates/lcp-final_*.log). VI: default path LCP median 2032 ms (tier 0 2004, tier 1
+    2036), the intro paragraph every run, CLS 0. Longest task 147, 152, 188, 181, 207 (median 181), so the script
+    **exits 1** on the 207 run. EN: LCP median 2032 ms, CLS 0.001 (as HEAD), longest task 136, 169, 183, 186, 185
+    (median 183, max 186), exit 0.
+  - Interleaved with HEAD, 5 rounds, default path (gates/ab.tsv): VI final 244, 182, 109, 139, 169 (median 169, max
+    244) vs HEAD 194, 179, 168, 210, 156 (median 179, max 210); EN final 127, 148, 163, 164, 223 (median 163, max 223)
+    vs HEAD 231, 173, 168, 153, 220 (median 173, max 231). LCP median VI 2456 vs 2500 ms, EN 2336 vs 2484 ms. CLS 0
+    (EN 0.001 in both builds). Both builds go over 200 ms in some rounds on this machine this hour; the window's build
+    is no worse than HEAD and a little lower at the median, but **the gate still has no margin**.
+  - First pass (critic's firstpass.cjs, 3 runs each, VI): final 210, 122, 169 ms with style 332–340 elements and
+    layout 378–385 objects; HEAD 215, 179, 160 ms with 1006–1014 and 712–713. The window stays out of the first pass;
+    what is left is the page's own forced style and layout during main.js's module evaluation (the M9 fix round's
+    note stands: "first pass beyond the window" is the lead's call).
+  - GPU after the reveal (critic's threads.cjs, 3 runs each): `.is-lit` at 3.01–3.05 s. Final: GPU tasks over 50 ms
+    of 70 and 187 ms before the reveal and 129 ms after it in run 1, none over 50 ms in runs 2 and 3; HEAD 77, 144, 55
+    and 78 ms in run 1 (no window reveal in HEAD). So the critic's "no GPU task over 100 ms at reveal" is met in 2 of
+    3 runs, not all; the fix round found the same range with the room hidden.
+  - Swing at 4x CPU (critic's fps4x.cjs, one pass per call, final and HEAD interleaved twice; gates/fps4x-ab.log):
+    RasterTask 24.7 / 29.9 ms at 1440 and 6.4 / 7.5 ms at 390 DPR 3 against HEAD 202.9 / 194.4 and 82.2 / 94.0;
+    paints per swing 18–20 and 2 against 250 and 241. Frames over 20 ms: final 32 / 26 (1440) and 38 / 29 (390), HEAD
+    56 / 23 and 25 / 32; style elements per swing 15.1 k against 43.3 k.
+- **Captures** (tools/cap.cjs, caps/ and caps-head/; sheets/): Get Involved's header at 1440x900 and 390x844 DPR 2,
+  VI and EN: rest (motion on, scroll 0, after the reveal), 8 scroll frames (p = k/8 of the stage), reduced motion
+  and no JS, each as the viewport and a crop of the stage; main.js blocked at 1 s and 4.6 s (VI). Contact sheets
+  sheets/sheet-{1440,390}-{vi,en}-{view,stage}.jpg and overview.jpg; HEAD-against-final strips
+  sheets/strip-{1440,390}-{vi,en}.jpg. In every captured frame the leaves stay inside the window's box (cap.json),
+  the leaves turn from 62° at scroll 0 to 102° by p 0.875 (t 0 → 1), reduced motion and no JS show 102°, the stage holds
+  91 elements under its root (92 with it) and no `<text>`, `<tspan>`, `<image>` or `<img>`; no page errors. The
+  requests are the logo, hole-hoa-thi.svg and the dusk still, as at HEAD. With main.js blocked the drawing is skipped
+  at 1 s (content-visibility hidden) and drawn at 4.6 s, at the 62° pose (no script sets --t), not the rest pose.
+  Box: 471 x 386 px at 1440, 259 x 249 px at 390, the same in both languages.
+- **Phones: the words sit lower.** With the larger window the 390 header's words move down 85 px against HEAD (H1 top
+  371 → 456, intro 425 → 510, the "see the ways" link 494 → 578, the ways 578 → 662 of an 844 px screen;
+  tools/fold.cjs, gates/fold.log). The H1, the intro and the one link down are still above the fold (M7's rule); the
+  first way's links now start below it. 1440 is unchanged (H1 206, ways 576).
+- **Straight edges** (seam-scan.py on the viewport shots, gates/seam.log and seam-head.log). 1440: no row lines in
+  any frame of either build; the column hits are the window's left edge (843/844), a leaf edge (881 at rest, 992 at
+  62°) and the right jamb (1278): objects (data-art), as HEAD's leaf edge at 695. 390: the rest frame has one row pair
+  (1132/1133, text below the window); reduced and no JS add the opening's head (174) and sill edge (609) inside the
+  window, the casement frame against soffit and sill, as the fix round recorded; the scrolled frames' pairs are text
+  and link underlines that HEAD has at the same spacing (offset by the taller header), plus the opening's sill edge in
+  f3 (229). HEAD's 390 rest had the sill and band rows (498, 516, plus 165–469 with reduced motion); they are gone.
+- **WordPress.** The exported drawing (assets/generated/drawings/involve-window.html, 25,512 bytes) equals the
+  `.gi-stage` in both dist pages byte for byte; golden.json's involve[0] and involve[1] heads equal the dist headers
+  (VI and EN) and carry the drawing; the theme's built bundle has no `.gi-stripes`, has `.gi-haze`, and its main.js
+  sets `.is-lit`. No PHP change.
+- **Bytes.** Drawing 92 elements, 25.5 kB raw / 6.8 kB gzip, no SVG gradient, filter or turbulence. Main CSS 42.3 →
+  44.0 kB gzip on every page (+1.7 kB), main JS +215 B raw / +37 B gzip. Get Involved's HTML 10.3 → 14.2 kB gzip (VI), 9.6 → 13.4 (EN).
+- **Housekeeping.** qa/m9/ is in .gitignore (the line is in the working tree, uncommitted with the rest). The HEAD
+  worktree under the session scratchpad is removed (`git worktree list` shows only the main tree). The /tmp/hcwa-*
+  folders npm test and the WP tests leave behind were cleared for today. No server or browser of this recheck is
+  running; the python http.server on :4900 (serving qa/m8) is not ours and was left alone, as in M8.
+- **Still open (not green).**
+  - lcp.cjs on /chung-tay/ exits 1 on 1 of 5 runs (207 ms); EN passes at 186. The interleaved set has runs over 200 in
+    both builds. The window no longer drives the first pass; the gate has no margin.
+  - One GPU task over 100 ms (129 ms) after the reveal in 1 of 3 runs.
+  - The 390 header's words sit 85 px lower than at HEAD; the first way's links are below the fold.
+  - The critic's coulds left as they were: light-contrast has no `.gi-head__text` zone; the window's CSS ships in the
+    site-wide stylesheet (+1.7 kB gzip on every page); the room-side outline of the window is a crisp rectangle against
+    the page (object edge, not a 0.5 must); with JS the window pops in about 1 s after the words on a throttled phone.
+  - With main.js blocked the fallback shows the 62° pose rather than the 102° rest pose.
+  - HCWA has not seen the new street or the shutter colour. Not checked on a real mid-range Android or a live
+    WordPress (Docker not running).

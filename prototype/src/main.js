@@ -36,6 +36,13 @@ initHeader();
 initEnBar(); // before paint: the pointer bar changes the hero's height
 initHeroPlate();
 initScroll3d(); // the Contact and News openings (PLAN-M4 5): native scroll only, no GSAP or Lenis
+// Get Involved's window (M9): the art waits for the words. Its drawing is skipped (content-visibility, pages.css)
+// until the page has loaded and painted, so the first frame is the text alone (CLAUDE.md: art after the text).
+const giWindow = document.querySelector(".gi-window");
+if (giWindow) {
+  const lit = () => requestAnimationFrame(() => requestAnimationFrame(() => giWindow.classList.add("is-lit")));
+  if (document.readyState === "complete") lit(); else addEventListener("load", lit, { once: true });
+}
 requestAnimationFrame(() => setTimeout(initUiRest));
 // The boxes below the fold skip layout until near the screen (layout.css); each is laid out once after load (M8).
 initWarm();

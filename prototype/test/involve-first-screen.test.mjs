@@ -34,7 +34,7 @@ for (const lang of LANGS) {
   test(`${lang}: the window is drawn, never a photo, a person or lettering`, () => {
     const h = head(render(lang).body);
     assert.doesNotMatch(h, /<img|<picture|\/img\/|photo|\/posters\//i);
-    const art = h.match(/<div class="gi-stage" aria-hidden="true">[\s\S]*?<span class="gi-stripes"><\/span>\s*<\/div>/)?.[0];
+    const art = h.match(/<div class="gi-stage" aria-hidden="true">[\s\S]*?<span class="gi-ledge"><\/span>\s*<\/div>\s*<\/div>\s*<\/div>/)?.[0];
     assert.ok(art, "the window stage is decorative");
     assert.doesNotMatch(art, /<text|<tspan|<image|<foreignObject|person|child|face|sign|plate/i);
     assert.doesNotMatch(art, /#[0-9a-f]{3,8}\b(?![\w-])|rgba?\(/i, "tokens only");
@@ -49,7 +49,70 @@ test("no shade or grey fog on the page: the header is warm light, the louver fac
   assert.doesNotMatch(css, /\.page-involve \.lit-head/, "the old shade header is gone");
   const face = css.match(/\.louver__face \{[^}]*\}/)[0];
   assert.match(face, /radial-gradient\(ellipse/, "a feathered patch, never a full-width band");
-  // The leaves are open at rest (112°) and already open (62°) at the first frame of the stage.
-  assert.match(gi, /\.gi-leaf \{ --a: 112deg;/);
-  assert.match(gi, /--a: calc\(62deg \+ 50deg \* var\(--s3d-cam\)\)/);
+  // The leaves are open at rest (--t 1: 102°) and already open (62°) at the first frame of the stage (--t follows the camera).
+  assert.match(gi, /\.gi-stage \{ --t: 1; --a: calc\(62deg \+ 40deg \* var\(--t\)\);/);
+  assert.match(gi, /html\.stages\[data-motion="on"\] \.gi-stage \{ --t: var\(--s3d-cam\); \}/);
+});
+
+// M9 (Maxwell 13 Nov: "make the animation on the right more realistic and fix it up"): a window in a thick wall, built
+// in one perspective, the leaves hinged on the jambs' outer edges inside the wall's thickness.
+test("the window is built: reveal, sill, splayed jambs, leaves hinged on the jambs' outer edges, never past the room face", () => {
+  const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rule = (sel) => css.match(new RegExp(`(?:^|\\n)${sel.replace(/[.[\]()-]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+  const num = (decl, name) => parseFloat(decl.match(new RegExp(`--${name}: ([\\d.]+)cqw`))[1]);
+  const win = rule(".gi-window");
+  assert.match(win, /container-type: size/);
+  const [wo, side, lw, wd] = ["wo", "side", "lw", "wd"].map((n) => num(win, n));
+  assert.ok(Math.abs(wo + 2 * side - 100) < 0.01, "the opening sits centred in the room-face outline");
+  assert.ok(Math.abs(2 * lw - wo) < 0.01, "two leaves close the opening");
+  // Each leaf: hinged at the outer edge of its jamb (the far end of the reveal), the opening's full height.
+  for (const [side_, sign] of [["l", "-1 \\* "], ["r", ""]]) {
+    const leaf = rule(`.gi-leaf--${side_}`);
+    assert.match(leaf, new RegExp(`translateZ\\(calc\\(-1 \\* var\\(--wd\\)\\)\\) rotateY\\(${sign.replace("-1 \\* ", "calc\\(-1 \\* ")}var\\(--a\\)`));
+    assert.match(leaf, side_ === "l" ? /left: var\(--side\); transform-origin: 0 50%/ : /right: var\(--side\); transform-origin: 100% 50%/);
+  }
+  assert.match(rule(".gi-leaf"), /top: 0; height: 100%; width: var\(--lw\)/);
+  // Through the whole swing the free edge stays behind the room face (z < 0): it never passes the outline or the sill.
+  const [a0, da] = rule(".gi-stage").match(/--a: calc\((\d+)deg \+ (\d+)deg \* var\(--t\)\)/).slice(1).map(Number);
+  for (let a = a0; a <= a0 + da; a += 1) assert.ok(-wd + lw * Math.sin((a * Math.PI) / 180) < 0, `${a}°`);
+  // The jambs are splayed so the leaf at rest stands clear of its jamb, with a strip of the jamb (and the leaf's
+  // shadow on it) showing: the wall's thickness reads in the rest pose too (M9 fix round: 102°, 10.76° off).
+  const splay = 90 - parseFloat(rule(".gi-jamb--l").match(/rotateY\(([\d.]+)deg\)/)[1]);
+  assert.ok(Math.abs(Math.tan((splay * Math.PI) / 180) * wd - side) < 0.2, "the jamb runs from the opening to the room face");
+  const rest = a0 + da;
+  assert.ok(rest - 90 < splay - 6, `the leaf at rest (${rest}°) stands well clear of its jamb (${90 + splay}°)`);
+  // Its free edge stays inside the opening's side of the jamb (never crosses it) at every angle.
+  for (let a = a0; a <= rest; a += 1) {
+    const r = (a * Math.PI) / 180, fx = side + lw * Math.cos(r), fz = -wd + lw * Math.sin(r);
+    assert.ok(fx > side * (-fz / wd) - 0.01, `${a}°: free edge clear of the jamb`);
+  }
+});
+
+test("the window is cheap to style and lay out: under 100 elements (M8's had about 340)", () => {
+  const h = head(render("vi").body);
+  const art = h.match(/<div class="gi-stage" aria-hidden="true">[\s\S]*?<span class="gi-ledge"><\/span>\s*<\/div>\s*<\/div>\s*<\/div>/)[0];
+  const n = (art.match(/<[a-zA-Z]/g) ?? []).length;
+  assert.ok(n < 100, `${n} elements`);
+});
+
+// M9 fix round: the street was rastered on every scrolled frame. Chromium re-invalidates any SVG shape painted with a
+// gradient (directly or through a pattern) each frame the stage moves, so the drawing carries no SVG gradient, and no
+// turbulence or blur filter (they made the reveal's raster a 400 ms GPU task). Its sky and haze are CSS.
+test("the window's SVG has no gradients or filters (rastered once, not every scrolled frame)", () => {
+  const art = head(render("vi").body).match(/<div class="gi-stage"[\s\S]*?<span class="gi-ledge">/)[0];
+  assert.doesNotMatch(art, /<(linear|radial)Gradient|<filter|filter="url|<fe[A-Z]/);
+  assert.equal((art.match(/<svg /g) ?? []).length, 2, "the far side and the tree: two depths");
+});
+
+// M9 fix round (critique): no bars of light and no white streaks under the window or on its jambs; the light the
+// sill throws back is a warm glow.
+test("no barred light: the pool under the window is gone, the jamb and sill shadows are soft", () => {
+  const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(css, /gi-stripes/);
+  for (const sel of [".gi-jamb--r::before", ".gi-jamb--l::before", ".gi-sill::before", ".gi-ledge::before", ".gi-ledge::after"]) {
+    const r = css.match(new RegExp(`\\n${sel.replace(/[.\-:]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+    assert.ok(r, sel);
+    assert.doesNotMatch(r, /repeating-/, `${sel}: no bars`);
+    assert.doesNotMatch(r, /lime-50|white|#fff/i, `${sel}: no white`);
+  }
 });
