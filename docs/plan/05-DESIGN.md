@@ -573,6 +573,24 @@ Reasons and measurements are in PLAN section 9 ("M6 world and flow", "M6 pages",
   the fold). The window's CSS is in the site-wide stylesheet (+1.7 kB gzip on every page); light-contrast has no Get
   Involved zone (checked by hand: 18 lines, 0 below the bar); with main.js blocked the fallback shows the 62° pose.
   HCWA has not approved the street or the shutter colour.
+- **M10 window size (14 Nov 2026, Maxwell: "keep the blue-green, make it bigger on desktop"; prototype/PLAN.md section
+  9 "M10 Get Involved window size"):** on desktop only, the box fills the right half less the page's margin (with the
+  sill 98% of it), at most 720 px wide, and may hang 108 px below the header into the day beside the ways' heading
+  (the header paints over the day, the ways over the header); the header, its words and the ways do not move. 663 x 546
+  px with the sill at 1440 (M9 492 x 405), 742 x 610 at 1920 and up. Drawing, paint and swing unchanged; phones keep
+  the M9 sizes above. **M10 fix round:** from 1280 px the header is 40 px taller (min-height and its words' foot) and
+  the window hangs 68 px instead of 108, so the box keeps its size and the ways sit about 90 px below the sill (was
+  52); the stage sits at most two gutters past the 1320 px content column (`--gi-x`), so at 1920 and 2560 the window
+  ends 88 px past the column instead of drifting to the page's right half; below about 1210 px the stage's margin
+  narrows toward 1vw (`50vw - 568px`), so the box is never smaller than M9's (471 px at 1024 in landscape and on iPad
+  Pro portrait, was 452).
+  **M10 final recheck (14 Nov 2026; prototype/PLAN.md section 9 "M10 final recheck", qa/m10/final/):** every gate
+  green on the final tree (npm test 213/213, builds and links, PROD=1 only its 143 guards, export:wp stable, php 8532/0,
+  static check clean, check-page 56/0, contrast unchanged, phones pixel-identical to HEAD, no text overlap or
+  horizontal scroll at 14 desktop viewports, mobile LCP about 2.0 s with the LCP on the intro). Drawn size with the
+  sill: 492 px at 1024 (1024x1366 equal to M9, not bigger), 663 x 546 at 1440, 740 x 609 at 1680 and up. Not green:
+  on SwiftShader the swing has about twice HEAD's frames over 20 ms at 1920 (median 81 vs 40 of 119) and slightly more
+  at 1440 (53 vs 42); keeping the 720 px cap or lowering it to 620 is still the lead's call.
 
 ## 1. Color tokens
 

@@ -116,3 +116,63 @@ test("no barred light: the pool under the window is gone, the jamb and sill shad
     assert.doesNotMatch(r, /lime-50|white|#fff/i, `${sel}: no white`);
   }
 });
+
+// M10 (Maxwell 14 Nov: "keep the blue-green, make it bigger on desktop"): only the desktop box's size changed. The
+// drawing has no absolute length (every plane, the sill and the nosing are in fractions of the box), so the swing
+// checked above holds at any size; the desktop box fills the stage (the right half less the page's margin) up to a cap
+// and a hang below the header; phones keep M9's rules.
+test("the window's size is free: drawn in fractions of the box, bigger on desktop, phones untouched", () => {
+  const css = readFileSync(new URL("../src/styles/pages.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const from = css.indexOf(".gi-stage { --t");
+  const drawing = css.slice(from, css.indexOf("@media (min-width: 1024px)", from));
+  for (const [, sel, body] of drawing.matchAll(/(\.gi-[^{]*)\{([^}]*)\}/g))
+    assert.doesNotMatch(body, /\d(px|vw|vh|svh|dvh|rem|em)\b/, `${sel.trim()}: only box fractions`);
+  // Phones (< 1024): M9's box and stage.
+  assert.match(css, /\n\.gi-window \{ position: absolute; top: 3%; bottom: 15%; left: 50%; aspect-ratio: 1\.04; translate: -50% 0; container-type: size;/);
+  assert.match(css, /@media \(max-width: 1023\.98px\) \{\n  \.gi-stage \{ height: clamp\(220px, 36svh, 320px\); \}/);
+  // Desktop: the stage and the box's width.
+  const desk = css.slice(css.indexOf("@media (min-width: 1024px)", from));
+  const stage = desk.match(/\.gi-stage \{ --gi-r: max\(([\d.]+)vw, min\(([\d.]+)vw, 50vw - (\d+)px, (\d+)px\)\); --gi-x: max\(var\(--gi-r\), \(100% - var\(--container\)\) \/ 2 - (\d) \* var\(--gutter\)\); --gi-hang: (\d+)px;[^}]*right: var\(--gi-x\);[^}]*width: calc\(50% - var\(--gi-x\)\); container-type: size; \}/);
+  assert.ok(stage, "the stage is the right half less the margin, at most two gutters past the column, a size container");
+  const [rLo, rVw, rK, rMax, gutters, hang] = stage.slice(1).map(Number);
+  const win = desk.match(/\.gi-window \{ top: 4%; bottom: auto; left: 50%; aspect-ratio: 1\.22; width: min\(([\d.]+)cqw, calc\(\(96cqh \+ var\(--gi-hang\)\) \/ ([\d.]+)\), (\d+)px\); \}/);
+  assert.ok(win, "the box: as wide as the stage allows, a hang below the header, a cap");
+  const [fill, perW, cap] = win.slice(1).map(Number);
+  const DRAWN = 1.043; // the sill runs 2.15% past each side of the box
+  assert.ok(fill * DRAWN <= 98.01, "with the sill it stays inside the stage: never into the words' column or off the page");
+  assert.ok(Math.abs(perW - (1 / 1.22 + 0.034)) < 0.001, "box height plus the nosing (3.4cqw) per unit of width");
+  assert.match(desk, /\.gi-head \{ z-index: 1; \}/, "the hang paints over the day's background");
+  assert.match(desk, /\.ways \{ position: relative; z-index: 2; \}/, "and under the ways' words");
+  // M10 fix round: from 1280 the header grows and the window hangs less by the same amount (same box, ways lower).
+  const wide = css.match(/@media \(min-width: 1280px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const grow = wide.match(/\.gi-head \{ min-height: min\(calc\(60svh - var\(--hdr\) \+ (\d+)px\), (\d+)px\); \}/);
+  const pad = wide.match(/\.gi-head__text \{ padding-bottom: (\d+)px; \}/);
+  const hang2 = +(wide.match(/\.gi-stage \{ --gi-hang: (\d+)px; \}/)?.[1] ?? NaN);
+  assert.ok(grow && pad, "from 1280 the header's height and its words' foot both grow");
+  const g = +grow[1];
+  assert.ok(+grow[2] === 520 + g && +pad[1] === 40 + g, "by the same amount, so the header is M9's plus that at every height");
+  assert.ok(g >= 36 && hang - hang2 === g, "and the window hangs that much less: its foot stays put, the ways move down");
+  // The header heights M9 (and M10 below 1280) give at each width, VI (qa/m10/tools/geo.cjs): the box at each,
+  // against M9's (92% of a 50vw stage, 84% of the header's height tall, aspect 1.22).
+  const gutter = (vw) => Math.min(48, Math.max(16, 0.04 * vw));
+  const place = (vw, head) => {
+    const r = Math.max((rLo * vw) / 100, Math.min((rVw * vw) / 100, vw / 2 - rK, rMax));
+    const x = Math.max(r, (vw - 1320) / 2 - gutters * gutter(vw));
+    const sw = vw / 2 - x, h = vw >= 1280 ? head + g : head, hg = vw >= 1280 ? hang2 : hang;
+    const b = Math.min((fill * sw) / 100, (0.96 * h + hg) / perW, cap);
+    return { b, x, sw, right: vw - x - (sw - b * DRAWN) / 2 };
+  };
+  const box = (vw, head) => place(vw, head).b;
+  const m9 = (vw, head) => Math.min(0.46 * vw, 0.84 * 1.22 * head);
+  const cases = [[1024, 403], [1024, 520], [1100, 520], [1150, 520], [1180, 520], [1200, 520], [1280, 446], [1280, 520], [1366, 429], [1440, 460], [1680, 520], [1920, 520], [2560, 520]];
+  for (const [vw, head] of cases) {
+    const { b, sw, right } = place(vw, head);
+    assert.ok(b <= cap && b * DRAWN <= sw + 0.01, `${vw}x${head}: inside the stage, so inside the right half`);
+    assert.ok(b >= m9(vw, head) - 0.5, `${vw}x${head}: never smaller than M9's (${b.toFixed(1)} vs ${m9(vw, head).toFixed(1)})`);
+    const col = Math.min(vw - gutter(vw), (vw + 1320) / 2);
+    assert.ok(right - col <= gutters * gutter(vw), `${vw}: at most ${gutters} gutters past the content column`);
+  }
+  assert.ok(box(1440, 460) * DRAWN >= 1.35 * 490, "1440: at least 1.35x M9's window with its sill");
+  assert.ok(box(1920, 520) >= box(1440, 460) && box(2560, 520) <= cap, "it grows to 1920 and stops there");
+  assert.ok(Math.abs(box(1920, 520) - box(2560, 520)) < 0.5 && place(2560, 520).right < 2560 - 400, "on wide screens it keeps to the column, not the page's edge");
+});

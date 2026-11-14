@@ -34,3 +34,5 @@ qa/m7/
 qa/m8/
 # M9 Get Involved window captures: local only.
 qa/m9/
+# M10 Get Involved window size captures: local only.
+qa/m10/

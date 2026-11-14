@@ -2323,3 +2323,177 @@ tests red); this pass makes it coherent, adds the three M4 header stills and fix
   - With main.js blocked the fallback shows the 62° pose rather than the 102° rest pose.
   - HCWA has not seen the new street or the shutter colour. Not checked on a real mid-range Android or a live
     WordPress (Docker not running).
+
+### M10 Get Involved window size (14 Nov 2026, Maxwell: "keep the blue-green, make it bigger on desktop"; tools, logs and captures in qa/m10/)
+- **What changed.** Only the desktop (>= 1024 px) size and place of the window box (pages.css, the >= 1024 block after
+  "The window (M9 ..."). The drawing, paint, street, construction, swing and light are M9's, untouched (the header's
+  markup and the exported drawing are byte-identical to HEAD a305b02). The stage is now the right half less a margin
+  that matches the page's (`--gi-r: clamp(16px, 3vw, 64px)`) and a size container; the box keeps aspect 1.22 and is
+  `min(93.96cqw, (96cqh + --gi-hang) / 0.8537, 720px)` wide: with the sill (104.3% of the box) it fills 98% of the
+  stage, it may hang `--gi-hang` (108 px) below the header's box, and it stops at 720 px. Every plane of the drawing is
+  in fractions of the box (a new test bans px/vw/vh/rem/em in its rules), so the leaves stay inside the opening at any
+  size; the existing swing test still checks every whole degree.
+- **Trade-off chosen: the header does not grow; the window hangs into the day beside the ways' heading.** The header's
+  min-height rules are unchanged, so the breadcrumb, H1, intro, link and the "Ways to help" heading sit exactly where
+  they did at HEAD at every width. The window is height-limited inside a 460 px header at 1440, so it extends down past
+  the text block into the day gradient (the stage overflows the header's box): `.gi-head { z-index: 1 }` paints it over
+  the day's background and `.ways { position: relative; z-index: 2 }` keeps the ways' words and patches over the sill's
+  glow. It hangs beside the ways' heading (heading ink ends at 489 px VI / 340 EN at 1440, the window starts at 727)
+  and stops about 52 px above the ways themselves. Phones keep M9's rules (the change is inside the >= 1024 query).
+- **Numbers** (qa/m10/tools/geo.cjs, VI, reduced motion, with the review note and EN pointer bars, 84 px, on top;
+  logs/geo.log). Window = drawn width incl. sill x height incl. nosing; header = .gi-head height; the H1, link bottom
+  and ways heading top are the same in both builds:
+
+  | viewport | HEAD window | M10 window | x | header | H1 top | link bottom | ways heading | window bottom vs header foot | to ways list |
+  |---|---|---|---|---|---|---|---|---|---|
+  | 1024x768 | 430 x 354 | 471 x 388 | 1.10 | 403 | 241 | 527 | 597 | +1 | 117 |
+  | 1280x800 | 476 x 392 | 590 x 485 | 1.24 | 446 | 249 | 570 | 648 | +57 | 85 |
+  | 1440x900 | 492 x 405 | 663 x 546 | 1.35 | 460 | 254 | 565 | 667 | +104 | 52 |
+  | 1920x1080 | 556 x 457 | 742 x 610 | 1.33 | 520 | 256 | 571 | 728 | +111 | 52 |
+  | 2560x1440 | 556 x 457 | 742 x 610 | 1.33 | 520 | 256 | 571 | 728 | +111 | 52 |
+
+  At 1440 the window spans 727 → 1390 (the stage 720 → 1397), 91 px clear of the VI intro's last letter (113 EN) and
+  50 px from the page's right edge (the text's gutter is 60); 1024 and 1280 are limited by the half's width (left edge
+  38–44 px from the intro's ink at 1024 and at 1280 EN). At 1920 the height limit binds (711 px box); 2560 the same.
+  EN: the same window sizes; at 1280 EN the header is 414 and the window hangs 88 px, 54 px above the ways.
+- **Words win.** Fold numbers above: breadcrumb, H1, intro and link above the fold at 1024x768, 1280x800, 1440x900; the
+  ways heading starts at 667 of 900 at 1440 (583 without the staging bars), as at HEAD. LCP element: the H1 at
+  1440x900 in every run of both builds (logs/ab-desk1440.tsv), the intro paragraph on the phone (ab-mobile-el.tsv);
+  never the art (it is not a candidate: CSS planes and inline SVG, drawn after load with JS).
+- **LCP and long tasks** (lcp.cjs default-path conditions, qa/m10/tools/lcp-default.cjs, 5 rounds interleaved with HEAD,
+  logs/ab-mobile.tsv): VI longest task M10 167, 127, 126, 149, 146 (median 146, max 167) vs HEAD 156, 125, 137, 143, 140
+  (median 140, max 156); LCP median 2388 vs 2356 ms. EN M10 137, 144, 131, 155, 123 (median 137, max 155) vs HEAD 277,
+  140, 150, 124, 134 (median 140, max 277); LCP median 2372 vs 2360 ms. CLS 0 (EN 0.001 in some runs of both). The phone
+  layout is pixel-identical, so this is the same page plus 58 B gzip of CSS (main CSS 43,841 → 43,899 B gzip). Desktop
+  1440x900 under the same throttling, 3 rounds (ab-desk1440.tsv): LCP 2360–2440 vs HEAD 2376–2452, longest task 137–201
+  vs 120–206.
+- **Swing at 4x CPU** (critic's fps4x.cjs with 1920 added, 5 interleaved rounds, logs/fps4x-ab.log). RasterTask per
+  swing: 1440 M10 30.8, 29.1, 34.9, 27.3, 28.0 ms vs HEAD 26.0, 29.9, 28.7, 25.6, 25.0; 1920 M10 36.0, 50.0, 46.1, 35.8,
+  41.1 vs HEAD 40.1, 38.9, 42.4, 44.2, 49.4: about +10% at 1440, none at 1920 (the street is rastered once; style per
+  swing about 15.1 k elements in both). **Frame time is worse at the larger size on this machine's software GPU:**
+  frames over 20 ms of 119, 1440 M10 18, 47, 39, 32, 19 (median 32) vs HEAD 17, 18, 20, 20, 30 (median 20), median frame
+  16.7–18.4 vs 16.6–17.0 ms; 1920 M10 51, 52, 79, 59, 64 vs HEAD 24, 17, 39, 28, 28, median frame 18.2–22.0 vs
+  16.7–17.4 ms. The same M10 build with M9's box size forced by CSS at 1920 (logs/fps4x-size.log, 3 rounds): 42, 46, 36
+  over 20 ms against 74, 66, 69: the cost follows the composited layers' area (SwiftShader draws them on the CPU), not
+  raster, style or layout. Not measured on a real GPU or a mid-range Android (phones are unchanged).
+- **Light and edges** (seam-scan.py, logs/seam.log, lightcrop.log). The light under the window (from the nosing 180 px
+  down, the window's width plus 12% each side): no row or column line at 1024, 1440, 1920 in rest, reduced and no-JS,
+  in both builds. Full captures: no row line from light; the rows left are the window's own top outline (the room face
+  against the wall; at 1440 now 636 px, over the scan's 40% span, which HEAD's 472 px was not; HEAD's 1024 capture has
+  the same row) and, at 1024 in the motion-on frame, the nosing's foot (HEAD's 1024 has it at 487). Column hits are the
+  window's, jambs' and leaves' edges (objects, data-art), as at HEAD.
+- **Fallbacks** (tools/fallbacks.cjs, logs/fallbacks.log, 1440 and 1920): with JS the drawing is skipped
+  (content-visibility hidden) at DOMContentLoaded and lit after load; no JS draws it at once at the rest pose (t 1);
+  reduced motion shows the rest pose; main.js blocked: hidden at 1 s, shown at 4.6 s. No canvas, no WebGL. No new DOM.
+- **Phones untouched.** 390x844 and 768x1024, VI and EN, rest (motion on), reduced and no JS: pixel-identical to HEAD
+  (12 of 12 pairs, PIL difference empty).
+- **WordPress.** export:wp run twice (the second changes nothing): prototype-data.php's version hash and sources.json
+  change; the theme's built CSS carries the new rules; the block prints the same header markup (golden.json unchanged),
+  and in WP the ways sit in hcwa/day after hcwa/involve-head as in the prototype, so the layering is the same.
+  php wp/tests/run.php 8532/0; wp-static-check 0 errors, the 10 known warnings.
+- **Gates.** npm test 213/213 (involve-first-screen.test.mjs: the new size test); build, build:pages, check:links and
+  check:links:pages pass (0 dead); PROD=1 blocked only by its 143 guards.
+- **Captures** (qa/m10/build/): before/ (HEAD a305b02) and after/ at 1024x768, 1280x800, 1440x900, 1920x1080: rest
+  (motion on, after the reveal), reduced, no JS, plus 4 scroll frames at 1440 (p 0.25 → 1); cap.json (the leaves inside
+  the box in every frame); before-after.png. HEAD was built in a temporary worktree (removed).
+- **Open.** Frame time during the swing on the software GPU at 1920 (above). The window's top outline is a crisp
+  rectangle edge and is now long enough to trip the scan at 1440 (M9's "could": the room face is an object edge).
+  At 1024 the window grows only 10% (the half is the limit). HCWA has not seen it. Not checked on a real mid-range
+  Android, a real GPU or a live WordPress (Docker not running).
+
+### M10 fix round (14 Nov 2026; critique in qa/m10/critique/, fix-round tools, logs and captures in qa/m10/fix/)
+- **The sill crowded the ways at 1280 and up (should).** A new `@media (min-width: 1280px)` block after the header's
+  second >= 1024 block: `.gi-head` min-height `min(calc(60svh - var(--hdr) + 40px), 560px)` and `.gi-head__text`
+  padding-bottom 80 px (so the header is 40 px taller whether its min-height or its words set its height), and
+  `--gi-hang` 68 px instead of 108. The box's width is `(96cqh + hang) / 0.8537`, so it keeps its size (636 px at
+  1440, 709 px at 1680 and up, was 711) and its foot stays put; the ways move 40 px down. Sill to ways list
+  (fix/tools/ink.cjs, VI; logs fix/gates/ink-*.log): 1280x800 85 → 123, 1366x768 43 → 81, 1440x900 52 → 90,
+  1440x700 45 → 85, 1680/1920/2560 51 → 91; EN 1280x800 92, 1440 90. The ways heading starts at 707 of 900 at 1440
+  with the 84 px of review bars (623 without), the list at 820 (736 without): the list still starts on the first
+  screen without the bars.
+- **The window drifted off the content column on wide screens (should).** `--gi-x: max(var(--gi-r), (100% -
+  var(--container)) / 2 - 2 * var(--gutter))`; the stage is `right: var(--gi-x); width: calc(50% - var(--gi-x))`. At
+  1440 and below nothing changes (the max() picks --gi-r). At 1680, 1920 and 2560 the window's drawn right edge is 88 px
+  past the column's (was 106, 162, 319): 1920 spans x 968 → 1708 (was 1040 → 1782), 2560 spans 1288 → 2028 (was
+  1517 → 2259). The gap to the words' ink is 92 px VI / 114 EN at 1680 and up (the gutter is 48).
+- **Smaller than M9 at 1024–1207 px with a tall header (should).** M9's box there was 46vw (92% of a 50vw stage);
+  M10's was 93.96% of (50% - 3vw), always 0.4416vw. `--gi-r` is now `max(1vw, min(3vw, 50vw - 568px, 64px))`: 1vw below
+  about 1160 px (0.4604vw, never under 46vw), then `50vw - 568px` (the margin at which the box still matches M9's
+  533 px box under the 520 px header), then 3vw again from about 1210 px, continuous. The box grows to the right, so
+  its left edge by the words does not move (gap to the intro's ink 38 VI / 40 EN at 1024, as before). 1024x1366
+  471 x 386 (M9 471, M10 build round 452), 1024x768 471 (M9 413, M10 build round 452), 1150x1366 529 (M9 529, was 508),
+  1180x820 534 (was 521). The right margin at 1024 is 15 px (M9 had 10). The size test now evaluates 13 header
+  heights including [1024, 520], [1100, 520], [1150, 520], [1180, 520], [1200, 520] and [1280, 520] against M9's
+  `min(0.46vw, 0.84 x 1.22 x header)`, checks that the >= 1280 rules grow the header by exactly what the hang loses,
+  and that the window ends at most two gutters past the column.
+- **Swing frame time at the bigger size (should; the critique left the choice to the lead).** Not changed, measured
+  again (fix/tools/fps-ab.sh, qa/m10/tools/fps4x.cjs, 5 interleaved rounds, nothing else running; fix/gates/
+  fps-ab.jsonl, fps-summary.txt). Frames over 20 ms of 119: 1440 fix 38, 36, 33, 40, 34 (median 36) vs HEAD 45, 53, 43,
+  25, 20 (median 43), median frame 17.2–18.7 vs 16.7–18.6 ms: no difference measurable at 1440 in this run. 1920 fix 97,
+  79, 65, 76, 56 (median 76) vs HEAD 54, 49, 44, 39, 24 (median 44), median frame 19.2–24.4 vs 17.1–19.1 ms: the 1920
+  cost stays. RasterTask per swing unchanged (1440 28–34 vs 25–35 ms; 1920 32–53 vs 39–51). Tried: dropping
+  will-change on `.gi-ledge::before` makes it worse (raster 205–239 ms per swing at 1440 and 271–300 at 1920, frames
+  over 20 ms 27–69 and 79–108): rejected. A 620 px cap forced by CSS at 1920 (3 rounds, fps-cap620.jsonl): 45, 34, 23
+  over 20 ms vs fix 77, 58, 72 and HEAD 29, 26, 16, so the 620 cap brings 1920 most of the way back; it would also cap
+  1440 (636 → 620, 1.31x instead of 1.35x). Left at 720 for the lead: all of this is SwiftShader (the compositor on the
+  CPU); not measured on a real GPU.
+- **Checks.** npm test 213/213; build, build:pages, check:links, check:links:pages pass (0 dead); PROD=1 blocked only by
+  its 143 guards; export:wp run three times (the later runs change nothing); php wp/tests/run.php 8532/0;
+  wp-static-check 0 errors, the 10 known warnings. Phones and tablets: 390x844, 768x1024 and 1023x768, VI and EN,
+  reduced and no JS, pixel-identical to HEAD (12 of 12, fix/gates/phone-diff.log). Captures (fix/after, after-tall
+  1024x1366, after-en 2560x1440 EN; rest, reduced, no JS, 1440 scroll frames): the leaves inside the box in every frame;
+  fix/before-after.png puts the build round's captures beside the fix round's. HEAD was built in a temporary worktree
+  (removed).
+
+### M10 final recheck (14 Nov 2026, on the final tree over HEAD a305b02; captures, tools and logs in qa/m10/final/)
+- **No source change in this recheck.** It re-ran every gate the M10 gates critic ran on the tree the fix round left,
+  plus the captures. HEAD was rebuilt fresh from a305b02 in a /tmp worktree (removed) for the A/B runs and the HEAD
+  captures; its dist and every scratch build are deleted.
+- **Gates.** npm test 213/213. build, build:pages, check:links and check:links:pages pass (46 pages, 0 dead). PROD=1
+  build blocked only by its 143 guards (the list matches the critic's line for line, apart from the pid and the temp
+  file name). export:wp run twice: the hash of `git diff -- wp` is the same before, between and after (only
+  prototype-data.php and sources.json differ from HEAD, as the fix round left them). php wp/tests/run.php 8532/0;
+  wp-static-check 0 errors, the 10 known warnings.
+- **Browser checks** (own vite preview on :4173 and a static server for HEAD on :4190, stopped by PID after; never
+  more than two browsers at once, timing runs alone). check-page 56/0. light-contrast: the same 3 known home intro
+  lines at 390 (6.7 < 7) of 254 as at HEAD. The critic's zoned copy (final/tools/gi-contrast.mjs: Get Involved header
+  words, ways heading and list at 1024–1920): 264 lines, 0 below the bar in both builds; the largest drop against HEAD
+  is 0.1 (the tightest line is "Ways to partner" at 1024 EN, 8.1 against 7).
+- **Geometry** (final/tools/geo.cjs, 14 viewports, VI and EN, reduced motion with and without JS; gates/geo-summary.txt).
+  The window touches no text (0 overlaps) and makes no horizontal scroll anywhere. Closest text gap 38 px (1024 VI;
+  40 EN), 44 at 1280 EN, 60+ elsewhere. The box is never narrower than HEAD's: 1024x768 413 → 471, 1024x1366 471 → 471
+  (equal, not bigger: this is where M9 was already width-limited), 1180x820 440 → 534, 1280x800 457 → 565, 1366x768
+  439 → 603, 1440x900 471 → 636, 1440x700 452 → 621, 1680 and up 533 → 709. Window-plus-sill bottom to the ways list:
+  102–143 px from 1180 up (HEAD 165–229), 116 at 1024x768. 1023x768 (the phone layout) is unchanged.
+- **Phones.** 390x844 and 768x1024 full pages, VI and EN, rest, reduced and no JS: 12/12 pixel-identical to HEAD
+  (gates/phone-diff.log).
+- **Seam scan** (seam-scan.py on header captures at 1024/1440/1920, rest, reduced, no JS, both builds). No row at the
+  header's foot in any capture. The only rows are the window's own top outline (y 131/179 at 1024, 135/183 at 1440;
+  none at 1920, where it is under 40% of the width); HEAD trips on the same edge at 1024 plus a second row lower in its header (475/523). The
+  columns that make every capture of both builds "fail" (18/18 each) are the window's own vertical edges and leaves,
+  as at HEAD. Not a section seam; recorded, not changed.
+- **Mobile LCP** (lcp.cjs, 5 runs each, alone). VI final: default median 2016 ms, longest task 186 (runs 144, 143, 167,
+  186, 130), tier 0/1 medians 2024/2020. EN final: 2000 ms, longest 178. HEAD the same session: VI 2036 ms, longest 221
+  (exit 1), EN 2080 ms, longest 232 (exit 1), so the machine was noisier than in the critic's runs. 3 interleaved rounds
+  (gates/lcp-ab.log): VI final 2108/1996/2028 ms, longest 200/136/166 vs HEAD 2020/1988/2012, 176/140/156; EN final
+  2044/2052/2028, 154/168/138 vs HEAD 2016/1976/2012, 163/122/163. LCP element P.gi-head__intro in every run; CLS
+  0.000–0.001; three.js after LCP. One final VI run touched 200 ms exactly (the gate fails over 200): noise on this
+  machine, since the phone markup and pixels are identical to HEAD, but it is close to the line.
+- **Desktop CLS on load** (cls.cjs, 4x CPU, 3 runs per size and language per build). EN at most 0.0012 in both. VI's
+  known 48 px shift of MAIN (0.022–0.042) shows in both builds: final 1440 1/3, 1920 3/3; HEAD 1024 3/3, 1280 3/3, 1440
+  2/3, 1920 3/3. Not from M10.
+- **Swing frame time** (qa/m10/tools/fps4x.cjs, 7 interleaved rounds, order alternating; gates/fps-summary.txt;
+  SwiftShader). Frames over 20 ms of 119: 1440 final 72, 63, 43, 33, 55, 53, 29 (median 53) vs HEAD 52, 42, 48, 29, 41,
+  39, 53 (median 42); 1920 final 100, 110, 81, 71, 64, 59, 83 (median 81) vs HEAD 40, 48, 55, 45, 25, 22, 21 (median 40),
+  median frame 19.9–25.9 vs 16.7–19.1 ms. Raster per swing about the same (1920 36–52 vs 34–44 ms). **Not green:** the
+  1920 cost the critic and the fix round measured is still there (about twice HEAD's slow frames), 1440 is slightly
+  worse; the lead's decision (720 vs a 620 px cap) stays open. Not measured on a real GPU.
+- **Captures** (final/caps/, JPEG; final/tools/fcap.cjs). 1024x768, 1440x900, 1920x1080 and 390x844, VI and EN, rest,
+  reduced and no JS, and 6 scroll frames (p 0.12 → 1 of --s3d-end) at 1440: 36 shots, leaves inside the box and no
+  horizontal scroll in every one (gates/caps-geometry.txt). final/contact.jpg holds them all; final/before-after.png
+  puts HEAD a305b02 beside the final tree at 1440 and 1920, VI and EN, rest. Looked at: the window holds the right half,
+  the sill clearly belongs to the header with a clear band of day before the ways, the H1 still leads.
+- **Still open.** The 1920 swing frame time (above). The gap from the intro's ink to the window at 1024 is 38 VI / 40
+  EN against a 41 px gutter (critic's could). The window's straight top outline under the nav (critic's could), the
+  soffit miter light seam (critic's could) and the VI 48 px load shift are not touched. 1024x1366 is the same size as
+  M9, not bigger. Not checked on a real GPU, a real mid-range Android or a live WordPress; HCWA has not seen it.

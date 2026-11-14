@@ -1049,9 +1049,22 @@ html[data-motion="on"] .gi-window.is-lit { animation: gi-lit 0.7s cubic-bezier(0
   .gi-head__text { grid-area: 1 / 1; padding-top: clamp(12px, 1.6vw, 24px); }
   .gi-head__text > * { max-inline-size: min(100%, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
   .gi-head__title { max-inline-size: min(9.5em, calc(50vw - max(var(--gutter), (100vw - var(--container)) / 2) - 24px)); }
-  .gi-stage { position: absolute; top: 0; right: 0; bottom: 0; width: 50vw; }
-  /* Nearly the stage's height, as wide as the half allows: the header's main picture. */
-  .gi-window { top: 4%; bottom: 12%; left: 50%; aspect-ratio: 1.22; max-width: 92%; }
+  /* M10 (Maxwell 14 Nov: "keep the blue-green, make it bigger on desktop"): the window holds the right half like a
+     hero picture. The stage is the right half less a margin that matches the page's (--gi-r), and a size container;
+     the box is as wide as the stage allows (with the sill's nosing, 104.3% of the box, it fills 98% of it), at most
+     720 px, and no taller than lets it hang --gi-hang below the header's box into the day (box height 1/1.22 of its
+     width plus the nosing 0.034: 0.8537 of its width, from 4% down). It hangs beside the ways' heading, never over it,
+     and stops short of the ways themselves; the header paints over the day and the ways over the header, so the sill's
+     light falls behind their words. Its geometry is all in fractions of the box, so only its size changes.
+     M10 fix round: below about 1210 px the margin narrows toward 1vw (50vw - 568px is the margin at which the box still
+     matches M9's 533 px box under the tallest header), so the box is never smaller than M9's where the half's width is
+     the limit (iPad Pro portrait); its left edge, by the words, stays where it was. On wide screens the stage may sit
+     at most two gutters past the content column (--gi-x), so the window keeps to the column instead of drifting to the
+     page's right half. */
+  .gi-head { z-index: 1; }
+  .gi-stage { --gi-r: max(1vw, min(3vw, 50vw - 568px, 64px)); --gi-x: max(var(--gi-r), (100% - var(--container)) / 2 - 2 * var(--gutter)); --gi-hang: 108px; position: absolute; top: 0; right: var(--gi-x); bottom: 0; width: calc(50% - var(--gi-x)); container-type: size; }
+  .gi-window { top: 4%; bottom: auto; left: 50%; aspect-ratio: 1.22; width: min(93.96cqw, calc((96cqh + var(--gi-hang)) / 0.8537), 720px); }
+  .ways { position: relative; z-index: 2; }
 }
 /* Below 1024 the window comes first, as a band of the room, and the words follow it. */
 @media (max-width: 1023.98px) {
@@ -1120,6 +1133,14 @@ html.stages[data-motion="on"] .gi-sunwash { opacity: calc(0.2 + 0.4 * var(--s3d-
      more of a shorter header (M7 fix round: 210 px of empty band at 1440 between the link and the ways, now about 100). */
   .gi-head { min-height: min(calc(60svh - var(--hdr)), 520px); }
   .gi-head__text { padding-bottom: 40px; }
+}
+@media (min-width: 1280px) {
+  /* M10 fix round: the sill stood on the ways' third and fourth cards (52 px above their list at 1440 and up). The
+     header grows 40 px and the window hangs 40 px less below it, so the box keeps its size and place (its width is
+     (96cqh + hang) / 0.8537) and the ways move down: about 90 px from the sill to their list. */
+  .gi-head { min-height: min(calc(60svh - var(--hdr) + 40px), 560px); }
+  .gi-head__text { padding-bottom: 80px; }
+  .gi-stage { --gi-hang: 68px; }
 }
 
 /* .louvers--page: kept only for WordPress Get Involved pages saved before M8 (hcwa/louvers under the lit header). Since
